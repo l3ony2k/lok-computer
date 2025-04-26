@@ -1,0 +1,262 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Retro UI specific */
+    --retro-window: 0 0% 94%;
+    --retro-window-titlebar: 0 0% 85%;
+    --retro-desktop: 195 40% 70%;
+    --retro-taskbar: 0 0% 85%;
+    --header-bg: hsl(0 0% 98%);
+    --header-border: hsl(0 0% 85%);
+    --block-bg: hsl(0 0% 100%);
+    --block-border: hsl(0 0% 85%);
+    --button-bg: hsl(0 0% 98%);
+    --button-hover: hsl(0 0% 95%);
+    --text-color: hsl(0 0% 20%);
+    --link-color: hsl(200 100% 40%);
+    --log-text: hsl(0 0% 30%);
+    --log-bg: hsl(0 0% 98%);
+    --loading-bg: hsl(0 0% 98%);
+    --loading-bar: hsl(200 80% 50%);
+    --detail-bg: hsl(0 0% 100%);
+    --detail-border: hsl(0 0% 85%);
+    --detail-header-bg: hsl(0 0% 98%);
+    --detail-meta-bg: hsl(0 0% 98%);
+    --icon-color: hsl(0 0% 30%);
+    
+    /* Keep existing base variables */
+    --background: 0 0% 98%;
+    --foreground: 0 0% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+
+    --primary: 0 0% 10%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 0 0% 90%;
+    --secondary-foreground: 0 0% 10%;
+
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+
+    --accent: 0 0% 75%;
+    --accent-foreground: 0 0% 10%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 78%;
+    --input: 0 0% 78%;
+    --ring: 0 0% 70%;
+
+    --radius: 0px;
+
+    /* Keep sidebar variables */
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    /* Retro UI specific */
+    --retro-window: 0 0% 10%;
+    --retro-window-titlebar: 0 0% 15%;
+    --retro-desktop: 195 35% 25%;
+    --retro-taskbar: 0 0% 15%;
+    --header-bg: hsl(0 0% 15%);
+    --header-border: hsl(0 0% 30%);
+    --block-bg: hsl(0 0% 10%);
+    --block-border: hsl(0 0% 30%);
+    --button-bg: hsl(0 0% 25%);
+    --button-hover: hsl(0 0% 30%);
+    --text-color: hsl(0 0% 90%);
+    --link-color: hsl(200 100% 70%);
+    --log-text: hsl(0 0% 80%);
+    --log-bg: hsl(0 0% 15%);
+    --loading-bg: hsl(0 0% 15%);
+    --loading-bar: hsl(200 70% 40%);
+    --detail-bg: hsl(0 0% 20%);
+    --detail-border: hsl(0 0% 30%);
+    --detail-header-bg: hsl(0 0% 15%);
+    --detail-meta-bg: hsl(0 0% 15%);
+    --icon-color: hsl(0 0% 80%);
+    
+    /* Keep existing dark mode variables */
+    --background: 0 0% 10%;
+    --foreground: 0 0% 98%;
+
+    --card: 0 0% 15%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 0 0% 15%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 10%;
+
+    --secondary: 0 0% 25%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 0 0% 25%;
+    --muted-foreground: 0 0% 65%;
+
+    --accent: 0 0% 30%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 62% 40%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 35%;
+    --input: 0 0% 35%;
+    --ring: 0 0% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+    font-family: ui-monospace, Menlo, Monaco, "Cascadia Mono", "Segoe UI Mono", "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro", "Fira Mono", "Droid Sans Mono", "Consolas", "Courier New", monospace;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased overflow-hidden;
+    background-image: radial-gradient(circle, hsl(var(--border)) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+  
+  .taskbar {
+    @apply bg-retro-taskbar p-1 border-t border-border h-[30px] flex items-center;
+  }
+
+  .taskbar-button {
+    @apply h-[24px] px-2 text-sm bg-secondary border border-border shadow-retro-button 
+    hover:bg-accent flex items-center justify-center;
+  }
+
+  .window-titlebar {
+    @apply flex items-center px-2 py-0.5 bg-retro-window-titlebar text-black font-mono text-sm 
+    cursor-move select-none h-[30px] border-b border-border;
+  }
+
+  .folder-grid {
+    @apply grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-4 p-4;
+  }
+
+  .folder-item {
+    @apply flex flex-col items-center justify-center p-2 hover:bg-accent/50 cursor-pointer;
+  }
+
+  .folder-icon {
+    @apply w-12 h-12 mb-2 flex items-center justify-center;
+  }
+
+  .folder-name {
+    @apply text-xs text-center truncate w-full;
+  }
+
+  .search-input {
+    @apply w-full p-1 text-xs bg-background border border-border shadow-retro-inset;
+  }
+ }
+
+ @layer components {
+  .retro-button {
+    @apply px-1 py-0 border border-border shadow-retro-button 
+    bg-secondary hover:bg-accent active:shadow-retro-inset 
+    active:translate-y-px active:translate-x-px transition-all;
+  }
+
+  .window-titlebar {
+    @apply flex items-center px-1 py-0.5 bg-retro-window-titlebar text-black dark:text-white font-mono text-sm cursor-move select-none h-[30px] border-b border-border;
+  }
+
+  .window-content {
+    @apply bg-retro-window border-t border-border overflow-auto h-full font-mono;
+  }
+
+  .folder-grid {
+    @apply grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 p-2;
+  }
+
+  .folder-item {
+    @apply flex flex-col items-center justify-center p-1 hover:bg-accent/50 cursor-pointer;
+  }
+
+  .folder-icon {
+    @apply w-12 h-12 mb-1 flex items-center justify-center;
+  }
+
+  .folder-name {
+    @apply text-xs text-center truncate w-full;
+  }
+
+  .taskbar {
+    @apply bg-retro-taskbar p-1 border-t border-border flex items-center;
+  }
+
+  .taskbar-button {
+    @apply retro-button flex items-center space-x-1 mr-1;
+  }
+
+  .search-input {
+    @apply w-full p-1 text-xs bg-background border border-border shadow-retro-inset;
+  }
+}
+
+@layer base {
+  .taskbar-scroll-fade {
+    /* Define CSS variables for the background color and fade width */
+    /* Assuming taskbar uses --background, adjust if needed */
+    --scroll-fade-bg: var(--background);
+    --scroll-fade-width: 20px; /* Adjust width of the fade effect */
+
+    /* Apply mask for fade effect */
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      black var(--scroll-fade-width),
+      black calc(100% - var(--scroll-fade-width)),
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      black var(--scroll-fade-width),
+      black calc(100% - var(--scroll-fade-width)),
+      transparent 100%
+    );
+  }
+
+  /* Adjust background variable based on theme if needed */
+  .retro .taskbar-scroll-fade {
+    /* Assuming retro taskbar uses the main background color */
+    --scroll-fade-bg: var(--background); 
+  }
+  .dark .taskbar-scroll-fade {
+    --scroll-fade-bg: var(--background);
+  }
+  .light .taskbar-scroll-fade {
+    --scroll-fade-bg: var(--background);
+  }
+
+  /* Hide scrollbar visually but keep functionality */
+  .taskbar-scroll-fade::-webkit-scrollbar {
+    display: none; /* For Chrome, Safari, Opera */
+  }
+  .taskbar-scroll-fade {
+    -ms-overflow-style: none;  /* For Internet Explorer and Edge */
+    scrollbar-width: none;  /* For Firefox */
+  }
+}
