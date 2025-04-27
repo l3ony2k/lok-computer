@@ -88,9 +88,16 @@ export const createWindowManagerContext = () => {
   };
 
   const updateWindowPosition = (id: string, x: number, y: number) => {
-    setSavedPositions(prev => ({
-      ...prev,
-      [id]: { x, y }
+    // Update the main windows state first
+    setWindows(prevWindows =>
+      prevWindows.map(w => 
+        w.id === id ? { ...w, x, y } : w
+      )
+    );
+    // Then update the saved positions for persistence
+    setSavedPositions(prevSaved => ({
+      ...prevSaved,
+      [id]: { ...(prevSaved[id] || {}), x, y } // Ensure other saved props like width/height aren't lost if they exist
     }));
   };
 
@@ -162,6 +169,11 @@ export const createWindowManagerContext = () => {
         w.id === id ? { ...w, width, height } : w
       )
     );
+    // Also update saved positions dimensions
+    setSavedPositions(prevSaved => ({
+        ...prevSaved,
+        [id]: { ...(prevSaved[id] || {}), width, height } // Save dimensions too
+      }));
   };
 
   return {

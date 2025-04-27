@@ -4,7 +4,7 @@ import { getChannelContents } from "@/lib/api";
 import { useWindowManager } from "@/hooks/useWindowManager";
 import { BlockViewer } from "../blocks/BlockViewer";
 import { toast } from "sonner";
-import { CustomIcon } from "../window/CustomIcon";
+import { CustomIcon } from "@/components/window/CustomIcon";
 
 interface ContentItem extends Partial<ArenaBlock>, Partial<ArenaChannel> {
   id: number;

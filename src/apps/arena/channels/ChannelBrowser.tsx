@@ -3,7 +3,7 @@ import { ArenaChannel } from "@/types/arena";
 import { getUserChannels } from "@/lib/api";
 import { useWindowManager } from "@/hooks/useWindowManager";
 import { ChannelExplorer } from "./ChannelExplorer";
-import { CustomIcon } from "../window/CustomIcon";
+import { CustomIcon } from "@/components/window/CustomIcon";
 
 export const ChannelBrowser = ({ username = "lok" }: { username?: string }) => {
   const [channels, setChannels] = useState<ArenaChannel[]>([]);
