@@ -90,7 +90,7 @@ export const DraggableWindow = ({ window: windowProps, onResizeStop }: Draggable
       enableResizing={!windowProps.maximized}
       dragHandleClassName="window-titlebar"
       className={cn(
-        "window-content-area flex flex-col border border-border shadow-lg overflow-hidden bg-background",
+        "window-content-area flex flex-col border-2 border-border shadow-lg dark:shadow-[3px_3px_24px_rgb(0,0,0,0.3)] overflow-hidden bg-background",
       )}
     >
       {/* Title bar - fixed height */}

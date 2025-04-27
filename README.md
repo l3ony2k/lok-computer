@@ -32,7 +32,9 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 *   [x] Implement desktop icons that launch their respective applications.
 *   [x] Improve overall window management logic within `WindowManager`.
 *   [x] Change window minimize maximize icon.
-*   [ ] Remove top buttons, add status bar and date time.
+*   [x] Remove right-side top bar buttons (Search, Settings, Theme); add dedicated Config app for theme settings.
+*   [x] Add status bar and date time.
+*   [x] Remove toast related stuff. (it's shadcn-ui)
 
 ### Phase 2.1: Enhancements
 
@@ -50,7 +52,6 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 *   [ ] Develop `Guestbook` app module (allow users to leave messages).
 *   [ ] Develop `Mailto` app module (iframe of mailbird.co).
 *   [ ] Develop `Shelf` app module (showing my movies, series, books, music, etc from neodb.social).
-*   [ ] Develop `Settings` app module (e.g., theme switching, background selection).
 *   [ ] Develop `Link Web` app module (visualizing links/connections).
 *   [ ] Develop `Browser` app module (basic iframe-based browser).
 
@@ -153,6 +154,45 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 - Updated `DraggableWindow.tsx`.
 - Replaced the `window-control-button hover:bg-...` classes with `retro-button p-1` for the minimize, maximize/restore, and close buttons in the window title bar.
 - This provides a consistent visual style across different button elements.
+
+### Session: Refactor Top Bar (2025-04-28)
+
+**Objective:** Separate the top bar UI into its own component.
+
+**Implementation:**
+- Created `src/core/TopBar.tsx`.
+- Moved the JSX for the top bar (including Home, About, Featured Channels dropdown, Search, Settings, Theme Toggle buttons) from `Desktop.tsx` to `TopBar.tsx`.
+- The `TopBar` component receives necessary handlers (`handleOpen...`, `toggleTheme`) and the current `theme` state as props from `Desktop.tsx`.
+- Updated `Desktop.tsx` to import and render the new `<TopBar />` component.
+
+### Session: Refactor Taskbar (2025-04-28)
+
+**Objective:** Separate the Taskbar UI into its own component in the core directory.
+
+**Implementation:**
+- Created `src/core/Taskbar.tsx`.
+- Moved the `Taskbar` component logic from `src/components/window/Taskbar.tsx` to the new file (the original file was deleted).
+- Adjusted the import path for `CustomIcon` within the new `Taskbar.tsx`.
+- Updated the index file `src/components/WindowManager.tsx` to re-export `Taskbar` from its new location (`@/core/Taskbar`).
+- Verified that `Desktop.tsx` continues to import `Taskbar` correctly via the index file.
+
+### Session: Remove Top Bar Buttons & Add Config App (2025-04-28)
+
+**Objective:** Remove the Search, Settings, and Theme buttons from the TopBar and create a dedicated application for configuration, starting with theme switching.
+
+**Implementation:**
+- Removed the right-hand side buttons (Search, Settings, Theme Toggle) and their corresponding props/handlers from `TopBar.tsx`.
+- Removed the unnecessary props passed to `<TopBar />` in `Desktop.tsx`.
+- Created `src/apps/config/ConfigApp.tsx`.
+- Added `RadioGroup` from `shadcn/ui` within `ConfigApp` to allow selecting 'Light', 'Dark', or 'System' themes.
+- Used the `useTheme` hook from `next-themes` within `ConfigApp` to get and set the theme.
+- Modified `handleOpenSettingsWindow` in `Desktop.tsx` to launch the `ConfigApp` component using `addWindow`.
+- Corrected property names (`width`, `height`, `x`, `y`) used in the `addWindow` call.
+- Ensured the 'Config' desktop icon in `DesktopIcons.tsx` correctly triggers `handleOpenSettingsWindow`.
+
+**Fixes (Follow-up):**
+- Corrected the `iconType` passed to `addWindow` for the Config App in `Desktop.tsx` from `'Settings'` to `'config'` to match the key used in `CustomIcon.tsx`, resolving missing icons in the title bar and taskbar.
+- Added the missing `ThemeProvider` from `next-themes` wrapper in `App.tsx` to enable dynamic theme switching, resolving the issue where selecting a theme in the Config App didn't visually update the UI.
 
 ## Getting Started
 

@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react';
 import { useWindowManager } from '@/hooks/useWindowManager';
-import { CustomIcon } from './CustomIcon';
+import { CustomIcon } from '@/components/window/CustomIcon'; // Adjusted import path
 
 export const Taskbar = () => {
   const { windows, focusWindow, activeWindow, minimizeWindow } = useWindowManager();

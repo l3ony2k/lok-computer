@@ -215,6 +215,11 @@
   }
 }
 
+/* Universal accent ring color for focus:ring */
+.focus\:ring-accent:focus {
+  --tw-ring-color: hsl(var(--accent));
+}
+
 /* Enable native dark scrollbar in dark mode */
 .dark .window-content-area {
   color-scheme: dark;
