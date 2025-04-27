@@ -1,37 +1,48 @@
 import React from 'react';
 
+// 1. Import the icons directly
+import folderIcon from '../../assets/icons/folder.png';
+import imageIcon from '../../assets/icons/image.png';
+import textIcon from '../../assets/icons/text.png';
+import videoIcon from '../../assets/icons/video.png';
+import linkIcon from '../../assets/icons/link.png';
+import otherChannelIcon from '../../assets/icons/other-channel.png';
+import configIcon from '../../assets/icons/config.png';
+import consoleIcon from '../../assets/icons/console.png';
+// Add imports for any other icons you have...
+
 interface CustomIconProps {
   iconType?: string; // e.g., 'folder', 'image', 'text'
   className?: string;
 }
 
-const iconBasePath = '/src/assets/icons/';
-
-// Map icon types to their corresponding file names
-const iconMap: { [key: string]: string } = {
-  folder: 'folder.png',
-  image: 'image.png',
-  text: 'text.png',
-  video: 'video.png',
-  link: 'link.png',
-  'other-channel': 'other-channel.png',
-  config: 'config.png',
-  console: 'console.png',
-  // Add other mappings as needed
+// 2. Map icon types to the imported icon variables
+const iconMap: { [key: string]: string } = { // The value is now the imported URL string
+  folder: folderIcon,
+  image: imageIcon,
+  text: textIcon,
+  video: videoIcon,
+  link: linkIcon,
+  'other-channel': otherChannelIcon,
+  config: configIcon,
+  console: consoleIcon,
+  // Add other mappings corresponding to your imports
 };
 
 export const CustomIcon: React.FC<CustomIconProps> = ({ iconType, className }) => {
-  if (!iconType || !iconMap[iconType]) {
+  // 3. Get the correct imported URL from the map
+  const iconSrc = iconType ? iconMap[iconType] : null; 
+
+  if (!iconSrc) {
     // Optionally return a default icon or null if type is missing/invalid
     return null; 
   }
 
-  const iconSrc = `${iconBasePath}${iconMap[iconType]}`;
-
+  // Use the imported URL directly
   return (
     <img 
       src={iconSrc} 
-      alt={`${iconType} icon`} 
+      alt={`${iconType || 'icon'}`} 
       className={`inline-block object-contain ${className || ''}`} 
       // Prevent dragging the icon itself, which can interfere with window dragging
       draggable="false" 
