@@ -11,11 +11,12 @@ export interface Window {
   y?: number;
   minimized?: boolean;
   maximized?: boolean;
+  wasMaximized?: boolean;
   zIndex: number;
   iconType?: string;
 }
 
-interface WindowManagerContextType {
+export interface WindowManagerContextType {
   windows: Window[];
   addWindow: (window: Omit<Window, "id" | "zIndex"> & { iconType?: string }) => string;
   closeWindow: (id: string) => void;
@@ -78,6 +79,7 @@ export const createWindowManagerContext = () => {
         zIndex: newZIndex,
         minimized: false,
         maximized: false,
+        wasMaximized: false,
         x: savedPosition.x ?? Math.random() * 100,
         y: savedPosition.y ?? Math.random() * 100,
       },
@@ -119,7 +121,12 @@ export const createWindowManagerContext = () => {
   const minimizeWindow = (id: string) => {
     setWindows((prev) =>
       prev.map((w) =>
-        w.id === id ? { ...w, minimized: true, maximized: false } : w
+        w.id === id ? { 
+          ...w, 
+          minimized: true, 
+          wasMaximized: w.maximized, 
+          maximized: false 
+        } : w
       )
     );
     
@@ -157,7 +164,17 @@ export const createWindowManagerContext = () => {
     setLastZIndex(newZIndex);
     
     setWindows((prev) =>
-      prev.map((w) => (w.id === id ? { ...w, zIndex: newZIndex, minimized: false } : w))
+      prev.map((w) => (
+        w.id === id 
+          ? { 
+              ...w, 
+              zIndex: newZIndex, 
+              minimized: false, 
+              maximized: w.wasMaximized || w.maximized, 
+              wasMaximized: false 
+            } 
+          : w
+      ))
     );
     
     setActiveWindow(id);

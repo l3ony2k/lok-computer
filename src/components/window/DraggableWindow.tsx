@@ -4,6 +4,7 @@ import { useWindowManager } from '@/hooks/useWindowManager.ts';
 import { X, Minimize, Maximize } from 'lucide-react';
 import { CustomIcon } from './CustomIcon';
 import { Rnd, DraggableData, ResizableDelta, Position } from 'react-rnd';
+import { cn } from '@/lib/utils';
 
 // Define default numeric values
 const DEFAULT_WIDTH = 500;
@@ -54,8 +55,6 @@ export const DraggableWindow = ({ window: windowProps, onResizeStop }: Draggable
     }
   }, [focusWindow, windowProps.id, activeWindow]);
 
-  if (windowProps.minimized) return null;
-
   const calculatedWidth = typeof windowProps.width === 'number' ? windowProps.width : DEFAULT_WIDTH;
   const calculatedHeight = typeof windowProps.height === 'number' ? windowProps.height : DEFAULT_HEIGHT;
 
@@ -76,6 +75,11 @@ export const DraggableWindow = ({ window: windowProps, onResizeStop }: Draggable
         zIndex: windowProps.zIndex, 
         display: 'flex',
         flexDirection: 'column',
+        ...(windowProps.minimized && { 
+          visibility: 'hidden',
+          opacity: 0,
+          pointerEvents: 'none',
+        })
       }}
       onMouseDown={handleMouseDownFocus}
       onDragStart={handleInteractionStartFocus}
@@ -85,7 +89,9 @@ export const DraggableWindow = ({ window: windowProps, onResizeStop }: Draggable
       disableDragging={windowProps.maximized}
       enableResizing={!windowProps.maximized}
       dragHandleClassName="window-titlebar"
-      className="window-content-area flex flex-col border border-border shadow-lg overflow-hidden bg-background"
+      className={cn(
+        "window-content-area flex flex-col border border-border shadow-lg overflow-hidden bg-background",
+      )}
     >
       {/* Title bar - fixed height */}
       <div 
@@ -96,7 +102,7 @@ export const DraggableWindow = ({ window: windowProps, onResizeStop }: Draggable
         <span className="flex-1 truncate">{windowProps.title}</span>
         <div className="flex space-x-1">
           <button 
-            className="window-control-button hover:bg-yellow-500"
+            className="retro-button p-1"
             onClick={(e) => { e.stopPropagation(); minimizeWindow(windowProps.id); }}
             title="Minimize"
           >
@@ -104,7 +110,7 @@ export const DraggableWindow = ({ window: windowProps, onResizeStop }: Draggable
           </button>
           {windowProps.maximized ? (
             <button 
-              className="window-control-button hover:bg-green-500"
+              className="retro-button p-1"
               onClick={(e) => { e.stopPropagation(); restoreWindow(windowProps.id); }}
               title="Restore"
             >
@@ -114,7 +120,7 @@ export const DraggableWindow = ({ window: windowProps, onResizeStop }: Draggable
             </button>
           ) : (
             <button 
-              className="window-control-button hover:bg-green-500"
+              className="retro-button p-1"
               onClick={(e) => { e.stopPropagation(); maximizeWindow(windowProps.id); }}
               title="Maximize"
             >
@@ -122,7 +128,7 @@ export const DraggableWindow = ({ window: windowProps, onResizeStop }: Draggable
             </button>
           )}
           <button 
-            className="window-control-button hover:bg-red-500"
+            className="retro-button p-1"
             onClick={(e) => { e.stopPropagation(); closeWindow(windowProps.id); }}
             title="Close"
           >

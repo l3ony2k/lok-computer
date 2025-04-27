@@ -1,38 +1,20 @@
 // src/core/Desktop.tsx
-import { useState, useEffect } from "react";
-import { useWindowManager } from "@/components/WindowManager"; // Keep original path for now
-import { ChannelBrowser } from "@/apps/arena/channels/ChannelBrowser"; // Updated path
-import { ChannelExplorer } from "@/apps/arena/channels/ChannelExplorer"; // Updated path
-import { About } from "@/apps/about/about/About"; // Updated path
+import { useState } from "react";
+import { useWindowManager } from "@/components/WindowManager";
+import { ChannelBrowser } from "@/apps/arena/channels/ChannelBrowser";
+import { ChannelExplorer } from "@/apps/arena/channels/ChannelExplorer";
+import { About } from "@/apps/about/about/About";
 import { Moon, Sun, Search, Settings } from "lucide-react";
 import { toast } from "sonner";
-import { FEATURED_CHANNELS } from "@/config/channels"; // Keep original path for now
-import { WindowContainer, Taskbar } from "@/components/WindowManager"; // Keep original path for now
+import { FEATURED_CHANNELS } from "@/config/channels";
+import { WindowContainer, Taskbar } from "@/components/WindowManager";
+import { DesktopIcons } from "@/components/desktop/DesktopIcons";
 
 export const Desktop = () => {
     const { addWindow } = useWindowManager();
     const [theme, setTheme] = useState<"light" | "dark">(
         () => (localStorage.getItem("theme") as "light" | "dark") || "light"
     );
-    const [hasInitialized, setHasInitialized] = useState(false);
-
-    useEffect(() => {
-        // Prevent infinite window creation by checking if we've already initialized
-        if (hasInitialized) return;
-
-        // Open the main channel browser on first load
-        addWindow({
-            title: "@lok's Channels",
-            content: <ChannelBrowser username="lok" />,
-            width: 600,
-            height: 500,
-            x: 50,
-            y: 50,
-            iconType: 'folder',
-        });
-
-        setHasInitialized(true);
-    }, [addWindow, hasInitialized]);
 
     const toggleTheme = () => {
         const newTheme = theme === "light" ? "dark" : "light";
@@ -57,12 +39,11 @@ export const Desktop = () => {
             content: <About />,
             width: 400,
             height: 400,
-            iconType: 'config',
+            iconType: 'about',
         });
     };
 
     const handleOpenFeaturedChannel = (slug: string, title: string) => {
-        // Create a new window for the featured channel
         addWindow({
             title: title,
             content: <ChannelExplorer channelSlug={slug} username="lok" />,
@@ -82,7 +63,6 @@ export const Desktop = () => {
 
     return (
         <div className={`h-screen w-screen flex flex-col ${theme === "dark" ? "dark" : ""}`}>
-            {/* Top Menu Bar - Increase z-index */}
             <div className="bg-retro-taskbar h-[30px] border-b border-border flex items-center justify-between text-sm relative z-[10000] px-1">
                 <div className="flex space-x-1 py-1">
                     <button className="retro-button" onClick={handleOpenChannelBrowser}>
@@ -92,7 +72,6 @@ export const Desktop = () => {
                         About
                     </button>
 
-                    {/* Featured channels dropdown */}
                     <div className="relative group">
                         <button className="retro-button">
                             Featured Channels
@@ -124,15 +103,18 @@ export const Desktop = () => {
                 </div>
             </div>
 
-            {/* Main Desktop Area */}
             <div className="flex-1 relative overflow-hidden">
                 <WindowContainer />
+                <DesktopIcons 
+                    addWindow={addWindow}
+                    handleOpenAbout={handleOpenAbout}
+                    handleOpenSettingsWindow={handleOpenSettingsWindow}
+                />
             </div>
 
-            {/* Taskbar */}
             <Taskbar />
         </div>
     );
 };
 
-export default Desktop; // Use default export for consistency if preferred, or named export
+export default Desktop;

@@ -28,9 +28,18 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 
 *   **Objective:** Build out the core desktop interface features.
 *   [x] Implement draggable and resizable windows (potentially using libraries like `react-draggable`, `react-rnd`).
-*   [ ] Implement desktop icons that launch their respective applications.
 *   [x] Refine taskbar functionality (e.g., show icons for open apps, minimize/restore windows).
-*   [ ] Improve overall window management logic within `WindowManager`.
+*   [x] Implement desktop icons that launch their respective applications.
+*   [x] Improve overall window management logic within `WindowManager`.
+*   [x] Change window minimize maximize icon.
+*   [ ] Remove top buttons, add status bar and date time.
+
+### Phase 2.1: Enhancements
+
+*   **Objective:** Improve current functionality.
+*   [ ] Search bar input support slug browsing.
+*   [ ] Support mobile devices. Add special logic for mobile display.
+*   [ ] Add system color mode support.
 
 ### Phase 3: New App Development
 
@@ -85,6 +94,65 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
         *   Created `src/apps/arena/components/ArenaWindowLayout.tsx` to encapsulate the common layout.
         *   Refactored `ChannelBrowser.tsx` and `ChannelExplorer.tsx` to use `ArenaWindowLayout`, passing their unique toolbars and content as props.
         *   This centralized the layout logic and reduced code duplication.
+
+### Session: Desktop Icons Implementation (Approx. 2025-04-28)
+
+**Objective:** Add clickable desktop icons to launch applications and prevent the initial window from opening automatically.
+
+**Key Changes:**
+
+1.  **Disable Auto-Open:** Removed the `useEffect` in `src/core/Desktop.tsx` that previously opened the `@lok's Channels` window on startup.
+2.  **Icon Configuration:**
+    *   Added icon image imports (`arena.png`, `lok-computer.png`) and mappings (`arena`, `about`) to `src/components/window/CustomIcon.tsx`.
+    *   Defined an array `desktopIcons` in `src/core/Desktop.tsx` specifying the name, icon, and action for each desktop shortcut (Are.na Browser, About, Config).
+3.  **Icon Rendering:** Rendered the `desktopIcons` array as clickable buttons within the main desktop area in `src/core/Desktop.tsx`.
+4.  **Action Linking:** Linked icon clicks to appropriate actions:
+    *   `Are.na Browser` icon opens the `ChannelBrowser` window.
+    *   `About` icon opens the `About` window (using the `lok-computer.png` icon).
+    *   `Config` icon triggers the existing `handleOpenSettingsWindow` function (currently shows a toast).
+5.  **Updated README:** Marked the 'Implement desktop icons' task as complete and added this development log entry.
+
+### Session: Desktop Icons Refactor & Positioning (Approx. 2025-04-28)
+
+**Objective:** Refactor desktop icon rendering into a separate component and position icons in the top-right corner, ensuring windows can move freely underneath.
+
+**Key Changes:**
+
+1.  **`DesktopIcons` Component:**
+    *   Created `src/components/desktop/DesktopIcons.tsx`.
+    *   Moved the icon definition array and rendering logic from `Desktop.tsx` to `DesktopIcons.tsx`.
+    *   The component accepts `addWindow`, `handleOpenAbout`, and `handleOpenSettingsWindow` as props.
+2.  **`Desktop.tsx` Refactor:**
+    *   Removed the old icon logic.
+    *   Imported and rendered the `<DesktopIcons />` component within the main desktop area.
+    *   Passed the necessary action handlers as props to `<DesktopIcons />`.
+3.  **Layout & Styling:**
+    *   Positioned the `DesktopIcons` container absolutely in the top-right corner using Tailwind CSS (`absolute top-4 right-4 ... z-10`) within `DesktopIcons.tsx`.
+    *   Removed padding from the main desktop area div in `Desktop.tsx`.
+    *   Ensured `WindowContainer` fills the relative parent (`flex-1 relative overflow-hidden`) so windows can be dragged anywhere within that area, underneath the absolutely positioned icons.
+4.  **Updated README:** Added this development log entry.
+
+### Session: Attempted Fix for Window Content Remounting (2025-04-28)
+
+**Objective:** Prevent window content from reloading (remounting) when minimizing/restoring windows.
+
+**Implementation:**
+- Instead of unmounting minimized windows (returning `null`), the code now keeps minimized windows in the DOM and hides them using inline styles: `visibility: hidden`, `opacity: 0`, and `pointerEvents: 'none'` on the `<Rnd>` window container.
+- This was implemented in `DraggableWindow.tsx` by conditionally applying these styles when `windowProps.minimized` is true.
+- The intention is to keep the React component tree (and thus internal state and effects) alive while making the window invisible and non-interactive.
+
+**Caveat:**
+- This approach may not be fully correct or robust. Some libraries (like `react-rnd`) or browser behaviors may not work well with `visibility: hidden` or `pointerEvents: none` for interactive containers. If you notice issues with minimizing/restoring or window stacking, further investigation is needed.
+- A more robust solution might involve rendering minimized windows offscreen or using a dedicated minimized state container.
+
+### Session: Restyle Window Control Buttons (2025-04-28)
+
+**Objective:** Restyle the window minimize, maximize/restore, and close buttons to match the top bar button style.
+
+**Implementation:**
+- Updated `DraggableWindow.tsx`.
+- Replaced the `window-control-button hover:bg-...` classes with `retro-button p-1` for the minimize, maximize/restore, and close buttons in the window title bar.
+- This provides a consistent visual style across different button elements.
 
 ## Getting Started
 

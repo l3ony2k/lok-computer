@@ -9,6 +9,8 @@ import linkIcon from '../../assets/icons/link.png';
 import otherChannelIcon from '../../assets/icons/other-channel.png';
 import configIcon from '../../assets/icons/config.png';
 import consoleIcon from '../../assets/icons/console.png';
+import arenaIcon from '../../assets/icons/arena.png'; // Add arena icon
+import lokComputerIcon from '../../assets/icons/lok-computer.png'; // Add lok-computer icon
 // Add imports for any other icons you have...
 
 interface CustomIconProps {
@@ -26,6 +28,8 @@ const iconMap: { [key: string]: string } = { // The value is now the imported UR
   'other-channel': otherChannelIcon,
   config: configIcon,
   console: consoleIcon,
+  arena: arenaIcon, // Map 'arena' type
+  about: lokComputerIcon, // Map 'about' type to lok-computer icon
   // Add other mappings corresponding to your imports
 };
 
