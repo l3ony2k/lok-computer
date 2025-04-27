@@ -5,6 +5,7 @@ import { useWindowManager } from "@/hooks/useWindowManager";
 import { BlockViewer } from "../blocks/BlockViewer";
 import { toast } from "sonner";
 import { CustomIcon } from "@/components/window/CustomIcon";
+import { ArenaWindowLayout } from "../components/ArenaWindowLayout";
 
 interface ContentItem extends Partial<ArenaBlock>, Partial<ArenaChannel> {
   id: number;
@@ -179,56 +180,34 @@ export const ChannelExplorer = ({
   }
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex items-center justify-between space-x-1 p-1 border-b border-border">
-        <div className="flex items-center space-x-0">
-          <button 
-            onClick={() => setGridSize('S')}
-            className={`retro-button text-xs px-1 ${gridSize === 'S' ? 'bg-accent' : ''}`}
-            title="Small Icons"
-          >
-            S
-          </button>
-          <button 
-            onClick={() => setGridSize('M')}
-            className={`retro-button text-xs px-1 ${gridSize === 'M' ? 'bg-accent' : ''}`}
-            title="Medium Icons"
-          >
-            M
-          </button>
-          <button 
-            onClick={() => setGridSize('L')}
-            className={`retro-button text-xs px-1 ${gridSize === 'L' ? 'bg-accent' : ''}`}
-            title="Large Icons"
-          >
-            L
-          </button>
+    <ArenaWindowLayout
+      toolbar={
+        <div className="flex items-center justify-between space-x-1 p-1 border-b border-border">
+          <div className="flex items-center space-x-0">
+            <button onClick={() => setGridSize('S')} className={`retro-button text-xs px-1 ${gridSize === 'S' ? 'bg-accent' : ''}`} title="Small Icons">
+              S
+            </button>
+            <button onClick={() => setGridSize('M')} className={`retro-button text-xs px-1 ${gridSize === 'M' ? 'bg-accent' : ''}`} title="Medium Icons">
+              M
+            </button>
+            <button onClick={() => setGridSize('L')} className={`retro-button text-xs px-1 ${gridSize === 'L' ? 'bg-accent' : ''}`} title="Large Icons">
+              L
+            </button>
+          </div>
+          <div className="flex items-center space-x-0">
+            <button onClick={() => setIsListView(false)} className={`retro-button text-xs px-1 ${!isListView ? 'bg-accent' : ''}`}>Grid</button>
+            <button onClick={() => setIsListView(true)} className={`retro-button text-xs px-1 ${isListView ? 'bg-accent' : ''}`}>List</button>
+          </div>
         </div>
-
-        <div className="flex items-center space-x-0"> 
-          <button 
-            onClick={() => setIsListView(false)}
-            className={`retro-button text-xs px-1 ${!isListView ? 'bg-accent' : ''}`}
-          >
-            Grid
-          </button>
-          <button 
-            onClick={() => setIsListView(true)}
-            className={`retro-button text-xs px-1 ${isListView ? 'bg-accent' : ''}`}
-          >
-            List
-          </button>
-        </div>
-      </div>
-      <div className="overflow-auto flex-1">
-        {contents.length === 0 ? (
-          <div className="text-center p-4">This channel is empty</div>
-        ) : isListView ? (
-          renderListView()
-        ) : (
-          renderGridView()
-        )}
-      </div>
-    </div>
+      }
+    >
+      {contents.length === 0 ? (
+        <div className="text-center p-4">This channel is empty</div>
+      ) : isListView ? (
+        renderListView()
+      ) : (
+        renderGridView()
+      )}
+    </ArenaWindowLayout>
   );
 };

@@ -214,3 +214,14 @@
     @apply w-full p-1 text-xs bg-background border border-border shadow-retro-inset;
   }
 }
+
+/* Enable native dark scrollbar in dark mode */
+.dark .window-content-area {
+  color-scheme: dark;
+  scrollbar-color: #444 #222; /* thumb and track */
+  scrollbar-width: thin;
+}
+.window-content-area {
+  scrollbar-color: #bbb #eee;
+  scrollbar-width: thin;
+}

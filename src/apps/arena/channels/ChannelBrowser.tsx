@@ -4,6 +4,7 @@ import { getUserChannels } from "@/lib/api";
 import { useWindowManager } from "@/hooks/useWindowManager";
 import { ChannelExplorer } from "./ChannelExplorer";
 import { CustomIcon } from "@/components/window/CustomIcon";
+import { ArenaWindowLayout } from "../components/ArenaWindowLayout";
 
 export const ChannelBrowser = ({ username = "lok" }: { username?: string }) => {
   const [channels, setChannels] = useState<ArenaChannel[]>([]);
@@ -116,71 +117,38 @@ export const ChannelBrowser = ({ username = "lok" }: { username?: string }) => {
   };
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex items-center justify-between space-x-2 p-1 border-b border-border">
-        <div className="flex items-center space-x-0">
-          <button 
-            onClick={() => setGridSize('S')}
-            className={`retro-button text-xs px-1 ${gridSize === 'S' ? 'bg-accent' : ''}`}
-            title="Small Icons"
-          >
-            S
-          </button>
-          <button 
-            onClick={() => setGridSize('M')}
-            className={`retro-button text-xs px-1 ${gridSize === 'M' ? 'bg-accent' : ''}`}
-            title="Medium Icons"
-          >
-            M
-          </button>
-          <button 
-            onClick={() => setGridSize('L')}
-            className={`retro-button text-xs px-1 ${gridSize === 'L' ? 'bg-accent' : ''}`}
-            title="Large Icons"
-          >
-            L
-          </button>
+    <ArenaWindowLayout
+      toolbar={
+        <div className="flex items-center justify-between space-x-2 p-1 border-b border-border">
+          <div className="flex items-center space-x-0">
+            <button onClick={() => setGridSize('S')} className={`retro-button text-xs px-1 ${gridSize === 'S' ? 'bg-accent' : ''}`} title="Small Icons">S</button>
+            <button onClick={() => setGridSize('M')} className={`retro-button text-xs px-1 ${gridSize === 'M' ? 'bg-accent' : ''}`} title="Medium Icons">M</button>
+            <button onClick={() => setGridSize('L')} className={`retro-button text-xs px-1 ${gridSize === 'L' ? 'bg-accent' : ''}`} title="Large Icons">L</button>
+          </div>
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search channels..."
+            className="search-input text-xs flex-1 mx-2"
+          />
+          <div className="flex items-center space-x-0">
+            <button onClick={() => setIsListView(false)} className={`retro-button text-xs px-1 ${!isListView ? 'bg-accent' : ''}`}>Grid</button>
+            <button onClick={() => setIsListView(true)} className={`retro-button text-xs px-1 ${isListView ? 'bg-accent' : ''}`}>List</button>
+          </div>
         </div>
-        
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search channels..."
-          className="search-input text-xs flex-1 mx-2"
-        />
-
-        <div className="flex items-center space-x-0">
-          <button 
-            onClick={() => setIsListView(false)}
-            className={`retro-button text-xs px-1 ${!isListView ? 'bg-accent' : ''}`}
-          >
-            Grid
-          </button>
-          <button 
-            onClick={() => setIsListView(true)}
-            className={`retro-button text-xs px-1 ${isListView ? 'bg-accent' : ''}`}
-          >
-            List
-          </button>
-        </div>
-      </div>
-      
+      }
+    >
       {loadError && (
-        <div className="px-2 py-1 mb-2 bg-yellow-100 dark:bg-yellow-900 text-xs">
-          {loadError}
-        </div>
+        <div className="px-2 py-1 mb-2 bg-yellow-100 dark:bg-yellow-900 text-xs">{loadError}</div>
       )}
-      
-      <div className="overflow-auto flex-1">
-        {loading ? (
-          <div className="p-1 text-center">Loading...</div>
-        ) : isListView ? (
-          renderListView()
-        ) : (
-          renderGridView()
-        )}
-      </div>
-    </div>
+      {loading ? (
+        <div className="p-1 text-center">Loading...</div>
+      ) : isListView ? (
+        renderListView()
+      ) : (
+        renderGridView()
+      )}
+    </ArenaWindowLayout>
   );
 };

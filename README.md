@@ -54,6 +54,38 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 *   [ ] Optimize performance.
 *   [ ] Configure deployment (e.g., using Netlify, Vercel).
 
+## Development Log
+
+### Session: Window Behavior and Arena App Refactoring (Approx. 2025-04-27)
+
+**Objective:** Fix window resizing bugs, implement dark mode scrollbars, and refactor Arena app components for better code structure.
+
+**Key Changes & Fixes:**
+
+1.  **Window Resizing Fix:**
+    *   **Issue:** Resizing windows from the top edge caused them to snap back to their original position.
+    *   **Solution:** Updated `handleResizeStop` in `src/components/window/DraggableWindow.tsx` to correctly update both dimensions and `x`/`y` position, resolving the snapping behavior.
+
+2.  **Scrollbar Styling (Dark Mode & Cross-Browser):**
+    *   **Issue:** Window scrollbars remained white in dark mode.
+    *   **Solution:**
+        *   Introduced `.window-content-area` class for scrollable divs.
+        *   Added CSS in `src/index.css`:
+            *   `color-scheme: dark;` for native dark scrollbars in Chromium.
+            *   `scrollbar-color` and `scrollbar-width` for themed scrollbars in Firefox (light & dark modes).
+
+3.  **Consistent Scrollbar Application:**
+    *   **Issue:** Scrollbar styles only worked in simple windows, not in Arena apps (`ChannelBrowser`, `ChannelExplorer`).
+    *   **Root Cause:** `.window-content-area` was applied incorrectly to a parent div including the toolbar.
+    *   **Solution:** Moved `.window-content-area` to the correct `overflow-auto flex-1` div in both `ChannelBrowser.tsx` and `ChannelExplorer.tsx`.
+
+4.  **Arena App Window Refactoring:**
+    *   **Issue:** Duplicated window structure (toolbar + scrollable content) in `ChannelBrowser.tsx` and `ChannelExplorer.tsx`.
+    *   **Solution:**
+        *   Created `src/apps/arena/components/ArenaWindowLayout.tsx` to encapsulate the common layout.
+        *   Refactored `ChannelBrowser.tsx` and `ChannelExplorer.tsx` to use `ArenaWindowLayout`, passing their unique toolbars and content as props.
+        *   This centralized the layout logic and reduced code duplication.
+
 ## Getting Started
 
 ### Prerequisites
