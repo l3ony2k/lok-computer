@@ -40,8 +40,13 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 
 *   **Objective:** Improve current functionality.
 *   [ ] Search bar input support slug browsing.
+*   [ ] Lightbox browsing for are.na explorer.
 *   [ ] Support mobile devices. Add special logic for mobile display.
-*   [ ] Add system color mode support.
+*   [x] Add system color mode support.
+*   [ ] Stylize theme switch buttons.
+*   [ ] Add wallpaper change.
+*   [ ] Browser window resize to move and shrink metaphor window.
+*   [ ] Allow user to move past border-b.
 
 ### Phase 3: New App Development
 
