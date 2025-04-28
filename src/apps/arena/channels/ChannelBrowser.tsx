@@ -44,6 +44,23 @@ export const ChannelBrowser = ({ username = "lok" }: { username?: string }) => {
     });
   };
 
+  const handleGoToChannel = (slug: string) => {
+    if (!slug.trim()) return; 
+    addWindow({
+      title: slug, 
+      content: <ChannelExplorer channelSlug={slug} username={username} />,
+      width: 600,
+      height: 500,
+      iconType: 'other-channel', 
+    });
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      handleGoToChannel(search);
+    }
+  };
+
   const filteredChannels = channels.filter(
     (channel) => channel.title.toLowerCase().includes(search.toLowerCase())
   );
@@ -125,13 +142,23 @@ export const ChannelBrowser = ({ username = "lok" }: { username?: string }) => {
             <button onClick={() => setGridSize('M')} className={`retro-button text-xs px-1 ${gridSize === 'M' ? 'bg-accent' : ''}`} title="Medium Icons">M</button>
             <button onClick={() => setGridSize('L')} className={`retro-button text-xs px-1 ${gridSize === 'L' ? 'bg-accent' : ''}`} title="Large Icons">L</button>
           </div>
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search channels..."
-            className="search-input text-xs flex-1 mx-2"
-          />
+          <div className="flex items-center flex-1 mx-2">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={handleKeyDown} 
+              placeholder="Search titles or enter slug..."
+              className="search-input text-xs flex-1 h-[18px] border-r-0 focus:outline-none" 
+            />
+            <button 
+              onClick={() => handleGoToChannel(search)} 
+              className={`retro-button text-xs px-1 h-[18px]`} 
+              title="Go to channel slug"
+            >
+              Go
+            </button>
+          </div>
           <div className="flex items-center space-x-0">
             <button onClick={() => setIsListView(false)} className={`retro-button text-xs px-1 ${!isListView ? 'bg-accent' : ''}`}>Grid</button>
             <button onClick={() => setIsListView(true)} className={`retro-button text-xs px-1 ${isListView ? 'bg-accent' : ''}`}>List</button>

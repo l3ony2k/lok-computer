@@ -39,7 +39,10 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 ### Phase 2.1: Enhancements
 
 *   **Objective:** Improve current functionality.
-*   [ ] Search bar input support slug browsing.
+*   [x] Search bar input support slug browsing.
+*   [ ] Change the not found text (channel browser).
+*   [ ] windows resize don't strech icon size when icon count doesn't fill one row.
+*   [ ] Blocks count in channel fix.
 *   [ ] Lightbox browsing for are.na explorer.
 *   [ ] Support mobile devices. Add special logic for mobile display.
 *   [x] Add system color mode support.
@@ -198,6 +201,23 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 **Fixes (Follow-up):**
 - Corrected the `iconType` passed to `addWindow` for the Config App in `Desktop.tsx` from `'Settings'` to `'config'` to match the key used in `CustomIcon.tsx`, resolving missing icons in the title bar and taskbar.
 - Added the missing `ThemeProvider` from `next-themes` wrapper in `App.tsx` to enable dynamic theme switching, resolving the issue where selecting a theme in the Config App didn't visually update the UI.
+
+### Session: Arena Channel Browser Input Enhancement (Approx. 2025-04-29)
+
+**Objective:** Enhance the Arena channel browser input to allow direct navigation to channel slugs via the Enter key or 'Go' button.
+
+**Key Changes:**
+
+1.  **Input Bar Navigation:**
+    *   **Issue:** The input bar only filtered channel titles.
+    *   **Solution:** Modified the input bar in `ChannelBrowser.tsx` to allow direct navigation to channel slugs by pressing the Enter key or clicking the 'Go' button.
+    *   **Implementation:** Added a `handleGo` function that checks if the input value matches a channel slug and navigates to it if found.
+
+2.  **Slug Browsing:**
+    *   **Issue:** The input bar did not support slug browsing.
+    *   **Solution:** Updated the input bar to support slug browsing by checking if the input value starts with a '/' and navigating to the corresponding channel if found.
+
+**Updated README:** Added this development log entry.
 
 ## Getting Started
 
