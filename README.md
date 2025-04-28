@@ -42,6 +42,7 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 *   [x] Search bar input support slug browsing.
 *   [ ] Change the not found text (channel browser).
 *   [ ] windows resize don't strech icon size when icon count doesn't fill one row.
+*   [ ] Refactor: double click to trigger icon action.
 *   [ ] Blocks count in channel fix.
 *   [ ] Lightbox browsing for are.na explorer.
 *   [ ] Support mobile devices. Add special logic for mobile display.
