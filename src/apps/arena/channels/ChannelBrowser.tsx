@@ -83,8 +83,8 @@ export const ChannelBrowser = ({ username = "lok" }: { username?: string }) => {
     return (
       <div className={`folder-grid`} style={gridTemplateStyle}>
         {filteredChannels.length === 0 ? (
-          <div className="col-start-1 col-end-[-1] text-center p-4">
-            No channels found
+          <div className="col-start-1 col-end-[-1] text-center p-4 opacity-50">
+            Not found, just hit Go or Enter
           </div>
         ) : (
           filteredChannels.map((channel) => (
@@ -113,8 +113,8 @@ export const ChannelBrowser = ({ username = "lok" }: { username?: string }) => {
     return (
       <div className="space-y-1 p-1">
         {filteredChannels.length === 0 ? (
-          <div className="text-center p-1">
-            No channels found
+          <div className="text-center p-1 opacity-50">
+            Not found, just hit Go or Enter
           </div>
         ) : (
           filteredChannels.map((channel) => (

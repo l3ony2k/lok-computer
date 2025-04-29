@@ -40,8 +40,8 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 
 *   **Objective:** Improve current functionality.
 *   [x] Search bar input support slug browsing.
-*   [ ] Change the not found text (channel browser).
-*   [ ] windows resize don't strech icon size when icon count doesn't fill one row.
+*   [x] Change the not found text (channel browser).
+*   [ ] Windows resize don't strech icon size when icon count doesn't fill one row.
 *   [ ] Refactor: double click to trigger icon action.
 *   [ ] Blocks count in channel fix.
 *   [ ] Lightbox browsing for are.na explorer.
@@ -51,6 +51,10 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 *   [ ] Add wallpaper change.
 *   [ ] Browser window resize to move and shrink metaphor window.
 *   [ ] Allow user to move past border-b.
+*   [ ] Add drop down app menu to topbar.
+*   [ ] Refactor the app list and icon files. Provide a universal app list.
+*   [ ] Save window states (position, size, open/closed) after refresh (using `localStorage` maybe).
+*   [ ] Multiple instances of the same app? 
 
 ### Phase 3: New App Development
 
@@ -264,3 +268,10 @@ This will start the Vite development server, usually available at `http://localh
 ## Contributing
 
 Contributions are welcome! Please feel free to open an issue or submit a pull request.
+
+## Acknowledgments
+
+*   CommitMono: https://commitmono.com/
+*   Websites That Look Like Desktops: https://www.are.na/lucy-pham/websites-that-look-like-desktops-xr4dhvkxeym
+*   Are.na: https://are.na/
+*   Windsurf: https://windsurf.com/
