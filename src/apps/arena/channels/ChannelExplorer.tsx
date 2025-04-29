@@ -112,30 +112,132 @@ export const ChannelExplorer: React.FC<{ channelSlug: string; username?: string 
   username = "lok" 
 }) => {
   const [loading, setLoading] = useState(true);
+  const [loadingStatus, setLoadingStatus] = useState<string>("Initializing...");
   const [contents, setContents] = useState<ContentItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isListView, setIsListView] = useState(false);
-  // Removed custom focus state, using native focus instead
   const { addWindow } = useWindowManager();
   const [gridSize, setGridSize] = useState<'S' | 'M' | 'L'>('S');
+  const itemsPerPage = 100;
 
   useEffect(() => {
-    const fetchChannelContents = async () => {
+    // Create an AbortController to cancel fetch requests if the component unmounts
+    const abortController = new AbortController();
+    let isMounted = true;
+    
+    const fetchAllChannelContents = async () => {
       try {
+        if (!isMounted) return;
         setLoading(true);
-        const data = await getChannelContents(channelSlug, username);
-        setContents(data.contents || []);
-        setError(null);
+        setContents([]);
+        
+        // First fetch to get an estimate of total content
+        setLoadingStatus("Estimating total content...");
+        const initialData = await getChannelContents(channelSlug, username, 1, itemsPerPage, abortController.signal);
+        
+        if (!isMounted) return;
+        
+        const totalItems = initialData.length || 0;
+        const estimatedTotalPages = Math.ceil(totalItems / itemsPerPage);
+        
+        console.log(`Channel ${channelSlug} has approximately ${totalItems} items (estimated ${estimatedTotalPages} pages)`);
+        
+        // Add first page of content
+        let allContents: ContentItem[] = [...(initialData.contents || [])];
+        
+        if (estimatedTotalPages <= 1) {
+          // If only one page, we're already done
+          if (isMounted) {
+            setContents(allContents);
+            setError(null);
+          }
+          return;
+        }
+        
+        // Fetch remaining pages in batches of 3
+        const batchSize = 3;
+        let currentPage = 2; // Start from page 2 since we already fetched page 1
+        
+        while (currentPage <= estimatedTotalPages && isMounted) {
+          // Calculate the batch of pages to fetch in parallel
+          const pagesToFetch = [];
+          for (let i = 0; i < batchSize && currentPage + i <= estimatedTotalPages; i++) {
+            pagesToFetch.push(currentPage + i);
+          }
+          
+          // Update loading status
+          if (isMounted) {
+            setLoadingStatus(`Fetching pages ${pagesToFetch[0]}-${pagesToFetch[pagesToFetch.length-1]}/${estimatedTotalPages}...`);
+          }
+          
+          // Fetch multiple pages in parallel
+          const fetchPromises = pagesToFetch.map(page => 
+            getChannelContents(channelSlug, username, page, itemsPerPage, abortController.signal)
+          );
+          
+          try {
+            const results = await Promise.all(fetchPromises);
+            
+            if (!isMounted) return;
+            
+            // Process results and add to allContents
+            let hasMoreContent = false;
+            for (const data of results) {
+              const pageContents = data.contents || [];
+              allContents = [...allContents, ...pageContents];
+              
+              // Check if we potentially have more pages
+              if (pageContents.length === itemsPerPage) {
+                hasMoreContent = true;
+              }
+            }
+            
+            console.log(`Fetched batch, now have ${allContents.length} items`);
+            
+            // Update currentPage for next batch
+            currentPage += pagesToFetch.length;
+            
+            // If the last page in the batch had fewer items than itemsPerPage,
+            // we've probably reached the end of content
+            if (!hasMoreContent && currentPage > estimatedTotalPages) {
+              break;
+            }
+          } catch (err) {
+            // If we're here with an AbortError, the component was unmounted
+            if (err.name === 'AbortError') {
+              console.log('Fetch aborted due to component unmount');
+              return;
+            }
+            throw err; // Re-throw other errors to be caught by the outer catch
+          }
+        }
+        
+        if (isMounted) {
+          setContents(allContents);
+          setError(null);
+          console.log(`Completed fetching all ${allContents.length} contents for channel ${channelSlug}`);
+        }
       } catch (err) {
-        setError("Failed to load channel contents");
-        console.error(err);
+        if (isMounted) {
+          setError("Failed to load channel contents");
+          console.error(err);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
-    fetchChannelContents();
-  }, [channelSlug, username]);
+    fetchAllChannelContents();
+    
+    // Cleanup function to abort any in-progress fetches when the component unmounts
+    return () => {
+      isMounted = false;
+      abortController.abort();
+      console.log('Aborting channel content fetches due to component unmount');
+    };
+  }, [channelSlug, username, itemsPerPage]);
 
   const getIconType = (item: ContentItem): string => {
     if (item.base_class === "Channel") return 'other-channel';
@@ -248,7 +350,12 @@ export const ChannelExplorer: React.FC<{ channelSlug: string; username?: string 
   };
 
   if (loading) {
-    return <div className="p-4 text-center">Loading...</div>;
+    return (
+      <div className="p-4 flex flex-col items-center justify-center h-full">
+        <div className="text-center opacity-50">{loadingStatus}</div>
+        <div className="text-center mt-2 opacity-50">Please wait while all content is fetched...</div>
+      </div>
+    );
   }
 
   if (error) {
@@ -270,6 +377,9 @@ export const ChannelExplorer: React.FC<{ channelSlug: string; username?: string 
               L
             </button>
           </div>
+          <div className="flex items-center space-x-2">
+            <span className="text-xs opacity-50">Total: {contents.length} items</span>
+          </div>
           <div className="flex items-center space-x-0">
             <button onClick={() => setIsListView(false)} className={`retro-button text-xs px-1 ${!isListView ? 'bg-accent' : ''}`}>Grid</button>
             <button onClick={() => setIsListView(true)} className={`retro-button text-xs px-1 ${isListView ? 'bg-accent' : ''}`}>List</button>
@@ -277,13 +387,15 @@ export const ChannelExplorer: React.FC<{ channelSlug: string; username?: string 
         </div>
       }
     >
-      {contents.length === 0 ? (
-        <div className="text-center p-4">This channel is empty</div>
-      ) : isListView ? (
-        renderListView()
-      ) : (
-        renderGridView()
-      )}
+      <div>
+        {contents.length === 0 ? (
+          <div className="text-center p-4">This channel is empty</div>
+        ) : isListView ? (
+          renderListView()
+        ) : (
+          renderGridView()
+        )}
+      </div>
     </ArenaWindowLayout>
   );
 };

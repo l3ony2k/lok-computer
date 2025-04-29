@@ -73,18 +73,36 @@ export async function getUserChannels(username: string = DEFAULT_USERNAME): Prom
 
 export async function getChannelContents(
   channelSlug: string, 
-  username: string = DEFAULT_USERNAME
+  username: string = DEFAULT_USERNAME,
+  page: number = 1,
+  perPage: number = 100,
+  signal?: AbortSignal
 ): Promise<ArenaChannelContents> {
   try {
     // No need to include username for public channels
-    const response = await fetch(`${API_BASE_URL}/channels/${channelSlug}?per=100`);
+    const url = `${API_BASE_URL}/channels/${channelSlug}?page=${page}&per=${perPage}`;
+    console.log(`Requesting channel contents from: ${url}`);
+    
+    const fetchOptions: RequestInit = {
+      signal // Add AbortSignal to request options
+    };
+    
+    const response = await fetch(url, fetchOptions);
     
     if (!response.ok) {
       throw new Error(`Failed to fetch channel contents: ${response.status}`);
     }
     
-    return await response.json();
+    const data = await response.json();
+    console.log(`Received channel contents for ${channelSlug}, page ${page}:`, data);
+    return data;
   } catch (error) {
+    // Don't show toast for aborted requests
+    if (error.name === 'AbortError') {
+      console.log(`Fetch for channel ${channelSlug} was aborted`);
+      throw error;
+    }
+    
     console.error(`Error fetching channel ${channelSlug}:`, error);
     toast.error(`Failed to load channel: ${channelSlug}`);
     throw error;
