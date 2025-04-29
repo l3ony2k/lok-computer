@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { useDoubleClick } from "@/hooks/useDoubleClick";
 import { ArenaBlock, ArenaChannel } from "@/types/arena";
 import { getChannelContents } from "@/lib/api";
 import { useWindowManager } from "@/hooks/useWindowManager";
 import { BlockViewer } from "../blocks/BlockViewer";
-import { toast } from "sonner";
 import { CustomIcon } from "@/components/window/CustomIcon";
 import { ArenaWindowLayout } from "../components/ArenaWindowLayout";
 
@@ -14,17 +14,108 @@ interface ContentItem extends Partial<ArenaBlock>, Partial<ArenaChannel> {
   title?: string;
 }
 
-export const ChannelExplorer = ({ 
+// Component for grid view content item
+const ContentItemGrid = React.memo(({ 
+  item, 
+  onSingleClick, 
+  onDoubleClick, 
+  itemWidth, 
+  iconSizeClass,
+  renderThumbnail,
+  getIconType
+}: { 
+  item: ContentItem; 
+  onSingleClick: () => void; 
+  onDoubleClick: () => void; 
+  itemWidth: string; 
+  iconSizeClass: string;
+  renderThumbnail: (image: any) => string;
+  getIconType: (item: ContentItem) => string;
+}) => {
+  const handleClick = useDoubleClick(
+    (event: React.MouseEvent) => onSingleClick(),
+    (event: React.MouseEvent) => onDoubleClick()
+  );
+
+  return (
+    <div
+      className="folder-item focus:ring-2 focus:ring-accent focus:ring-opacity-50"
+      onClick={handleClick}
+      style={{ width: itemWidth }}
+      tabIndex={0}
+    >
+      <div className={`folder-icon ${iconSizeClass}`}> 
+        {(item as ArenaBlock).class === "Image" && (item as ArenaBlock).image?.thumb ? (
+          <img 
+            src={renderThumbnail((item as ArenaBlock).image?.thumb)} 
+            alt={item.title || "Thumbnail"}
+            className={`w-full h-full object-cover`}
+            loading="lazy"
+          />
+        ) : (
+          <CustomIcon iconType={getIconType(item)} className={`w-full h-full`} />
+        )}
+      </div>
+      <div className="folder-name">
+        {item.title || (item as ArenaBlock).generated_title || "Untitled"}
+      </div>
+    </div>
+  );
+});
+
+// Component for list view content item
+const ContentItemListView = React.memo(({ 
+  item, 
+  onSingleClick, 
+  onDoubleClick, 
+  iconSizeClass,
+  renderThumbnail,
+  getIconType
+}: { 
+  item: ContentItem; 
+  onSingleClick: () => void; 
+  onDoubleClick: () => void; 
+  iconSizeClass: string;
+  renderThumbnail: (image: any) => string;
+  getIconType: (item: ContentItem) => string;
+}) => {
+  const handleClick = useDoubleClick(
+    (event: React.MouseEvent) => onSingleClick(),
+    (event: React.MouseEvent) => onDoubleClick()
+  );
+
+  return (
+    <div
+      onClick={handleClick}
+      className="flex items-center space-x-4 p-2 hover:bg-accent/50 cursor-pointer focus:ring-2 focus:ring-accent focus:ring-opacity-50"
+      tabIndex={0}
+    >
+      {(item as ArenaBlock).class === "Image" && (item as ArenaBlock).image?.thumb ? (
+        <img 
+          src={renderThumbnail((item as ArenaBlock).image?.thumb)} 
+          alt={item.title || "Thumbnail"}
+          className={`${iconSizeClass} object-cover shrink-0`}
+          loading="lazy"
+        />
+      ) : (
+        <CustomIcon iconType={getIconType(item)} className={`${iconSizeClass} shrink-0`} />
+      )}
+      <span className="truncate text-sm">
+        {item.title || (item as ArenaBlock).generated_title || "Untitled"}
+      </span>
+    </div>
+  );
+});
+
+export const ChannelExplorer: React.FC<{ channelSlug: string; username?: string }> = ({ 
   channelSlug, 
   username = "lok" 
-}: { 
-  channelSlug: string; 
-  username?: string;
 }) => {
   const [loading, setLoading] = useState(true);
   const [contents, setContents] = useState<ContentItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isListView, setIsListView] = useState(false);
+  // Removed custom focus state, using native focus instead
   const { addWindow } = useWindowManager();
   const [gridSize, setGridSize] = useState<'S' | 'M' | 'L'>('S');
 
@@ -55,7 +146,11 @@ export const ChannelExplorer = ({
     return 'text'; // Default to text icon for unknown/other block types
   };
 
-  const handleItemClick = (item: ContentItem) => {
+  const handleItemSingleClick = (itemId: number) => {
+    // No custom focus state needed, native focus handles it
+  };
+
+  const handleItemDoubleClick = (item: ContentItem) => {
     const iconType = getIconType(item);
     if (item.base_class === "Channel") {
       addWindow({
@@ -87,52 +182,42 @@ export const ChannelExplorer = ({
 
   const renderGridView = () => {
     // Determine icon container size classes based on size
-    const iconSizeClasses = { S: 'w-12 h-12', M: 'w-16 h-16', L: 'w-20 h-20' };
+    const iconSizeClasses = { S: 'w-12 h-12', M: 'w-20 h-20', L: 'w-28 h-28' };
     const dynamicIconSizeClass = iconSizeClasses[gridSize] || 'w-12 h-12';
 
-    // Determine minmax value for auto-fit grid based on size
-    const minColWidth = {
+    // Fixed width for each grid item based on size
+    const itemWidth = {
       S: '64px',
-      M: '96px',
-      L: '128px',
-    }
+      M: '109px',
+      L: '136px',
+    };
+
+    // Use fixed width instead of minmax with 1fr
     const gridTemplateStyle = { 
-      gridTemplateColumns: `repeat(auto-fit, minmax(${minColWidth[gridSize] || '64px'}, 1fr))` 
+      gridTemplateColumns: `repeat(auto-fill, ${itemWidth[gridSize]})`,
+      justifyContent: 'start' // Align items to the start instead of stretching
     };
 
     return (
       <div className={`folder-grid`} style={gridTemplateStyle}> 
         {contents.length === 0 ? (
           // Use grid-column-start to span full width correctly with auto-fit
-          <div className="col-start-1 col-end-[-1] text-center p-4">
+          <div className="col-start-1 col-end-[-1] text-center p-4 opacity-50" style={{ gridColumn: '1 / -1' }}>
             No contents found for this channel.
           </div>
         ) : (
           contents.map((item) => (
-            <div
+            <ContentItemGrid
               key={item.id}
-              className="folder-item"
-              onClick={() => handleItemClick(item)}
-            >
-              {/* Apply dynamic size to folder-icon container */}
-              <div className={`folder-icon ${dynamicIconSizeClass}`}> 
-                {(item as ArenaBlock).class === "Image" && (item as ArenaBlock).image?.thumb ? (
-                  <img 
-                    src={renderThumbnail((item as ArenaBlock).image?.thumb)} 
-                    alt={item.title || "Thumbnail"}
-                    className={`w-full h-full object-cover`} // Fill container
-                    loading="lazy"
-                  />
-                ) : (
-                  <CustomIcon iconType={getIconType(item)} className={`w-full h-full`} /> // Fill container
-                )}
-              </div>
-              <div className="folder-name">
-                {item.title || 
-                  (item as ArenaBlock).generated_title ||
-                  "Untitled"}
-              </div>
-            </div>
+              item={item}
+              // Removed isFocused prop, using native focus instead
+              onSingleClick={() => handleItemSingleClick(item.id)}
+              onDoubleClick={() => handleItemDoubleClick(item)}
+              itemWidth={itemWidth[gridSize]}
+              iconSizeClass={dynamicIconSizeClass}
+              renderThumbnail={renderThumbnail}
+              getIconType={getIconType}
+            />
           ))
         )}
       </div>
@@ -147,25 +232,16 @@ export const ChannelExplorer = ({
     return (
       <div className="space-y-1 p-1">
         {contents.map((item) => (
-          <div
+          <ContentItemListView
             key={item.id}
-            onClick={() => handleItemClick(item)}
-            className="flex items-center space-x-4 p-2 hover:bg-accent/50 cursor-pointer"
-          >
-            {(item as ArenaBlock).class === "Image" && (item as ArenaBlock).image?.thumb ? (
-              <img 
-                src={renderThumbnail((item as ArenaBlock).image?.thumb)} 
-                alt={item.title || "Thumbnail"}
-                className={`${dynamicIconSizeClass} object-cover shrink-0`} // Apply dynamic size directly
-                loading="lazy"
-              />
-            ) : (
-              <CustomIcon iconType={getIconType(item)} className={`${dynamicIconSizeClass} shrink-0`} /> // Apply dynamic size directly
-            )}
-            <span className="truncate text-sm">
-              {item.title || (item as ArenaBlock).generated_title || "Untitled"}
-            </span>
-          </div>
+            item={item}
+            // Removed isFocused prop, using native focus instead
+            onSingleClick={() => handleItemSingleClick(item.id)}
+            onDoubleClick={() => handleItemDoubleClick(item)}
+            iconSizeClass={dynamicIconSizeClass}
+            renderThumbnail={renderThumbnail}
+            getIconType={getIconType}
+          />
         ))}
       </div>
     );

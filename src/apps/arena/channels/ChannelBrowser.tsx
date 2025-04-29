@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { useDoubleClick } from "@/hooks/useDoubleClick";
 import { ArenaChannel } from "@/types/arena";
 import { getUserChannels } from "@/lib/api";
 import { useWindowManager } from "@/hooks/useWindowManager";
@@ -6,11 +7,75 @@ import { ChannelExplorer } from "./ChannelExplorer";
 import { CustomIcon } from "@/components/window/CustomIcon";
 import { ArenaWindowLayout } from "../components/ArenaWindowLayout";
 
-export const ChannelBrowser = ({ username = "lok" }: { username?: string }) => {
+// Component for grid view channel item
+const ChannelItem = React.memo(({ 
+  channel, 
+  onSingleClick, 
+  onDoubleClick, 
+  itemWidth, 
+  iconSizeClass 
+}: { 
+  channel: ArenaChannel; 
+  onSingleClick: () => void; 
+  onDoubleClick: () => void; 
+  itemWidth: string; 
+  iconSizeClass: string;
+}) => {
+  const handleClick = useDoubleClick(
+    (event: React.MouseEvent) => onSingleClick(),
+    (event: React.MouseEvent) => onDoubleClick()
+  );
+
+  return (
+    <div
+      className="folder-item focus:ring-2 focus:ring-accent focus:ring-opacity-50"
+      onClick={handleClick}
+      style={{ width: itemWidth }}
+      tabIndex={0}
+    >
+      <div className={`folder-icon ${iconSizeClass}`}>
+        <CustomIcon iconType="folder" className="w-full h-full" />
+      </div>
+      <div className="folder-name">{channel.title}</div>
+    </div>
+  );
+});
+
+// Component for list view channel item
+const ChannelItemListView = React.memo(({ 
+  channel, 
+  onSingleClick, 
+  onDoubleClick, 
+  iconSizeClass 
+}: { 
+  channel: ArenaChannel; 
+  onSingleClick: () => void; 
+  onDoubleClick: () => void; 
+  iconSizeClass: string;
+}) => {
+  const handleClick = useDoubleClick(
+    (event: React.MouseEvent) => onSingleClick(),
+    (event: React.MouseEvent) => onDoubleClick()
+  );
+
+  return (
+    <div
+      onClick={handleClick}
+      className="flex items-center space-x-1 p-1 hover:bg-accent/50 cursor-pointer focus:ring-2 focus:ring-accent focus:ring-opacity-50"
+      tabIndex={0}
+    >
+      <CustomIcon iconType="folder" className={`${iconSizeClass} shrink-0`} />
+      <span className="truncate text-sm">{channel.title}</span>
+    </div>
+  );
+});
+
+export const ChannelBrowser: React.FC<{ username?: string }> = ({ username = "lok" }) => {
   const [channels, setChannels] = useState<ArenaChannel[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [isListView, setIsListView] = useState(false);
+  // Removed custom focus state, using native focus instead
   const { addWindow } = useWindowManager();
   const [loadError, setLoadError] = useState<string | null>(null);
   const [gridSize, setGridSize] = useState<'S' | 'M' | 'L'>('S');
@@ -34,7 +99,11 @@ export const ChannelBrowser = ({ username = "lok" }: { username?: string }) => {
     fetchChannels();
   }, [username]);
 
-  const handleChannelClick = (channel: ArenaChannel) => {
+  const handleChannelSingleClick = (channelId: number) => {
+    // No custom focus state needed, native focus handles it
+  };
+
+  const handleChannelDoubleClick = (channel: ArenaChannel) => {
     addWindow({
       title: channel.title,
       content: <ChannelExplorer channelSlug={channel.slug} username={username} />,
@@ -67,38 +136,39 @@ export const ChannelBrowser = ({ username = "lok" }: { username?: string }) => {
 
   const renderGridView = () => {
     // Determine icon size classes based on size
-    const iconSizeClasses = { S: 'w-12 h-12', M: 'w-16 h-16', L: 'w-20 h-20' };
+    const iconSizeClasses = { S: 'w-12 h-12', M: 'w-20 h-20', L: 'w-28 h-28' };
     const dynamicIconSizeClass = iconSizeClasses[gridSize] || 'w-12 h-12';
 
-    // Determine minmax value for auto-fit grid based on size
-    const minColWidth = {
+    // Fixed width for each grid item based on size
+    const itemWidth = {
       S: '64px',
-      M: '96px',
-      L: '128px',
-    }
+      M: '109px',
+      L: '136px',
+    };
+
+    // Use fixed width instead of minmax with 1fr
     const gridTemplateStyle = { 
-      gridTemplateColumns: `repeat(auto-fit, minmax(${minColWidth[gridSize] || '64px'}, 1fr))` 
+      gridTemplateColumns: `repeat(auto-fill, ${itemWidth[gridSize]})`,
+      justifyContent: 'start' // Align items to the start instead of stretching
     };
 
     return (
       <div className={`folder-grid`} style={gridTemplateStyle}>
         {filteredChannels.length === 0 ? (
-          <div className="col-start-1 col-end-[-1] text-center p-4 opacity-50">
+          <div className="col-start-1 col-end-[-1] text-center p-4 opacity-50" style={{ gridColumn: '1 / -1' }}>
             Not found, just hit Go or Enter
           </div>
         ) : (
           filteredChannels.map((channel) => (
-            <div
+            <ChannelItem
               key={channel.id}
-              className="folder-item"
-              onClick={() => handleChannelClick(channel)}
-            >
-              {/* Apply dynamic size to folder-icon container */}
-              <div className={`folder-icon ${dynamicIconSizeClass}`}> 
-                <CustomIcon iconType="folder" className="w-full h-full" /> 
-              </div>
-              <div className="folder-name">{channel.title}</div>
-            </div>
+              channel={channel}
+              // Removed isFocused prop, using native focus instead
+              onSingleClick={() => handleChannelSingleClick(channel.id)}
+              onDoubleClick={() => handleChannelDoubleClick(channel)}
+              itemWidth={itemWidth[gridSize]}
+              iconSizeClass={dynamicIconSizeClass}
+            />
           ))
         )}
       </div>
@@ -118,15 +188,14 @@ export const ChannelBrowser = ({ username = "lok" }: { username?: string }) => {
           </div>
         ) : (
           filteredChannels.map((channel) => (
-            <div
+            <ChannelItemListView
               key={channel.id}
-              onClick={() => handleChannelClick(channel)}
-              className="flex items-center space-x-1 p-1 hover:bg-accent/50 cursor-pointer"
-            >
-              {/* Apply dynamic size to CustomIcon */}
-              <CustomIcon iconType="folder" className={`${dynamicIconSizeClass} shrink-0`} /> 
-              <span className="truncate text-sm">{channel.title}</span>
-            </div>
+              channel={channel}
+              // Removed isFocused prop, using native focus instead
+              onSingleClick={() => handleChannelSingleClick(channel.id)}
+              onDoubleClick={() => handleChannelDoubleClick(channel)}
+              iconSizeClass={dynamicIconSizeClass}
+            />
           ))
         )}
       </div>
@@ -171,6 +240,8 @@ export const ChannelBrowser = ({ username = "lok" }: { username?: string }) => {
       )}
       {loading ? (
         <div className="p-1 text-center">Loading...</div>
+      ) : channels.length === 0 && !loadError ? (
+        <div className="p-1 text-center">No channels available. Please try again later.</div>
       ) : isListView ? (
         renderListView()
       ) : (
