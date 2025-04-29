@@ -135,6 +135,26 @@
     background-image: radial-gradient(circle, hsl(var(--border)) 1px, transparent 1px);
     background-size: 20px 20px;
   }
+
+  /* Desktop background with custom wallpaper */
+  .desktop-container {
+    @apply flex-1 relative overflow-hidden;
+    background-color: hsl(var(--background));
+  }
+
+  /* Add wallpaper as background when provided */
+  .desktop-container.has-wallpaper {
+    background-image: var(--wallpaper-url);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  /* Fallback when no wallpaper or wallpaper fails to load */
+  .desktop-container:not(.has-wallpaper) {
+    background-image: radial-gradient(circle, hsl(var(--border)) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
   
   .taskbar {
     @apply bg-retro-taskbar p-1 border-t border-border h-[30px] flex items-center;

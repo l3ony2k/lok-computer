@@ -1,5 +1,5 @@
 // src/core/Desktop.tsx
-import { useState } from "react";
+import { useEffect } from "react";
 import { useWindowManager } from "@/components/WindowManager";
 import { ChannelBrowser } from "@/apps/arena/channels/ChannelBrowser";
 import { ChannelExplorer } from "@/apps/arena/channels/ChannelExplorer";
@@ -11,19 +11,24 @@ import { WindowContainer, Taskbar } from "@/components/WindowManager";
 import { DesktopIcons } from "@/components/desktop/DesktopIcons";
 import { TopBar } from "./TopBar";
 import { ConfigApp } from "@/apps/config/ConfigApp";
+import { useUserSettings } from "@/hooks/useUserSettings";
+import { useTheme } from "next-themes";
 
 export const Desktop = () => {
     const { addWindow } = useWindowManager();
-    const [theme, setTheme] = useState<"light" | "dark">(
-        () => (localStorage.getItem("theme") as "light" | "dark") || "light"
-    );
-
-    const toggleTheme = () => {
-        const newTheme = theme === "light" ? "dark" : "light";
-        setTheme(newTheme);
-        localStorage.setItem("theme", newTheme);
-        document.documentElement.classList.toggle("dark", newTheme === "dark");
-    };
+    const { theme, setTheme } = useTheme();
+    const { settings } = useUserSettings();
+    
+    // Apply the wallpaper as a CSS variable if it exists
+    useEffect(() => {
+        const rootElement = document.documentElement;
+        
+        if (settings.wallpaper) {
+            rootElement.style.setProperty('--wallpaper-url', `url("${settings.wallpaper}")`);
+        } else {
+            rootElement.style.removeProperty('--wallpaper-url');
+        }
+    }, [settings.wallpaper]);
 
     const handleOpenChannelBrowser = () => {
         addWindow({
@@ -64,10 +69,10 @@ export const Desktop = () => {
             title: 'Config',
             iconType: 'config', 
             content: <ConfigApp />,
-            width: 350, 
-            height: 250,
+            width: 400, 
+            height: 500,
             x: 150, 
-            y: 150,
+            y: 100,
         });
     };
 
@@ -75,7 +80,7 @@ export const Desktop = () => {
         <div className={`h-screen w-screen flex flex-col ${theme === "dark" ? "dark" : ""}`}>
             <TopBar />
 
-            <div className="flex-1 relative overflow-hidden">
+            <div className={`desktop-container ${settings.wallpaper ? 'has-wallpaper' : ''}`}>
                 <WindowContainer />
                 <DesktopIcons 
                     addWindow={addWindow}

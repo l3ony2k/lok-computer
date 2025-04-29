@@ -12,12 +12,12 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
         <h1 className="text-4xl font-bold mb-4">404</h1>
-        <p className="text-xl text-gray-600 mb-4">You can't use an old map to explore a new world.</p>
-        <a href="/" className="text-blue-500 hover:text-blue-700 underline">
-          Return to Home
+        <p className="text-base mb-8 opacity-50">You can't use an old map to explore a new world.</p>
+        <a href="/">
+          <button className="retro-button py-1 px-2">Return to Home</button>
         </a>
       </div>
     </div>

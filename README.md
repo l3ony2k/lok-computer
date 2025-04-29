@@ -38,23 +38,30 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 
 ### Phase 2.1: Enhancements
 
-*   **Objective:** Improve current functionality.
+**Objective:** Improve current functionality.
+
+#### Completed Enhancements:
+
 *   [x] Search bar input support slug browsing.
 *   [x] Change the not found text (channel browser).
 *   [x] Windows resize don't strech icon size when icon count doesn't fill one row.
 *   [x] Refactor: double click to trigger icon action.
 *   [x] Blocks count in channel fix.
+*   [x] Add system color mode support.
+*   [x] Stylize theme switch buttons.
+
+#### Pending Enhancements:
+
 *   [ ] Lightbox browsing for are.na explorer.
 *   [ ] Support mobile devices. Add special logic for mobile display.
-*   [x] Add system color mode support.
-*   [ ] Stylize theme switch buttons.
-*   [ ] Add wallpaper change.
+*   [x] Add wallpaper change.
+*   [x] `localStorage` for Window positions and dimensions.
 *   [ ] Browser window resize to move and shrink metaphor window.
 *   [ ] Allow user to move past border-b.
 *   [ ] Add drop down app menu to topbar.
 *   [ ] Refactor the app list and icon files. Provide a universal app list.
 *   [ ] Save window states (position, size, open/closed) after refresh (using `localStorage` maybe).
-*   [ ] Multiple instances of the same app? 
+*   [ ] Multiple instances of the same app?
 
 ### Phase 3: New App Development
 
@@ -223,6 +230,36 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
     *   **Solution:** Updated the input bar to support slug browsing by checking if the input value starts with a '/' and navigating to the corresponding channel if found.
 
 **Updated README:** Added this development log entry.
+
+### Session: Desktop Wallpaper Implementation (2025-04-29)
+
+**Objective:** Add the ability to customize the desktop background with wallpaper images.
+
+**Key Changes:**
+
+1. **Centralized Settings Management:**
+   * Created `src/hooks/useUserSettings.ts` with a `UserSettings` interface to store user preferences.
+   * Implemented localStorage persistence to save settings between sessions.
+   * Designed the hook to be extensible for future settings (like window states).
+
+2. **CSS Structure for Wallpapers:**
+   * Updated `index.css` to add a `.desktop-container` class with wallpaper support.
+   * Added conditional styling with `.has-wallpaper` class to show custom backgrounds.
+   * Created a fallback pattern for when no wallpaper is set.
+   * Used CSS variables to dynamically set the wallpaper URL.
+
+3. **Desktop Component Update:**
+   * Modified `Desktop.tsx` to use the `useUserSettings` hook.
+   * Added an effect to set the CSS variable based on the selected wallpaper.
+   * Applied conditional CSS classes to the desktop container.
+   * Updated the Config window dimensions to accommodate the new wallpaper settings UI.
+
+4. **Config App Enhancement:**
+   * Extended `ConfigApp.tsx` to add a wallpaper selection section.
+   * Added a set of predefined wallpaper options with thumbnails.
+   * Implemented a custom URL input for user-provided wallpapers.
+   * Created a preview of the currently selected wallpaper.
+   * Added a reset button to return to the default pattern background.
 
 ## Getting Started
 
