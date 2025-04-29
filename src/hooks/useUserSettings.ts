@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, createContext, useContext, ReactNode } from "react";
 
 /**
  * Interface defining all user settings
@@ -19,10 +19,20 @@ const DEFAULT_SETTINGS: UserSettings = {
 // Storage key for all user settings
 const STORAGE_KEY = 'userSettings';
 
+// Create the context with a default value
+interface UserSettingsContextValue {
+  settings: UserSettings;
+  updateSetting: <K extends keyof UserSettings>(key: K, value: UserSettings[K]) => void;
+  setWallpaper: (url: string) => void;
+  clearWallpaper: () => void;
+}
+
+const UserSettingsContext = createContext<UserSettingsContextValue | undefined>(undefined);
+
 /**
- * Hook for accessing and modifying user settings with localStorage persistence
+ * Provider component for user settings
  */
-export function useUserSettings() {
+export function UserSettingsProvider({ children }: { children: ReactNode }) {
   // Load settings from localStorage on component mount
   const [settings, setSettings] = useState<UserSettings>(() => {
     try {
@@ -72,10 +82,29 @@ export function useUserSettings() {
     updateSetting('wallpaper', '');
   };
 
-  return {
+  const value = {
     settings,
     updateSetting,
     setWallpaper,
     clearWallpaper,
   };
+
+  return React.createElement(
+    UserSettingsContext.Provider,
+    { value },
+    children
+  );
+}
+
+/**
+ * Hook for accessing and modifying user settings with localStorage persistence
+ */
+export function useUserSettings() {
+  const context = useContext(UserSettingsContext);
+  
+  if (context === undefined) {
+    throw new Error('useUserSettings must be used within a UserSettingsProvider');
+  }
+  
+  return context;
 }
