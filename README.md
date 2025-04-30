@@ -54,8 +54,12 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 
 *   [ ] Lightbox browsing for are.na explorer.
 *   [ ] Support mobile devices. Add special logic for mobile display.
+    *  on mobile, the window should take up exact width of the screen.
+    *  the first window would start at x=0, y=0.
+    *  the windows would stack vertically on each other, exposing the title bar of each window, (second windows start at x=0, y=height of windows title bar, third windows start at x=0, y=height of windows title bar + height of windows title bar, etc) with the topmost window being the active one, staying on the biggest y-position. so that all the windows title bars are visible.
+    * when click on a not topmost window title bar, that window would be moved to the top of the stack. and would be sent to the biggest y-position.
 *   [x] Add wallpaper change.
-*   [ ] `localStorage` for Window positions and dimensions.
+*   [ ] `localStorage` for Window positions and dimensions. remember user's open windows, windows positions and dimensions across sessions. 
 *   [ ] Text shadow for desktop icons.
 *   [ ] CommitMono font overall.
 *   [ ] Browser window resize to move and shrink metaphor window.
