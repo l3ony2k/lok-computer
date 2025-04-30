@@ -227,7 +227,7 @@
   }
 
   .taskbar-button {
-    @apply retro-button flex items-center space-x-1 mr-1;
+    @apply retro-button flex items-center space-x-1;
   }
 
   .search-input {

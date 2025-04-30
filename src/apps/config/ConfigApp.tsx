@@ -7,8 +7,8 @@ import { useState } from "react";
 // Default wallpaper options
 const DEFAULT_WALLPAPERS = [
   {
-    name: "Mountain Landscape",
-    url: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&auto=format&fit=crop"
+    name: "by @1000bytes.bsky.social",
+    url: "https://d2w9rnfcy7mm78.cloudfront.net/36335972/original_8a4c77ea7ed077282b4653fad9183d57.jpg"
   },
   {
     name: "Ocean Waves",

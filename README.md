@@ -55,7 +55,9 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 *   [ ] Lightbox browsing for are.na explorer.
 *   [ ] Support mobile devices. Add special logic for mobile display.
 *   [x] Add wallpaper change.
-*   [x] `localStorage` for Window positions and dimensions.
+*   [ ] `localStorage` for Window positions and dimensions.
+*   [ ] Text shadow for desktop icons.
+*   [ ] CommitMono font overall.
 *   [ ] Browser window resize to move and shrink metaphor window.
 *   [ ] Allow user to move past border-b.
 *   [ ] Add drop down app menu to topbar.
