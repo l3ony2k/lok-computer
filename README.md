@@ -60,7 +60,7 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
     * when click on a not topmost window title bar, that window would be moved to the top of the stack. and would be sent to the biggest y-position.
 *   [x] Add wallpaper change.
 *   [ ] `localStorage` for Window positions and dimensions. remember user's open windows, windows positions and dimensions across sessions. 
-*   [ ] Text shadow for desktop icons.
+*   [x] Text shadow for desktop icons.
 *   [ ] CommitMono font overall.
 *   [ ] Browser window resize to move and shrink metaphor window.
 *   [ ] Allow user to move past border-b.
@@ -68,6 +68,7 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 *   [ ] Refactor the app list and icon files. Provide a universal app list.
 *   [ ] Save window states (position, size, open/closed) after refresh (using `localStorage` maybe).
 *   [ ] Multiple instances of the same app?
+*   [ ] Make certain are.na channels open in list view.
 
 ### Phase 3: New App Development
 

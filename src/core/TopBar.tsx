@@ -32,10 +32,11 @@ export const TopBar: React.FC = () => {
   return (
     <div className="h-[30px] bg-retro-taskbar text-sm px-2 flex items-center border-b border-border select-none">
       {/* Left side: lok.computer */}
-      <span className="font-mono text-s text-neutral-700 dark:text-neutral-200 tracking-tight">lok.computer</span>
+        <span className="font-mono text-s text-neutral-700 dark:text-neutral-200 tracking-tight">lok.computer</span>
       {/* Right side: Date and Time */}
       <div className="ml-auto flex items-center space-x-2 text-s font-mono">
         <span>{formatDate(currentTime)}</span>
+        &nbsp;
         <span>{formatTime(currentTime)}</span>
       </div>
     </div>
