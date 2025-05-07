@@ -6,6 +6,7 @@ import { useWindowManager } from "@/hooks/useWindowManager";
 import { ChannelExplorer } from "./ChannelExplorer";
 import { CustomIcon } from "@/components/window/CustomIcon";
 import { ArenaWindowLayout } from "../components/ArenaWindowLayout";
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Component for grid view channel item
 const ChannelItem = React.memo(({ 
@@ -13,18 +14,22 @@ const ChannelItem = React.memo(({
   onSingleClick, 
   onDoubleClick, 
   itemWidth, 
-  iconSizeClass 
+  iconSizeClass,
+  isMobile
 }: { 
   channel: ArenaChannel; 
   onSingleClick: () => void; 
   onDoubleClick: () => void; 
   itemWidth: string; 
   iconSizeClass: string;
+  isMobile: boolean;
 }) => {
-  const handleClick = useDoubleClick(
-    (event: React.MouseEvent) => onSingleClick(),
-    (event: React.MouseEvent) => onDoubleClick()
+  const doubleClickHandler = useDoubleClick(
+    (event: React.MouseEvent | React.TouchEvent) => onSingleClick(),
+    (event: React.MouseEvent | React.TouchEvent) => onDoubleClick()
   );
+
+  const handleClick = isMobile ? onDoubleClick : doubleClickHandler;
 
   return (
     <div
@@ -46,17 +51,21 @@ const ChannelItemListView = React.memo(({
   channel, 
   onSingleClick, 
   onDoubleClick, 
-  iconSizeClass 
+  iconSizeClass,
+  isMobile
 }: { 
   channel: ArenaChannel; 
   onSingleClick: () => void; 
   onDoubleClick: () => void; 
   iconSizeClass: string;
+  isMobile: boolean;
 }) => {
-  const handleClick = useDoubleClick(
-    (event: React.MouseEvent) => onSingleClick(),
-    (event: React.MouseEvent) => onDoubleClick()
+  const doubleClickHandler = useDoubleClick(
+    (event: React.MouseEvent | React.TouchEvent) => onSingleClick(),
+    (event: React.MouseEvent | React.TouchEvent) => onDoubleClick()
   );
+
+  const handleClick = isMobile ? onDoubleClick : doubleClickHandler;
 
   return (
     <div
@@ -79,6 +88,7 @@ export const ChannelBrowser: React.FC<{ username?: string }> = ({ username = "lo
   const { addWindow } = useWindowManager();
   const [loadError, setLoadError] = useState<string | null>(null);
   const [gridSize, setGridSize] = useState<'S' | 'M' | 'L'>('S');
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const fetchChannels = async () => {
@@ -163,7 +173,7 @@ export const ChannelBrowser: React.FC<{ username?: string }> = ({ username = "lo
             <ChannelItem
               key={channel.id}
               channel={channel}
-              // Removed isFocused prop, using native focus instead
+              isMobile={isMobile}
               onSingleClick={() => handleChannelSingleClick(channel.id)}
               onDoubleClick={() => handleChannelDoubleClick(channel)}
               itemWidth={itemWidth[gridSize]}
@@ -191,7 +201,7 @@ export const ChannelBrowser: React.FC<{ username?: string }> = ({ username = "lo
             <ChannelItemListView
               key={channel.id}
               channel={channel}
-              // Removed isFocused prop, using native focus instead
+              isMobile={isMobile}
               onSingleClick={() => handleChannelSingleClick(channel.id)}
               onDoubleClick={() => handleChannelDoubleClick(channel)}
               iconSizeClass={dynamicIconSizeClass}

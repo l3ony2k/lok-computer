@@ -54,6 +54,7 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 
 *   [ ] Lightbox browsing for are.na explorer.
 *   [ ] Support mobile devices. Add special logic for mobile display.
+    *  [x] first of all, allow user to use touchscreen to double click, click on minimize, maximize, restore, close and other actions. (Changed to single click for icons/items on mobile, window controls are single tap)
     *  on mobile, the window should take up exact width of the screen.
     *  the first window would start at x=0, y=0.
     *  the windows would stack vertically on each other, exposing the title bar of each window, (second windows start at x=0, y=height of windows title bar, third windows start at x=0, y=height of windows title bar + height of windows title bar, etc) with the topmost window being the active one, staying on the biggest y-position. so that all the windows title bars are visible.
@@ -299,6 +300,37 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
    * Implemented a custom URL input for user-provided wallpapers.
    * Created a preview of the currently selected wallpaper.
    * Added a reset button to return to the default pattern background.
+
+### Session: Touch Interaction Improvements (Current Date - Please fill in)
+
+**Objective:** Enhance touch screen support for desktop icons, window control buttons, and Are.na browser items, making interactions more intuitive on mobile.
+
+**Key Changes & Fixes:**
+
+1.  **Desktop Icon Double-Tap/Single-Tap (`src/hooks/useDoubleClick.ts`, `src/components/desktop/DesktopIcons.tsx`):**
+    *   Logic within the `useDoubleClick` hook was reviewed and confirmed to handle both `MouseEvent` and `TouchEvent` types, with correct differentiation between single and double clicks/taps.
+    *   In `DesktopIcons.tsx`, integrated `useIsMobile` hook. On mobile devices, desktop icons now trigger their action on a **single tap**. On desktop, they retain the double-click behavior.
+    *   **Fix:** Corrected a conditional hook call (`useDoubleClick`) within the mapping logic to comply with the Rules of Hooks, preventing a "Rendered fewer hooks" error. The hook is now called unconditionally, and its result is used conditionally.
+
+2.  **Window Control Buttons (`src/components/window/DraggableWindow.tsx`):**
+    *   Added `onTouchEnd` handlers to the minimize, maximize/restore, and close buttons, mirroring `onClick` logic. This was done in a previous step to improve reliability on touch for these controls (actions on single tap).
+
+3.  **Are.na Channel Browser & Explorer Items (`src/apps/arena/channels/ChannelBrowser.tsx`, `src/apps/arena/channels/ChannelExplorer.tsx`):**
+    *   Integrated the `useIsMobile` hook in both `ChannelBrowser` and `ChannelExplorer` components.
+    *   Modified the item components (`ChannelItem`, `ChannelItemListView`, `ContentItemGrid`, `ContentItemListView`) within these browsers.
+    *   On mobile devices, clicking/tapping an item (channel, block, or sub-channel) now triggers its action on a **single tap**.
+    *   On desktop, these items retain their double-click behavior to perform actions.
+    *   **Fix:** Corrected conditional hook calls (`useDoubleClick`) within the item components in both files to comply with the Rules of Hooks. The hook is now called unconditionally per item, and its result is used conditionally based on whether the view is mobile or desktop.
+
+**Overall Impact:** These changes aim to provide a more conventional and responsive touch experience on mobile devices by switching from double-tap to single-tap for primary actions on icons and list items, while preserving the existing desktop interaction model. The hook-related fixes ensure stability and adherence to React best practices.
+
+**Testing Notes:**
+*   **Mobile:** Verify desktop icons, channels in Are.na browser, and items (blocks/sub-channels) in Are.na explorer open/activate with a single tap.
+*   **Mobile:** Confirm window control buttons (minimize, maximize, close) work with a single tap.
+*   **Desktop:** Verify desktop icons and Are.na browser/explorer items still require a double-click to activate.
+*   **Desktop:** Confirm window control buttons work as expected with a single click.
+*   Ensure that normal window dragging via the title bar is unaffected on both platforms.
+*   Confirm the "Rendered fewer hooks than expected" error no longer occurs when resizing the browser window across the mobile breakpoint or on initial load.
 
 ## Getting Started
 

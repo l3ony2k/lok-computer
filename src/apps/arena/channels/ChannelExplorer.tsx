@@ -6,6 +6,7 @@ import { useWindowManager } from "@/hooks/useWindowManager";
 import { BlockViewer } from "../blocks/BlockViewer";
 import { CustomIcon } from "@/components/window/CustomIcon";
 import { ArenaWindowLayout } from "../components/ArenaWindowLayout";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ContentItem extends Partial<ArenaBlock>, Partial<ArenaChannel> {
   id: number;
@@ -22,7 +23,8 @@ const ContentItemGrid = React.memo(({
   itemWidth, 
   iconSizeClass,
   renderThumbnail,
-  getIconType
+  getIconType,
+  isMobile
 }: { 
   item: ContentItem; 
   onSingleClick: () => void; 
@@ -31,11 +33,15 @@ const ContentItemGrid = React.memo(({
   iconSizeClass: string;
   renderThumbnail: (image: any) => string;
   getIconType: (item: ContentItem) => string;
+  isMobile: boolean;
 }) => {
-  const handleClick = useDoubleClick(
-    (event: React.MouseEvent) => onSingleClick(),
-    (event: React.MouseEvent) => onDoubleClick()
+  // Always call useDoubleClick
+  const doubleClickHandler = useDoubleClick(
+    (event: React.MouseEvent | React.TouchEvent) => onSingleClick(),
+    (event: React.MouseEvent | React.TouchEvent) => onDoubleClick()
   );
+  // Conditionally choose the action for onClick
+  const handleClick = isMobile ? onDoubleClick : doubleClickHandler;
 
   return (
     <div
@@ -70,7 +76,8 @@ const ContentItemListView = React.memo(({
   onDoubleClick, 
   iconSizeClass,
   renderThumbnail,
-  getIconType
+  getIconType,
+  isMobile
 }: { 
   item: ContentItem; 
   onSingleClick: () => void; 
@@ -78,11 +85,15 @@ const ContentItemListView = React.memo(({
   iconSizeClass: string;
   renderThumbnail: (image: any) => string;
   getIconType: (item: ContentItem) => string;
+  isMobile: boolean;
 }) => {
-  const handleClick = useDoubleClick(
-    (event: React.MouseEvent) => onSingleClick(),
-    (event: React.MouseEvent) => onDoubleClick()
+  // Always call useDoubleClick
+  const doubleClickHandler = useDoubleClick(
+    (event: React.MouseEvent | React.TouchEvent) => onSingleClick(),
+    (event: React.MouseEvent | React.TouchEvent) => onDoubleClick()
   );
+  // Conditionally choose the action for onClick
+  const handleClick = isMobile ? onDoubleClick : doubleClickHandler;
 
   return (
     <div
@@ -119,6 +130,7 @@ export const ChannelExplorer: React.FC<{ channelSlug: string; username?: string 
   const { addWindow } = useWindowManager();
   const [gridSize, setGridSize] = useState<'S' | 'M' | 'L'>('S');
   const itemsPerPage = 100;
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     // Create an AbortController to cancel fetch requests if the component unmounts
@@ -308,11 +320,11 @@ export const ChannelExplorer: React.FC<{ channelSlug: string; username?: string 
             No contents found for this channel.
           </div>
         ) : (
-          contents.map((item) => (
+          contents.map((item, index) => (
             <ContentItemGrid
-              key={item.id}
+              key={item.id + "-" + index} 
               item={item}
-              // Removed isFocused prop, using native focus instead
+              isMobile={isMobile}
               onSingleClick={() => handleItemSingleClick(item.id)}
               onDoubleClick={() => handleItemDoubleClick(item)}
               itemWidth={itemWidth[gridSize]}
@@ -333,11 +345,11 @@ export const ChannelExplorer: React.FC<{ channelSlug: string; username?: string 
 
     return (
       <div className="space-y-1 p-1">
-        {contents.map((item) => (
+        {contents.map((item, index) => (
           <ContentItemListView
-            key={item.id}
+            key={item.id + "-" + index}
             item={item}
-            // Removed isFocused prop, using native focus instead
+            isMobile={isMobile}
             onSingleClick={() => handleItemSingleClick(item.id)}
             onDoubleClick={() => handleItemDoubleClick(item)}
             iconSizeClass={dynamicIconSizeClass}

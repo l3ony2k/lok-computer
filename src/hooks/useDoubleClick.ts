@@ -1,6 +1,6 @@
 import { useCallback, useRef } from 'react';
 
-export type ClickHandler = (event: React.MouseEvent) => void;
+export type ClickHandler = (event: React.MouseEvent | React.TouchEvent) => void;
 
 export function useDoubleClick(
   onSingleClick: ClickHandler,
@@ -11,7 +11,7 @@ export function useDoubleClick(
   const timer = useRef<NodeJS.Timeout | null>(null);
 
   const handleClick = useCallback(
-    (event: React.MouseEvent) => {
+    (event: React.MouseEvent | React.TouchEvent) => {
       const currentTime = Date.now();
       const timeSinceLastClick = currentTime - lastClick.current;
 
@@ -20,7 +20,12 @@ export function useDoubleClick(
         timer.current = null;
         onDoubleClick(event);
       } else {
-        onSingleClick(event); // Trigger single click immediately
+        if (timer.current) {
+          clearTimeout(timer.current);
+        }
+
+        onSingleClick(event);
+
         timer.current = setTimeout(() => {
           timer.current = null;
         }, timeout);

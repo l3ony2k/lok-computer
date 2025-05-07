@@ -23,6 +23,25 @@ interface DraggableWindowProps {
 export const DraggableWindow = ({ window: windowProps, onResizeStop }: DraggableWindowProps) => {
   const { closeWindow, minimizeWindow, maximizeWindow, restoreWindow, focusWindow, updateWindowPosition, activeWindow } = useWindowManager();
 
+  const handleMinimize = (e: React.MouseEvent | React.TouchEvent) => {
+    e.stopPropagation();
+    minimizeWindow(windowProps.id);
+  };
+
+  const handleMaximizeRestore = (e: React.MouseEvent | React.TouchEvent) => {
+    e.stopPropagation();
+    if (windowProps.maximized) {
+      restoreWindow(windowProps.id);
+    } else {
+      maximizeWindow(windowProps.id);
+    }
+  };
+
+  const handleClose = (e: React.MouseEvent | React.TouchEvent) => {
+    e.stopPropagation();
+    closeWindow(windowProps.id);
+  };
+
   const handleDragStop = useCallback((_e: any, data: DraggableData) => {
     if (!windowProps.maximized) {
       const parentElement = data.node.parentElement;
@@ -146,7 +165,8 @@ export const DraggableWindow = ({ window: windowProps, onResizeStop }: Draggable
         <div className="flex space-x-1">
           <button 
             className="retro-button p-1"
-            onClick={(e) => { e.stopPropagation(); minimizeWindow(windowProps.id); }}
+            onClick={handleMinimize}
+            onTouchEnd={handleMinimize}
             title="Minimize"
           >
             <Minimize className="w-3 h-3" />
@@ -154,7 +174,8 @@ export const DraggableWindow = ({ window: windowProps, onResizeStop }: Draggable
           {windowProps.maximized ? (
             <button 
               className="retro-button p-1"
-              onClick={(e) => { e.stopPropagation(); restoreWindow(windowProps.id); }}
+              onClick={handleMaximizeRestore}
+              onTouchEnd={handleMaximizeRestore}
               title="Restore"
             >
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -164,7 +185,8 @@ export const DraggableWindow = ({ window: windowProps, onResizeStop }: Draggable
           ) : (
             <button 
               className="retro-button p-1"
-              onClick={(e) => { e.stopPropagation(); maximizeWindow(windowProps.id); }}
+              onClick={handleMaximizeRestore}
+              onTouchEnd={handleMaximizeRestore}
               title="Maximize"
             >
               <Maximize className="w-3 h-3" />
@@ -172,7 +194,8 @@ export const DraggableWindow = ({ window: windowProps, onResizeStop }: Draggable
           )}
           <button 
             className="retro-button p-1"
-            onClick={(e) => { e.stopPropagation(); closeWindow(windowProps.id); }}
+            onClick={handleClose}
+            onTouchEnd={handleClose}
             title="Close"
           >
             <X className="w-3 h-3" />
