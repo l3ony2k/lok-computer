@@ -5,6 +5,7 @@ import { X, Minimize, Maximize } from 'lucide-react';
 import { CustomIcon } from './CustomIcon';
 import { Rnd, DraggableData, ResizableDelta, Position } from 'react-rnd';
 import { cn } from '@/lib/utils';
+import { adjustWindowToViewport, type WindowDimensions, type ViewportDimensions, type AdjustedWindow } from '@/lib/utils';
 
 // Define default numeric values
 const DEFAULT_WIDTH = 500;
@@ -24,15 +25,57 @@ export const DraggableWindow = ({ window: windowProps, onResizeStop }: Draggable
 
   const handleDragStop = useCallback((_e: any, data: DraggableData) => {
     if (!windowProps.maximized) {
-      updateWindowPosition(windowProps.id, data.x, data.y);
+      const parentElement = data.node.parentElement;
+      if (parentElement) {
+        const viewport: ViewportDimensions = {
+          width: parentElement.clientWidth,
+          height: parentElement.clientHeight,
+        };
+
+        const currentWindowData: WindowDimensions = {
+          x: data.x,
+          y: data.y,
+          width: windowProps.width ?? DEFAULT_WIDTH,
+          height: windowProps.height ?? DEFAULT_HEIGHT,
+          minWidth: windowProps.minWidth ?? MIN_WIDTH,
+          minHeight: windowProps.minHeight ?? MIN_HEIGHT,
+        };
+
+        const adjusted = adjustWindowToViewport(currentWindowData, viewport);
+        
+        updateWindowPosition(windowProps.id, adjusted.x, adjusted.y);
+      } else {
+        updateWindowPosition(windowProps.id, data.x, data.y);
+      }
     }
-  }, [windowProps.id, windowProps.maximized, updateWindowPosition]);
+  }, [windowProps.id, windowProps.maximized, windowProps.width, windowProps.height, windowProps.minWidth, windowProps.minHeight, updateWindowPosition]);
 
   const handleResizeStop = useCallback((_e: any, _direction: any, ref: HTMLElement, _delta: ResizableDelta, position: Position) => {
-    onResizeStop(windowProps.id, ref.offsetWidth, ref.offsetHeight);
-    // Update position when resizing from top/left handles
-    updateWindowPosition(windowProps.id, position.x, position.y);
-  }, [windowProps.id, onResizeStop, updateWindowPosition]);
+    const parentElement = ref.parentElement;
+    if (parentElement) {
+      const viewport: ViewportDimensions = {
+        width: parentElement.clientWidth,
+        height: parentElement.clientHeight,
+      };
+
+      const currentWindowData: WindowDimensions = {
+        x: position.x,
+        y: position.y,
+        width: ref.offsetWidth,
+        height: ref.offsetHeight,
+        minWidth: windowProps.minWidth ?? MIN_WIDTH,
+        minHeight: windowProps.minHeight ?? MIN_HEIGHT,
+      };
+
+      const adjusted = adjustWindowToViewport(currentWindowData, viewport);
+
+      onResizeStop(windowProps.id, adjusted.width, adjusted.height); 
+      updateWindowPosition(windowProps.id, adjusted.x, adjusted.y);
+    } else {
+      onResizeStop(windowProps.id, ref.offsetWidth, ref.offsetHeight);
+      updateWindowPosition(windowProps.id, position.x, position.y);
+    }
+  }, [windowProps.id, windowProps.minWidth, windowProps.minHeight, onResizeStop, updateWindowPosition]);
 
   // Focus handler for clicks outside the title bar
   const handleMouseDownFocus = useCallback((e: MouseEvent) => {

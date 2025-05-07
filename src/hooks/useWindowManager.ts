@@ -9,6 +9,8 @@ export interface Window {
   height?: number;
   x?: number;
   y?: number;
+  minWidth?: number;
+  minHeight?: number;
   minimized?: boolean;
   maximized?: boolean;
   wasMaximized?: boolean;
@@ -18,7 +20,7 @@ export interface Window {
 
 export interface WindowManagerContextType {
   windows: Window[];
-  addWindow: (window: Omit<Window, "id" | "zIndex"> & { iconType?: string }) => string;
+  addWindow: (window: Omit<Window, "id" | "zIndex" | "minWidth" | "minHeight"> & { iconType?: string; width?: number; height?: number; x?: number; y?: number; minWidth?: number; minHeight?: number; }) => string;
   closeWindow: (id: string) => void;
   minimizeWindow: (id: string) => void;
   maximizeWindow: (id: string) => void;
@@ -44,6 +46,10 @@ export const WindowManagerContext = createContext<WindowManagerContextType>({
 
 export const useWindowManager = () => useContext(WindowManagerContext);
 
+// Define default minimums, can be moved to a config or constants file later
+const DEFAULT_MIN_WIDTH = 250;
+const DEFAULT_MIN_HEIGHT = 200;
+
 export const createWindowManagerContext = () => {
   const loadSavedWindows = () => {
     try {
@@ -64,12 +70,21 @@ export const createWindowManagerContext = () => {
     localStorage.setItem('windowPositions', JSON.stringify(savedPositions));
   }, [savedPositions]);
 
-  const addWindow = (window: Omit<Window, "id" | "zIndex"> & { iconType?: string }) => {
+  const addWindow = (window: Omit<Window, "id" | "zIndex" | "minWidth" | "minHeight"> & { iconType?: string; width?: number; height?: number; x?: number; y?: number; minWidth?: number; minHeight?: number; }) => {
     const id = `window-${Date.now()}`;
     const newZIndex = lastZIndex + 1;
     setLastZIndex(newZIndex);
     
     const savedPosition = savedPositions[id] || {};
+    
+    // Initial dimensions and position (could be refined with viewport logic later)
+    const initialX = window.x ?? savedPosition.x ?? Math.random() * 100;
+    const initialY = window.y ?? savedPosition.y ?? Math.random() * 100;
+    // Default width/height can also come from window definition or constants
+    const initialWidth = window.width ?? savedPosition.width ?? 500; 
+    const initialHeight = window.height ?? savedPosition.height ?? 400;
+    const minWidth = window.minWidth ?? DEFAULT_MIN_WIDTH;
+    const minHeight = window.minHeight ?? DEFAULT_MIN_HEIGHT;
     
     setWindows((prev) => [
       ...prev,
@@ -80,8 +95,12 @@ export const createWindowManagerContext = () => {
         minimized: false,
         maximized: false,
         wasMaximized: false,
-        x: savedPosition.x ?? Math.random() * 100,
-        y: savedPosition.y ?? Math.random() * 100,
+        x: initialX,
+        y: initialY,
+        width: initialWidth,
+        height: initialHeight,
+        minWidth: minWidth,
+        minHeight: minHeight,
       },
     ]);
     

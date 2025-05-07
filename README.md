@@ -62,7 +62,7 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 *   [ ] `localStorage` for Window positions and dimensions. remember user's open windows, windows positions and dimensions across sessions. 
 *   [x] Text shadow for desktop icons.
 *   [ ] CommitMono font overall.
-*   [ ] Browser window resize to move and shrink metaphor window.
+*   [x] Browser window resize to move and shrink metaphor window.
 *   [ ] Allow user to move past border-b.
 *   [ ] Add drop down app menu to topbar.
 *   [ ] Refactor the app list and icon files. Provide a universal app list.
@@ -92,6 +92,38 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 *   [ ] Configure deployment (e.g., using Netlify, Vercel).
 
 ## Development Log
+
+### Session: Viewport-Aware Window Behavior (Current Date - Please fill in)
+
+**Objective:** Ensure windows are always contained within the browser viewport, shrinking and moving as necessary when the browser resizes or when windows are interacted with.
+
+**Key Changes & Fixes:**
+
+1.  **Window Interface Update (`src/hooks/useWindowManager.ts`):**
+    *   Added `minWidth` and `minHeight` properties to the `Window` interface.
+    *   Updated `addWindow` function to initialize these properties for new windows, using default minimum dimensions.
+
+2.  **Viewport Adjustment Logic (`src/lib/utils.ts`):**
+    *   Created a new utility function `adjustWindowToViewport`.
+    *   This function takes a window's current dimensions/position and minimums, along with viewport dimensions.
+    *   It calculates the necessary adjustments (new position and/or size) to ensure the window fits within the viewport, respecting its minimum dimensions. It prioritizes shrinking before moving.
+
+3.  **Integration with Window Interactions (`src/components/window/DraggableWindow.tsx`):**
+    *   Modified `handleDragStop` and `handleResizeStop` (event handlers for `react-rnd`).
+    *   These handlers now use `adjustWindowToViewport` to correct the window's position and size based on the dimensions of the `WindowContainer` (the parent bounds for `react-rnd`).
+    *   This ensures that user-initiated drags and resizes respect the viewport constraints.
+
+4.  **Global Browser Resize Handling (`src/core/Desktop.tsx`):**
+    *   Added a global event listener for the browser's `resize` event.
+    *   On resize, this handler gets the current dimensions of the `desktop-container` (the main area for windows).
+    *   It then iterates through all non-maximized windows, applying `adjustWindowToViewport` using the `desktop-container`'s dimensions.
+    *   If adjustments are needed, it updates the window's state using `updateWindowPosition` and/or `updateWindowDimensions`.
+    *   An initial call to this handler ensures windows are correctly placed on load.
+
+5.  **Minimum Size Propagation:**
+    *   Updated calls to `addWindow` in `Desktop.tsx` to pass default `minWidth` and `minHeight` values, ensuring these are available to the windowing system from creation.
+
+**Overall Impact:** These changes make the windowing system more robust by preventing windows from going off-screen or becoming unusably sized due to browser viewport changes. Windows now intelligently adapt to the available space.
 
 ### Session: Window Behavior and Arena App Refactoring (Approx. 2025-04-27)
 
