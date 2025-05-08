@@ -60,21 +60,21 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
     *  the windows would stack vertically on each other, exposing the title bar of each window, (second windows start at x=0, y=height of windows title bar, third windows start at x=0, y=height of windows title bar + height of windows title bar, etc) with the topmost window being the active one, staying on the biggest y-position. so that all the windows title bars are visible.
     * when click on a not topmost window title bar, that window would be moved to the top of the stack. and would be sent to the biggest y-position.
 *   [x] Add wallpaper change.
-*   [ ] `localStorage` for Window positions and dimensions. remember user's open windows, windows positions and dimensions across sessions. 
+*   [ ] `localStorage` for Window positions and dimensions. remember user's open windows, windows positions and dimensions across sessions (refresh, close, reopen). 
+*   [ ] Save window states (position, size, open/closed) after refresh (using `localStorage` maybe).
 *   [x] Text shadow for desktop icons.
 *   [ ] CommitMono font overall.
 *   [x] Browser window resize to move and shrink metaphor window.
 *   [ ] Allow user to move past border-b.
 *   [ ] Add drop down app menu to topbar.
 *   [ ] Refactor the app list and icon files. Provide a universal app list.
-*   [ ] Save window states (position, size, open/closed) after refresh (using `localStorage` maybe).
 *   [ ] Multiple instances of the same app?
 *   [ ] Make certain are.na channels open in list view.
 
 ### Phase 3: New App Development
 
 *   **Objective:** Expand the available applications.
-*   [ ] Develop `Weather` app module (fetching data from an API).
+*   [x] Develop `Weather` app module (fetching data from an API).
 *   [ ] Develop `Blueksy` app module (getting latest posts from blueksy).
 *   [ ] Develop `Status` app module (showing latest status log from status.lol).
 *   [ ] Develop `Guestbook` app module (allow users to leave messages).
@@ -331,6 +331,31 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 *   **Desktop:** Confirm window control buttons work as expected with a single click.
 *   Ensure that normal window dragging via the title bar is unaffected on both platforms.
 *   Confirm the "Rendered fewer hooks than expected" error no longer occurs when resizing the browser window across the mobile breakpoint or on initial load.
+
+### Session: Weather App Implementation (2025-04-30)
+
+**Objective:** Implement a basic Weather app using the wttr.in API, following the existing design patterns of the application.
+
+**Key Changes:**
+
+1. **Weather API Integration:**
+   * Created `src/apps/weather/WeatherApp.tsx` to display weather information using the wttr.in API.
+   * Implemented a search bar to allow users to check weather for different locations.
+   * Added automatic user geolocation detection for the initial weather display.
+   * Used format=4 for the wttr.in API to get a clean ASCII art weather representation.
+
+2. **UI Components:**
+   * Created a toolbar with a search input field and search button using the existing style patterns.
+   * Added a weather content display area with location information and formatted weather data.
+   * Implemented loading and error states with appropriate user feedback.
+   * Used `window-content-area` class for consistent scrollbar styling and content display.
+
+3. **Desktop Integration:**
+   * Added weather.png icon to `CustomIcon.tsx` component for consistent iconography.
+   * Added a Weather app icon to the desktop in `DesktopIcons.tsx`.
+   * Configured the Weather app to open in an appropriately sized window.
+
+**Overall Impact:** This addition completes one of the goals from the Phase 3 roadmap, providing users with quick access to weather information through the desktop environment. The implementation maintains consistency with the existing UI patterns and interaction models.
 
 ## Getting Started
 

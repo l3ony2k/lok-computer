@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react";
 import { useWindowManager } from "@/components/WindowManager";
 import { ChannelBrowser } from "@/apps/arena/channels/ChannelBrowser";
 import { ChannelExplorer } from "@/apps/arena/channels/ChannelExplorer";
-import { About } from "@/apps/about/about/About";
+import { About } from "@/apps/about/About";
 import { Moon, Sun, Search, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { FEATURED_CHANNELS } from "@/config/channels";

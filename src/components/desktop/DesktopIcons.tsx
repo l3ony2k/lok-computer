@@ -4,6 +4,7 @@ import { ChannelBrowser } from '@/apps/arena/channels/ChannelBrowser';
 import type { WindowManagerContextType } from '@/hooks/useWindowManager'; // Adjust path if needed
 import { useDoubleClick } from '@/hooks/useDoubleClick';
 import { useIsMobile } from '@/hooks/use-mobile'; // Added import
+import { WeatherApp } from '@/apps/weather/WeatherApp'; // Import WeatherApp
 
 interface DesktopIconsProps {
   addWindow: WindowManagerContextType['addWindow'];
@@ -44,6 +45,20 @@ export const DesktopIcons: React.FC<DesktopIconsProps> = ({
         name: "About",
         iconType: "about",
         action: handleOpenAbout,
+    },
+    {
+        name: "Weather",
+        iconType: "weather",
+        action: () => {
+          console.log("Double-clicked Weather icon");
+          addWindow({
+            title: "Weather",
+            content: <WeatherApp />,
+            width: 860,
+            height: 525,
+            iconType: 'weather',
+          });
+        },
     },
     {
         name: "Config",

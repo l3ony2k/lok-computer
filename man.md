@@ -153,11 +153,22 @@
 *   **`lib/api.ts`**: Contains functions (`getUserChannels`, `getChannelContents`, `getBlock`) to fetch data from the Are.na v2 API. Includes error handling (using `sonner` toasts) and a fallback mechanism (`USE_STATIC_CHANNELS` in `config/channels.ts`) to use a predefined list if the API fails or is disabled.
 *   **`types/arena.ts`**: Defines TypeScript interfaces (`ArenaChannel`, `ArenaBlock`, `ArenaChannelContents`) matching the structure of data returned by the Are.na API.
 
-### 3.4. About Application (`src/apps/about/`)
+### 3.4. Weather Application (`src/apps/weather/`)
+
+*   **`WeatherApp.tsx`**:
+    *   Provides real-time weather information using the wttr.in API.
+    *   Automatically detects and displays weather for the user's current location on initial load using the browser's Geolocation API.
+    *   Features a search bar allowing users to check weather for any location worldwide.
+    *   Displays weather data in a clean ASCII art format, showing current conditions, temperature, and forecast.
+    *   Handles loading states, geolocation permission errors, and API fetch failures with appropriate user feedback.
+    *   Uses the same UI patterns as other applications, with a toolbar containing search functionality and a scrollable content area.
+    *   Accessible via the Weather icon on the desktop.
+
+### 3.5. About Application (`src/apps/about/`)
 
 *   **`About.tsx`**: A very simple component providing static informational content about the project. It's displayed within a standard draggable window when the "About" menu item is clicked.
 
-### 3.5. UI Components & Styling
+### 3.6. UI Components & Styling
 
 *   **`src/components/ui/`**: Contains the standard shadcn-ui components (Button, Card, Dialog, etc.). These are used throughout the application, particularly in the `Desktop` menu and potentially within app windows.
 *   **`src/components/ThemeProvider.tsx`**: Provides context for managing the light/dark theme state, persisting it to `localStorage`.
@@ -169,13 +180,13 @@
     *   Includes custom scrollbar styling for `.window-content-area` to match the theme, using `color-scheme` for Chromium and `scrollbar-color`/`scrollbar-width` for Firefox.
 *   **`tailwind.config.ts`**: Configures Tailwind, extending the theme with custom colors (referencing the CSS variables), shadows (`boxShadow`), and animations (`keyframes`, `animation`). It defines the `retro` color palette and `sidebar` colors (though the sidebar component itself isn't heavily used in the core desktop layout shown).
 
-### 3.6. Configuration (`src/config/channels.ts`)
+### 3.7. Configuration (`src/config/channels.ts`)
 
 *   Defines a list of `FEATURED_CHANNELS` for the dropdown menu.
 *   Sets the `DEFAULT_USERNAME` ('lok').
 *   Provides a `USE_STATIC_CHANNELS` flag to control whether the `ChannelBrowser` uses the live Are.na API or the static `FEATURED_CHANNELS` list (useful for development or API rate limiting).
 
-### 3.7. Application Setup & Routing (`src/main.tsx`, `src/App.tsx`, `src/pages/`)
+### 3.8. Application Setup & Routing (`src/main.tsx`, `src/App.tsx`, `src/pages/`)
 
 *   **`main.tsx`**: The entry point, imports global CSS and renders the `App` component into the `div#root` in `index.html`.
 *   **`App.tsx`**:
