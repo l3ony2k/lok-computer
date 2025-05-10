@@ -17,6 +17,10 @@ export const About = () => {
       <p>
         Made by Claude 3.7 Sonnet, Gemini 2.5 Pro Preview, Cline, and Windsurf.
       </p>
+
+      <p className="mt-4 text-xs opacity-50">
+        Version 1.0.0
+      </p>
     </div>
   );
 };
