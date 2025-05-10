@@ -357,6 +357,35 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 
 **Overall Impact:** This addition completes one of the goals from the Phase 3 roadmap, providing users with quick access to weather information through the desktop environment. The implementation maintains consistency with the existing UI patterns and interaction models.
 
+### Session: Arena App DRY Refactoring (2025-05-02)
+
+**Objective:** Refactor the Arena app components to improve DRY principles and code organization without changing user-facing functionality.
+
+**Key Changes:**
+
+1. **Shared Component Extraction:**
+   * Created `src/apps/arena/utils/contentItems.tsx` to house shared component logic.
+   * Moved duplicated components like `ContentItemGrid` and `ContentItemListView` to this shared file.
+   * Added helper functions like `getItemTitle` and `getGridConfiguration` for consistent behavior.
+
+2. **ChannelBrowser Refactoring:**
+   * Updated to use the shared components from `contentItems.tsx`.
+   * Removed redundant styling calculations in favor of the shared `getGridConfiguration` function.
+   * Improved type safety by using consistent component interfaces.
+
+3. **ChannelExplorer Refactoring:**
+   * Converted to use the shared components and utilities.
+   * Made error and loading states more consistent.
+   * Removed duplicated rendering logic.
+
+4. **BlockViewer Improvements:**
+   * Refactored the block rendering logic using a type-based dictionary approach.
+   * Extracted helper functions like `getImageSource` for better organization.
+   * Created a dedicated shared renderer for Media and Attachment types.
+   * Improved typings for image objects.
+
+These changes have significantly reduced code duplication across the Arena app while maintaining all existing functionality. The new structure is more maintainable and consistent, with clearer separation of concerns between components.
+
 ## Getting Started
 
 ### Prerequisites

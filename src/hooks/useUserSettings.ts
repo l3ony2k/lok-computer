@@ -4,7 +4,6 @@ import React, { useState, useEffect, createContext, useContext, ReactNode } from
  * Interface defining all user settings
  */
 export interface UserSettings {
-  theme?: 'light' | 'dark' | 'system';
   wallpaper?: string;
   // Future additions:
   // windowState?: { [windowId: string]: WindowState };
@@ -12,7 +11,6 @@ export interface UserSettings {
 
 // Default settings to use if nothing is stored
 const DEFAULT_SETTINGS: UserSettings = {
-  theme: 'system',
   wallpaper: '',
 };
 

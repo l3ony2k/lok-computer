@@ -134,7 +134,7 @@ export const Desktop = () => {
     };
 
     return (
-        <div className={`h-screen w-screen flex flex-col ${theme === "dark" ? "dark" : ""}`}>
+        <div className="h-screen w-screen flex flex-col">
             <TopBar />
 
             <div ref={desktopContainerRef} className={`desktop-container ${settings.wallpaper ? 'has-wallpaper' : ''}`}>

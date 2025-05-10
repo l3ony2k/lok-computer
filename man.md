@@ -239,3 +239,13 @@ The project has completed the initial refactoring (Phase 1) and is working on de
 *   **Desktop Enhancements:** Adding desktop icons, refining taskbar/window management.
 *   **New Apps:** Developing Weather, Bluesky, Status.lol, Guestbook, Mailto, Shelf, Settings, Link Web, and Browser apps.
 *   **Persistence & Polish:** Persisting full window states, adding tests, UI/UX refinement, performance optimization, and deployment configuration.
+
+## Theme Management
+
+The application uses `next-themes` for theme management, which provides:
+- System theme detection
+- Theme persistence in localStorage
+- Automatic dark/light mode switching
+- CSS class toggling
+
+The theme can be controlled through the Config App, which uses the `useTheme` hook from `next-themes` to get and set the current theme.

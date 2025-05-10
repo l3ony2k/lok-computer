@@ -1,90 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { useDoubleClick } from "@/hooks/useDoubleClick";
 import { ArenaChannel } from "@/types/arena";
 import { getUserChannels } from "@/lib/api";
 import { useWindowManager } from "@/hooks/useWindowManager";
 import { ChannelExplorer } from "./ChannelExplorer";
-import { CustomIcon } from "@/components/window/CustomIcon";
 import { ArenaWindowLayout } from "../components/ArenaWindowLayout";
 import { useIsMobile } from '@/hooks/use-mobile';
-
-// Component for grid view channel item
-const ChannelItem = React.memo(({ 
-  channel, 
-  onSingleClick, 
-  onDoubleClick, 
-  itemWidth, 
-  iconSizeClass,
-  isMobile
-}: { 
-  channel: ArenaChannel; 
-  onSingleClick: () => void; 
-  onDoubleClick: () => void; 
-  itemWidth: string; 
-  iconSizeClass: string;
-  isMobile: boolean;
-}) => {
-  const doubleClickHandler = useDoubleClick(
-    (event: React.MouseEvent | React.TouchEvent) => onSingleClick(),
-    (event: React.MouseEvent | React.TouchEvent) => onDoubleClick()
-  );
-
-  const handleClick = isMobile ? onDoubleClick : doubleClickHandler;
-
-  return (
-    <div
-      className="folder-item focus:ring-2 focus:ring-accent focus:ring-opacity-50"
-      onClick={handleClick}
-      style={{ width: itemWidth }}
-      tabIndex={0}
-    >
-      <div className={`folder-icon ${iconSizeClass}`}>
-        <CustomIcon iconType="folder" className="w-full h-full" />
-      </div>
-      <div className="folder-name">{channel.title}</div>
-    </div>
-  );
-});
-
-// Component for list view channel item
-const ChannelItemListView = React.memo(({ 
-  channel, 
-  onSingleClick, 
-  onDoubleClick, 
-  iconSizeClass,
-  isMobile
-}: { 
-  channel: ArenaChannel; 
-  onSingleClick: () => void; 
-  onDoubleClick: () => void; 
-  iconSizeClass: string;
-  isMobile: boolean;
-}) => {
-  const doubleClickHandler = useDoubleClick(
-    (event: React.MouseEvent | React.TouchEvent) => onSingleClick(),
-    (event: React.MouseEvent | React.TouchEvent) => onDoubleClick()
-  );
-
-  const handleClick = isMobile ? onDoubleClick : doubleClickHandler;
-
-  return (
-    <div
-      onClick={handleClick}
-      className="flex items-center space-x-1 p-1 hover:bg-accent/50 cursor-pointer focus:ring-2 focus:ring-accent focus:ring-opacity-50"
-      tabIndex={0}
-    >
-      <CustomIcon iconType="folder" className={`${iconSizeClass} shrink-0`} />
-      <span className="truncate text-sm">{channel.title}</span>
-    </div>
-  );
-});
+import { ContentItemGrid, ContentItemListView, getGridConfiguration, ContentItem } from "../utils/contentItems";
 
 export const ChannelBrowser: React.FC<{ username?: string }> = ({ username = "lok" }) => {
   const [channels, setChannels] = useState<ArenaChannel[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [isListView, setIsListView] = useState(false);
-  // Removed custom focus state, using native focus instead
   const { addWindow } = useWindowManager();
   const [loadError, setLoadError] = useState<string | null>(null);
   const [gridSize, setGridSize] = useState<'S' | 'M' | 'L'>('S');
@@ -144,40 +71,31 @@ export const ChannelBrowser: React.FC<{ username?: string }> = ({ username = "lo
     (channel) => channel.title.toLowerCase().includes(search.toLowerCase())
   );
 
+  // Function to determine the icon type for a channel
+  const getIconType = (item: ContentItem): string => {
+    return 'folder';
+  };
+
   const renderGridView = () => {
-    // Determine icon size classes based on size
-    const iconSizeClasses = { S: 'w-12 h-12', M: 'w-20 h-20', L: 'w-28 h-28' };
-    const dynamicIconSizeClass = iconSizeClasses[gridSize] || 'w-12 h-12';
-
-    // Fixed width for each grid item based on size
-    const itemWidth = {
-      S: '64px',
-      M: '109px',
-      L: '136px',
-    };
-
-    // Use fixed width instead of minmax with 1fr
-    const gridTemplateStyle = { 
-      gridTemplateColumns: `repeat(auto-fill, ${itemWidth[gridSize]})`,
-      justifyContent: 'start' // Align items to the start instead of stretching
-    };
+    const { gridIconSizeClass, itemWidth, gridTemplateStyle } = getGridConfiguration(gridSize);
 
     return (
-      <div className={`folder-grid`} style={gridTemplateStyle}>
+      <div className="folder-grid" style={gridTemplateStyle}>
         {filteredChannels.length === 0 ? (
           <div className="col-start-1 col-end-[-1] text-center p-4 opacity-50" style={{ gridColumn: '1 / -1' }}>
             Not found, just hit Go or Enter
           </div>
         ) : (
           filteredChannels.map((channel) => (
-            <ChannelItem
+            <ContentItemGrid
               key={channel.id}
-              channel={channel}
-              isMobile={isMobile}
+              item={channel as ContentItem}
               onSingleClick={() => handleChannelSingleClick(channel.id)}
               onDoubleClick={() => handleChannelDoubleClick(channel)}
-              itemWidth={itemWidth[gridSize]}
-              iconSizeClass={dynamicIconSizeClass}
+              itemWidth={itemWidth}
+              iconSizeClass={gridIconSizeClass}
+              getIconType={getIconType}
+              isMobile={isMobile}
             />
           ))
         )}
@@ -186,9 +104,7 @@ export const ChannelBrowser: React.FC<{ username?: string }> = ({ username = "lo
   };
 
   const renderListView = () => {
-    // Determine icon size classes based on size
-    const iconSizeClasses = { S: 'w-6 h-6', M: 'w-8 h-8', L: 'w-10 h-10' };
-    const dynamicIconSizeClass = iconSizeClasses[gridSize] || 'w-6 h-6';
+    const { listIconSizeClass } = getGridConfiguration(gridSize);
 
     return (
       <div className="space-y-1 p-1">
@@ -198,13 +114,14 @@ export const ChannelBrowser: React.FC<{ username?: string }> = ({ username = "lo
           </div>
         ) : (
           filteredChannels.map((channel) => (
-            <ChannelItemListView
+            <ContentItemListView
               key={channel.id}
-              channel={channel}
-              isMobile={isMobile}
+              item={channel as ContentItem}
               onSingleClick={() => handleChannelSingleClick(channel.id)}
               onDoubleClick={() => handleChannelDoubleClick(channel)}
-              iconSizeClass={dynamicIconSizeClass}
+              iconSizeClass={listIconSizeClass}
+              getIconType={getIconType}
+              isMobile={isMobile}
             />
           ))
         )}
@@ -249,13 +166,9 @@ export const ChannelBrowser: React.FC<{ username?: string }> = ({ username = "lo
         <div className="px-2 py-1 mb-2 bg-yellow-100 dark:bg-yellow-900 text-xs">{loadError}</div>
       )}
       {loading ? (
-        <div className="p-1 text-center">Loading...</div>
-      ) : channels.length === 0 && !loadError ? (
-        <div className="p-1 text-center">No channels available. Please try again later.</div>
-      ) : isListView ? (
-        renderListView()
+        <div className="text-center p-4">Loading channels...</div>
       ) : (
-        renderGridView()
+        isListView ? renderListView() : renderGridView()
       )}
     </ArenaWindowLayout>
   );

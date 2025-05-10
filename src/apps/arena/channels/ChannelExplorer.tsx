@@ -1,122 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { useDoubleClick } from "@/hooks/useDoubleClick";
-import { ArenaBlock, ArenaChannel } from "@/types/arena";
+import { ArenaBlock } from "@/types/arena";
 import { getChannelContents } from "@/lib/api";
 import { useWindowManager } from "@/hooks/useWindowManager";
 import { BlockViewer } from "../blocks/BlockViewer";
-import { CustomIcon } from "@/components/window/CustomIcon";
 import { ArenaWindowLayout } from "../components/ArenaWindowLayout";
 import { useIsMobile } from "@/hooks/use-mobile";
-
-interface ContentItem extends Partial<ArenaBlock>, Partial<ArenaChannel> {
-  id: number;
-  base_class: string;
-  class?: string;
-  title?: string;
-}
-
-// Component for grid view content item
-const ContentItemGrid = React.memo(({ 
-  item, 
-  onSingleClick, 
-  onDoubleClick, 
-  itemWidth, 
-  iconSizeClass,
-  renderThumbnail,
-  getIconType,
-  isMobile
-}: { 
-  item: ContentItem; 
-  onSingleClick: () => void; 
-  onDoubleClick: () => void; 
-  itemWidth: string; 
-  iconSizeClass: string;
-  renderThumbnail: (image: any) => string;
-  getIconType: (item: ContentItem) => string;
-  isMobile: boolean;
-}) => {
-  // Always call useDoubleClick
-  const doubleClickHandler = useDoubleClick(
-    (event: React.MouseEvent | React.TouchEvent) => onSingleClick(),
-    (event: React.MouseEvent | React.TouchEvent) => onDoubleClick()
-  );
-  // Conditionally choose the action for onClick
-  const handleClick = isMobile ? onDoubleClick : doubleClickHandler;
-
-  return (
-    <div
-      className="folder-item focus:ring-2 focus:ring-accent focus:ring-opacity-50"
-      onClick={handleClick}
-      style={{ width: itemWidth }}
-      tabIndex={0}
-    >
-      <div className={`folder-icon ${iconSizeClass}`}> 
-        {(item as ArenaBlock).class === "Image" && (item as ArenaBlock).image?.thumb ? (
-          <img 
-            src={renderThumbnail((item as ArenaBlock).image?.thumb)} 
-            alt={item.title || "Thumbnail"}
-            className={`w-full h-full object-cover`}
-            loading="lazy"
-          />
-        ) : (
-          <CustomIcon iconType={getIconType(item)} className={`w-full h-full`} />
-        )}
-      </div>
-      <div className="folder-name">
-        {item.title || (item as ArenaBlock).generated_title || "Untitled"}
-      </div>
-    </div>
-  );
-});
-
-// Component for list view content item
-const ContentItemListView = React.memo(({ 
-  item, 
-  onSingleClick, 
-  onDoubleClick, 
-  iconSizeClass,
-  renderThumbnail,
-  getIconType,
-  isMobile
-}: { 
-  item: ContentItem; 
-  onSingleClick: () => void; 
-  onDoubleClick: () => void; 
-  iconSizeClass: string;
-  renderThumbnail: (image: any) => string;
-  getIconType: (item: ContentItem) => string;
-  isMobile: boolean;
-}) => {
-  // Always call useDoubleClick
-  const doubleClickHandler = useDoubleClick(
-    (event: React.MouseEvent | React.TouchEvent) => onSingleClick(),
-    (event: React.MouseEvent | React.TouchEvent) => onDoubleClick()
-  );
-  // Conditionally choose the action for onClick
-  const handleClick = isMobile ? onDoubleClick : doubleClickHandler;
-
-  return (
-    <div
-      onClick={handleClick}
-      className="flex items-center space-x-4 p-2 hover:bg-accent/50 cursor-pointer focus:ring-2 focus:ring-accent focus:ring-opacity-50"
-      tabIndex={0}
-    >
-      {(item as ArenaBlock).class === "Image" && (item as ArenaBlock).image?.thumb ? (
-        <img 
-          src={renderThumbnail((item as ArenaBlock).image?.thumb)} 
-          alt={item.title || "Thumbnail"}
-          className={`${iconSizeClass} object-cover shrink-0`}
-          loading="lazy"
-        />
-      ) : (
-        <CustomIcon iconType={getIconType(item)} className={`${iconSizeClass} shrink-0`} />
-      )}
-      <span className="truncate text-sm">
-        {item.title || (item as ArenaBlock).generated_title || "Untitled"}
-      </span>
-    </div>
-  );
-});
+import { ContentItemGrid, ContentItemListView, getGridConfiguration, ContentItem, getItemTitle } from "../utils/contentItems";
 
 export const ChannelExplorer: React.FC<{ channelSlug: string; username?: string }> = ({ 
   channelSlug, 
@@ -252,85 +141,70 @@ export const ChannelExplorer: React.FC<{ channelSlug: string; username?: string 
   }, [channelSlug, username, itemsPerPage]);
 
   const getIconType = (item: ContentItem): string => {
-    if (item.base_class === "Channel") return 'other-channel';
-    if (item.class === "Image") return 'image';
-    if (item.class === "Text") return 'text'; 
-    if (item.class === "Media") return 'video'; // Assuming Media is Video
-    if (item.class === "Link") return 'link';
-    return 'text'; // Default to text icon for unknown/other block types
+    if (item.base_class === "Channel") return "folder";
+    
+    const blockClass = (item as ArenaBlock).class;
+    if (blockClass === "Text") return "text-file";
+    if (blockClass === "Link") return "link";
+    if (blockClass === "Image") return "image";
+    if (blockClass === "Attachment") return "file";
+    if (blockClass === "Media") return "media";
+    
+    return "block";
   };
 
   const handleItemSingleClick = (itemId: number) => {
-    // No custom focus state needed, native focus handles it
+    // Using native focus, no custom focus state needed
   };
 
   const handleItemDoubleClick = (item: ContentItem) => {
-    const iconType = getIconType(item);
     if (item.base_class === "Channel") {
       addWindow({
-        title: item.title || "Untitled Channel",
+        title: item.title || "Channel",
         content: <ChannelExplorer channelSlug={item.slug!} username={username} />,
         width: 600,
         height: 500,
-        iconType: iconType, // Pass 'other-channel'
+        iconType: "folder",
       });
     } else {
       addWindow({
-        title: item.title || (item as ArenaBlock).generated_title || "Untitled Block",
+        title: getItemTitle(item),
         content: <BlockViewer blockId={item.id} />,
         width: 600,
         height: 500,
-        iconType: iconType, // Pass derived iconType
+        iconType: getIconType(item),
       });
     }
   };
 
   const renderThumbnail = (image: any) => {
-    // If image is a string, return it directly
-    if (typeof image === 'string') {
-      return image;
-    }
-    // If it's an object with url property, return the url
-    return image?.url || '';
+    // Support both string and object URL formats
+    if (typeof image === 'string') return image;
+    if (image && typeof image === 'object' && 'url' in image) return image.url;
+    return '';
   };
 
   const renderGridView = () => {
-    // Determine icon container size classes based on size
-    const iconSizeClasses = { S: 'w-12 h-12', M: 'w-20 h-20', L: 'w-28 h-28' };
-    const dynamicIconSizeClass = iconSizeClasses[gridSize] || 'w-12 h-12';
-
-    // Fixed width for each grid item based on size
-    const itemWidth = {
-      S: '64px',
-      M: '109px',
-      L: '136px',
-    };
-
-    // Use fixed width instead of minmax with 1fr
-    const gridTemplateStyle = { 
-      gridTemplateColumns: `repeat(auto-fill, ${itemWidth[gridSize]})`,
-      justifyContent: 'start' // Align items to the start instead of stretching
-    };
+    const { gridIconSizeClass, itemWidth, gridTemplateStyle } = getGridConfiguration(gridSize);
 
     return (
-      <div className={`folder-grid`} style={gridTemplateStyle}> 
+      <div className="folder-grid" style={gridTemplateStyle}>
         {contents.length === 0 ? (
-          // Use grid-column-start to span full width correctly with auto-fit
           <div className="col-start-1 col-end-[-1] text-center p-4 opacity-50" style={{ gridColumn: '1 / -1' }}>
-            No contents found for this channel.
+            This channel is empty
           </div>
         ) : (
-          contents.map((item, index) => (
+          contents.map((item) => (
             <ContentItemGrid
-              key={item.id + "-" + index} 
+              key={item.id}
               item={item}
-              isMobile={isMobile}
               onSingleClick={() => handleItemSingleClick(item.id)}
               onDoubleClick={() => handleItemDoubleClick(item)}
-              itemWidth={itemWidth[gridSize]}
-              iconSizeClass={dynamicIconSizeClass}
+              itemWidth={itemWidth}
+              iconSizeClass={gridIconSizeClass}
               renderThumbnail={renderThumbnail}
               getIconType={getIconType}
+              isMobile={isMobile}
             />
           ))
         )}
@@ -339,55 +213,40 @@ export const ChannelExplorer: React.FC<{ channelSlug: string; username?: string 
   };
 
   const renderListView = () => {
-    // Determine icon size classes based on size
-    const iconSizeClasses = { S: 'w-6 h-6', M: 'w-8 h-8', L: 'w-10 h-10' };
-    const dynamicIconSizeClass = iconSizeClasses[gridSize] || 'w-6 h-6';
+    const { listIconSizeClass } = getGridConfiguration(gridSize);
 
     return (
       <div className="space-y-1 p-1">
-        {contents.map((item, index) => (
-          <ContentItemListView
-            key={item.id + "-" + index}
-            item={item}
-            isMobile={isMobile}
-            onSingleClick={() => handleItemSingleClick(item.id)}
-            onDoubleClick={() => handleItemDoubleClick(item)}
-            iconSizeClass={dynamicIconSizeClass}
-            renderThumbnail={renderThumbnail}
-            getIconType={getIconType}
-          />
-        ))}
+        {contents.length === 0 ? (
+          <div className="text-center p-1 opacity-50">
+            This channel is empty
+          </div>
+        ) : (
+          contents.map((item) => (
+            <ContentItemListView
+              key={item.id}
+              item={item}
+              onSingleClick={() => handleItemSingleClick(item.id)}
+              onDoubleClick={() => handleItemDoubleClick(item)}
+              iconSizeClass={listIconSizeClass}
+              renderThumbnail={renderThumbnail}
+              getIconType={getIconType}
+              isMobile={isMobile}
+            />
+          ))
+        )}
       </div>
     );
   };
 
-  if (loading) {
-    return (
-      <div className="p-4 flex flex-col items-center justify-center h-full">
-        <div className="text-center opacity-50">{loadingStatus}</div>
-        <div className="text-center mt-2 opacity-50">Please wait while all content is fetched...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return <div className="p-4 text-center text-red-500">{error}</div>;
-  }
-
   return (
     <ArenaWindowLayout
       toolbar={
-        <div className="flex items-center justify-between space-x-1 p-1 border-b border-border">
+        <div className="flex items-center justify-between space-x-2 p-1 border-b border-border">
           <div className="flex items-center space-x-0">
-            <button onClick={() => setGridSize('S')} className={`retro-button text-xs px-1 ${gridSize === 'S' ? 'bg-accent' : ''}`} title="Small Icons">
-              S
-            </button>
-            <button onClick={() => setGridSize('M')} className={`retro-button text-xs px-1 ${gridSize === 'M' ? 'bg-accent' : ''}`} title="Medium Icons">
-              M
-            </button>
-            <button onClick={() => setGridSize('L')} className={`retro-button text-xs px-1 ${gridSize === 'L' ? 'bg-accent' : ''}`} title="Large Icons">
-              L
-            </button>
+            <button onClick={() => setGridSize('S')} className={`retro-button text-xs px-1 ${gridSize === 'S' ? 'bg-accent' : ''}`} title="Small Icons">S</button>
+            <button onClick={() => setGridSize('M')} className={`retro-button text-xs px-1 ${gridSize === 'M' ? 'bg-accent' : ''}`} title="Medium Icons">M</button>
+            <button onClick={() => setGridSize('L')} className={`retro-button text-xs px-1 ${gridSize === 'L' ? 'bg-accent' : ''}`} title="Large Icons">L</button>
           </div>
           <div className="flex items-center space-x-2">
             <span className="text-xs opacity-50">Total: {contents.length} items</span>
@@ -399,15 +258,17 @@ export const ChannelExplorer: React.FC<{ channelSlug: string; username?: string 
         </div>
       }
     >
-      <div>
-        {contents.length === 0 ? (
-          <div className="text-center p-4">This channel is empty</div>
-        ) : isListView ? (
-          renderListView()
-        ) : (
-          renderGridView()
-        )}
-      </div>
+      {error && (
+        <div className="px-2 py-1 mb-2 bg-yellow-100 dark:bg-yellow-900 text-xs">{error}</div>
+      )}
+      {loading ? (
+        <div className="p-4 text-center">
+          <div className="text-xs mb-1">{loadingStatus}</div>
+          <div className="progress-bar"></div>
+        </div>
+      ) : (
+        isListView ? renderListView() : renderGridView()
+      )}
     </ArenaWindowLayout>
   );
 };
