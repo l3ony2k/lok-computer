@@ -390,6 +390,7 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
    * Added missing Twitter card meta tags (title, description, creator)
    * Enhanced OpenGraph tags with site_name and URL properties
    * Updated OG and Twitter titles to be more descriptive and keyword-rich
+   * Added og:logo meta tag using the favicon for brand recognition in social shares
 
 3. **Structured Data Implementation:**
    * Added Schema.org JSON-LD markup to describe the web application
