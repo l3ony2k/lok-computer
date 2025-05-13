@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { useDoubleClick } from "@/hooks/useDoubleClick";
 import { ArenaBlock, ArenaChannel } from "@/types/arena";
 import { CustomIcon } from "@/components/window/CustomIcon";
@@ -42,6 +42,12 @@ export const ContentItemGrid = React.memo(({
   const handleClick = isMobile ? onDoubleClick : doubleClickHandler;
 
   const hasImage = (item as ArenaBlock).class === "Image" && (item as ArenaBlock).image?.thumb;
+  
+  // Pre-compute icon type to avoid recalculations during rendering
+  const iconType = useMemo(() => getIconType(item), [item, getIconType]);
+  
+  // Pre-compute item title to avoid recalculations during rendering
+  const itemTitle = useMemo(() => getItemTitle(item), [item]);
 
   return (
     <div
@@ -54,15 +60,15 @@ export const ContentItemGrid = React.memo(({
         {hasImage && renderThumbnail ? (
           <img 
             src={renderThumbnail((item as ArenaBlock).image?.thumb)} 
-            alt={getItemTitle(item)}
-            className={`w-full h-full object-cover`}
+            alt={itemTitle}
+            className="w-full h-full object-cover"
             loading="lazy"
           />
         ) : (
-          <CustomIcon iconType={getIconType(item)} className={`w-full h-full`} />
+          <CustomIcon iconType={iconType} className="w-full h-full" />
         )}
       </div>
-      <div className="folder-name">{getItemTitle(item)}</div>
+      <div className="folder-name">{itemTitle}</div>
     </div>
   );
 });
@@ -92,6 +98,12 @@ export const ContentItemListView = React.memo(({
   const handleClick = isMobile ? onDoubleClick : doubleClickHandler;
 
   const hasImage = (item as ArenaBlock).class === "Image" && (item as ArenaBlock).image?.thumb;
+  
+  // Pre-compute icon type to avoid recalculations during rendering
+  const iconType = useMemo(() => getIconType(item), [item, getIconType]);
+  
+  // Pre-compute item title to avoid recalculations during rendering
+  const itemTitle = useMemo(() => getItemTitle(item), [item]);
 
   return (
     <div
@@ -102,14 +114,14 @@ export const ContentItemListView = React.memo(({
       {hasImage && renderThumbnail ? (
         <img 
           src={renderThumbnail((item as ArenaBlock).image?.thumb)} 
-          alt={getItemTitle(item)}
+          alt={itemTitle}
           className={`${iconSizeClass} object-cover shrink-0`}
           loading="lazy"
         />
       ) : (
-        <CustomIcon iconType={getIconType(item)} className={`${iconSizeClass} shrink-0`} />
+        <CustomIcon iconType={iconType} className={`${iconSizeClass} shrink-0`} />
       )}
-      <span className="truncate text-sm">{getItemTitle(item)}</span>
+      <span className="truncate text-sm">{itemTitle}</span>
     </div>
   );
 });

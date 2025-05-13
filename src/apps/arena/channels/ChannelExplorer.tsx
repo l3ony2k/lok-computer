@@ -141,16 +141,16 @@ export const ChannelExplorer: React.FC<{ channelSlug: string; username?: string 
   }, [channelSlug, username, itemsPerPage]);
 
   const getIconType = (item: ContentItem): string => {
-    if (item.base_class === "Channel") return "folder";
+    if (item.base_class === "Channel") return "other-channel";
     
     const blockClass = (item as ArenaBlock).class;
-    if (blockClass === "Text") return "text-file";
+    if (blockClass === "Text") return "text";
     if (blockClass === "Link") return "link";
-    if (blockClass === "Image") return "image";
-    if (blockClass === "Attachment") return "file";
-    if (blockClass === "Media") return "media";
+    if (blockClass === "Image") return "image"; 
+    if (blockClass === "Attachment") return "text";
+    if (blockClass === "Media") return "video";
     
-    return "block";
+    return "text"; // Default to text icon for unknown/other block types
   };
 
   const handleItemSingleClick = (itemId: number) => {
@@ -164,7 +164,7 @@ export const ChannelExplorer: React.FC<{ channelSlug: string; username?: string 
         content: <ChannelExplorer channelSlug={item.slug!} username={username} />,
         width: 600,
         height: 500,
-        iconType: "folder",
+        iconType: "other-channel",
       });
     } else {
       addWindow({
