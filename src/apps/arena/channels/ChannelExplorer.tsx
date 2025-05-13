@@ -49,6 +49,8 @@ export const ChannelExplorer: React.FC<{ channelSlug: string; username?: string 
         if (estimatedTotalPages <= 1) {
           // If only one page, we're already done
           if (isMounted) {
+            // Sort content by position in descending order (newest first)
+            allContents.sort((a, b) => (b.position || 0) - (a.position || 0));
             setContents(allContents);
             setError(null);
           }
@@ -114,6 +116,8 @@ export const ChannelExplorer: React.FC<{ channelSlug: string; username?: string 
         }
         
         if (isMounted) {
+          // Sort content by position in descending order (newest first)
+          allContents.sort((a, b) => (b.position || 0) - (a.position || 0));
           setContents(allContents);
           setError(null);
           console.log(`Completed fetching all ${allContents.length} contents for channel ${channelSlug}`);

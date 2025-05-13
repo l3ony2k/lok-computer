@@ -94,6 +94,21 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 
 ## Development Log
 
+### Session: Arena Channel Explorer Sorting (Current Date)
+
+**Objective:** Ensure blocks in the Arena Channel Explorer are properly sorted by position in descending order (newest first).
+
+**Implementation:**
+- Verified that the sorting logic was already implemented in `ChannelExplorer.tsx` but was missing from the documentation.
+- The component sorts content by the `position` property in descending order (highest position values first).
+- This sorting ensures that newer blocks appear at the beginning of the list, with older blocks (or manually repositioned blocks) appearing later.
+- Sorting is applied after all content is fetched from the API, ensuring a consistent display order regardless of pagination.
+
+**Technical Details:**
+- The sorting is implemented using JavaScript's native `Array.sort()` method with a comparison function.
+- The comparison function handles potential undefined position values by defaulting to 0.
+- The sort is performed before setting the content state: `allContents.sort((a, b) => (b.position || 0) - (a.position || 0))`
+
 ### Session: Viewport-Aware Window Behavior (Current Date - Please fill in)
 
 **Objective:** Ensure windows are always contained within the browser viewport, shrinking and moving as necessary when the browser resizes or when windows are interacted with.
@@ -263,220 +278,4 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 1.  **Input Bar Navigation:**
     *   **Issue:** The input bar only filtered channel titles.
     *   **Solution:** Modified the input bar in `ChannelBrowser.tsx` to allow direct navigation to channel slugs by pressing the Enter key or clicking the 'Go' button.
-    *   **Implementation:** Added a `handleGo` function that checks if the input value matches a channel slug and navigates to it if found.
-
-2.  **Slug Browsing:**
-    *   **Issue:** The input bar did not support slug browsing.
-    *   **Solution:** Updated the input bar to support slug browsing by checking if the input value starts with a '/' and navigating to the corresponding channel if found.
-
-**Updated README:** Added this development log entry.
-
-### Session: Desktop Wallpaper Implementation (2025-04-29)
-
-**Objective:** Add the ability to customize the desktop background with wallpaper images.
-
-**Key Changes:**
-
-1. **Centralized Settings Management:**
-   * Created `src/hooks/useUserSettings.ts` with a `UserSettings` interface to store user preferences.
-   * Implemented localStorage persistence to save settings between sessions.
-   * Designed the hook to be extensible for future settings (like window states).
-
-2. **CSS Structure for Wallpapers:**
-   * Updated `index.css` to add a `.desktop-container` class with wallpaper support.
-   * Added conditional styling with `.has-wallpaper` class to show custom backgrounds.
-   * Created a fallback pattern for when no wallpaper is set.
-   * Used CSS variables to dynamically set the wallpaper URL.
-
-3. **Desktop Component Update:**
-   * Modified `Desktop.tsx` to use the `useUserSettings` hook.
-   * Added an effect to set the CSS variable based on the selected wallpaper.
-   * Applied conditional CSS classes to the desktop container.
-   * Updated the Config window dimensions to accommodate the new wallpaper settings UI.
-
-4. **Config App Enhancement:**
-   * Extended `ConfigApp.tsx` to add a wallpaper selection section.
-   * Added a set of predefined wallpaper options with thumbnails.
-   * Implemented a custom URL input for user-provided wallpapers.
-   * Created a preview of the currently selected wallpaper.
-   * Added a reset button to return to the default pattern background.
-
-### Session: Touch Interaction Improvements (Current Date - Please fill in)
-
-**Objective:** Enhance touch screen support for desktop icons, window control buttons, and Are.na browser items, making interactions more intuitive on mobile.
-
-**Key Changes & Fixes:**
-
-1.  **Desktop Icon Double-Tap/Single-Tap (`src/hooks/useDoubleClick.ts`, `src/components/desktop/DesktopIcons.tsx`):**
-    *   Logic within the `useDoubleClick` hook was reviewed and confirmed to handle both `MouseEvent` and `TouchEvent` types, with correct differentiation between single and double clicks/taps.
-    *   In `DesktopIcons.tsx`, integrated `useIsMobile` hook. On mobile devices, desktop icons now trigger their action on a **single tap**. On desktop, they retain the double-click behavior.
-    *   **Fix:** Corrected a conditional hook call (`useDoubleClick`) within the mapping logic to comply with the Rules of Hooks, preventing a "Rendered fewer hooks" error. The hook is now called unconditionally, and its result is used conditionally.
-
-2.  **Window Control Buttons (`src/components/window/DraggableWindow.tsx`):**
-    *   Added `onTouchEnd` handlers to the minimize, maximize/restore, and close buttons, mirroring `onClick` logic. This was done in a previous step to improve reliability on touch for these controls (actions on single tap).
-
-3.  **Are.na Channel Browser & Explorer Items (`src/apps/arena/channels/ChannelBrowser.tsx`, `src/apps/arena/channels/ChannelExplorer.tsx`):**
-    *   Integrated the `useIsMobile` hook in both `ChannelBrowser` and `ChannelExplorer` components.
-    *   Modified the item components (`ChannelItem`, `ChannelItemListView`, `ContentItemGrid`, `ContentItemListView`) within these browsers.
-    *   On mobile devices, clicking/tapping an item (channel, block, or sub-channel) now triggers its action on a **single tap**.
-    *   On desktop, these items retain their double-click behavior to perform actions.
-    *   **Fix:** Corrected conditional hook calls (`useDoubleClick`) within the item components in both files to comply with the Rules of Hooks. The hook is now called unconditionally per item, and its result is used conditionally based on whether the view is mobile or desktop.
-
-**Overall Impact:** These changes aim to provide a more conventional and responsive touch experience on mobile devices by switching from double-tap to single-tap for primary actions on icons and list items, while preserving the existing desktop interaction model. The hook-related fixes ensure stability and adherence to React best practices.
-
-**Testing Notes:**
-*   **Mobile:** Verify desktop icons, channels in Are.na browser, and items (blocks/sub-channels) in Are.na explorer open/activate with a single tap.
-*   **Mobile:** Confirm window control buttons (minimize, maximize, close) work with a single tap.
-*   **Desktop:** Verify desktop icons and Are.na browser/explorer items still require a double-click to activate.
-*   **Desktop:** Confirm window control buttons work as expected with a single click.
-*   Ensure that normal window dragging via the title bar is unaffected on both platforms.
-*   Confirm the "Rendered fewer hooks than expected" error no longer occurs when resizing the browser window across the mobile breakpoint or on initial load.
-
-### Session: Weather App Implementation (2025-04-30)
-
-**Objective:** Implement a basic Weather app using the wttr.in API, following the existing design patterns of the application.
-
-**Key Changes:**
-
-1. **Weather API Integration:**
-   * Created `src/apps/weather/WeatherApp.tsx` to display weather information using the wttr.in API.
-   * Implemented a search bar to allow users to check weather for different locations.
-   * Added automatic user geolocation detection for the initial weather display.
-   * Used format=4 for the wttr.in API to get a clean ASCII art weather representation.
-
-2. **UI Components:**
-   * Created a toolbar with a search input field and search button using the existing style patterns.
-   * Added a weather content display area with location information and formatted weather data.
-   * Implemented loading and error states with appropriate user feedback.
-   * Used `window-content-area` class for consistent scrollbar styling and content display.
-
-3. **Desktop Integration:**
-   * Added weather.png icon to `CustomIcon.tsx` component for consistent iconography.
-   * Added a Weather app icon to the desktop in `DesktopIcons.tsx`.
-   * Configured the Weather app to open in an appropriately sized window.
-
-**Overall Impact:** This addition completes one of the goals from the Phase 3 roadmap, providing users with quick access to weather information through the desktop environment. The implementation maintains consistency with the existing UI patterns and interaction models.
-
-### Session: Console Error Cleanup (2025-05-03)
-
-**Objective:** Address console errors related to Permissions-Policy headers and improve development experience.
-
-**Key Changes:**
-
-1. **Permissions-Policy Meta Tag:**
-   * Added `<meta http-equiv="Permissions-Policy">` tag to index.html.
-   * Explicitly disabled browser features causing warnings: browsing-topics, interest-cohort, join-ad-interest-group, private-state-token-issuance, private-state-token-redemption, and run-ad-auction.
-   * These features are primarily related to the Chrome Privacy Sandbox and advertising technologies not used by the application.
-
-2. **Meta Tag Content Updates:**
-   * Updated all meta tag descriptions to reflect the current purpose of the application as a "mini desktop-like environment" rather than just an Are.na browser.
-   * Added proper content for previously empty OG and Twitter image URLs.
-
-**Impact:** This change improves the development experience by reducing console noise and makes the site metadata more accurate for sharing and SEO purposes. The Permissions-Policy warnings were not affecting application functionality but cleaning them up provides a cleaner console during development.
-
-### Session: SEO Optimization (2025-05-03)
-
-**Objective:** Enhance the site's search engine optimization and discoverability when users search for "lok computer".
-
-**Key Changes:**
-
-1. **Enhanced Meta Tags:**
-   * Updated title tag to include descriptive keywords: "lok.computer | Mini Desktop Environment in Browser" 
-   * Expanded meta description with more detailed information about the application's purpose and features
-   * Added meta keywords tag with relevant search terms
-   * Added canonical URL tag to prevent duplicate content issues
-
-2. **Improved Social Sharing Tags:**
-   * Added missing Twitter card meta tags (title, description, creator)
-   * Enhanced OpenGraph tags with site_name and URL properties
-   * Updated OG and Twitter titles to be more descriptive and keyword-rich
-   * Added og:logo meta tag using the favicon for brand recognition in social shares
-
-3. **Structured Data Implementation:**
-   * Added Schema.org JSON-LD markup to describe the web application
-   * Included essential application details: name, description, type, author
-   * Specified that the application is free to use
-   * This structured data helps search engines better understand and display the site in search results
-
-**Impact:** These changes will improve the site's visibility in search results, especially for queries related to "lok computer". The enhanced metadata and structured data will help search engines better understand the purpose and content of the site, potentially improving rankings. Social sharing will also present richer information when links are shared on platforms like Twitter or Facebook.
-
-### Session: Arena App DRY Refactoring (2025-05-02)
-
-**Objective:** Refactor the Arena app components to improve DRY principles and code organization without changing user-facing functionality.
-
-**Key Changes:**
-
-1. **Shared Component Extraction:**
-   * Created `src/apps/arena/utils/contentItems.tsx` to house shared component logic.
-   * Moved duplicated components like `ContentItemGrid` and `ContentItemListView` to this shared file.
-   * Added helper functions like `getItemTitle` and `getGridConfiguration` for consistent behavior.
-
-2. **ChannelBrowser Refactoring:**
-   * Updated to use the shared components from `contentItems.tsx`.
-   * Removed redundant styling calculations in favor of the shared `getGridConfiguration` function.
-   * Improved type safety by using consistent component interfaces.
-
-3. **ChannelExplorer Refactoring:**
-   * Converted to use the shared components and utilities.
-   * Made error and loading states more consistent.
-   * Removed duplicated rendering logic.
-
-4. **BlockViewer Improvements:**
-   * Refactored the block rendering logic using a type-based dictionary approach.
-   * Extracted helper functions like `getImageSource` for better organization.
-   * Created a dedicated shared renderer for Media and Attachment types.
-   * Improved typings for image objects.
-
-These changes have significantly reduced code duplication across the Arena app while maintaining all existing functionality. The new structure is more maintainable and consistent, with clearer separation of concerns between components.
-
-## Getting Started
-
-### Prerequisites
-
-*   Node.js (LTS version recommended)
-*   npm (comes with Node.js) or Bun
-
-### Installation
-
-1.  Clone the repository:
-    ```bash
-    git clone <repository-url>
-    cd are-na-browser-lok
-    ```
-
-2.  Install dependencies:
-    ```bash
-    npm install
-    # or if using bun
-    # bun install
-    ```
-
-### Running Locally
-
-Start the development server:
-
-```bash
-npm run dev
-# or
-# bun dev
-```
-
-This will start the Vite development server, usually available at `http://localhost:5173`.
-
-## Available Scripts
-
-*   `npm run dev` or `bun dev`: Starts the development server.
-*   `npm run build` or `bun build`: Creates a production build in the `dist` folder.
-*   `npm run lint` or `bun lint`: Lints the codebase using ESLint.
-*   `npm run preview` or `bun preview`: Serves the production build locally for preview.
-
-## Contributing
-
-Contributions are welcome! Please feel free to open an issue or submit a pull request.
-
-## Acknowledgments
-
-*   CommitMono: https://commitmono.com/
-*   Websites That Look Like Desktops: https://www.are.na/lucy-pham/websites-that-look-like-desktops-xr4dhvkxeym
-*   Are.na: https://are.na/
-*   Windsurf: https://windsurf.com/
+    *   **Implementation:** Added a `
