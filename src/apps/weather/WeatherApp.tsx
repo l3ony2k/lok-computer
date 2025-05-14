@@ -55,7 +55,7 @@ export const WeatherApp: React.FC<WeatherAppProps> = () => {
   return (
     <div className="h-full flex flex-col">
       {/* Toolbar area */}
-      <div className="p-1 border-b flex items-center gap-0">
+      <div className="p-1 border-b flex items-center gap-0 select-none">
         <form onSubmit={handleSearch} className="flex-1 flex items-center gap-0">
           <input
             type="text"
@@ -86,7 +86,7 @@ export const WeatherApp: React.FC<WeatherAppProps> = () => {
                 className="text-xs"
                 dangerouslySetInnerHTML={{ __html: weatherData || '' }}
               />
-              <div className="mt-4 text-xs">Powered by <a className="underline text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300" href="https://wttr.in/" target="_blank" rel="noopener noreferrer">wttr.in</a></div>
+              <div className="mt-4 text-xs opacity-50 select-none">Powered by <a className="underline text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300" href="https://wttr.in/" target="_blank" rel="noopener noreferrer">wttr.in</a></div>
             </div>
         )}
       </div>

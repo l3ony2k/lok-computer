@@ -52,7 +52,7 @@ export const ConfigApp = () => {
   };
 
   return (
-    <div className="p-4 overflow-auto window-content-area">
+    <div className="p-4 overflow-auto window-content-area select-none">
       <div className="space-y-6">
         {/* Theme Selection */}
         <div>

@@ -137,6 +137,18 @@
     background-size: 20px 20px;
   }
 
+  /* Universal text selection styling */
+  ::selection {
+    background-color: hsl(var(--accent));
+    color: hsl(var(--accent-foreground));
+  }
+  
+  /* Firefox support */
+  ::-moz-selection {
+    background-color: hsl(var(--accent));
+    color: hsl(var(--accent-foreground));
+  }
+
   /* Desktop background with custom wallpaper */
   .desktop-container {
     @apply flex-1 relative overflow-hidden;

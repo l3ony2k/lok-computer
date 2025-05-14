@@ -419,3 +419,36 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
    * Made icon images non-selectable while keeping their associated text selectable when appropriate
 
 **Result:** The application now has a more native app-like feel with no accidental text selection when users interact with UI elements, while still allowing selection in content areas where it's expected and useful.
+
+### Session: Enhanced Text Selection Styling (2025-05-02)
+
+**Objective:** Implement a universal, visually consistent text selection style across the application for better readability and UI consistency.
+
+**Key Changes:**
+
+1. **Universal Selection Styling:**
+   * Added custom `::selection` and `::-moz-selection` CSS rules in `src/index.css`
+   * Used the application's accent color as the selection background
+   * Used accent-foreground color for selected text, creating a clean contrast
+
+2. **Implementation Details:**
+   * Added the following CSS rules:
+     ```css
+     ::selection {
+       background-color: hsl(var(--accent));
+       color: hsl(var(--accent-foreground));
+     }
+     
+     ::-moz-selection {
+       background-color: hsl(var(--accent));
+       color: hsl(var(--accent-foreground));
+     }
+     ```
+   * This leverages the application's existing design tokens for visual consistency
+
+3. **Benefits:**
+   * Creates a consistent, branded look for text selection across the entire application
+   * Improves readability of selected text with appropriate contrast
+   * Maintains the application's visual language and design system
+
+**Result:** Text selection now has a polished, consistent appearance that aligns with the application's design aesthetic while maintaining good readability and visual hierarchy.
