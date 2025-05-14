@@ -335,3 +335,87 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
    * Positioned the calendar to align with the right side of the topbar.
 
 **Result:** Users can now click on the date/time display in the topbar to view a calendar showing the current month, providing a quick reference for dates without opening a separate calendar application.
+
+### Session: Analog Clock Implementation (2025-04-30)
+
+**Objective:** Add an analog clock to the calendar flyout that displays the current time with hour, minute, and second hands.
+
+**Key Changes:**
+
+1. **Enhanced Calendar Component:**
+   * Modified `src/components/calendar/Calendar.tsx` to include an analog clock above the month display.
+   * Implemented the clock using SVG for precise rendering and smooth animation.
+   * Added minute marks around the clock face with thicker marks at hour positions (every 5 minutes).
+
+2. **Real-time Animation:**
+   * Added state to track the current time using `useState`.
+   * Implemented `useEffect` with a 1-second interval to update the clock hands in real time.
+   * Calculated precise angles for each hand: 
+     - Hour hand (takes minutes into account for smooth movement)
+     - Minute hand (takes seconds into account for smooth movement)
+     - Second hand (moves in 6-degree increments)
+
+3. **Minimal Styling:**
+   * Used clean lines with appropriate thickness hierarchy (hour hand thickest, second hand thinnest).
+   * Made the second hand accent-colored to distinguish it and add visual interest.
+   * Ensured dark/light mode compatibility with appropriate text colors.
+   * Created a subtle hour/minute distinction for the clock marks.
+
+**Result:** The calendar flyout now features a visually appealing analog clock that displays the current time with smooth-moving hands, enhancing the overall aesthetic and functionality of the interface.
+
+### Session: Text Selection Fix for UI Elements (2025-05-01)
+
+**Objective:** Fix issues with text selection in UI elements, particularly in the Calendar component where text highlighting was interfering with dragging and clicking interactions.
+
+**Key Changes:**
+
+1. **CSS Selection Prevention:**
+   * Added the Tailwind `select-none` class to interactive elements throughout the Calendar component.
+   * Applied to calendar day cells, day name headers, month/year display, and the analog clock container.
+
+2. **Implementation Details:**
+   * Modified `src/components/calendar/Calendar.tsx` to include `select-none` class on:
+     - The main calendar container div
+     - The clock container div
+     - The month/year display text
+     - Day name header cells
+     - Calendar day cells
+
+3. **Benefits:**
+   * Prevents accidental text selection when users interact with the calendar
+   * Makes the UI feel more like a native application rather than a webpage
+   * Maintains all clickable functionality while improving the user experience
+
+**Result:** The calendar and other UI elements now have a more polished, app-like feel with no unwanted text selection when users click or drag interface elements.
+
+### Session: Comprehensive Text Selection Control (2025-05-01)
+
+**Objective:** Apply a consistent text selection strategy across the entire application, making UI elements non-selectable while keeping content areas selectable.
+
+**Key Changes:**
+
+1. **Global UI Components:**
+   * Applied `select-none` to all interaction elements in `src/index.css`, including:
+     - Taskbar and taskbar buttons
+     - Window title bars
+     - Folder items, icons, and names
+     - All retro-style buttons
+
+2. **Desktop Environment:**
+   * Added `select-none` to:
+     - Desktop icons and their container
+     - TopBar elements including menu buttons and date/time display
+     - App menu items
+     - Arena content item grids and lists
+
+3. **Smart Selection in Content Areas:**
+   * Added `select-text` to content areas where text selection is desirable:
+     - Block content in `BlockViewer.tsx` (while keeping metadata non-selectable)
+     - Text content in `About.tsx` (while keeping version information non-selectable)
+     - Other content-focused areas
+
+4. **Component-Specific Updates:**
+   * Updated `ArenaWindowLayout.tsx` to make the toolbar non-selectable
+   * Made icon images non-selectable while keeping their associated text selectable when appropriate
+
+**Result:** The application now has a more native app-like feel with no accidental text selection when users interact with UI elements, while still allowing selection in content areas where it's expected and useful.

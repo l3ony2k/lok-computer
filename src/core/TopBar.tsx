@@ -118,16 +118,16 @@ export const TopBar: React.FC<TopBarProps> = ({ addWindow }) => {
         {/* Left side: lok.computer */}
         <button 
           onClick={toggleAppMenu}
-          className="font-mono font-bold text-s text-neutral-700 dark:text-neutral-100 tracking-tight hover:bg-accent px-1 py-0 rounded-sm"
+          className="font-mono font-bold text-s text-neutral-700 dark:text-neutral-100 tracking-tight hover:bg-accent px-1 py-0 rounded-sm select-none"
         >
           lok.computer
         </button>
         
         {/* Right side: Date and Time */}
-        <div className="ml-auto flex items-center space-x-2 text-s font-mono font-bold">
+        <div className="ml-auto flex items-center space-x-2 text-s font-mono font-bold select-none">
           <button
             onClick={toggleCalendar}
-            className="flex items-center space-x-2 hover:bg-accent px-1 py-0 rounded-sm"
+            className="flex items-center space-x-2 hover:bg-accent px-1 py-0 rounded-sm select-none"
           >
             <span>{formatDate(currentTime)}</span>
             <span>{formatTime(currentTime)}</span>

@@ -108,20 +108,20 @@ export const ContentItemListView = React.memo(({
   return (
     <div
       onClick={handleClick}
-      className="flex items-center space-x-4 p-2 hover:bg-accent/50 cursor-pointer focus:ring-2 focus:ring-accent focus:ring-opacity-50"
+      className="flex items-center space-x-4 p-2 hover:bg-accent/50 cursor-pointer focus:ring-2 focus:ring-accent focus:ring-opacity-50 select-none"
       tabIndex={0}
     >
       {hasImage && renderThumbnail ? (
         <img 
           src={renderThumbnail((item as ArenaBlock).image?.thumb)} 
           alt={itemTitle}
-          className={`${iconSizeClass} object-cover shrink-0`}
+          className={`${iconSizeClass} object-cover shrink-0 select-none`}
           loading="lazy"
         />
       ) : (
-        <CustomIcon iconType={iconType} className={`${iconSizeClass} shrink-0`} />
+        <CustomIcon iconType={iconType} className={`${iconSizeClass} shrink-0 select-none`} />
       )}
-      <span className="truncate text-sm">{itemTitle}</span>
+      <span className="truncate text-sm select-none">{itemTitle}</span>
     </div>
   );
 });

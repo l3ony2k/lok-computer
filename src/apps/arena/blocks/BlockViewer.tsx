@@ -136,12 +136,14 @@ export const BlockViewer = ({ blockId }: { blockId: number | string }) => {
   return (
     <div className="p-2">
       <div className="flex flex-col">
-        <div className="text-sm mb-2 text-muted-foreground">
+        <div className="text-sm mb-2 text-muted-foreground select-none">
           Block ID: {block.id} | Created: {new Date(block.created_at).toLocaleDateString()}
         </div>
-        {renderBlockContent()}
+        <div className="select-text">
+          {renderBlockContent()}
+        </div>
         {block.source?.url && block.class !== "Link" && (
-          <div className="mt-4 text-sm">
+          <div className="mt-4 text-sm select-none">
             Source: <a 
               href={block.source.url} 
               target="_blank" 

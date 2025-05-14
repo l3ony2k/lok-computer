@@ -32,7 +32,7 @@ export const AppMenu: React.FC<AppMenuProps> = ({
       className="fixed inset-0 z-[10000]" 
       onClick={handleOutsideClick}
     >
-      <div className="absolute top-[30px] left-2 bg-retro-taskbar border border-border shadow-md min-w-[200px]">
+      <div className="absolute top-[30px] left-2 bg-retro-taskbar border border-border shadow-md min-w-[200px] select-none">
         {items.map((item) => (
           <button
             key={item.name}
@@ -40,7 +40,7 @@ export const AppMenu: React.FC<AppMenuProps> = ({
               item.action();
               onClose();
             }}
-            className="flex items-center w-full px-3 py-1.5 text-sm text-left hover:bg-accent transition-colors"
+            className="flex items-center w-full px-3 py-1.5 text-sm text-left hover:bg-accent transition-colors select-none"
           >
             <CustomIcon iconType={item.iconType} className="w-4 h-4 mr-2" />
             <span className="text-neutral-700 dark:text-neutral-100">{item.name}</span>

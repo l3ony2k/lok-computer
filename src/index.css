@@ -158,12 +158,12 @@
   }
   
   .taskbar {
-    @apply bg-retro-taskbar p-1 border-t border-border h-[30px] flex items-center;
+    @apply bg-retro-taskbar p-1 border-t border-border h-[30px] flex items-center select-none;
   }
 
   .taskbar-button {
     @apply h-[24px] px-2 text-sm bg-secondary border border-border shadow-retro-button 
-    hover:bg-accent flex items-center justify-center;
+    hover:bg-accent flex items-center justify-center select-none;
   }
 
   .window-titlebar {
@@ -176,15 +176,15 @@
   }
 
   .folder-item {
-    @apply flex flex-col items-center justify-center p-2 hover:bg-accent/50 cursor-pointer;
+    @apply flex flex-col items-center justify-center p-2 hover:bg-accent/50 cursor-pointer select-none;
   }
 
   .folder-icon {
-    @apply w-12 h-12 mb-2 flex items-center justify-center;
+    @apply w-12 h-12 mb-2 flex items-center justify-center select-none;
   }
 
   .folder-name {
-    @apply text-xs text-center truncate w-full;
+    @apply text-xs text-center truncate w-full select-none;
   }
 
   .search-input {
@@ -196,7 +196,7 @@
   .retro-button {
     @apply px-1 py-0 border border-border shadow-retro-button 
     bg-secondary hover:bg-accent active:shadow-retro-inset 
-    active:translate-y-px active:translate-x-px transition-all;
+    active:translate-y-px active:translate-x-px transition-all select-none;
   }
 
   .window-titlebar {

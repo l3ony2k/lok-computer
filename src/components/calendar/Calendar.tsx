@@ -60,7 +60,7 @@ export const Calendar: React.FC<CalendarProps> = ({
     calendarDays.push(
       <div 
         key={`day-${day}`} 
-        className={`h-7 w-7 flex items-center justify-center text-xs ${
+        className={`h-7 w-7 flex items-center justify-center text-xs select-none ${
           isCurrentDay 
             ? 'bg-accent text-neutral-700 dark:text-neutral-100 font-bold' 
             : 'text-neutral-700 dark:text-neutral-100'
@@ -88,7 +88,7 @@ export const Calendar: React.FC<CalendarProps> = ({
     minuteMarks.push(
       <line
         key={`mark-${i}`}
-        x1={isHourMark ? 38 : 42}
+        x1={isHourMark ? 42 : 46}
         y1={0}
         x2={50}
         y2={0}
@@ -106,9 +106,9 @@ export const Calendar: React.FC<CalendarProps> = ({
       className="fixed inset-0 z-[10000]" 
       onClick={handleOutsideClick}
     >
-      <div className="absolute top-[30px] right-2 bg-retro-taskbar border border-border shadow-md p-3">
+      <div className="absolute top-[30px] right-2 bg-retro-taskbar border border-border shadow-md p-3 select-none">
         {/* Analog Clock */}
-        <div className="flex justify-center mb-3">
+        <div className="flex justify-center mb-3 select-none">
           <svg width="110" height="110" viewBox="0 0 110 110">
             {/* Clock Face - Circle with minute marks */}
             <circle
@@ -176,14 +176,14 @@ export const Calendar: React.FC<CalendarProps> = ({
           </svg>
         </div>
         
-        <div className="text-center text-sm mb-2 text-neutral-700 dark:text-neutral-100">
+        <div className="text-center text-sm mb-2 text-neutral-700 dark:text-neutral-100 select-none">
           {monthNames[month]} {year}
         </div>
         
         <div className="grid grid-cols-7 gap-1 text-center">
           {/* Day names row */}
           {dayNames.map(day => (
-            <div key={day} className="h-7 w-7 flex items-center justify-center text-xs font-bold text-neutral-700 dark:text-neutral-100">
+            <div key={day} className="h-7 w-7 flex items-center justify-center text-xs font-bold text-neutral-700 dark:text-neutral-100 select-none">
               {day}
             </div>
           ))}
