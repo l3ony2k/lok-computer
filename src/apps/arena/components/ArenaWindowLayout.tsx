@@ -12,10 +12,8 @@ interface ArenaWindowLayoutProps {
  */
 export const ArenaWindowLayout = ({ toolbar, children }: ArenaWindowLayoutProps) => {
   return (
-    <div className="flex flex-col h-full">
-      <div className="border-b border-border p-2 flex items-center select-none">
+    <div className="flex flex-col h-full select-none">
         {toolbar}
-      </div>
       <div className="window-content-area flex-1 overflow-auto">
         {children}
       </div>

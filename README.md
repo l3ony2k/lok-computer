@@ -69,7 +69,7 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 *   [x] Add drop down app menu to topbar.
 *   [x] Add calendar flyout to topbar time display.
 *   [x] Add analog clock to calendar flyout.
-*   [ ] Refactor the app list and icon files. Provide a universal app list.
+*   [x] Refactor the app list and icon files. Provide a universal app list.
 *   [ ] Multiple instances of the same app?
 *   [ ] Make certain are.na channels open in list view.
 
