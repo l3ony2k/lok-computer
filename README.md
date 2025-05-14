@@ -66,7 +66,9 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 *   [ ] CommitMono font overall.
 *   [x] Browser window resize to move and shrink metaphor window.
 *   [ ] Allow user to move past border-b.
-*   [ ] Add drop down app menu to topbar.
+*   [x] Add drop down app menu to topbar.
+*   [x] Add calendar flyout to topbar time display.
+*   [x] Add analog clock to calendar flyout.
 *   [ ] Refactor the app list and icon files. Provide a universal app list.
 *   [ ] Multiple instances of the same app?
 *   [ ] Make certain are.na channels open in list view.
@@ -279,3 +281,57 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
     *   **Issue:** The input bar only filtered channel titles.
     *   **Solution:** Modified the input bar in `ChannelBrowser.tsx` to allow direct navigation to channel slugs by pressing the Enter key or clicking the 'Go' button.
     *   **Implementation:** Added a `
+
+### Session: App Menu Implementation (2025-04-30)
+
+**Objective:** Add a dropdown app menu to the topbar when clicking on "lok.computer" text.
+
+**Key Changes:**
+
+1. **New Components:**
+   * Created `src/components/menu/AppMenu.tsx` to handle the dropdown menu UI and logic.
+   * Menu has consistent styling with the rest of the UI, using the retro-taskbar background color and accent hover effects.
+
+2. **TopBar Enhancements:**
+   * Modified `src/core/TopBar.tsx` to make "lok.computer" text clickable and toggle the app menu.
+   * Added state management for the menu's open/closed status.
+   * Created app launching functions for each app (Arena Browser, About, Weather, Config).
+
+3. **Integration:**
+   * Updated `src/core/Desktop.tsx` to pass the `addWindow` function to `TopBar`.
+   * Ensured the menu displays with a high z-index (50) to appear above other elements.
+   * Implemented click-outside behavior to dismiss the menu.
+
+4. **Styling:**
+   * Used the same styling as the rest of the application (retro-taskbar background, accent color for hover states).
+   * Made text color consistent with the dark/light mode themes.
+   * Positioned the menu to align properly with the topbar.
+
+**Result:** Users can now click on "lok.computer" in the topbar to access a dropdown menu of available applications, providing an alternative to the desktop icons for launching apps.
+
+### Session: Calendar Flyout Implementation (2025-04-30)
+
+**Objective:** Add a calendar flyout to the topbar when clicking on the date/time text in the top-right corner.
+
+**Key Changes:**
+
+1. **New Components:**
+   * Created `src/components/calendar/Calendar.tsx` to display a simple month calendar view.
+   * Calendar shows the current month with days of the week, highlighting the current day.
+
+2. **TopBar Enhancements:**
+   * Modified `src/core/TopBar.tsx` to make the date and time display clickable.
+   * Added state management for the calendar's open/closed status.
+   * Created toggle functionality that also closes the app menu if it's open.
+
+3. **Integration:**
+   * Added the `<Calendar />` component to `TopBar`, passing the current date.
+   * Ensured the calendar displays with a high z-index (10000) to appear above other elements.
+   * Implemented click-outside behavior to dismiss the calendar.
+
+4. **Styling:**
+   * Used the same styling as the rest of the application (retro-taskbar background, accent color for current day highlight).
+   * Made text color consistent with the dark/light mode themes.
+   * Positioned the calendar to align with the right side of the topbar.
+
+**Result:** Users can now click on the date/time display in the topbar to view a calendar showing the current month, providing a quick reference for dates without opening a separate calendar application.
