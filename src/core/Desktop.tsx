@@ -14,10 +14,8 @@ import { ConfigApp } from "@/apps/config/ConfigApp";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { useTheme } from "next-themes";
 import { adjustWindowToViewport, type WindowDimensions, type ViewportDimensions } from "@/lib/utils";
-
-// Default min dimensions, ideally from a shared constants file or useWindowManager context
-const MIN_WINDOW_WIDTH = 250;
-const MIN_WINDOW_HEIGHT = 200;
+import { WINDOW_DEFAULTS } from "@/config/window";
+import { APP_LIST } from "@/config/apps";
 
 export const Desktop = () => {
     const { addWindow, windows, updateWindowPosition, updateWindowDimensions } = useWindowManager();
@@ -52,8 +50,8 @@ export const Desktop = () => {
                             y: win.y,
                             width: win.width,
                             height: win.height,
-                            minWidth: win.minWidth ?? MIN_WINDOW_WIDTH,
-                            minHeight: win.minHeight ?? MIN_WINDOW_HEIGHT,
+                            minWidth: win.minWidth ?? WINDOW_DEFAULTS.MIN_WIDTH,
+                            minHeight: win.minHeight ?? WINDOW_DEFAULTS.MIN_HEIGHT,
                         };
 
                         const adjusted = adjustWindowToViewport(currentWindowData, viewport);
@@ -80,38 +78,41 @@ export const Desktop = () => {
     }, [windows, updateWindowPosition, updateWindowDimensions]);
 
     const handleOpenChannelBrowser = () => {
+        const app = APP_LIST.find(app => app.name === "Are.na Browser");
         addWindow({
             title: "@lok's Channels",
             content: <ChannelBrowser username="lok" />,
-            width: 600,
-            height: 500,
+            width: app?.defaultWidth ?? WINDOW_DEFAULTS.DEFAULT_WIDTH,
+            height: app?.defaultHeight ?? WINDOW_DEFAULTS.DEFAULT_HEIGHT,
             iconType: 'folder',
-            minWidth: MIN_WINDOW_WIDTH,
-            minHeight: MIN_WINDOW_HEIGHT,
+            minWidth: WINDOW_DEFAULTS.MIN_WIDTH,
+            minHeight: WINDOW_DEFAULTS.MIN_HEIGHT,
         });
     };
 
     const handleOpenAbout = () => {
+        const app = APP_LIST.find(app => app.name === "About");
         addWindow({
             title: "About",
             content: <About />,
-            width: 400,
-            height: 400,
+            width: app?.defaultWidth ?? WINDOW_DEFAULTS.DEFAULT_WIDTH,
+            height: app?.defaultHeight ?? WINDOW_DEFAULTS.DEFAULT_HEIGHT,
             iconType: 'about',
-            minWidth: MIN_WINDOW_WIDTH,
-            minHeight: MIN_WINDOW_HEIGHT,
+            minWidth: WINDOW_DEFAULTS.MIN_WIDTH,
+            minHeight: WINDOW_DEFAULTS.MIN_HEIGHT,
         });
     };
 
     const handleOpenFeaturedChannel = (slug: string, title: string) => {
+        const app = APP_LIST.find(app => app.name === "Are.na Browser");
         addWindow({
             title: title,
             content: <ChannelExplorer channelSlug={slug} username="lok" />,
-            width: 600,
-            height: 500,
+            width: app?.defaultWidth ?? WINDOW_DEFAULTS.DEFAULT_WIDTH,
+            height: app?.defaultHeight ?? WINDOW_DEFAULTS.DEFAULT_HEIGHT,
             iconType: 'folder',
-            minWidth: MIN_WINDOW_WIDTH,
-            minHeight: MIN_WINDOW_HEIGHT,
+            minWidth: WINDOW_DEFAULTS.MIN_WIDTH,
+            minHeight: WINDOW_DEFAULTS.MIN_HEIGHT,
         });
     };
 
@@ -120,16 +121,17 @@ export const Desktop = () => {
     };
 
     const handleOpenSettingsWindow = () => {
+        const app = APP_LIST.find(app => app.name === "Config");
         addWindow({
             title: 'Config',
             iconType: 'config', 
             content: <ConfigApp />,
-            width: 400, 
-            height: 500,
+            width: app?.defaultWidth ?? WINDOW_DEFAULTS.DEFAULT_WIDTH,
+            height: app?.defaultHeight ?? WINDOW_DEFAULTS.DEFAULT_HEIGHT,
             x: 150, 
             y: 100,
-            minWidth: MIN_WINDOW_WIDTH,
-            minHeight: MIN_WINDOW_HEIGHT,
+            minWidth: WINDOW_DEFAULTS.MIN_WIDTH,
+            minHeight: WINDOW_DEFAULTS.MIN_HEIGHT,
         });
     };
 

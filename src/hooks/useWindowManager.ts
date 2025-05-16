@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { ReactNode } from "react";
+import { WINDOW_DEFAULTS } from "@/config/window";
 
 export interface Window {
   id: string;
@@ -46,10 +47,6 @@ export const WindowManagerContext = createContext<WindowManagerContextType>({
 
 export const useWindowManager = () => useContext(WindowManagerContext);
 
-// Define default minimums, can be moved to a config or constants file later
-const DEFAULT_MIN_WIDTH = 250;
-const DEFAULT_MIN_HEIGHT = 200;
-
 export const createWindowManagerContext = () => {
   const loadSavedWindows = () => {
     try {
@@ -80,11 +77,10 @@ export const createWindowManagerContext = () => {
     // Initial dimensions and position (could be refined with viewport logic later)
     const initialX = window.x ?? savedPosition.x ?? Math.random() * 100;
     const initialY = window.y ?? savedPosition.y ?? Math.random() * 100;
-    // Default width/height can also come from window definition or constants
-    const initialWidth = window.width ?? savedPosition.width ?? 500; 
-    const initialHeight = window.height ?? savedPosition.height ?? 400;
-    const minWidth = window.minWidth ?? DEFAULT_MIN_WIDTH;
-    const minHeight = window.minHeight ?? DEFAULT_MIN_HEIGHT;
+    const initialWidth = window.width ?? savedPosition.width ?? WINDOW_DEFAULTS.DEFAULT_WIDTH;
+    const initialHeight = window.height ?? savedPosition.height ?? WINDOW_DEFAULTS.DEFAULT_HEIGHT;
+    const minWidth = window.minWidth ?? WINDOW_DEFAULTS.MIN_WIDTH;
+    const minHeight = window.minHeight ?? WINDOW_DEFAULTS.MIN_HEIGHT;
     
     setWindows((prev) => [
       ...prev,

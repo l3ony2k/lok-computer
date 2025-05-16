@@ -6,14 +6,7 @@ import { CustomIcon } from './CustomIcon';
 import { Rnd, DraggableData, ResizableDelta, Position } from 'react-rnd';
 import { cn } from '@/lib/utils';
 import { adjustWindowToViewport, type WindowDimensions, type ViewportDimensions, type AdjustedWindow } from '@/lib/utils';
-
-// Define default numeric values
-const DEFAULT_WIDTH = 500;
-const DEFAULT_HEIGHT = 400;
-const MIN_WIDTH = 250;
-const MIN_HEIGHT = 200;
-const TOP_BAR_HEIGHT = 30;
-const TASKBAR_HEIGHT = 30;
+import { WINDOW_DEFAULTS } from '@/config/window';
 
 interface DraggableWindowProps {
   window: Window;
@@ -54,10 +47,10 @@ export const DraggableWindow = ({ window: windowProps, onResizeStop }: Draggable
         const currentWindowData: WindowDimensions = {
           x: data.x,
           y: data.y,
-          width: windowProps.width ?? DEFAULT_WIDTH,
-          height: windowProps.height ?? DEFAULT_HEIGHT,
-          minWidth: windowProps.minWidth ?? MIN_WIDTH,
-          minHeight: windowProps.minHeight ?? MIN_HEIGHT,
+          width: windowProps.width ?? WINDOW_DEFAULTS.DEFAULT_WIDTH,
+          height: windowProps.height ?? WINDOW_DEFAULTS.DEFAULT_HEIGHT,
+          minWidth: windowProps.minWidth ?? WINDOW_DEFAULTS.MIN_WIDTH,
+          minHeight: windowProps.minHeight ?? WINDOW_DEFAULTS.MIN_HEIGHT,
         };
 
         const adjusted = adjustWindowToViewport(currentWindowData, viewport);
@@ -82,8 +75,8 @@ export const DraggableWindow = ({ window: windowProps, onResizeStop }: Draggable
         y: position.y,
         width: ref.offsetWidth,
         height: ref.offsetHeight,
-        minWidth: windowProps.minWidth ?? MIN_WIDTH,
-        minHeight: windowProps.minHeight ?? MIN_HEIGHT,
+        minWidth: windowProps.minWidth ?? WINDOW_DEFAULTS.MIN_WIDTH,
+        minHeight: windowProps.minHeight ?? WINDOW_DEFAULTS.MIN_HEIGHT,
       };
 
       const adjusted = adjustWindowToViewport(currentWindowData, viewport);
@@ -117,8 +110,8 @@ export const DraggableWindow = ({ window: windowProps, onResizeStop }: Draggable
     }
   }, [focusWindow, windowProps.id, activeWindow]);
 
-  const calculatedWidth = typeof windowProps.width === 'number' ? windowProps.width : DEFAULT_WIDTH;
-  const calculatedHeight = typeof windowProps.height === 'number' ? windowProps.height : DEFAULT_HEIGHT;
+  const calculatedWidth = typeof windowProps.width === 'number' ? windowProps.width : WINDOW_DEFAULTS.DEFAULT_WIDTH;
+  const calculatedHeight = typeof windowProps.height === 'number' ? windowProps.height : WINDOW_DEFAULTS.DEFAULT_HEIGHT;
 
   return (
     <Rnd
@@ -130,8 +123,8 @@ export const DraggableWindow = ({ window: windowProps, onResizeStop }: Draggable
                  { x: 0, y: 0 } : 
                  { x: windowProps.x ?? 50, y: windowProps.y ?? 50 }
                }
-      minWidth={MIN_WIDTH}
-      minHeight={MIN_HEIGHT}
+      minWidth={WINDOW_DEFAULTS.MIN_WIDTH}
+      minHeight={WINDOW_DEFAULTS.MIN_HEIGHT}
       bounds="parent"
       style={{ 
         zIndex: windowProps.zIndex, 

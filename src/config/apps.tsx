@@ -49,8 +49,8 @@ export const APP_LIST: AppConfig[] = [
     name: "About",
     iconType: "about",
     component: About,
-    defaultWidth: 400,
-    defaultHeight: 400
+    defaultWidth: 500,
+    defaultHeight: 600
   },
   {
     name: "Config",
