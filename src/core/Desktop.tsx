@@ -137,7 +137,7 @@ export const Desktop = () => {
         <div className="h-screen w-screen flex flex-col">
             <TopBar addWindow={addWindow} />
 
-            <div ref={desktopContainerRef} className={`desktop-container ${settings.wallpaper ? 'has-wallpaper' : ''}`}>
+            <div ref={desktopContainerRef} className={`desktop-container relative overflow-hidden ${settings.wallpaper ? 'has-wallpaper' : ''}`}>
                 <WindowContainer />
                 <DesktopIcons 
                     addWindow={addWindow}
