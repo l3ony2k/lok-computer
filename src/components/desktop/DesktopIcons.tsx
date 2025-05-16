@@ -1,11 +1,9 @@
 import React from 'react';
 import { CustomIcon } from '@/components/window/CustomIcon';
-import { ChannelBrowser } from '@/apps/arena/channels/ChannelBrowser';
-import type { WindowManagerContextType } from '@/hooks/useWindowManager'; // Adjust path if needed
+import type { WindowManagerContextType } from '@/hooks/useWindowManager';
 import { useDoubleClick } from '@/hooks/useDoubleClick';
-import { useIsMobile } from '@/hooks/use-mobile'; // Added import
-import { WeatherApp } from '@/apps/weather/WeatherApp'; // Import WeatherApp
-import BskyPostsApp from '@/apps/bsky/BskyPostsApp'; // Import BskyPostsApp
+import { useIsMobile } from '@/hooks/use-mobile';
+import { APP_LIST } from '@/config/apps';
 
 interface DesktopIconsProps {
   addWindow: WindowManagerContextType['addWindow'];
@@ -18,99 +16,57 @@ export const DesktopIcons: React.FC<DesktopIconsProps> = ({
   handleOpenAbout,
   handleOpenSettingsWindow
 }) => {
-  const isMobile = useIsMobile(); // Added mobile check
+  const isMobile = useIsMobile();
 
   const handleSingleClickBase = (iconName: string) => (event: React.MouseEvent | React.TouchEvent) => {
     // No custom focus state needed, native focus handles it
-    // This is the function that would be called on a single click
-    // if useDoubleClick was configured to do so and no double click followed.
-    // For desktop icons, we typically only want the double-click action.
   };
 
-  const desktopIcons = [
-    {
-      name: "Are.na Browser",
-      iconType: "arena",
-      action: () => {
-        console.log("Double-clicked Are.na Browser icon");
-        addWindow({
-          title: "Are.na Browser",
-          content: <ChannelBrowser username="lok" />,
-          width: 600,
-          height: 500,
-          iconType: 'arena',
-        });
-      },
-    },
-    {
-      name: "Bsky Posts",
-      iconType: "bsky", // Assuming you'll add 'bsky.png' and map 'bsky' in CustomIcon.tsx
-      action: () => {
-        addWindow({
-          title: "Bsky Posts",
-          content: <BskyPostsApp />,
-          width: 450,
-          height: 700,
-          iconType: 'bsky',
-        });
-      },
-    },
-    {
-      name: "Weather",
-      iconType: "weather",
-      action: () => {
-        console.log("Double-clicked Weather icon");
-        addWindow({
-          title: "Weather",
-          content: <WeatherApp />,
-          width: 860,
-          height: 525,
-          iconType: 'weather',
-        });
-      },
-    },
-    {
-        name: "About",
-        iconType: "about",
-        action: handleOpenAbout,
-    },
-    {
-      name: "Config",
-      iconType: "config",
-      action: handleOpenSettingsWindow, // Shows toast for now
-    },
-  ];
+  const getActionForApp = (app: typeof APP_LIST[0]) => {
+    switch (app.name) {
+      case "About":
+        return handleOpenAbout;
+      case "Config":
+        return handleOpenSettingsWindow;
+      default:
+        return () => {
+          addWindow({
+            title: app.name,
+            content: <app.component {...(app.props || {})} />,
+            width: app.defaultWidth,
+            height: app.defaultHeight,
+            iconType: app.iconType,
+          });
+        };
+    }
+  };
   
   return (
-    // Container div for positioning - styling will be applied in Desktop.tsx's usage
     <div className="absolute top-4 right-4 flex flex-col items-end space-y-2 z-10 select-none"> 
-      {desktopIcons.map((icon) => {
-        const singleClickHandlerForHook = handleSingleClickBase(icon.name);
-        
-        // Always call the hook
-        const doubleClickHandler = useDoubleClick(singleClickHandlerForHook, icon.action);
-        
-        // Conditionally choose the action for onClick
-        const clickAction = isMobile ? icon.action : doubleClickHandler;
+      {APP_LIST.map((app) => {
+        const singleClickHandlerForHook = handleSingleClickBase(app.name);
+        const action = getActionForApp(app);
+        const doubleClickHandler = useDoubleClick(singleClickHandlerForHook, action);
+        const clickAction = isMobile ? action : doubleClickHandler;
         
         return (
           <button
-          key={icon.name}
-          onClick={clickAction} 
-          className="flex flex-col items-center space-y-1 p-2 hover:bg-black/10 dark:hover:bg-white/10 transition-colors duration-100 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-opacity-50 w-20 select-none"
-          aria-label={`Open ${icon.name}`}
-          tabIndex={0}
+            key={app.name}
+            onClick={clickAction} 
+            className="flex flex-col items-center space-y-1 p-2 hover:bg-black/10 dark:hover:bg-white/10 transition-colors duration-100 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-opacity-50 w-20 select-none"
+            aria-label={`Open ${app.name}`}
+            tabIndex={0}
           >
-                <CustomIcon iconType={icon.iconType} className="w-10 h-10" />
-                <span 
-                  className="text-xs text-center break-words w-full text-neutral-200 font-bold select-none"
-                  style={{ textShadow: "0px 0px 3px rgba(0, 0, 0, 0.8)" }}
-                  >
-                  {icon.name}
-                </span>
-            </button>
-          );
-        })}
+            <CustomIcon iconType={app.iconType} className="w-10 h-10" />
+            <span 
+              className="text-xs text-center break-words w-full text-neutral-200 font-bold select-none"
+              style={{ textShadow: "0px 0px 3px rgba(0, 0, 0, 0.8)" }}
+            >
+              {app.name}
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
 };

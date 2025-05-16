@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AppMenu } from '@/components/menu/AppMenu';
 import { Calendar } from '@/components/calendar/Calendar';
-import { ChannelBrowser } from '@/apps/arena/channels/ChannelBrowser';
-import { About } from '@/apps/about/About';
-import { ConfigApp } from '@/apps/config/ConfigApp';
-import { WeatherApp } from '@/apps/weather/WeatherApp';
-import BskyPostsApp from '@/apps/bsky/BskyPostsApp';
+import { APP_LIST } from '@/config/apps';
 
 interface TopBarProps {
   addWindow: (windowProps: any) => void;
@@ -38,85 +34,23 @@ export const TopBar: React.FC<TopBarProps> = ({ addWindow }) => {
     return date.toISOString().split('T')[0];
   };
 
-  const handleOpenChannelBrowser = () => {
-    addWindow({
-      title: "Are.na Browser",
-      content: <ChannelBrowser username="lok" />,
-      width: 600,
-      height: 500,
-      iconType: 'arena',
-    });
+  const getActionForApp = (app: typeof APP_LIST[0]) => {
+    return () => {
+      addWindow({
+        title: app.name,
+        content: <app.component {...(app.props || {})} />,
+        width: app.defaultWidth,
+        height: app.defaultHeight,
+        iconType: app.iconType,
+      });
+    };
   };
 
-  const handleOpenAbout = () => {
-    addWindow({
-      title: "About",
-      content: <About />,
-      width: 400,
-      height: 400,
-      iconType: 'about',
-    });
-  };
-
-  const handleOpenConfigApp = () => {
-    addWindow({
-      title: 'Config',
-      iconType: 'config', 
-      content: <ConfigApp />,
-      width: 400, 
-      height: 500,
-      x: 150, 
-      y: 100,
-    });
-  };
-
-  const handleOpenWeatherApp = () => {
-    addWindow({
-      title: "Weather",
-      content: <WeatherApp />,
-      width: 860,
-      height: 525,
-      iconType: 'weather',
-    });
-  };
-
-  const handleOpenBskyPostsApp = () => {
-    addWindow({
-      title: "Bsky Posts",
-      content: <BskyPostsApp />,
-      width: 450,
-      height: 700,
-      iconType: 'bsky',
-    });
-  };
-
-  const appMenuItems = [
-    {
-      name: "Are.na Browser",
-      iconType: "arena",
-      action: handleOpenChannelBrowser
-    },
-    {
-      name: "About",
-      iconType: "about",
-      action: handleOpenAbout
-    },
-    {
-      name: "Weather",
-      iconType: "weather",
-      action: handleOpenWeatherApp
-    },
-    {
-      name: "Bsky Posts",
-      iconType: "bsky",
-      action: handleOpenBskyPostsApp
-    },
-    {
-      name: "Config",
-      iconType: "config",
-      action: handleOpenConfigApp
-    }
-  ];
+  const appMenuItems = APP_LIST.map(app => ({
+    name: app.name,
+    iconType: app.iconType,
+    action: getActionForApp(app)
+  }));
 
   const toggleAppMenu = () => {
     setIsAppMenuOpen(!isAppMenuOpen);

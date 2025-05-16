@@ -13,6 +13,7 @@ import arenaIcon from '../../assets/icons/arena.png'; // Add arena icon
 import lokComputerIcon from '../../assets/icons/lok-computer.png'; // Add lok-computer icon
 import weatherIcon from '../../assets/icons/weather.png'; // Add weather icon
 import bskyIcon from '../../assets/icons/bsky.png'; // Add bsky icon
+import webpageIcon from '../../assets/icons/webpage.png'; // Add webpage icon
 // Add imports for any other icons you have...
 
 interface CustomIconProps {
@@ -34,6 +35,7 @@ const iconMap: { [key: string]: string } = { // The value is now the imported UR
   about: lokComputerIcon, // Map 'about' type to lok-computer icon
   weather: weatherIcon, // Map 'weather' type
   bsky: bskyIcon, // Add bsky mapping
+  webpage: webpageIcon, // Add webpage mapping
   // Add other mappings corresponding to your imports
 };
 

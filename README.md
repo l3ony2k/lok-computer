@@ -82,8 +82,8 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 *   [ ] Develop `Guestbook` app module (allow users to leave messages).
 *   [ ] Develop `Mailto` app module (iframe of mailbird.co).
 *   [ ] Develop `Shelf` app module (showing my movies, series, books, music, etc from neodb.social).
-*   [ ] Develop `Link Web` app module (visualizing links/connections).
-*   [ ] Develop `Browser` app module (basic iframe-based browser).
+*   [x] Develop `Link Web` app module (visualizing links/connections).
+*   [x] Develop `Browser` app module (basic iframe-based browser).
 
 ### Phase 4: Persistence & Polish
 
@@ -120,6 +120,34 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
         *   Verified that `src/components/window/CustomIcon.tsx` already defines an 'image' `iconType` and maps it to an appropriate icon (`image.png`), so no changes were required for the image viewer window icon.
 
 **Overall Impact:** Users can now see the creation date and time for Bluesky posts in a consistent format. If posts contain images, thumbnails are displayed, and clicking a thumbnail opens the full-size image in a dedicated, resizable image viewer window.
+
+### Session: Web Browser App Implementation (Current Date)
+
+**Objective:** Create a new Web Browser application capable of browsing websites within an iframe.
+
+**Implementation Details:**
+
+1.  **`WebBrowser.tsx` Creation:**
+    *   Created a new component `src/apps/web/WebBrowser.tsx`.
+    *   The component uses `ArenaWindowLayout` for a consistent window structure.
+    *   It includes an `iframe` to render web content.
+2.  **Toolbar & Controls:**
+    *   Implemented a toolbar with:
+        *   Backward and Forward navigation buttons (with SVG icons).
+        *   Refresh button (with SVG icon).
+        *   A URL input field.
+        *   A "Go" button to load the URL.
+    *   Styling for these elements is similar to `ChannelBrowser.tsx`.
+3.  **Functionality:**
+    *   **URL Handling:** Input URLs are sanitized (prefixed with `https://` if no protocol is present).
+    *   **Navigation:** The "Go" button or pressing Enter in the URL bar loads the sanitized URL into the iframe.
+    *   **History:** A simple history stack is maintained for back/forward functionality.
+    *   **Refresh:** The refresh button reloads the current iframe content.
+    *   **State Management:** Uses React state for `currentUrlInput`, `iframeSrc`, `history`, and `historyIndex`.
+    *   **Iframe Sandbox:** Configured with common `sandbox` attributes to allow most functionalities while maintaining some security.
+4.  **Initial URL:** Defaults to Google, but can be configured via the `initialUrl` prop.
+
+**Overall Impact:** Users can now open a basic web browser within the application to navigate websites. This adds a versatile tool to the desktop environment.
 
 ### Session: Arena Channel Explorer Sorting (Current Date)
 
@@ -293,187 +321,4 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 - Ensured the 'Config' desktop icon in `DesktopIcons.tsx` correctly triggers `handleOpenSettingsWindow`.
 
 **Fixes (Follow-up):**
-- Corrected the `iconType` passed to `addWindow` for the Config App in `Desktop.tsx` from `'Settings'` to `'config'` to match the key used in `CustomIcon.tsx`, resolving missing icons in the title bar and taskbar.
-- Added the missing `ThemeProvider` from `next-themes` wrapper in `App.tsx` to enable dynamic theme switching, resolving the issue where selecting a theme in the Config App didn't visually update the UI.
-
-### Session: Arena Channel Browser Input Enhancement (Approx. 2025-04-29)
-
-**Objective:** Enhance the Arena channel browser input to allow direct navigation to channel slugs via the Enter key or 'Go' button.
-
-**Key Changes:**
-
-1.  **Input Bar Navigation:**
-    *   **Issue:** The input bar only filtered channel titles.
-    *   **Solution:** Modified the input bar in `ChannelBrowser.tsx` to allow direct navigation to channel slugs by pressing the Enter key or clicking the 'Go' button.
-    *   **Implementation:** Added a `
-
-### Session: App Menu Implementation (2025-04-30)
-
-**Objective:** Add a dropdown app menu to the topbar when clicking on "lok.computer" text.
-
-**Key Changes:**
-
-1. **New Components:**
-   * Created `src/components/menu/AppMenu.tsx` to handle the dropdown menu UI and logic.
-   * Menu has consistent styling with the rest of the UI, using the retro-taskbar background color and accent hover effects.
-
-2. **TopBar Enhancements:**
-   * Modified `src/core/TopBar.tsx` to make "lok.computer" text clickable and toggle the app menu.
-   * Added state management for the menu's open/closed status.
-   * Created app launching functions for each app (Arena Browser, About, Weather, Config).
-
-3. **Integration:**
-   * Updated `src/core/Desktop.tsx` to pass the `addWindow` function to `TopBar`.
-   * Ensured the menu displays with a high z-index (50) to appear above other elements.
-   * Implemented click-outside behavior to dismiss the menu.
-
-4. **Styling:**
-   * Used the same styling as the rest of the application (retro-taskbar background, accent color for hover states).
-   * Made text color consistent with the dark/light mode themes.
-   * Positioned the menu to align properly with the topbar.
-
-**Result:** Users can now click on "lok.computer" in the topbar to access a dropdown menu of available applications, providing an alternative to the desktop icons for launching apps.
-
-### Session: Calendar Flyout Implementation (2025-04-30)
-
-**Objective:** Add a calendar flyout to the topbar when clicking on the date/time text in the top-right corner.
-
-**Key Changes:**
-
-1. **New Components:**
-   * Created `src/components/calendar/Calendar.tsx` to display a simple month calendar view.
-   * Calendar shows the current month with days of the week, highlighting the current day.
-
-2. **TopBar Enhancements:**
-   * Modified `src/core/TopBar.tsx` to make the date and time display clickable.
-   * Added state management for the calendar's open/closed status.
-   * Created toggle functionality that also closes the app menu if it's open.
-
-3. **Integration:**
-   * Added the `<Calendar />` component to `TopBar`, passing the current date.
-   * Ensured the calendar displays with a high z-index (10000) to appear above other elements.
-   * Implemented click-outside behavior to dismiss the calendar.
-
-4. **Styling:**
-   * Used the same styling as the rest of the application (retro-taskbar background, accent color for current day highlight).
-   * Made text color consistent with the dark/light mode themes.
-   * Positioned the calendar to align with the right side of the topbar.
-
-**Result:** Users can now click on the date/time display in the topbar to view a calendar showing the current month, providing a quick reference for dates without opening a separate calendar application.
-
-### Session: Analog Clock Implementation (2025-04-30)
-
-**Objective:** Add an analog clock to the calendar flyout that displays the current time with hour, minute, and second hands.
-
-**Key Changes:**
-
-1. **Enhanced Calendar Component:**
-   * Modified `src/components/calendar/Calendar.tsx` to include an analog clock above the month display.
-   * Implemented the clock using SVG for precise rendering and smooth animation.
-   * Added minute marks around the clock face with thicker marks at hour positions (every 5 minutes).
-
-2. **Real-time Animation:**
-   * Added state to track the current time using `useState`.
-   * Implemented `useEffect` with a 1-second interval to update the clock hands in real time.
-   * Calculated precise angles for each hand: 
-     - Hour hand (takes minutes into account for smooth movement)
-     - Minute hand (takes seconds into account for smooth movement)
-     - Second hand (moves in 6-degree increments)
-
-3. **Minimal Styling:**
-   * Used clean lines with appropriate thickness hierarchy (hour hand thickest, second hand thinnest).
-   * Made the second hand accent-colored to distinguish it and add visual interest.
-   * Ensured dark/light mode compatibility with appropriate text colors.
-   * Created a subtle hour/minute distinction for the clock marks.
-
-**Result:** The calendar flyout now features a visually appealing analog clock that displays the current time with smooth-moving hands, enhancing the overall aesthetic and functionality of the interface.
-
-### Session: Text Selection Fix for UI Elements (2025-05-01)
-
-**Objective:** Fix issues with text selection in UI elements, particularly in the Calendar component where text highlighting was interfering with dragging and clicking interactions.
-
-**Key Changes:**
-
-1. **CSS Selection Prevention:**
-   * Added the Tailwind `select-none` class to interactive elements throughout the Calendar component.
-   * Applied to calendar day cells, day name headers, month/year display, and the analog clock container.
-
-2. **Implementation Details:**
-   * Modified `src/components/calendar/Calendar.tsx` to include `select-none` class on:
-     - The main calendar container div
-     - The clock container div
-     - The month/year display text
-     - Day name header cells
-     - Calendar day cells
-
-3. **Benefits:**
-   * Prevents accidental text selection when users interact with the calendar
-   * Makes the UI feel more like a native application rather than a webpage
-   * Maintains all clickable functionality while improving the user experience
-
-**Result:** The calendar and other UI elements now have a more polished, app-like feel with no unwanted text selection when users click or drag interface elements.
-
-### Session: Comprehensive Text Selection Control (2025-05-01)
-
-**Objective:** Apply a consistent text selection strategy across the entire application, making UI elements non-selectable while keeping content areas selectable.
-
-**Key Changes:**
-
-1. **Global UI Components:**
-   * Applied `select-none` to all interaction elements in `src/index.css`, including:
-     - Taskbar and taskbar buttons
-     - Window title bars
-     - Folder items, icons, and names
-     - All retro-style buttons
-
-2. **Desktop Environment:**
-   * Added `select-none` to:
-     - Desktop icons and their container
-     - TopBar elements including menu buttons and date/time display
-     - App menu items
-     - Arena content item grids and lists
-
-3. **Smart Selection in Content Areas:**
-   * Added `select-text` to content areas where text selection is desirable:
-     - Block content in `BlockViewer.tsx` (while keeping metadata non-selectable)
-     - Text content in `About.tsx` (while keeping version information non-selectable)
-     - Other content-focused areas
-
-4. **Component-Specific Updates:**
-   * Updated `ArenaWindowLayout.tsx` to make the toolbar non-selectable
-   * Made icon images non-selectable while keeping their associated text selectable when appropriate
-
-**Result:** The application now has a more native app-like feel with no accidental text selection when users interact with UI elements, while still allowing selection in content areas where it's expected and useful.
-
-### Session: Enhanced Text Selection Styling (2025-05-02)
-
-**Objective:** Implement a universal, visually consistent text selection style across the application for better readability and UI consistency.
-
-**Key Changes:**
-
-1. **Universal Selection Styling:**
-   * Added custom `::selection` and `::-moz-selection` CSS rules in `src/index.css`
-   * Used the application's accent color as the selection background
-   * Used accent-foreground color for selected text, creating a clean contrast
-
-2. **Implementation Details:**
-   * Added the following CSS rules:
-     ```css
-     ::selection {
-       background-color: hsl(var(--accent));
-       color: hsl(var(--accent-foreground));
-     }
-     
-     ::-moz-selection {
-       background-color: hsl(var(--accent));
-       color: hsl(var(--accent-foreground));
-     }
-     ```
-   * This leverages the application's existing design tokens for visual consistency
-
-3. **Benefits:**
-   * Creates a consistent, branded look for text selection across the entire application
-   * Improves readability of selected text with appropriate contrast
-   * Maintains the application's visual language and design system
-
-**Result:** Text selection now has a polished, consistent appearance that aligns with the application's design aesthetic while maintaining good readability and visual hierarchy.
+- Corrected the `iconType` passed to `addWindow` for the Config App in `
