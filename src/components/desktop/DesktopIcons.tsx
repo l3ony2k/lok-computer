@@ -43,25 +43,6 @@ export const DesktopIcons: React.FC<DesktopIconsProps> = ({
       },
     },
     {
-        name: "About",
-        iconType: "about",
-        action: handleOpenAbout,
-    },
-    {
-        name: "Weather",
-        iconType: "weather",
-        action: () => {
-          console.log("Double-clicked Weather icon");
-          addWindow({
-            title: "Weather",
-            content: <WeatherApp />,
-            width: 860,
-            height: 525,
-            iconType: 'weather',
-          });
-        },
-    },
-    {
       name: "Bsky Posts",
       iconType: "bsky", // Assuming you'll add 'bsky.png' and map 'bsky' in CustomIcon.tsx
       action: () => {
@@ -75,42 +56,61 @@ export const DesktopIcons: React.FC<DesktopIconsProps> = ({
       },
     },
     {
-        name: "Config",
-        iconType: "config",
-        action: handleOpenSettingsWindow, // Shows toast for now
+      name: "Weather",
+      iconType: "weather",
+      action: () => {
+        console.log("Double-clicked Weather icon");
+        addWindow({
+          title: "Weather",
+          content: <WeatherApp />,
+          width: 860,
+          height: 525,
+          iconType: 'weather',
+        });
+      },
+    },
+    {
+        name: "About",
+        iconType: "about",
+        action: handleOpenAbout,
+    },
+    {
+      name: "Config",
+      iconType: "config",
+      action: handleOpenSettingsWindow, // Shows toast for now
     },
   ];
-
+  
   return (
     // Container div for positioning - styling will be applied in Desktop.tsx's usage
     <div className="absolute top-4 right-4 flex flex-col items-end space-y-2 z-10 select-none"> 
       {desktopIcons.map((icon) => {
-          const singleClickHandlerForHook = handleSingleClickBase(icon.name);
-          
-          // Always call the hook
-          const doubleClickHandler = useDoubleClick(singleClickHandlerForHook, icon.action);
-          
-          // Conditionally choose the action for onClick
-          const clickAction = isMobile ? icon.action : doubleClickHandler;
-
-          return (
-            <button
-                key={icon.name}
-                onClick={clickAction} 
-                className="flex flex-col items-center space-y-1 p-2 hover:bg-black/10 dark:hover:bg-white/10 transition-colors duration-100 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-opacity-50 w-20 select-none"
-                aria-label={`Open ${icon.name}`}
-                tabIndex={0}
-            >
+        const singleClickHandlerForHook = handleSingleClickBase(icon.name);
+        
+        // Always call the hook
+        const doubleClickHandler = useDoubleClick(singleClickHandlerForHook, icon.action);
+        
+        // Conditionally choose the action for onClick
+        const clickAction = isMobile ? icon.action : doubleClickHandler;
+        
+        return (
+          <button
+          key={icon.name}
+          onClick={clickAction} 
+          className="flex flex-col items-center space-y-1 p-2 hover:bg-black/10 dark:hover:bg-white/10 transition-colors duration-100 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-opacity-50 w-20 select-none"
+          aria-label={`Open ${icon.name}`}
+          tabIndex={0}
+          >
                 <CustomIcon iconType={icon.iconType} className="w-10 h-10" />
                 <span 
                   className="text-xs text-center break-words w-full text-neutral-200 font-bold select-none"
                   style={{ textShadow: "0px 0px 3px rgba(0, 0, 0, 0.8)" }}
-                >
+                  >
                   {icon.name}
                 </span>
             </button>
           );
-      })}
+        })}
     </div>
   );
 };
