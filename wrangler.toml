@@ -1,0 +1,4 @@
+name = "lok-computer-worker" 
+main = "worker.js"
+compatibility_date = "2025-05-15" 
+account_id = "50d0c53b7190ef6df5c5083b25de689f" 

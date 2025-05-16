@@ -2,11 +2,10 @@
     "version": 1,
     "include": ["/api/*"],
     "exclude": [],
-    "resources": {
-      "/api/*": {
-        "type": "worker",
-        "service": "lok-computer-worker", 
-        "entrypoint": "ASSETGRAPH_GENERATED_SERVICE_WORKER_ENTRYPOINT"
+    "services": [
+      {
+        "service": "lok-computer-worker",
+        "path": "/api/*"
       }
-    }
+    ]
   }

@@ -31,7 +31,3 @@ dist-ssr
 
 # env
 .env
-
-# wrangler
-wrangler.toml
-.wrangler
