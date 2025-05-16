@@ -5,6 +5,7 @@ import { ChannelBrowser } from '@/apps/arena/channels/ChannelBrowser';
 import { About } from '@/apps/about/About';
 import { ConfigApp } from '@/apps/config/ConfigApp';
 import { WeatherApp } from '@/apps/weather/WeatherApp';
+import BskyPostsApp from '@/apps/bsky/BskyPostsApp';
 
 interface TopBarProps {
   addWindow: (windowProps: any) => void;
@@ -79,6 +80,16 @@ export const TopBar: React.FC<TopBarProps> = ({ addWindow }) => {
     });
   };
 
+  const handleOpenBskyPostsApp = () => {
+    addWindow({
+      title: "Bsky Posts",
+      content: <BskyPostsApp />,
+      width: 450,
+      height: 700,
+      iconType: 'bsky',
+    });
+  };
+
   const appMenuItems = [
     {
       name: "Are.na Browser",
@@ -94,6 +105,11 @@ export const TopBar: React.FC<TopBarProps> = ({ addWindow }) => {
       name: "Weather",
       iconType: "weather",
       action: handleOpenWeatherApp
+    },
+    {
+      name: "Bsky Posts",
+      iconType: "bsky",
+      action: handleOpenBskyPostsApp
     },
     {
       name: "Config",

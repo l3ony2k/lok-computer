@@ -5,6 +5,7 @@ import type { WindowManagerContextType } from '@/hooks/useWindowManager'; // Adj
 import { useDoubleClick } from '@/hooks/useDoubleClick';
 import { useIsMobile } from '@/hooks/use-mobile'; // Added import
 import { WeatherApp } from '@/apps/weather/WeatherApp'; // Import WeatherApp
+import BskyPostsApp from '@/apps/bsky/BskyPostsApp'; // Import BskyPostsApp
 
 interface DesktopIconsProps {
   addWindow: WindowManagerContextType['addWindow'];
@@ -59,6 +60,19 @@ export const DesktopIcons: React.FC<DesktopIconsProps> = ({
             iconType: 'weather',
           });
         },
+    },
+    {
+      name: "Bsky Posts",
+      iconType: "bsky", // Assuming you'll add 'bsky.png' and map 'bsky' in CustomIcon.tsx
+      action: () => {
+        addWindow({
+          title: "Bsky Posts",
+          content: <BskyPostsApp />,
+          width: 450,
+          height: 700,
+          iconType: 'bsky',
+        });
+      },
     },
     {
         name: "Config",

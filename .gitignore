@@ -28,3 +28,10 @@ dist-ssr
 
 # cursor rules
 .cursor/*
+
+# env
+.env
+
+# wrangler
+wrangler.toml
+.wrangler

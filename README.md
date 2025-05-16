@@ -77,7 +77,7 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 
 *   **Objective:** Expand the available applications.
 *   [x] Develop `Weather` app module (fetching data from an API).
-*   [ ] Develop `Blueksy` app module (getting latest posts from blueksy).
+*   [/] Develop `Bsky Posts` app module (getting latest posts from Bluesky with image viewer).
 *   [ ] Develop `Status` app module (showing latest status log from status.lol).
 *   [ ] Develop `Guestbook` app module (allow users to leave messages).
 *   [ ] Develop `Mailto` app module (iframe of mailbird.co).
@@ -95,6 +95,31 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 *   [ ] Configure deployment (e.g., using Netlify, Vercel).
 
 ## Development Log
+
+### Session: Bsky Posts App - Date Formatting & Image Viewer (Current Date - Please fill in)
+
+**Objective:** Finalize date/time display for posts and implement image viewing functionality for the Bsky Posts app.
+
+**Implementation Details:**
+
+1.  **Date/Time Formatting:**
+    *   Verified that the existing helper functions (`formatDateToISO` and `formatTimeTo24H`) in `src/apps/bsky/BskyPostsApp.tsx` correctly format the post creation date as "YYYY-MM-DD HH:MM" (24-hour format), matching the style used in `TopBar.tsx`. No changes were needed.
+
+2.  **Image Viewer Functionality:**
+    *   **`ImageViewerApp.tsx` Creation:**
+        *   Created a new component `src/apps/imageviewer/ImageViewerApp.tsx`.
+        *   This component accepts `imageUrl` and `altText` props.
+        *   It displays the provided image, centered within the app window, using a `bg-neutral-900` background.
+    *   **`BskyPostsApp.tsx` Integration:**
+        *   The `DisplayPost` interface already included an optional `images` array (`PostImage[]`).
+        *   The `fetchPostsInternal` function was already correctly extracting image data (thumbnail, fullsize URL, alt text) from the Bluesky API response for posts with embedded images (`AppBskyEmbedImages.isView`).
+        *   Image thumbnails are rendered within each post if images are present.
+        *   A `handleOpenImageViewer` function was already in place, which uses the `useWindowManager` hook's `addWindow` method.
+        *   Clicking an image thumbnail in `BskyPostsApp.tsx` now opens the `ImageViewerApp` in a new window. The window is titled "Image Viewer" and uses the 'image' `iconType`.
+    *   **Icon Configuration:**
+        *   Verified that `src/components/window/CustomIcon.tsx` already defines an 'image' `iconType` and maps it to an appropriate icon (`image.png`), so no changes were required for the image viewer window icon.
+
+**Overall Impact:** Users can now see the creation date and time for Bluesky posts in a consistent format. If posts contain images, thumbnails are displayed, and clicking a thumbnail opens the full-size image in a dedicated, resizable image viewer window.
 
 ### Session: Arena Channel Explorer Sorting (Current Date)
 

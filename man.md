@@ -162,13 +162,31 @@
     *   Displays weather data in a clean ASCII art format, showing current conditions, temperature, and forecast.
     *   Handles loading states, geolocation permission errors, and API fetch failures with appropriate user feedback.
     *   Uses the same UI patterns as other applications, with a toolbar containing search functionality and a scrollable content area.
-    *   Accessible via the Weather icon on the desktop.
+    *   Accessible via the Weather icon on the desktop and App Menu.
 
-### 3.5. About Application (`src/apps/about/`)
+### 3.5. Bsky Posts Application (`src/apps/bsky/`)
+
+*   **`BskyPostsApp.tsx`**:
+    *   Fetches and displays the logged-in user's latest posts from Bluesky (bsky.social).
+    *   Requires user handle and an app password to be configured via environment variables (`VITE_BSKY_HANDLE`, `VITE_BSKY_APP_PASSWORD` in a `.env` file) for API authentication.
+    *   Displays original posts and replies, filtering out reposts.
+    *   Shows post text and creation date/time (formatted as YYYY-MM-DD HH:MM).
+    *   **Image Display**: If posts contain images, thumbnails are shown directly in the post feed.
+        *   Clicking a thumbnail opens the image in a separate `ImageViewerApp` window.
+    *   **Lazy Loading**: Implements a "Load More" button to fetch older posts, initially loading a set number and allowing users to request more.
+    *   Handles loading states (initial load, loading more), error states (login failure, fetch failure), and provides user feedback.
+    *   Accessible via the Bsky icon on the desktop and App Menu.
+*   **`ImageViewerApp.tsx` (`src/apps/imageviewer/`)**:
+    *   A simple, dedicated application for displaying a single image.
+    *   Launched by `BskyPostsApp` when an image thumbnail is clicked.
+    *   Takes an image URL and alt text as props.
+    *   Displays the image centered within its window, with a neutral dark background.
+
+### 3.6. About Application (`src/apps/about/`)
 
 *   **`About.tsx`**: A very simple component providing static informational content about the project. It's displayed within a standard draggable window when the "About" menu item is clicked.
 
-### 3.6. UI Components & Styling
+### 3.7. UI Components & Styling
 
 *   **`src/components/ui/`**: Contains the standard shadcn-ui components (Button, Card, Dialog, etc.). These are used throughout the application, particularly in the `Desktop` menu and potentially within app windows.
 *   **`src/components/ThemeProvider.tsx`**: Provides context for managing the light/dark theme state, persisting it to `localStorage`.
@@ -180,13 +198,13 @@
     *   Includes custom scrollbar styling for `.window-content-area` to match the theme, using `color-scheme` for Chromium and `scrollbar-color`/`scrollbar-width` for Firefox.
 *   **`tailwind.config.ts`**: Configures Tailwind, extending the theme with custom colors (referencing the CSS variables), shadows (`boxShadow`), and animations (`keyframes`, `animation`). It defines the `retro` color palette and `sidebar` colors (though the sidebar component itself isn't heavily used in the core desktop layout shown).
 
-### 3.7. Configuration (`src/config/channels.ts`)
+### 3.8. Configuration (`src/config/channels.ts`)
 
 *   Defines a list of `FEATURED_CHANNELS` for the dropdown menu.
 *   Sets the `DEFAULT_USERNAME` ('lok').
 *   Provides a `USE_STATIC_CHANNELS` flag to control whether the `ChannelBrowser` uses the live Are.na API or the static `FEATURED_CHANNELS` list (useful for development or API rate limiting).
 
-### 3.8. Application Setup & Routing (`src/main.tsx`, `src/App.tsx`, `src/pages/`)
+### 3.9. Application Setup & Routing (`src/main.tsx`, `src/App.tsx`, `src/pages/`)
 
 *   **`main.tsx`**: The entry point, imports global CSS and renders the `App` component into the `div#root` in `index.html`.
 *   **`App.tsx`**:
