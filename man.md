@@ -138,11 +138,18 @@
 *   **`ChannelExplorer.tsx`**:
     *   Displays the contents (blocks and sub-channels) of a specific Are.na channel, identified by its `channelSlug`.
     *   Fetches content using `getChannelContents` from `lib/api.ts`.
+    *   **Performance Optimizations:**
+        *   Uses `react-window` virtualization to render only visible items
+        *   Implements `FixedSizeGrid` for grid view and `FixedSizeList` for list view
+        *   Utilizes `React.memo` for optimized content item components
+        *   Efficient grid calculations based on container dimensions
     *   Represents blocks with appropriate icons (image, text, video, link) and sub-channels with a distinct 'other-channel' icon. Shows image thumbnails in grid view if available.
     *   Also provides grid/list view and icon size controls.
     *   Clicking a block opens a `BlockViewer` window.
     *   Clicking a sub-channel opens another `ChannelExplorer` window for that channel.
     *   Uses `ArenaWindowLayout` for its structure.
+    *   Handles pagination and batch loading of channel contents.
+    *   Sorts content by position in descending order (newest first).
 *   **`BlockViewer.tsx`**:
     *   Displays the details of a single Are.na block, identified by `blockId`.
     *   Fetches block data using `getBlock` from `lib/api.ts`.

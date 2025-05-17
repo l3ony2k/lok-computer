@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { ArenaBlock } from "@/types/arena";
 import { getChannelContents } from "@/lib/api";
 import { useWindowManager } from "@/hooks/useWindowManager";
@@ -6,6 +6,148 @@ import { BlockViewer } from "../blocks/BlockViewer";
 import { ArenaWindowLayout } from "../components/ArenaWindowLayout";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ContentItemGrid, ContentItemListView, getGridConfiguration, ContentItem, getItemTitle } from "../utils/contentItems";
+import { FixedSizeGrid, FixedSizeList, GridChildComponentProps, ListChildComponentProps } from 'react-window';
+import AutoSizer from 'react-virtualized-auto-sizer';
+
+// Memoized content item components for better performance
+const MemoizedContentItemGrid = React.memo(ContentItemGrid);
+const MemoizedContentItemListView = React.memo(ContentItemListView);
+
+interface ContentRendererProps {
+  contents: ContentItem[];
+  gridSize: 'S' | 'M' | 'L';
+  onSingleClick: (itemId: number) => void;
+  onDoubleClick: (item: ContentItem) => void;
+  renderThumbnail: (image: any) => string;
+  getIconType: (item: ContentItem) => string;
+  isMobile: boolean;
+}
+
+interface AutoSizerProps {
+  height: number;
+  width: number;
+}
+
+// Memoized grid content renderer
+const GridContent = React.memo(({ 
+  contents, 
+  gridSize,
+  onSingleClick,
+  onDoubleClick,
+  renderThumbnail,
+  getIconType,
+  isMobile 
+}: ContentRendererProps) => {
+  const { gridIconSizeClass, itemWidth } = getGridConfiguration(gridSize);
+  // Convert itemWidth from string (e.g. '64px') to number for grid calculations
+  const itemWidthNum = parseInt(itemWidth.replace('px', ''), 10);
+  
+  if (contents.length === 0) {
+    return (
+      <div className="col-start-1 col-end-[-1] text-center p-4 opacity-50">
+        This channel is empty
+      </div>
+    );
+  }
+
+  return (
+    <AutoSizer>
+      {({ height, width }: AutoSizerProps) => {
+        const columnCount = Math.max(1, Math.floor(width / itemWidthNum));
+        const rowCount = Math.ceil(contents.length / columnCount);
+        const itemHeight = itemWidthNum + 32; // Approximate height based on content
+
+        return (
+          <FixedSizeGrid
+            className="folder-grid"
+            columnCount={columnCount}
+            columnWidth={itemWidthNum}
+            height={height}
+            rowCount={rowCount}
+            rowHeight={itemHeight}
+            width={width}
+            style={{ overflow: 'auto' }}
+          >
+            {({ columnIndex, rowIndex, style }: GridChildComponentProps) => {
+              const itemIndex = rowIndex * columnCount + columnIndex;
+              const item = contents[itemIndex];
+              
+              if (!item) return null;
+              
+              return (
+                <div style={style}>
+                  <MemoizedContentItemGrid
+                    key={item.id}
+                    item={item}
+                    onSingleClick={() => onSingleClick(item.id)}
+                    onDoubleClick={() => onDoubleClick(item)}
+                    itemWidth={itemWidth} // Pass the original string width
+                    iconSizeClass={gridIconSizeClass}
+                    renderThumbnail={renderThumbnail}
+                    getIconType={getIconType}
+                    isMobile={isMobile}
+                  />
+                </div>
+              );
+            }}
+          </FixedSizeGrid>
+        );
+      }}
+    </AutoSizer>
+  );
+});
+
+// Memoized list content renderer
+const ListContent = React.memo(({ 
+  contents, 
+  gridSize,
+  onSingleClick,
+  onDoubleClick,
+  renderThumbnail,
+  getIconType,
+  isMobile 
+}: ContentRendererProps) => {
+  const { listIconSizeClass } = getGridConfiguration(gridSize);
+  const itemSize = 32; // Approximate height of each list item
+
+  if (contents.length === 0) {
+    return (
+      <div className="text-center p-1 opacity-50">
+        This channel is empty
+      </div>
+    );
+  }
+
+  return (
+    <AutoSizer>
+      {({ height, width }: AutoSizerProps) => (
+        <FixedSizeList
+          className="space-y-1 p-1"
+          height={height}
+          itemCount={contents.length}
+          itemSize={itemSize}
+          width={width}
+          style={{ overflow: 'auto' }}
+        >
+          {({ index, style }: ListChildComponentProps) => (
+            <div style={style}>
+              <MemoizedContentItemListView
+                key={contents[index].id}
+                item={contents[index]}
+                onSingleClick={() => onSingleClick(contents[index].id)}
+                onDoubleClick={() => onDoubleClick(contents[index])}
+                iconSizeClass={listIconSizeClass}
+                renderThumbnail={renderThumbnail}
+                getIconType={getIconType}
+                isMobile={isMobile}
+              />
+            </div>
+          )}
+        </FixedSizeList>
+      )}
+    </AutoSizer>
+  );
+});
 
 export const ChannelExplorer: React.FC<{ channelSlug: string; username?: string }> = ({ 
   channelSlug, 
@@ -188,60 +330,29 @@ export const ChannelExplorer: React.FC<{ channelSlug: string; username?: string 
     return '';
   };
 
-  const renderGridView = () => {
-    const { gridIconSizeClass, itemWidth, gridTemplateStyle } = getGridConfiguration(gridSize);
+  const renderGridView = () => (
+    <GridContent
+      contents={contents}
+      gridSize={gridSize}
+      onSingleClick={handleItemSingleClick}
+      onDoubleClick={handleItemDoubleClick}
+      renderThumbnail={renderThumbnail}
+      getIconType={getIconType}
+      isMobile={isMobile}
+    />
+  );
 
-    return (
-      <div className="folder-grid" style={gridTemplateStyle}>
-        {contents.length === 0 ? (
-          <div className="col-start-1 col-end-[-1] text-center p-4 opacity-50" style={{ gridColumn: '1 / -1' }}>
-            This channel is empty
-          </div>
-        ) : (
-          contents.map((item) => (
-            <ContentItemGrid
-              key={item.id}
-              item={item}
-              onSingleClick={() => handleItemSingleClick(item.id)}
-              onDoubleClick={() => handleItemDoubleClick(item)}
-              itemWidth={itemWidth}
-              iconSizeClass={gridIconSizeClass}
-              renderThumbnail={renderThumbnail}
-              getIconType={getIconType}
-              isMobile={isMobile}
-            />
-          ))
-        )}
-      </div>
-    );
-  };
-
-  const renderListView = () => {
-    const { listIconSizeClass } = getGridConfiguration(gridSize);
-
-    return (
-      <div className="space-y-1 p-1">
-        {contents.length === 0 ? (
-          <div className="text-center p-1 opacity-50">
-            This channel is empty
-          </div>
-        ) : (
-          contents.map((item) => (
-            <ContentItemListView
-              key={item.id}
-              item={item}
-              onSingleClick={() => handleItemSingleClick(item.id)}
-              onDoubleClick={() => handleItemDoubleClick(item)}
-              iconSizeClass={listIconSizeClass}
-              renderThumbnail={renderThumbnail}
-              getIconType={getIconType}
-              isMobile={isMobile}
-            />
-          ))
-        )}
-      </div>
-    );
-  };
+  const renderListView = () => (
+    <ListContent
+      contents={contents}
+      gridSize={gridSize}
+      onSingleClick={handleItemSingleClick}
+      onDoubleClick={handleItemDoubleClick}
+      renderThumbnail={renderThumbnail}
+      getIconType={getIconType}
+      isMobile={isMobile}
+    />
+  );
 
   return (
     <ArenaWindowLayout
