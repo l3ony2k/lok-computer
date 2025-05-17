@@ -8,6 +8,7 @@ import { Agent, CredentialSession } from '@atproto/api'; // Standard npm import
  * - AI_API_KEY: API key for authentication
  * - AI_MODEL: Model to use for chat completion (e.g., 'gpt-3.5-turbo', 'gpt-4')
  * - AI_TEMPERATURE: Temperature setting for response generation (0.0 to 1.0)
+ * - AI_SYSTEM_INSTRUCTION: System instruction to set AI behavior and context
  * 
  * Bluesky Configuration:
  * - BSKY_HANDLE: Bluesky account handle
@@ -54,6 +55,12 @@ export default {
           return makeJsonResponse({ error: 'Invalid messages format' }, 400);
         }
 
+        // Prepare messages array with system instruction if provided
+        const systemInstruction = env.AI_SYSTEM_INSTRUCTION;
+        const messageArray = systemInstruction 
+          ? [{ role: 'system', content: systemInstruction }, ...messages.slice(-10)]
+          : messages.slice(-10);
+
         // Forward the request to the OpenAI-compatible API
         const response = await fetch(env.AI_BASE_URL + '/v1/chat/completions', {
           method: 'POST',
@@ -63,7 +70,7 @@ export default {
           },
           body: JSON.stringify({
             model: env.AI_MODEL || 'gpt-3.5-turbo',
-            messages: messages.slice(-10), // Only send last 10 messages
+            messages: messageArray,
             temperature: parseFloat(env.AI_TEMPERATURE || '0.7'),
           }),
         });

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { toast } from 'sonner';
+import { ArenaWindowLayout } from "@/apps/arena/components/ArenaWindowLayout";
 
 type Message = {
   id: string;
@@ -15,41 +16,41 @@ export const TalkToAI = () => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       return saved ? JSON.parse(saved) : [
-        { id: '1', text: 'Hello! How can I help you today?', sender: 'ai' },
+        { id: '1', text: 'Hello user, how can I help you?', sender: 'ai' },
       ];
     } catch (error) {
       console.error('Failed to load chat history:', error);
-      return [{ id: '1', text: 'Hello! How can I help you today?', sender: 'ai' }];
+      return [{ id: '1', text: 'Hello user, how can I help you?', sender: 'ai' }];
     }
   });
   
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  // Save messages to localStorage whenever they change
+  // Initial focus
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
-    } catch (error) {
-      console.error('Failed to save chat history:', error);
-    }
-  }, [messages]);
+    inputRef.current?.focus();
+  }, []);
 
   const scrollToBottom = () => {
-    if (messagesEndRef.current) {
-      const scrollContainer = messagesEndRef.current.parentElement;
-      if (scrollContainer) {
-        scrollContainer.scrollTop = scrollContainer.scrollHeight;
+    setTimeout(() => {
+      if (messagesEndRef.current) {
+        const scrollContainer = messagesEndRef.current.parentElement?.parentElement;
+        if (scrollContainer) {
+          scrollContainer.scrollTop = scrollContainer.scrollHeight;
+        }
       }
-    }
+    }, 0);
   };
 
+  // Scroll when messages change
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  const handleSend = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
@@ -63,6 +64,7 @@ export const TalkToAI = () => {
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
+    scrollToBottom();
 
     try {
       // Convert messages to OpenAI format
@@ -97,11 +99,16 @@ export const TalkToAI = () => {
       };
 
       setMessages(prev => [...prev, aiMessage]);
+      scrollToBottom();
     } catch (error) {
       console.error('Error getting AI response:', error);
       toast.error('Failed to get AI response. Please try again.');
     } finally {
       setIsLoading(false);
+      // Focus back on input after sending
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 0);
     }
   };
 
@@ -109,58 +116,73 @@ export const TalkToAI = () => {
     const initialMessage = { id: Date.now().toString(), text: 'Hello! How can I help you today?', sender: 'ai' as const };
     setMessages([initialMessage]);
     toast.success('Chat history cleared');
+    // Focus back on input after clearing
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 0);
   };
 
   return (
-    <div className="flex flex-col h-full bg-background">
-      <div className="window-content-area flex-1 p-2 overflow-y-auto">
-        <div className="space-y-4">
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`max-w-xs md:max-w-md px-2 py-1 ${
-                  message.sender === 'user'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted'
-                }`}
-              >
-                {message.text}
-              </div>
-            </div>
-          ))}
-          <div ref={messagesEndRef} />
+    <ArenaWindowLayout
+      toolbar={
+        <div className="flex items-center justify-center p-1 border-b border-border">
+          <span className="text-xs opacity-50">AI may go crazy. Use at your own risk.</span>
         </div>
-      </div>
-      
-      <form onSubmit={handleSend} className="p-2 border-t border-border">
-        <div className="flex space-x-0">
+      }
+    >
+      <div className="flex flex-col h-full">
+        <div className="window-content-area flex-1 p-2 overflow-y-auto">
+          <div className="space-y-4">
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                <div
+                  className={`max-w-xs md:max-w-md px-2 py-1 ${
+                    message.sender === 'user'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted'
+                  }`}
+                >
+                  {message.text}
+                </div>
+              </div>
+            ))}
+            <div ref={messagesEndRef} />
+          </div>
+        </div>
+        
+        <div className="flex items-center justify-between space-x-2 p-1 border-t border-border">
           <button
             type="button"
             onClick={handleClear}
-            className="retro-button px-2 py-1 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            className="retro-button text-xs px-1 h-[18px]"
+            title="Clear chat history"
           >
             Clear
           </button>
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder={isLoading ? "Waiting for response..." : "Type a message..."}
-            disabled={isLoading}
-            className="flex-1 px-2 py-1 border border-border bg-background"
-          />
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="retro-button px-2 py-1 bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-          >
-            Send
-          </button>
+          <form onSubmit={handleSubmit} className="flex items-center flex-1 mx-2">
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={isLoading ? "Waiting for response..." : "Type a message..."}
+              disabled={isLoading}
+              className="search-input text-xs flex-1 h-[18px] border-r-0 focus:outline-none"
+            />
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="retro-button text-xs px-1 h-[18px] disabled:opacity-50"
+              title="Send message"
+            >
+              Send
+            </button>
+          </form>
         </div>
-      </form>
-    </div>
+      </div>
+    </ArenaWindowLayout>
   );
 };
