@@ -113,7 +113,7 @@ export const TalkToAI = () => {
   };
 
   const handleClear = () => {
-    const initialMessage = { id: Date.now().toString(), text: 'Hello! How can I help you today?', sender: 'ai' as const };
+    const initialMessage = { id: Date.now().toString(), text: 'Hello user, how can I help you?', sender: 'ai' as const };
     setMessages([initialMessage]);
     toast.success('Chat history cleared');
     // Focus back on input after clearing
