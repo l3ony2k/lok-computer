@@ -1,20 +1,32 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export const About = () => {
   const [activeTab, setActiveTab] = useState('about-this');
+
+  useEffect(() => {
+    console.info('[About] App initialized');
+    return () => {
+      console.info('[About] App cleanup');
+    };
+  }, []);
+
+  const handleTabChange = (tab: string) => {
+    console.log('[About] Tab changed to:', tab);
+    setActiveTab(tab);
+  };
 
   return (
     <div className="text-sm p-0">
       <div className="flex border-b border-accent sticky top-0 bg-background">
         <button 
           className={`ml-2 mt-2 px-2 py-1 border-l border-t border-r border-accent mr-1 ${activeTab === 'about-this' ? 'bg-accent/50' : 'opacity-50'}`}
-          onClick={() => setActiveTab('about-this')}
+          onClick={() => handleTabChange('about-this')}
         >
           About this
         </button>
         <button 
           className={`mt-2 px-2 py-1 border-l border-t border-r border-accent ${activeTab === 'about-me' ? 'bg-accent/50' : 'opacity-50'}`}
-          onClick={() => setActiveTab('about-me')}
+          onClick={() => handleTabChange('about-me')}
         >
           About me
         </button>
@@ -22,7 +34,13 @@ export const About = () => {
 
       {activeTab === 'about-this' && (
         <div className="max-w-lg mx-auto p-4">
-          <img className="mb-6 select-none" src="https://d2w9rnfcy7mm78.cloudfront.net/36349997/original_9ae0772fcf1074962bb42fc2b6a21dfd.jpg" alt="a computer within a computer, that's basically what lok.computer is" />
+          <img 
+            className="mb-6 select-none" 
+            src="https://d2w9rnfcy7mm78.cloudfront.net/36349997/original_9ae0772fcf1074962bb42fc2b6a21dfd.jpg" 
+            alt="a computer within a computer, that's basically what lok.computer is"
+            onLoad={() => console.log('[About] Hero image loaded')}
+            onError={() => console.error('[About] Failed to load hero image')}
+          />
           <div className="select-text">
             <div className="border-l-4 border-accent pl-4 italic mb-4">
               A small OS in your browser, for curiosity and creation.

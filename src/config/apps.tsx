@@ -5,6 +5,8 @@ import BskyPostsApp from '@/apps/bsky/BskyPostsApp';
 import { WeatherApp } from '@/apps/weather/WeatherApp';
 import { About } from '@/apps/about/About';
 import { ConfigApp } from '@/apps/config/ConfigApp';
+import { ConsoleApp } from '@/apps/console/ConsoleApp';
+import { TalkToAI } from '@/apps/talk-to-ai/TalkToAI';
 
 export interface AppConfig {
   name: string;
@@ -39,11 +41,25 @@ export const APP_LIST: AppConfig[] = [
     defaultHeight: 700
   },
   {
+    name: "Talk to AI",
+    iconType: "mailbox",
+    component: TalkToAI,
+    defaultWidth: 400,
+    defaultHeight: 600
+  },
+  {
     name: "Weather",
     iconType: "weather",
     component: WeatherApp,
     defaultWidth: 860,
     defaultHeight: 525
+  },
+  {
+    name: "Console",
+    iconType: "console",
+    component: ConsoleApp,
+    defaultWidth: 700,
+    defaultHeight: 400
   },
   {
     name: "About",

@@ -12,6 +12,7 @@ export const WeatherApp: React.FC<WeatherAppProps> = () => {
 
   // Function to fetch weather data from wttr.in
   const fetchWeather = async (query: string = '') => {
+    console.info(`[Weather] Fetching weather data${query ? ` for location: ${query}` : ' for current location'}`);
     setLoading(true);
     setError(null);
     
@@ -24,6 +25,7 @@ export const WeatherApp: React.FC<WeatherAppProps> = () => {
         ? `https://wttr.in/${encodeURIComponent(query)}?2dFq` 
         : 'https://wttr.in/?2dFq';
       
+      console.log('[Weather] Requesting data from:', url);
       const response = await fetch(url);
       
       if (!response.ok) {
@@ -31,9 +33,10 @@ export const WeatherApp: React.FC<WeatherAppProps> = () => {
       }
       
       const data = await response.text();
+      console.info('[Weather] Successfully fetched weather data');
       setWeatherData(data);
     } catch (err) {
-      console.error('Error fetching weather:', err);
+      console.error('[Weather] Error fetching weather:', err);
       setError('Failed to fetch weather data. Please try again.');
       setWeatherData(null);
     } finally {
@@ -44,12 +47,23 @@ export const WeatherApp: React.FC<WeatherAppProps> = () => {
   // Handle search form submission
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    fetchWeather(searchInput.trim());
+    const query = searchInput.trim();
+    if (query) {
+      console.log('[Weather] User searched for location:', query);
+      fetchWeather(query);
+    } else {
+      console.warn('[Weather] Empty search query, fetching default location');
+      fetchWeather();
+    }
   };
 
   // Load weather on initial render
   useEffect(() => {
+    console.info('[Weather] App initialized, fetching default weather data');
     fetchWeather();
+    return () => {
+      console.info('[Weather] App cleanup');
+    };
   }, []);
 
   return (

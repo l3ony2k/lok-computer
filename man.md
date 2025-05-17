@@ -189,11 +189,49 @@
     *   Takes an image URL and alt text as props.
     *   Displays the image centered within its window, with a neutral dark background.
 
-### 3.6. About Application (`src/apps/about/`)
+### 3.6. Console Application (`src/apps/console/`)
+
+*   **`ConsoleApp.tsx`**:
+    *   Provides an in-application console to view messages logged via `console.log`, `console.error`, `console.warn`, and `console.info`.
+    *   **Log Capture:**
+        *   The component overrides global console methods to intercept log messages
+        *   Each log entry includes timestamp, type, and formatted message
+        *   Messages are color-coded by type (error: red, warn: yellow, info: blue, log: default)
+    *   **Log Display:**
+        *   Long messages (>10 lines) are collapsible with expand/collapse toggle
+        *   Messages are automatically scrolled into view
+        *   Object messages are automatically stringified for readability
+    *   **Command Interface:**
+        *   Interactive command input with command history (up/down arrow keys)
+        *   **Available Commands:**
+            *   `help`: Display available commands with usage information
+            *   `clear`: Clear console output
+            *   `apps list`: List all available applications
+            *   `apps open <app>`: Open a specific application window
+            *   `apps close <app>`: Close a specific application window
+            *   `theme get`: Show current theme setting
+            *   `theme set <theme>`: Set theme to light/dark/system
+            *   `theme toggle`: Toggle between light and dark themes
+            *   `status`: Show system status (time, theme, open windows)
+    *   **App Integration:**
+        *   Weather app logs search queries, API calls, and errors
+        *   About app logs lifecycle events, tab changes, and image loading
+        *   All apps include standardized log prefixes for easy filtering
+    *   **Command History:**
+        *   Maintains a history of executed commands
+        *   Navigate history using up/down arrow keys
+        *   Restores empty input when navigating past newest command
+    *   **Easter Eggs:**
+        *   Dangerous command simulation (e.g., `rm -rf`, `format`, `deltree`)
+        *   Displays a fake system deletion progress with critical paths
+        *   Temporarily blacks out the screen for dramatic effect
+        *   Includes a friendly reminder about command safety
+
+### 3.7. About Application (`src/apps/about/`)
 
 *   **`About.tsx`**: A very simple component providing static informational content about the project. It's displayed within a standard draggable window when the "About" menu item is clicked.
 
-### 3.7. UI Components & Styling
+### 3.8. UI Components & Styling
 
 *   **`src/components/ui/`**: Contains the standard shadcn-ui components (Button, Card, Dialog, etc.). These are used throughout the application, particularly in the `Desktop` menu and potentially within app windows.
 *   **`src/components/ThemeProvider.tsx`**: Provides context for managing the light/dark theme state, persisting it to `localStorage`.
@@ -205,13 +243,13 @@
     *   Includes custom scrollbar styling for `.window-content-area` to match the theme, using `color-scheme` for Chromium and `scrollbar-color`/`scrollbar-width` for Firefox.
 *   **`tailwind.config.ts`**: Configures Tailwind, extending the theme with custom colors (referencing the CSS variables), shadows (`boxShadow`), and animations (`keyframes`, `animation`). It defines the `retro` color palette and `sidebar` colors (though the sidebar component itself isn't heavily used in the core desktop layout shown).
 
-### 3.8. Configuration (`src/config/channels.ts`)
+### 3.9. Configuration (`src/config/channels.ts`)
 
 *   Defines a list of `FEATURED_CHANNELS` for the dropdown menu.
 *   Sets the `DEFAULT_USERNAME` ('lok').
 *   Provides a `USE_STATIC_CHANNELS` flag to control whether the `ChannelBrowser` uses the live Are.na API or the static `FEATURED_CHANNELS` list (useful for development or API rate limiting).
 
-### 3.9. Application Setup & Routing (`src/main.tsx`, `src/App.tsx`, `src/pages/`)
+### 3.10. Application Setup & Routing (`src/main.tsx`, `src/App.tsx`, `src/pages/`)
 
 *   **`main.tsx`**: The entry point, imports global CSS and renders the `App` component into the `div#root` in `index.html`.
 *   **`App.tsx`**:

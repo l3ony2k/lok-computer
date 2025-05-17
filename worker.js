@@ -1,5 +1,19 @@
 import { Agent, CredentialSession } from '@atproto/api'; // Standard npm import
 
+/**
+ * Available Environment Variables:
+ * 
+ * AI Chat Configuration:
+ * - AI_BASE_URL: Base URL for the OpenAI-compatible API endpoint
+ * - AI_API_KEY: API key for authentication
+ * - AI_MODEL: Model to use for chat completion (e.g., 'gpt-3.5-turbo', 'gpt-4')
+ * - AI_TEMPERATURE: Temperature setting for response generation (0.0 to 1.0)
+ * 
+ * Bluesky Configuration:
+ * - BSKY_HANDLE: Bluesky account handle
+ * - BSKY_APP_PASSWORD: Bluesky app-specific password
+ */
+
 // Helper to set CORS headers
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*', // Or your specific Pages domain for better security
@@ -25,6 +39,46 @@ export default {
     // Handle CORS preflight requests
     if (request.method === 'OPTIONS') {
       return new Response(null, { headers: corsHeaders });
+    }
+
+    // Route for AI chat
+    if (url.pathname === '/api/chat') {
+      try {
+        if (request.method !== 'POST') {
+          return makeJsonResponse({ error: 'Method not allowed' }, 405);
+        }
+
+        const { messages } = await request.json();
+
+        if (!Array.isArray(messages) || messages.length === 0) {
+          return makeJsonResponse({ error: 'Invalid messages format' }, 400);
+        }
+
+        // Forward the request to the OpenAI-compatible API
+        const response = await fetch(env.AI_BASE_URL + '/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${env.AI_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: env.AI_MODEL || 'gpt-3.5-turbo',
+            messages: messages.slice(-10), // Only send last 10 messages
+            temperature: parseFloat(env.AI_TEMPERATURE || '0.7'),
+          }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error?.message || 'AI API request failed');
+        }
+
+        const data = await response.json();
+        return makeJsonResponse(data);
+      } catch (error) {
+        console.error('Error in AI chat endpoint:', error);
+        return makeJsonResponse({ error: error.message || 'Internal server error' }, 500);
+      }
     }
 
     // Route for Bluesky feed
