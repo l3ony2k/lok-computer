@@ -1,56 +1,91 @@
 import React, { useState, useEffect } from 'react';
-import { AppMenu } from '@/components/menu/AppMenu';
-import { Calendar } from '@/components/calendar/Calendar';
+import { AppMenu, AppMenuItem } from '@/components/menu/AppMenu';
+import { useWindowManager } from '@/hooks/useWindowManager';
 import { APP_LIST } from '@/config/apps';
+import { getUserChannels } from '@/lib/api';
+import { ArenaChannel } from '@/types/arena';
+import { ChannelExplorer } from '@/apps/arena/channels/ChannelExplorer';
+import { WebBrowser } from '@/apps/web/WebBrowser';
+import { Calendar } from '@/components/calendar/Calendar';
 
-interface TopBarProps {
-  addWindow: (windowProps: any) => void;
-}
-
-export const TopBar: React.FC<TopBarProps> = ({ addWindow }) => {
+export const TopBar: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isAppMenuOpen, setIsAppMenuOpen] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const { addWindow, windows, focusWindow } = useWindowManager();
+  const [appMenuItems, setAppMenuItems] = useState<AppMenuItem[]>([]);
 
   useEffect(() => {
-    const timerId = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-
-    return () => {
-      clearInterval(timerId);
-    };
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    const fetchMenuData = async () => {
+      const generatedItems: AppMenuItem[] = await Promise.all(APP_LIST.map(async (app) => {
+        const baseItem: AppMenuItem = {
+          name: app.name,
+          iconType: app.iconType,
+          action: () => {
+            addWindow({
+              title: app.name,
+              content: <app.component {...(app.props || {})} />,
+              width: app.defaultWidth,
+              height: app.defaultHeight,
+              iconType: app.iconType,
+            });
+          },
+          subItems: []
+        };
+
+        if (app.name === 'Are.na Browser' && app.props?.username) {
+          try {
+            const channels: ArenaChannel[] = await getUserChannels(app.props.username);
+            baseItem.subItems = channels.map(channel => ({
+              name: channel.title,
+              iconType: 'folder',
+              action: () => addWindow({
+                title: channel.title,
+                content: <ChannelExplorer channelSlug={channel.slug} username={app.props.username} />,
+                width: 600,
+                height: 500,
+                iconType: 'folder',
+              }),
+            }));
+          } catch (e) {
+            console.error("Failed to fetch channels for app menu", e);
+          }
+        }
+        
+        if (app.name === 'Links' && app.props?.items) {
+          baseItem.subItems = app.props.items.map((item: any) => ({
+            name: item.title,
+            iconType: 'link',
+            action: () => addWindow({
+              title: item.title,
+              content: <WebBrowser initialUrl={item.source.url} />,
+              width: 800,
+              height: 600,
+              iconType: 'link',
+            }),
+          }));
+        }
+        
+        return baseItem;
+      }));
+      setAppMenuItems(generatedItems);
+    };
+
+    fetchMenuData();
+  }, [addWindow]);
+
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-    });
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
   const formatDate = (date: Date) => {
     return date.toISOString().split('T')[0];
   };
-
-  const getActionForApp = (app: typeof APP_LIST[0]) => {
-    return () => {
-      addWindow({
-        title: app.name,
-        content: <app.component {...(app.props || {})} />,
-        width: app.defaultWidth,
-        height: app.defaultHeight,
-        iconType: app.iconType,
-      });
-    };
-  };
-
-  const appMenuItems = APP_LIST.map(app => ({
-    name: app.name,
-    iconType: app.iconType,
-    action: getActionForApp(app)
-  }));
 
   const toggleAppMenu = () => {
     setIsAppMenuOpen(!isAppMenuOpen);
@@ -62,18 +97,23 @@ export const TopBar: React.FC<TopBarProps> = ({ addWindow }) => {
     if (isAppMenuOpen) setIsAppMenuOpen(false);
   };
 
+  const handleWindowSwitch = (id: number) => {
+    focusWindow(id);
+    if (isAppMenuOpen) setIsAppMenuOpen(false);
+  };
+
   return (
     <>
       <div className="h-[30px] bg-retro-taskbar text-sm px-2 flex items-center border-b border-border select-none">
-        {/* Left side: lok.computer */}
-        <button 
-          onClick={toggleAppMenu}
-          className="font-mono font-bold text-s text-neutral-700 dark:text-neutral-100 tracking-tight hover:bg-accent px-1 py-0 rounded-sm select-none"
-        >
-          lok.computer
-        </button>
+        <div className="flex items-center">
+          <button
+            onClick={toggleAppMenu}
+            className="font-mono font-bold text-s text-neutral-700 dark:text-neutral-100 tracking-tight hover:bg-accent px-1 py-0 rounded-sm select-none"
+          >
+            lok.computer
+          </button>
+        </div>
         
-        {/* Right side: Date and Time */}
         <div className="ml-auto flex items-center space-x-2 text-s font-mono font-bold select-none">
           <button
             onClick={toggleCalendar}
@@ -85,14 +125,12 @@ export const TopBar: React.FC<TopBarProps> = ({ addWindow }) => {
         </div>
       </div>
       
-      {/* App Menu */}
-      <AppMenu 
-        items={appMenuItems} 
-        isOpen={isAppMenuOpen} 
-        onClose={() => setIsAppMenuOpen(false)} 
+      <AppMenu
+        items={appMenuItems}
+        isOpen={isAppMenuOpen}
+        onClose={() => setIsAppMenuOpen(false)}
       />
 
-      {/* Calendar */}
       <Calendar
         isOpen={isCalendarOpen}
         onClose={() => setIsCalendarOpen(false)}

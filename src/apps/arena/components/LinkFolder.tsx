@@ -91,7 +91,14 @@ const ListContent = React.memo(({
   isMobile 
 }: ContentRendererProps) => {
   const { listIconSizeClass } = getGridConfiguration(gridSize);
-  const itemSize = 32;
+ 
+  // Dynamic item size to fix list view overlapping
+  const itemSizeMap = {
+    S: 40, // icon (h-6, 24px) + vertical padding (p-2, 16px)
+    M: 48, // icon (h-8, 32px) + vertical padding (p-2, 16px)
+    L: 56, // icon (h-10, 40px) + vertical padding (p-2, 16px)
+  };
+  const itemSize = itemSizeMap[gridSize] || 40;
 
   return (
     <AutoSizer>
@@ -124,7 +131,7 @@ const ListContent = React.memo(({
 });
 
 export const LinkFolder: React.FC<{ items: ContentItem[], title: string }> = ({ items, title }) => {
-  const [isListView, setIsListView] = useState(false);
+  const [isListView, setIsListView] = useState(true);
   const { addWindow } = useWindowManager();
   const [gridSize, setGridSize] = useState<'S' | 'M' | 'L'>('S');
   const isMobile = useIsMobile();

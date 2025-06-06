@@ -30,14 +30,6 @@ const links: ContentItem[] = [
 
 export const APP_LIST: AppConfig[] = [
   {
-    name: "Links",
-    iconType: "folder",
-    component: LinkFolder,
-    defaultWidth: 600,
-    defaultHeight: 500,
-    props: { items: links, title: "Links" }
-  },
-  {
     name: "Are.na Browser",
     iconType: "arena",
     component: ChannelBrowser,
@@ -93,5 +85,13 @@ export const APP_LIST: AppConfig[] = [
     component: ConfigApp,
     defaultWidth: 400,
     defaultHeight: 500
+  },
+  {
+    name: "Links",
+    iconType: "folder",
+    component: LinkFolder,
+    defaultWidth: 600,
+    defaultHeight: 500,
+    props: { items: links, title: "Links" }
   }
 ]; 
