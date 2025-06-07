@@ -21,16 +21,20 @@ export interface AppConfig {
 
 const links: ContentItem[] = [
   { id: 1, base_class: 'Block', class: 'Link', title: 'leonw.ong', source: { url: 'https://leonw.ong', title: '' } },
-  { id: 2, base_class: 'Block', class: 'Link', title: 'are.na/lok', source: { url: 'https://are.na/lok', title: '' } },
-  { id: 3, base_class: 'Block', class: 'Link', title: 'leon.thoughts.page', source: { url: 'https://leon.thoughts.page', title: '' } },
-  { id: 4, base_class: 'Block', class: 'Link', title: 'l3on.site (blog)', source: { url: 'https://l3on.site', title: '' } },
-  { id: 5, base_class: 'Block', class: 'Link', title: 'exa.ee/leon', source: { url: 'https://exa.ee/leon', title: '' } },
-  { id: 6, base_class: 'Block', class: 'Link', title: 'letterbird.co/lok', source: { url: 'https://letterbird.co/lok', title: '' } },
+  { id: 2, base_class: 'Block', class: 'Link', title: 'are.na blocks canvas', source: { url: 'https://abc.lok.computer', title: '' } },
+  { id: 3, base_class: 'Block', class: 'Link', title: 'thoughts.page', source: { url: 'https://leon.thoughts.page', title: '' } },
+  { id: 4, base_class: 'Block', class: 'Link', title: 'my blog (chinese)', source: { url: 'https://l3on.site', title: '' } },
+  { id: 5, base_class: 'Block', class: 'Link', title: 'are.na', source: { url: 'https://are.na/lok', title: '' } },
+  { id: 6, base_class: 'Block', class: 'Link', title: 'omg.lol', source: { url: 'https://lok.omg.lol/', title: '' } },
+  { id: 7, base_class: 'Block', class: 'Link', title: 'kinopio page', source: { url: 'https://exa.ee/leon', title: '' } },
+  { id: 8, base_class: 'Block', class: 'Link', title: 'letterbird (mail)', source: { url: 'https://letterbird.co/lok', title: '' } },
+  { id: 9, base_class: 'Block', class: 'Link', title: 'special.fish', source: { url: 'https://special.fish/lok', title: '' } },
+  { id: 10, base_class: 'Block', class: 'Link', title: 'yourworldoftext.com', source: { url: 'https://www.yourworldoftext.com/~lok', title: '' } },
 ];
 
 export const APP_LIST: AppConfig[] = [
   {
-    name: "Are.na Browser",
+    name: "Are.na",
     iconType: "arena",
     component: ChannelBrowser,
     defaultWidth: 400,
@@ -38,21 +42,21 @@ export const APP_LIST: AppConfig[] = [
     props: { username: "lok" }
   },
   {
-    name: "Web Browser",
+    name: "Web",
     iconType: "webpage",
     component: WebBrowser,
     defaultWidth: 800,
     defaultHeight: 600
   },
   {
-    name: "Bsky Posts",
+    name: "Bsky",
     iconType: "bsky",
     component: BskyPostsApp,
     defaultWidth: 450,
     defaultHeight: 700
   },
   {
-    name: "Talk to AI",
+    name: "AI Talk",
     iconType: "mailbox",
     component: TalkToAI,
     defaultWidth: 400,

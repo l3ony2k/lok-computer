@@ -25,10 +25,16 @@ export const About = () => {
           About this
         </button>
         <button 
-          className={`mt-2 px-2 py-1 border-l border-t border-r border-accent ${activeTab === 'about-me' ? 'bg-accent/50' : 'opacity-50'}`}
+          className={`mt-2 px-2 py-1 border-l border-t border-r border-accent mr-1 ${activeTab === 'about-me' ? 'bg-accent/50' : 'opacity-50'}`}
           onClick={() => handleTabChange('about-me')}
         >
           About me
+        </button>
+        <button 
+          className={`mt-2 px-2 py-1 border-l border-t border-r border-accent ${activeTab === 'projects' ? 'bg-accent/50' : 'opacity-50'}`}
+          onClick={() => handleTabChange('projects')}
+        >
+          Projects
         </button>
       </div>
 
@@ -74,6 +80,14 @@ export const About = () => {
           <p className="mb-4">
             visit <a href="https://leonw.ong/" className="underline text-blue-700 dark:text-blue-300">leonw.ong</a> for now.
           </p>
+        </div>
+      )}
+
+      {activeTab === 'projects' && (
+        <div className="select-text p-4 max-w-lg mx-auto">
+          <div className="border-l-4 border-accent pl-4 italic mb-4">
+            Live to the point of tears. - Albert Camus
+          </div>
         </div>
       )}
     </div>

@@ -1,4 +1,3 @@
-
 export interface ArenaChannel {
   id: number;
   title: string;
@@ -51,11 +50,13 @@ export interface ArenaBlock {
     filename: string;
     content_type: string;
     updated_at: string;
-    thumb: string;
-    square: string;
-    display: string;
+    thumb: { url: string };
+    square: { url: string };
+    display: { url: string };
+    large: { url: string };
     original: {
       url: string;
+      [key: string]: any;
     };
   };
   attachment?: {

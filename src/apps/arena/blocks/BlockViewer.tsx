@@ -10,18 +10,12 @@ interface ImageObject {
 // Helper functions for image source determination
 const getImageSource = (block: ArenaBlock): string => {
   if (!block.image) return "";
-  
-  if (typeof block.image.display === 'string') {
-    return block.image.display;
-  }
-  
-  if (block.image.display && typeof block.image.display === 'object' && 'url' in block.image.display) {
-    return (block.image.display as ImageObject).url;
-  }
-  
-  if (block.image.original && typeof block.image.original === 'object' && 'url' in block.image.original) {
-    return (block.image.original as ImageObject).url;
-  }
+
+  const image = block.image as any;
+
+  if (image.large?.url) return image.large.url;
+  if (image.display?.url) return image.display.url;
+  if (image.original?.url) return image.original.url;
   
   return "";
 };
@@ -48,6 +42,13 @@ const renderBlockByType = {
   
   Link: (block: ArenaBlock) => (
     <div className="flex flex-col">
+      {block.image && (
+        <img 
+          src={getImageSource(block)}
+          alt={block.title || "Image"} 
+          className="max-w-full object-contain max-h-[60vh] mx-auto mb-2"
+        />
+      )}
       {block.source?.url && (
         <a 
           href={block.source.url} 
