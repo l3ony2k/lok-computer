@@ -33,7 +33,7 @@ export const APP_LIST: AppConfig[] = [
     name: "Are.na Browser",
     iconType: "arena",
     component: ChannelBrowser,
-    defaultWidth: 600,
+    defaultWidth: 400,
     defaultHeight: 500,
     props: { username: "lok" }
   },
@@ -90,8 +90,8 @@ export const APP_LIST: AppConfig[] = [
     name: "Links",
     iconType: "folder",
     component: LinkFolder,
-    defaultWidth: 600,
-    defaultHeight: 500,
+    defaultWidth: 300,
+    defaultHeight: 400,
     props: { items: links, title: "Links" }
   }
 ]; 

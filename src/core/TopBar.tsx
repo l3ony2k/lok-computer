@@ -12,7 +12,7 @@ export const TopBar: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isAppMenuOpen, setIsAppMenuOpen] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  const { addWindow, windows, focusWindow } = useWindowManager();
+  const { addWindow } = useWindowManager();
   const [appMenuItems, setAppMenuItems] = useState<AppMenuItem[]>([]);
 
   useEffect(() => {
@@ -70,6 +70,10 @@ export const TopBar: React.FC = () => {
             }),
           }));
         }
+
+        if (baseItem.subItems && baseItem.subItems.length > 0) {
+          baseItem.action = undefined;
+        }
         
         return baseItem;
       }));
@@ -94,11 +98,6 @@ export const TopBar: React.FC = () => {
 
   const toggleCalendar = () => {
     setIsCalendarOpen(!isCalendarOpen);
-    if (isAppMenuOpen) setIsAppMenuOpen(false);
-  };
-
-  const handleWindowSwitch = (id: number) => {
-    focusWindow(id);
     if (isAppMenuOpen) setIsAppMenuOpen(false);
   };
 

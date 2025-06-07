@@ -11,7 +11,7 @@ export const ChannelBrowser: React.FC<{ username?: string }> = ({ username = "lo
   const [channels, setChannels] = useState<ArenaChannel[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [isListView, setIsListView] = useState(false);
+  const [isListView, setIsListView] = useState(true);
   const { addWindow } = useWindowManager();
   const [loadError, setLoadError] = useState<string | null>(null);
   const [gridSize, setGridSize] = useState<'S' | 'M' | 'L'>('S');

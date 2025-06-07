@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useLayoutEffect, useRef } from 'react';
 import { CustomIcon } from '@/components/window/CustomIcon';
 import { ChevronRight } from 'lucide-react';
 
@@ -17,16 +17,27 @@ interface AppMenuProps {
 
 const MenuItem: React.FC<{ item: AppMenuItem; onClose: () => void }> = ({ item, onClose }) => {
   const [isSubMenuOpen, setIsSubMenuOpen] = useState(false);
+  const textRef = useRef<HTMLSpanElement>(null);
+  const [isOverflowing, setIsOverflowing] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
+
+  useLayoutEffect(() => {
+    if (textRef.current) {
+      setIsOverflowing(textRef.current.scrollWidth > textRef.current.clientWidth);
+    }
+  }, [item.name]);
 
   const hasSubItems = item.subItems && item.subItems.length > 0;
 
   const handleMouseEnter = () => {
+    setIsHovering(true);
     if (hasSubItems) {
       setIsSubMenuOpen(true);
     }
   };
 
   const handleMouseLeave = () => {
+    setIsHovering(false);
     if (hasSubItems) {
       setIsSubMenuOpen(false);
     }
@@ -51,7 +62,11 @@ const MenuItem: React.FC<{ item: AppMenuItem; onClose: () => void }> = ({ item, 
         disabled={!item.action && !hasSubItems}
       >
         <CustomIcon iconType={item.iconType} className="w-4 h-4 mr-2" />
-        <span className="flex-1 text-neutral-700 dark:text-neutral-100">{item.name}</span>
+        <div className="flex-1 overflow-hidden whitespace-nowrap">
+          <span ref={textRef} className={`inline-block ${isHovering && isOverflowing ? 'animate-marquee' : ''}`}>
+            {item.name}
+          </span>
+        </div>
         {hasSubItems && <ChevronRight className="w-4 h-4" />}
       </button>
 
@@ -81,15 +96,29 @@ export const AppMenu: React.FC<AppMenuProps> = ({
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-[10000]" 
-      onClick={handleOutsideClick}
-    >
-      <div className="absolute top-[30px] left-2 bg-retro-taskbar border border-border shadow-md min-w-[200px] select-none">
-        {items.map((item) => (
-          <MenuItem key={item.name} item={item} onClose={onClose} />
-        ))}
+    <>
+      <style>
+        {`
+          @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-100%); }
+          }
+          .animate-marquee {
+            animation: marquee 7s linear infinite;
+            padding-left: 100%;
+          }
+        `}
+      </style>
+      <div 
+        className="fixed inset-0 z-[10000]" 
+        onClick={handleOutsideClick}
+      >
+        <div className="absolute top-[30px] left-2 bg-retro-taskbar border border-border shadow-md min-w-[200px] select-none">
+          {items.map((item) => (
+            <MenuItem key={item.name} item={item} onClose={onClose} />
+          ))}
+        </div>
       </div>
-    </div>
+    </>
   );
 }; 
