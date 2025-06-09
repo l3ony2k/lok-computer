@@ -7,12 +7,14 @@ import { APP_LIST } from '@/config/apps';
 
 interface DesktopIconsProps {
   addWindow: WindowManagerContextType['addWindow'];
+  addOrFocusWindow: WindowManagerContextType['addOrFocusWindow'];
   handleOpenAbout: () => void;
   handleOpenSettingsWindow: () => void;
 }
 
 export const DesktopIcons: React.FC<DesktopIconsProps> = ({ 
   addWindow,
+  addOrFocusWindow,
   handleOpenAbout,
   handleOpenSettingsWindow
 }) => {
@@ -60,13 +62,24 @@ export const DesktopIcons: React.FC<DesktopIconsProps> = ({
         return handleOpenSettingsWindow;
       default:
         return () => {
-          addWindow({
-            title: app.name,
-            content: <app.component {...(app.props || {})} />,
-            width: app.defaultWidth,
-            height: app.defaultHeight,
-            iconType: app.iconType,
-          });
+          if (app.singleInstance) {
+            addOrFocusWindow({
+              title: app.name,
+              content: <app.component {...(app.props || {})} />,
+              width: app.defaultWidth,
+              height: app.defaultHeight,
+              iconType: app.iconType,
+              singleInstance: true,
+            });
+          } else {
+            addWindow({
+              title: app.name,
+              content: <app.component {...(app.props || {})} />,
+              width: app.defaultWidth,
+              height: app.defaultHeight,
+              iconType: app.iconType,
+            });
+          }
         };
     }
   };

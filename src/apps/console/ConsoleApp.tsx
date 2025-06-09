@@ -26,7 +26,7 @@ export const ConsoleApp: React.FC = () => {
   const [deletionProgress, setDeletionProgress] = useState(0);
   const consoleEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const { windows, addWindow, closeWindow } = useWindowManager();
+  const { windows, addWindow, addOrFocusWindow, closeWindow } = useWindowManager();
   const { theme, setTheme } = useTheme();
 
   // Add auto-focus effect
@@ -71,15 +71,28 @@ export const ConsoleApp: React.FC = () => {
             }
             const appToOpen = APP_LIST.find(app => app.name.toLowerCase() === appName.toLowerCase());
             if (appToOpen) {
-              addWindow({
-                title: appToOpen.name,
-                content: React.createElement(appToOpen.component as ComponentType),
-                iconType: appToOpen.iconType,
-                width: appToOpen.defaultWidth || 600,
-                height: appToOpen.defaultHeight || 400,
-                minWidth: 300,
-                minHeight: 200
-              });
+              if (appToOpen.singleInstance) {
+                addOrFocusWindow({
+                  title: appToOpen.name,
+                  content: React.createElement(appToOpen.component as ComponentType),
+                  iconType: appToOpen.iconType,
+                  width: appToOpen.defaultWidth || 600,
+                  height: appToOpen.defaultHeight || 400,
+                  minWidth: 300,
+                  minHeight: 200,
+                  singleInstance: true
+                });
+              } else {
+                addWindow({
+                  title: appToOpen.name,
+                  content: React.createElement(appToOpen.component as ComponentType),
+                  iconType: appToOpen.iconType,
+                  width: appToOpen.defaultWidth || 600,
+                  height: appToOpen.defaultHeight || 400,
+                  minWidth: 300,
+                  minHeight: 200
+                });
+              }
               console.info(`Opened ${appToOpen.name}`);
             } else {
               console.error(`App "${appName}" not found`);

@@ -18,7 +18,7 @@ import { WINDOW_DEFAULTS } from "@/config/window";
 import { APP_LIST } from "@/config/apps";
 
 export const Desktop = () => {
-    const { addWindow, windows, updateWindowPosition, updateWindowDimensions } = useWindowManager();
+    const { addWindow, addOrFocusWindow, windows, updateWindowPosition, updateWindowDimensions } = useWindowManager();
     const { theme, setTheme } = useTheme();
     const { settings } = useUserSettings();
     const desktopContainerRef = useRef<HTMLDivElement>(null);
@@ -92,15 +92,28 @@ export const Desktop = () => {
 
     const handleOpenAbout = () => {
         const app = APP_LIST.find(app => app.name === "About");
-        addWindow({
-            title: "About",
-            content: <About />,
-            width: app?.defaultWidth ?? WINDOW_DEFAULTS.DEFAULT_WIDTH,
-            height: app?.defaultHeight ?? WINDOW_DEFAULTS.DEFAULT_HEIGHT,
-            iconType: 'about',
-            minWidth: WINDOW_DEFAULTS.MIN_WIDTH,
-            minHeight: WINDOW_DEFAULTS.MIN_HEIGHT,
-        });
+        if (app?.singleInstance) {
+            addOrFocusWindow({
+                title: "About",
+                content: <About />,
+                width: app?.defaultWidth ?? WINDOW_DEFAULTS.DEFAULT_WIDTH,
+                height: app?.defaultHeight ?? WINDOW_DEFAULTS.DEFAULT_HEIGHT,
+                iconType: 'about',
+                minWidth: WINDOW_DEFAULTS.MIN_WIDTH,
+                minHeight: WINDOW_DEFAULTS.MIN_HEIGHT,
+                singleInstance: true,
+            });
+        } else {
+            addWindow({
+                title: "About",
+                content: <About />,
+                width: app?.defaultWidth ?? WINDOW_DEFAULTS.DEFAULT_WIDTH,
+                height: app?.defaultHeight ?? WINDOW_DEFAULTS.DEFAULT_HEIGHT,
+                iconType: 'about',
+                minWidth: WINDOW_DEFAULTS.MIN_WIDTH,
+                minHeight: WINDOW_DEFAULTS.MIN_HEIGHT,
+            });
+        }
     };
 
     const handleOpenFeaturedChannel = (slug: string, title: string) => {
@@ -122,27 +135,43 @@ export const Desktop = () => {
 
     const handleOpenSettingsWindow = () => {
         const app = APP_LIST.find(app => app.name === "Config");
-        addWindow({
-            title: 'Config',
-            iconType: 'config', 
-            content: <ConfigApp />,
-            width: app?.defaultWidth ?? WINDOW_DEFAULTS.DEFAULT_WIDTH,
-            height: app?.defaultHeight ?? WINDOW_DEFAULTS.DEFAULT_HEIGHT,
-            x: 150, 
-            y: 100,
-            minWidth: WINDOW_DEFAULTS.MIN_WIDTH,
-            minHeight: WINDOW_DEFAULTS.MIN_HEIGHT,
-        });
+        if (app?.singleInstance) {
+            addOrFocusWindow({
+                title: 'Config',
+                iconType: 'config', 
+                content: <ConfigApp />,
+                width: app?.defaultWidth ?? WINDOW_DEFAULTS.DEFAULT_WIDTH,
+                height: app?.defaultHeight ?? WINDOW_DEFAULTS.DEFAULT_HEIGHT,
+                x: 150, 
+                y: 100,
+                minWidth: WINDOW_DEFAULTS.MIN_WIDTH,
+                minHeight: WINDOW_DEFAULTS.MIN_HEIGHT,
+                singleInstance: true,
+            });
+        } else {
+            addWindow({
+                title: 'Config',
+                iconType: 'config', 
+                content: <ConfigApp />,
+                width: app?.defaultWidth ?? WINDOW_DEFAULTS.DEFAULT_WIDTH,
+                height: app?.defaultHeight ?? WINDOW_DEFAULTS.DEFAULT_HEIGHT,
+                x: 150, 
+                y: 100,
+                minWidth: WINDOW_DEFAULTS.MIN_WIDTH,
+                minHeight: WINDOW_DEFAULTS.MIN_HEIGHT,
+            });
+        }
     };
 
     return (
         <div className="h-screen w-screen flex flex-col">
-            <TopBar addWindow={addWindow} />
+            <TopBar />
 
             <div ref={desktopContainerRef} className={`desktop-container relative overflow-hidden ${settings.wallpaper ? 'has-wallpaper' : ''}`}>
                 <WindowContainer />
                 <DesktopIcons 
                     addWindow={addWindow}
+                    addOrFocusWindow={addOrFocusWindow}
                     handleOpenAbout={handleOpenAbout}
                     handleOpenSettingsWindow={handleOpenSettingsWindow}
                 />

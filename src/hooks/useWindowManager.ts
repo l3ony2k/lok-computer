@@ -22,6 +22,7 @@ export interface Window {
 export interface WindowManagerContextType {
   windows: Window[];
   addWindow: (window: Omit<Window, "id" | "zIndex" | "minWidth" | "minHeight"> & { iconType?: string; width?: number; height?: number; x?: number; y?: number; minWidth?: number; minHeight?: number; }) => string;
+  addOrFocusWindow: (window: Omit<Window, "id" | "zIndex" | "minWidth" | "minHeight"> & { iconType?: string; width?: number; height?: number; x?: number; y?: number; minWidth?: number; minHeight?: number; singleInstance?: boolean; }) => string;
   closeWindow: (id: string) => void;
   minimizeWindow: (id: string) => void;
   maximizeWindow: (id: string) => void;
@@ -35,6 +36,7 @@ export interface WindowManagerContextType {
 export const WindowManagerContext = createContext<WindowManagerContextType>({
   windows: [],
   addWindow: () => "",
+  addOrFocusWindow: () => "",
   closeWindow: () => {},
   minimizeWindow: () => {},
   maximizeWindow: () => {},
@@ -102,6 +104,22 @@ export const createWindowManagerContext = () => {
     
     setActiveWindow(id);
     return id;
+  };
+
+  const addOrFocusWindow = (window: Omit<Window, "id" | "zIndex" | "minWidth" | "minHeight"> & { iconType?: string; width?: number; height?: number; x?: number; y?: number; minWidth?: number; minHeight?: number; singleInstance?: boolean; }) => {
+    // If singleInstance is true, check if a window with the same title already exists
+    if (window.singleInstance) {
+      const existingWindow = windows.find(w => w.title === window.title);
+      if (existingWindow) {
+        // Focus the existing window and bring it to front
+        focusWindow(existingWindow.id);
+        return existingWindow.id;
+      }
+    }
+    
+    // If no existing window found or singleInstance is false, create a new window
+    const { singleInstance, ...windowProps } = window; // Remove singleInstance from props
+    return addWindow(windowProps);
   };
 
   const updateWindowPosition = (id: string, x: number, y: number) => {
@@ -211,6 +229,7 @@ export const createWindowManagerContext = () => {
   return {
     windows,
     addWindow,
+    addOrFocusWindow,
     closeWindow,
     minimizeWindow,
     maximizeWindow,

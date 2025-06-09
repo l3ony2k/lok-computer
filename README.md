@@ -513,3 +513,44 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 - Messages display section that populates via the external script
 
 **Overall Impact:** Users can now access a fully functional guestbook that allows visitors to leave messages, while the interface seamlessly integrates with the project's retro computer aesthetic.
+
+### Session: Single Instance App Management (Current Date)
+
+**Objective:** Implement a clean system to control whether apps can have multiple instances or should focus existing windows when activated.
+
+**Implementation Details:**
+
+1. **App Configuration Updates (`src/config/apps.tsx`):**
+   - Added `singleInstance?: boolean` property to `AppConfig` interface
+   - Configured specific apps to use single instance mode:
+     - **Guestbook**: `singleInstance: true`
+     - **Config**: `singleInstance: true` 
+     - **AI Talk**: `singleInstance: true`
+     - **About**: `singleInstance: true`
+
+2. **Window Manager Enhancement (`src/hooks/useWindowManager.ts`):**
+   - Added new `addOrFocusWindow` function to handle single instance logic
+   - Function checks if a window with the same title already exists
+   - If existing window found: brings it to front and focuses it
+   - If no existing window: creates new window normally
+   - Updated interface and context to include the new function
+
+3. **Component Integration:**
+   - **DesktopIcons**: Updated to use `addOrFocusWindow` for single instance apps
+   - **TopBar Menu**: Updated app menu to respect single instance configuration
+   - **Desktop Handlers**: Updated special handlers for About and Config
+   - **Console App**: Updated `apps open` command to respect single instance settings
+
+4. **User Experience:**
+   - **Single Instance Apps**: Clicking icon/menu item focuses existing window instead of creating duplicate
+   - **Multi Instance Apps**: Continue to work as before, creating new windows each time
+   - **Seamless Transition**: No visual changes, just improved behavior for designated apps
+
+**Affected Apps:**
+- ✅ **Guestbook**: Only one instance (makes sense for a single guestbook)
+- ✅ **Config**: Only one settings window needed
+- ✅ **AI Talk**: Single conversation thread per session
+- ✅ **About**: One about window is sufficient
+- 🔄 **Other Apps**: Can still open multiple instances (Are.na, Web, Weather, etc.)
+
+**Overall Impact:** Provides a cleaner desktop experience by preventing unnecessary duplicate windows for apps that conceptually should only have one instance, while maintaining flexibility for apps that benefit from multiple instances.

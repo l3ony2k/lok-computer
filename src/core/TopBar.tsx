@@ -12,7 +12,7 @@ export const TopBar: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isAppMenuOpen, setIsAppMenuOpen] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  const { addWindow } = useWindowManager();
+  const { addWindow, addOrFocusWindow } = useWindowManager();
   const [appMenuItems, setAppMenuItems] = useState<AppMenuItem[]>([]);
 
   useEffect(() => {
@@ -27,13 +27,24 @@ export const TopBar: React.FC = () => {
           name: app.name,
           iconType: app.iconType,
           action: () => {
-            addWindow({
-              title: app.name,
-              content: <app.component {...(app.props || {})} />,
-              width: app.defaultWidth,
-              height: app.defaultHeight,
-              iconType: app.iconType,
-            });
+            if (app.singleInstance) {
+              addOrFocusWindow({
+                title: app.name,
+                content: <app.component {...(app.props || {})} />,
+                width: app.defaultWidth,
+                height: app.defaultHeight,
+                iconType: app.iconType,
+                singleInstance: true,
+              });
+            } else {
+              addWindow({
+                title: app.name,
+                content: <app.component {...(app.props || {})} />,
+                width: app.defaultWidth,
+                height: app.defaultHeight,
+                iconType: app.iconType,
+              });
+            }
           },
           subItems: []
         };
@@ -81,7 +92,7 @@ export const TopBar: React.FC = () => {
     };
 
     fetchMenuData();
-  }, [addWindow]);
+  }, [addWindow, addOrFocusWindow]);
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });

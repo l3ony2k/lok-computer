@@ -18,6 +18,7 @@ export interface AppConfig {
   defaultWidth: number;
   defaultHeight: number;
   props?: Record<string, any>;
+  singleInstance?: boolean; // If true, only one instance can be open at a time
 }
 
 const links: ContentItem[] = [
@@ -61,7 +62,8 @@ export const APP_LIST: AppConfig[] = [
     iconType: "mailbox",
     component: TalkToAI,
     defaultWidth: 400,
-    defaultHeight: 600
+    defaultHeight: 600,
+    singleInstance: true
   },
   {
     name: "Weather",
@@ -82,14 +84,16 @@ export const APP_LIST: AppConfig[] = [
     iconType: "about",
     component: About,
     defaultWidth: 500,
-    defaultHeight: 600
+    defaultHeight: 600,
+    singleInstance: true
   },
   {
     name: "Config",
     iconType: "config",
     component: ConfigApp,
     defaultWidth: 400,
-    defaultHeight: 500
+    defaultHeight: 500,
+    singleInstance: true
   },
   {
     name: "Links",
@@ -104,6 +108,7 @@ export const APP_LIST: AppConfig[] = [
     iconType: "mail",
     component: GuestbookApp,
     defaultWidth: 500,
-    defaultHeight: 600
+    defaultHeight: 600,
+    singleInstance: true
   }
 ]; 
