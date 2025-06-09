@@ -473,3 +473,43 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
    - Implements proper message format conversion for OpenAI API
    - Maintains chat history up to 10 rounds for context
    - Provides user feedback for all operations with toast notifications
+
+### Session: Guestbook App Implementation (Current Date)
+
+**Objective:** Add a new "Guestbook" application that embeds a functional guestbook service while maintaining the project's styling consistency.
+
+**Implementation Details:**
+
+1. **`GuestbookApp.tsx` Creation (`src/apps/guestbook/GuestbookApp.tsx`):**
+   - Created a new React component for the Guestbook application
+   - **Script Integration:** Dynamically loads the external guestbook JavaScript from `guestbooks.meadow.cafe`
+   - **Proper Cleanup:** Removes the script when component unmounts to prevent memory leaks
+   - **Form Styling:** Adapts the original guestbook HTML to use project's CSS classes:
+     - Uses `search-input` class for input fields and textarea
+     - Uses `retro-button` class for the submit button
+     - Applies project's color scheme and spacing patterns
+   - **Required Elements Preserved:** Maintains all required IDs and name attributes as specified in the documentation
+
+2. **Icon Integration:**
+   - Added `mail.png` icon import to `CustomIcon.tsx`
+   - Created `mail` iconType mapping for the guestbook app
+
+3. **App Configuration (`src/config/apps.tsx`):**
+   - Added new entry to `APP_LIST` for "Guestbook" app
+   - Set appropriate default window dimensions (500x600)
+   - Configured to use the `mail` icon type
+
+4. **Styling Consistency:**
+   - Preserved all original guestbook functionality while adapting visual appearance
+   - Used project's form input styling (`search-input`) and button styling (`retro-button`)
+   - Applied consistent spacing, colors, and typography
+   - Maintained responsive layout with max-width container
+
+**Key Features:**
+- Functional guestbook form with name, website, and message fields
+- Dynamic loading and cleanup of external guestbook script
+- Consistent styling with the rest of the lok.computer interface
+- Proper error handling display area
+- Messages display section that populates via the external script
+
+**Overall Impact:** Users can now access a fully functional guestbook that allows visitors to leave messages, while the interface seamlessly integrates with the project's retro computer aesthetic.

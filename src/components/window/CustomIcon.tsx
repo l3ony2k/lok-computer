@@ -15,6 +15,7 @@ import weather2Icon from '../../assets/icons/weather2.png'; // Add weather icon
 import bskyIcon from '../../assets/icons/bsky.png'; // Add bsky icon
 import globeIcon from '../../assets/icons/globe.png'; // Add webpage icon
 import robotIcon from '../../assets/icons/robot.png'; // Add mail icon
+import mailIcon from '../../assets/icons/mail.png'; // Add mail icon for guestbook
 // Add imports for any other icons you have...
 
 interface CustomIconProps {
@@ -38,6 +39,7 @@ const iconMap: { [key: string]: string } = { // The value is now the imported UR
   bsky: bskyIcon, // Add bsky mapping
   webpage: globeIcon, // Add webpage mapping
   mailbox: robotIcon, // Add mailbox icon mapping
+  mail: mailIcon, // Add mail icon mapping for guestbook
   // Add other mappings corresponding to your imports
 };
 

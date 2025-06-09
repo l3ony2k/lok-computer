@@ -9,6 +9,7 @@ import { ConsoleApp } from '@/apps/console/ConsoleApp';
 import { TalkToAI } from '@/apps/talk-to-ai/TalkToAI';
 import { LinkFolder } from '@/apps/arena/components/LinkFolder';
 import { ContentItem } from '@/apps/arena/utils/contentItems';
+import { GuestbookApp } from '@/apps/guestbook/GuestbookApp';
 
 export interface AppConfig {
   name: string;
@@ -97,5 +98,12 @@ export const APP_LIST: AppConfig[] = [
     defaultWidth: 300,
     defaultHeight: 400,
     props: { items: links, title: "Links" }
+  },
+  {
+    name: "Guestbook",
+    iconType: "mail",
+    component: GuestbookApp,
+    defaultWidth: 500,
+    defaultHeight: 600
   }
 ]; 
