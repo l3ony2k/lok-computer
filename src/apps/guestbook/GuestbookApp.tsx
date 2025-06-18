@@ -71,7 +71,7 @@ export const GuestbookApp: React.FC<GuestbookAppProps> = () => {
           {/* Made with footer */}
           <div id="guestbooks___guestbook-made-with" className="text-right">
             <small className="text-xs opacity-50 fixed bottom-1 right-2 select-none">
-              Lovingly made with <a target="_blank" href="https://guestbooks.meadow.cafe" className="underline text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300">Guestbooks</a>
+              Lovingly made with <a target="_blank" href="https://guestbooks.meadow.cafe/guestbook/671" className="underline text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300">Guestbooks</a>
             </small>
           </div>
           
