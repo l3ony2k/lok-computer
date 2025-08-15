@@ -191,7 +191,7 @@ const BskyPostsApp: React.FC = () => {
       )}
 
       {posts.length > 0 && (
-        <div className="flex-grow overflow-y-auto p-3 space-y-3">
+        <div className="flex-grow overflow-y-auto p-3 space-y-3 scrollable-area">
           {posts.map((post) => (
             <div key={post.uri} className="p-3 border border-accent">
               <p className="text-sm text-neutral-800 dark:text-neutral-200 whitespace-pre-wrap break-words">

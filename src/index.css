@@ -26,7 +26,7 @@
     --detail-header-bg: hsl(0 0% 98%);
     --detail-meta-bg: hsl(0 0% 98%);
     --icon-color: hsl(0 0% 30%);
-    
+
     /* Keep existing base variables */
     --background: 0 0% 98%;
     --foreground: 0 0% 10%;
@@ -92,7 +92,7 @@
     --detail-header-bg: hsl(0 0% 15%);
     --detail-meta-bg: hsl(0 0% 15%);
     --icon-color: hsl(0 0% 80%);
-    
+
     /* Keep existing dark mode variables */
     --background: 0 0% 10%;
     --foreground: 0 0% 98%;
@@ -142,7 +142,7 @@
     background-color: hsl(var(--accent));
     color: hsl(var(--accent-foreground));
   }
-  
+
   /* Firefox support */
   ::-moz-selection {
     background-color: hsl(var(--accent));
@@ -168,19 +168,17 @@
     background-image: radial-gradient(circle, hsl(var(--border)) 1px, transparent 1px);
     background-size: 20px 20px;
   }
-  
+
   .taskbar {
     @apply bg-retro-taskbar p-1 border-t border-border h-[30px] flex items-center select-none;
   }
 
   .taskbar-button {
-    @apply h-[24px] px-2 text-sm bg-secondary border border-border shadow-retro-button 
-    hover:bg-accent flex items-center justify-center select-none;
+    @apply h-[24px] px-2 text-sm bg-secondary border border-border shadow-retro-button hover:bg-accent flex items-center justify-center select-none;
   }
 
   .window-titlebar {
-    @apply flex items-center px-2 py-0.5 bg-retro-window-titlebar text-black font-mono text-sm 
-    cursor-move select-none h-[30px] border-b border-border;
+    @apply flex items-center px-2 py-0.5 bg-retro-window-titlebar text-black font-mono text-sm cursor-move select-none h-[30px] border-b border-border;
   }
 
   .folder-grid {
@@ -202,13 +200,15 @@
   .search-input {
     @apply w-full p-1 text-xs bg-background border border-border shadow-retro-inset;
   }
- }
+}
 
- @layer components {
+@layer components {
   .retro-button {
-    @apply px-1 py-0 border border-border shadow-retro-button 
-    bg-secondary hover:bg-accent active:shadow-retro-inset 
-    active:translate-y-px active:translate-x-px transition-all select-none;
+    @apply px-1 py-0 border border-border shadow-retro-button bg-secondary hover:bg-accent active:shadow-retro-inset active:translate-y-px active:translate-x-px transition-all select-none;
+  }
+
+  .thin-scrollbar {
+    @apply scrollable-area;
   }
 
   .window-titlebar {
@@ -253,15 +253,79 @@
   --tw-ring-color: hsl(var(--accent));
 }
 
-/* Enable native dark scrollbar in dark mode */
-.dark .window-content-area {
-  color-scheme: dark;
-  scrollbar-color: #444 #222; /* thumb and track */
+/* Global thin scrollbar styles for ALL elements */
+* {
   scrollbar-width: thin;
+  scrollbar-color: hsl(var(--border)) hsl(var(--background));
 }
-.window-content-area {
-  scrollbar-color: #bbb #eee;
+
+.dark * {
+  color-scheme: dark;
+  scrollbar-color: hsl(var(--border)) hsl(var(--background));
+}
+
+/* Global webkit scrollbar styles for ALL elements */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+
+*::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--accent));
+}
+
+*::-webkit-scrollbar-corner {
+  background: hsl(var(--background));
+}
+
+/* Unified thin scrollbar styles for all scrollable areas */
+.window-content-area,
+.scrollable-area {
   scrollbar-width: thin;
+  scrollbar-color: hsl(var(--border)) hsl(var(--background));
+}
+
+.dark .window-content-area,
+.dark .scrollable-area {
+  color-scheme: dark;
+  scrollbar-color: hsl(var(--border)) hsl(var(--background));
+}
+
+/* Webkit scrollbar styles for Chromium browsers */
+.window-content-area::-webkit-scrollbar,
+.scrollable-area::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.window-content-area::-webkit-scrollbar-track,
+.scrollable-area::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+
+.window-content-area::-webkit-scrollbar-thumb,
+.scrollable-area::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 4px;
+}
+
+.window-content-area::-webkit-scrollbar-thumb:hover,
+.scrollable-area::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--accent));
+}
+
+.window-content-area::-webkit-scrollbar-corner,
+.scrollable-area::-webkit-scrollbar-corner {
+  background: hsl(var(--background));
 }
 
 /* Guestbook challenge question styling (dynamically loaded content) */
@@ -286,13 +350,13 @@
   line-height: 1rem;
   background-color: hsl(var(--background));
   border: 1px solid hsl(var(--border));
-  box-shadow: inset 1px 1px 0 rgba(0,0,0,0.2), inset -1px -1px 0 rgba(255,255,255,0.1);
+  box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.2), inset -1px -1px 0 rgba(255, 255, 255, 0.1);
   font-family: ui-monospace, Menlo, Monaco, "Cascadia Mono", "Segoe UI Mono", "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro", "Fira Mono", "Droid Sans Mono", "Consolas", "Courier New", monospace;
 }
 
 #guestbooks___challenge-answer-container input:focus {
   outline: none;
-  box-shadow: inset 1px 1px 0 rgba(0,0,0,0.2), inset -1px -1px 0 rgba(255,255,255,0.1), 0 0 0 2px hsl(var(--accent));
+  box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.2), inset -1px -1px 0 rgba(255, 255, 255, 0.1), 0 0 0 2px hsl(var(--accent));
 }
 
 #guestbooks___challenge-answer-container br {
@@ -304,11 +368,11 @@
 }
 
 /* Guestbook messages styling */
-#guestbooks___guestbook-messages-container > div {
+#guestbooks___guestbook-messages-container>div {
   border: 1px solid hsl(var(--border));
   background-color: hsl(var(--card));
   margin-bottom: 1rem;
-  box-shadow: inset 1px 1px 0 rgba(255,255,255,0.1), inset -1px -1px 0 rgba(0,0,0,0.1);
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.1), inset -1px -1px 0 rgba(0, 0, 0, 0.1);
 }
 
 #guestbooks___guestbook-messages-container p:first-child {

@@ -41,7 +41,7 @@ export const ConsoleApp: React.FC = () => {
       name: 'help',
       description: 'Show available commands',
       action: () => {
-        console.info('Available commands:', 
+        console.info('Available commands:',
           Object.entries(commands)
             .map(([name, cmd]) => `\n${name}${cmd.name === 'apps' ? ' [list|open|close] [app]' : cmd.name === 'theme' ? ' [get|set|toggle] [theme]' : ''}: ${cmd.description}`)
             .join('')
@@ -280,11 +280,11 @@ export const ConsoleApp: React.FC = () => {
         console.error('FATAL ERROR: I am a human');
         // Disable all pointer events during the freeze
         document.documentElement.style.pointerEvents = 'none';
-        
+
         setTimeout(() => {
           // Black out the screen
           document.documentElement.style.filter = 'brightness(0)';
-          
+
           setTimeout(() => {
             // Re-enable pointer events and restore screen
             document.documentElement.style.pointerEvents = '';
@@ -373,9 +373,9 @@ export const ConsoleApp: React.FC = () => {
   return (
     <div className="h-full flex flex-col bg-neutral-900 text-neutral-300 font-mono text-xs select-text">
       <div className="p-1 border-b border-neutral-700 text-neutral-400 select-none">
-        root@lok.computer 
+        root@lok.computer
       </div>
-      <div className="flex-1 overflow-auto p-2 space-y-1">
+      <div className="flex-1 overflow-auto p-2 space-y-1 scrollable-area">
         {logs.map(log => {
           const message = formatMessage(log.message);
           const isCollapsible = shouldCollapse(message);
@@ -406,7 +406,7 @@ export const ConsoleApp: React.FC = () => {
       </div>
       <div className="p-1 border-t border-neutral-700 flex items-center">
         <span className="text-neutral-500 mr-1">{'>'}</span>
-        <input 
+        <input
           ref={inputRef}
           type="text"
           value={command}
