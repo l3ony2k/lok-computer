@@ -42,6 +42,7 @@ export interface ArenaBlock {
   generated_title: string;
   content?: string;
   description?: string;
+  description_html?: string;
   source?: {
     url: string;
     title: string;

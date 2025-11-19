@@ -2,11 +2,6 @@ import { useState, useEffect } from "react";
 import { ArenaBlock } from "@/types/arena";
 import { getBlock } from "@/lib/api";
 
-interface ImageObject {
-  url: string;
-  [key: string]: any;
-}
-
 // Helper functions for image source determination
 const getImageSource = (block: ArenaBlock): string => {
   if (!block.image) return "";
@@ -16,80 +11,76 @@ const getImageSource = (block: ArenaBlock): string => {
   if (image.large?.url) return image.large.url;
   if (image.display?.url) return image.display.url;
   if (image.original?.url) return image.original.url;
-  
+
   return "";
 };
+
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+};
+
+// Shared renderer for Media and Attachment types
+const renderMediaOrAttachment = (block: ArenaBlock) => (
+  <div className="flex flex-col items-center justify-center w-full">
+    {block.embed?.html && (
+      <div
+        className="max-w-full [&>iframe]:max-w-full"
+        dangerouslySetInnerHTML={{ __html: block.embed.html }}
+      />
+    )}
+    {!block.embed?.html && block.attachment?.url && (
+      <a
+        href={block.attachment.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-border rounded-lg hover:bg-muted transition-colors"
+      >
+        <span className="text-4xl mb-2">📎</span>
+        <span className="text-blue-500 underline">{block.attachment.file_name || "Download attachment"}</span>
+      </a>
+    )}
+  </div>
+);
 
 // Block type renderers
 const renderBlockByType = {
   Image: (block: ArenaBlock) => (
-    <div className="flex flex-col">
-      <img 
+    <div className="flex flex-col items-center justify-center w-full h-full min-h-[200px]">
+      <img
         src={getImageSource(block)}
-        alt={block.title || "Image"} 
-        className="max-w-full object-contain max-h-[60vh] mx-auto"
+        alt={block.title || "Image"}
+        className="max-w-full object-contain max-h-[60vh]"
       />
-      {block.title && <p className="mt-2 font-bold">{block.title}</p>}
-      {block.description && <p className="mt-1">{block.description}</p>}
     </div>
   ),
-  
+
   Text: (block: ArenaBlock) => (
     <div className="whitespace-pre-wrap">
       {block.content}
     </div>
   ),
-  
+
   Link: (block: ArenaBlock) => (
-    <div className="flex flex-col">
-      {block.image && (
-        <img 
+    <div className="flex flex-col items-center justify-center w-full h-full min-h-[200px]">
+      {block.image ? (
+        <img
           src={getImageSource(block)}
-          alt={block.title || "Image"} 
-          className="max-w-full object-contain max-h-[60vh] mx-auto mb-2"
+          alt={block.title || "Link thumbnail"}
+          className="max-w-full object-contain max-h-[60vh]"
         />
+      ) : (
+        <div className="flex items-center justify-center w-full h-40 bg-muted text-muted-foreground">
+          No Thumbnail
+        </div>
       )}
-      {block.source?.url && (
-        <a 
-          href={block.source.url} 
-          target="_blank" 
-          rel="noopener noreferrer" 
-          className="text-blue-500 underline break-all"
-        >
-          {block.source.title || block.source.url}
-        </a>
-      )}
-      {block.description && <p className="mt-2">{block.description}</p>}
     </div>
   ),
-  
+
   Media: (block: ArenaBlock) => renderMediaOrAttachment(block),
   Attachment: (block: ArenaBlock) => renderMediaOrAttachment(block)
 };
-
-// Shared renderer for Media and Attachment types
-const renderMediaOrAttachment = (block: ArenaBlock) => (
-  <div className="flex flex-col">
-    {block.embed?.html && (
-      <div 
-        className="max-w-full"
-        dangerouslySetInnerHTML={{ __html: block.embed.html }} 
-      />
-    )}
-    {!block.embed?.html && block.attachment?.url && (
-      <a 
-        href={block.attachment.url} 
-        target="_blank" 
-        rel="noopener noreferrer" 
-        className="text-blue-500 underline"
-      >
-        {block.attachment.file_name || "Download attachment"}
-      </a>
-    )}
-    {block.title && <p className="mt-2 font-bold">{block.title}</p>}
-    {block.description && <p className="mt-1">{block.description}</p>}
-  </div>
-);
 
 export const BlockViewer = ({ blockId }: { blockId: number | string }) => {
   const [loading, setLoading] = useState(true);
@@ -124,37 +115,97 @@ export const BlockViewer = ({ blockId }: { blockId: number | string }) => {
 
   const renderBlockContent = () => {
     const blockClass = block.class as keyof typeof renderBlockByType;
-    
+
     // Use the type-specific renderer if available
     if (renderBlockByType[blockClass]) {
       return renderBlockByType[blockClass](block);
     }
-    
+
     // Fallback for unsupported block types
     return <p>This block type ({block.class}) is not supported in the viewer.</p>;
   };
 
+  const hasDescription = Boolean(block.description_html || block.description);
+
   return (
-    <div className="p-2">
-      <div className="flex flex-col">
-        <div className="text-sm mb-2 text-muted-foreground select-none">
-          Block ID: {block.id} | Created: {new Date(block.created_at).toLocaleDateString()}
-        </div>
-        <div className="select-text">
+    <div className="flex flex-col h-full overflow-y-auto bg-background text-foreground">
+      <div className="flex flex-col w-full max-w-4xl mx-auto">
+
+        {/* Content Section */}
+        <div className="w-full flex justify-center p-2">
           {renderBlockContent()}
         </div>
-        {block.source?.url && block.class !== "Link" && (
-          <div className="mt-4 text-sm select-none">
-            Source: <a 
-              href={block.source.url} 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="text-blue-500 underline"
-            >
-              {block.source.title || block.source.url}
-            </a>
-          </div>
+
+        {/* Description Section (Optional) */}
+        {hasDescription && (
+          <>
+            <hr className="w-full border-border" />
+            <div
+              className="w-full prose dark:prose-invert max-w-none text-sm p-2"
+              dangerouslySetInnerHTML={{
+                __html: block.description_html || block.description || ""
+              }}
+            />
+          </>
         )}
+
+        {/* Metadata Section */}
+        <hr className="w-full border-border" />
+        <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-muted-foreground p-2">
+          <div className="space-y-3">
+            <div className="flex flex-col gap-1">
+              <span className="font-bold text-foreground/70 uppercase tracking-wider text-[10px]">Type</span>
+              <span>{block.class}</span>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <span className="font-bold text-foreground/70 uppercase tracking-wider text-[10px]">Block ID</span>
+              <a
+                href={`https://www.are.na/block/${block.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-primary hover:underline w-fit"
+              >
+                #{block.id}
+              </a>
+            </div>
+
+            {block.source?.url && (
+              <div className="flex flex-col gap-1">
+                <span className="font-bold text-foreground/70 uppercase tracking-wider text-[10px]">Source</span>
+                <a
+                  href={block.source.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-primary hover:underline truncate block w-full"
+                  title={block.source.url}
+                >
+                  {block.source.title || block.source.url}
+                </a>
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex flex-col gap-1">
+              <span className="font-bold text-foreground/70 uppercase tracking-wider text-[10px]">Connected By</span>
+              <a
+                href={`https://www.are.na/${block.user.slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-primary hover:underline w-fit"
+              >
+                {block.user.full_name}
+              </a>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <span className="font-bold text-foreground/70 uppercase tracking-wider text-[10px]">Connected Time</span>
+              <span>{formatDate(block.created_at)}</span>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   );
