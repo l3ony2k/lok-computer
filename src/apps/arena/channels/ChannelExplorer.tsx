@@ -6,8 +6,6 @@ import { BlockViewer } from "../blocks/BlockViewer";
 import { ArenaWindowLayout } from "../components/ArenaWindowLayout";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ContentItemGrid, ContentItemListView, getGridConfiguration, ContentItem, getItemTitle } from "../utils/contentItems";
-import { FixedSizeGrid, FixedSizeList, GridChildComponentProps, ListChildComponentProps } from 'react-window';
-import AutoSizer from 'react-virtualized-auto-sizer';
 import { RetroButton } from "@/components/ui/RetroButton";
 
 // Memoized content item components for better performance
@@ -24,11 +22,6 @@ interface ContentRendererProps {
   isMobile: boolean;
 }
 
-interface AutoSizerProps {
-  height: number;
-  width: number;
-}
-
 // Memoized grid content renderer
 const GridContent = React.memo(({
   contents,
@@ -39,9 +32,7 @@ const GridContent = React.memo(({
   getIconType,
   isMobile
 }: ContentRendererProps) => {
-  const { gridIconSizeClass, itemWidth } = getGridConfiguration(gridSize);
-  // Convert itemWidth from string (e.g. '64px') to number for grid calculations
-  const itemWidthNum = parseInt(itemWidth.replace('px', ''), 10);
+  const { gridIconSizeClass, itemWidth, gridTemplateStyle } = getGridConfiguration(gridSize);
 
   if (contents.length === 0) {
     return (
@@ -52,53 +43,20 @@ const GridContent = React.memo(({
   }
 
   return (
-    <div className="h-full w-full">
-      <AutoSizer>
-        {({ height, width }: AutoSizerProps) => {
-          // Add gap/padding to column width calculations
-          const gap = 8; // 4px padding on each side
-          const columnWidth = itemWidthNum + gap;
-          const columnCount = Math.max(1, Math.floor(width / columnWidth));
-          const rowCount = Math.ceil(contents.length / columnCount);
-          const itemHeight = columnWidth + 32; // Approximate height based on content
-
-          return (
-            <FixedSizeGrid
-              className="folder-grid"
-              columnCount={columnCount}
-              columnWidth={columnWidth}
-              height={height}
-              rowCount={rowCount}
-              rowHeight={itemHeight}
-              width={width}
-              style={{ overflow: 'auto' }}
-            >
-              {({ columnIndex, rowIndex, style }: GridChildComponentProps) => {
-                const itemIndex = rowIndex * columnCount + columnIndex;
-                const item = contents[itemIndex];
-
-                if (!item) return null;
-
-                return (
-                  <div style={style} className="p-1">
-                    <MemoizedContentItemGrid
-                      key={item.id}
-                      item={item}
-                      onSingleClick={() => onSingleClick(item.id)}
-                      onDoubleClick={() => onDoubleClick(item)}
-                      itemWidth={itemWidth} // Pass the original string width
-                      iconSizeClass={gridIconSizeClass}
-                      renderThumbnail={renderThumbnail}
-                      getIconType={getIconType}
-                      isMobile={isMobile}
-                    />
-                  </div>
-                );
-              }}
-            </FixedSizeGrid>
-          );
-        }}
-      </AutoSizer>
+    <div className="folder-grid" style={gridTemplateStyle}>
+      {contents.map((item) => (
+        <MemoizedContentItemGrid
+          key={item.id}
+          item={item}
+          onSingleClick={() => onSingleClick(item.id)}
+          onDoubleClick={() => onDoubleClick(item)}
+          itemWidth={itemWidth}
+          iconSizeClass={gridIconSizeClass}
+          renderThumbnail={renderThumbnail}
+          getIconType={getIconType}
+          isMobile={isMobile}
+        />
+      ))}
     </div>
   );
 });
@@ -115,14 +73,6 @@ const ListContent = React.memo(({
 }: ContentRendererProps) => {
   const { listIconSizeClass } = getGridConfiguration(gridSize);
 
-  // Dynamic item size to fix list view overlapping
-  const itemSizeMap = {
-    S: 40, // icon (h-6, 24px) + vertical padding (p-2, 16px)
-    M: 48, // icon (h-8, 32px) + vertical padding (p-2, 16px)
-    L: 56, // icon (h-10, 40px) + vertical padding (p-2, 16px)
-  };
-  const itemSize = (itemSizeMap[gridSize] || 40) + 4; // Add 4px for gap
-
   if (contents.length === 0) {
     return (
       <div className="text-center p-1 opacity-50">
@@ -132,45 +82,31 @@ const ListContent = React.memo(({
   }
 
   return (
-    <div className="h-full w-full">
-      <AutoSizer>
-        {({ height, width }: AutoSizerProps) => (
-          <FixedSizeList
-            className="space-y-1 p-1"
-            height={height}
-            itemCount={contents.length}
-            itemSize={itemSize}
-            width={width}
-            style={{ overflow: 'auto' }}
-          >
-            {({ index, style }: ListChildComponentProps) => (
-              <div style={{ ...style, width: width - 8, left: 4 }}>
-                <MemoizedContentItemListView
-                  key={contents[index].id}
-                  item={contents[index]}
-                  onSingleClick={() => onSingleClick(contents[index].id)}
-                  onDoubleClick={() => onDoubleClick(contents[index])}
-                  iconSizeClass={listIconSizeClass}
-                  renderThumbnail={renderThumbnail}
-                  getIconType={getIconType}
-                  isMobile={isMobile}
-                />
-              </div>
-            )}
-          </FixedSizeList>
-        )}
-      </AutoSizer>
+    <div className="space-y-1 p-1">
+      {contents.map((item) => (
+        <MemoizedContentItemListView
+          key={item.id}
+          item={item}
+          onSingleClick={() => onSingleClick(item.id)}
+          onDoubleClick={() => onDoubleClick(item)}
+          iconSizeClass={listIconSizeClass}
+          renderThumbnail={renderThumbnail}
+          getIconType={getIconType}
+          isMobile={isMobile}
+        />
+      ))}
     </div>
   );
 });
 
-export const ChannelExplorer: React.FC<{ channelSlug: string; username?: string }> = ({
+export const ChannelExplorer: React.FC<{ channelSlug?: string; username?: string; items?: ContentItem[] }> = ({
   channelSlug,
-  username = "lok"
+  username = "lok",
+  items
 }) => {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!items);
   const [loadingStatus, setLoadingStatus] = useState<string>("Initializing...");
-  const [contents, setContents] = useState<ContentItem[]>([]);
+  const [contents, setContents] = useState<ContentItem[]>(items || []);
   const [error, setError] = useState<string | null>(null);
   const [isListView, setIsListView] = useState(false);
   const { addWindow } = useWindowManager();
@@ -179,6 +115,14 @@ export const ChannelExplorer: React.FC<{ channelSlug: string; username?: string 
   const isMobile = useIsMobile();
 
   useEffect(() => {
+    if (items) {
+      setContents(items);
+      setLoading(false);
+      return;
+    }
+
+    if (!channelSlug) return;
+
     // Create an AbortController to cancel fetch requests if the component unmounts
     const abortController = new AbortController();
     let isMounted = true;
@@ -299,7 +243,7 @@ export const ChannelExplorer: React.FC<{ channelSlug: string; username?: string 
       abortController.abort();
       console.log('Aborting channel content fetches due to component unmount');
     };
-  }, [channelSlug, username, itemsPerPage]);
+  }, [channelSlug, username, itemsPerPage, items]);
 
   const getIconType = (item: ContentItem): string => {
     if (item.base_class === "Channel") return "other-channel";
@@ -326,6 +270,16 @@ export const ChannelExplorer: React.FC<{ channelSlug: string; username?: string 
         width: 600,
         height: 500,
         iconType: "other-channel",
+      });
+    } else if (item.class === "Link" && item.source?.url) {
+      // Handle Link items specifically (from LinkFolder logic)
+      const { WebBrowser } = require("@/apps/web/WebBrowser");
+      addWindow({
+        title: getItemTitle(item),
+        content: <WebBrowser initialUrl={item.source.url} />,
+        width: 800,
+        height: 600,
+        iconType: "link",
       });
     } else {
       addWindow({

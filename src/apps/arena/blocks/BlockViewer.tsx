@@ -58,9 +58,12 @@ const renderBlockByType = {
   ),
 
   Text: (block: ArenaBlock) => (
-    <div className="whitespace-pre-wrap">
-      {block.content}
-    </div>
+    <div
+      className="prose dark:prose-invert max-w-none"
+      dangerouslySetInnerHTML={{
+        __html: block.content_html || block.content || ""
+      }}
+    />
   ),
 
   Link: (block: ArenaBlock) => (
@@ -130,30 +133,31 @@ export const BlockViewer = ({ blockId }: { blockId: number | string }) => {
 
   return (
     <ArenaWindowLayout toolbar={null}>
-      <div className="flex flex-col w-full max-w-4xl mx-auto">
+      <div className="flex flex-col min-h-full w-full max-w-4xl mx-auto">
 
         {/* Content Section */}
         <div className="w-full flex justify-center p-2">
           {renderBlockContent()}
         </div>
 
-        {/* Description Section (Optional) */}
-        {hasDescription && (
-          <>
-            <hr className="w-full border-border" />
-            <div
-              className="w-full prose dark:prose-invert max-w-none text-sm p-2"
-              dangerouslySetInnerHTML={{
-                __html: block.description_html || block.description || ""
-              }}
-            />
-          </>
-        )}
+        {/* Metadata Area (Description + Metadata) */}
+        <div className="mt-auto w-full">
+          {/* Description Section (Optional) */}
+          {hasDescription && (
+            <>
+              <hr className="w-full border-border" />
+              <div
+                className="w-full prose dark:prose-invert max-w-none text-sm p-2"
+                dangerouslySetInnerHTML={{
+                  __html: block.description_html || block.description || ""
+                }}
+              />
+            </>
+          )}
 
-        {/* Metadata Section */}
-        <hr className="w-full border-border" />
-        <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-muted-foreground p-2">
-          <div className="space-y-3">
+          {/* Metadata Section */}
+          <hr className="w-full border-border" />
+          <div className="w-full flex flex-wrap gap-x-8 gap-y-4 text-xs text-muted-foreground p-2">
             <div className="flex flex-col gap-1">
               <span className="font-bold text-foreground/70 uppercase tracking-wider text-[10px]">Type</span>
               <span>{block.class}</span>
@@ -172,7 +176,7 @@ export const BlockViewer = ({ blockId }: { blockId: number | string }) => {
             </div>
 
             {block.source?.url && (
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-1 max-w-[200px]">
                 <span className="font-bold text-foreground/70 uppercase tracking-wider text-[10px]">Source</span>
                 <a
                   href={block.source.url}
@@ -185,9 +189,7 @@ export const BlockViewer = ({ blockId }: { blockId: number | string }) => {
                 </a>
               </div>
             )}
-          </div>
 
-          <div className="space-y-3">
             <div className="flex flex-col gap-1">
               <span className="font-bold text-foreground/70 uppercase tracking-wider text-[10px]">Connected By</span>
               <a

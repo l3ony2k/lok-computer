@@ -7,8 +7,6 @@ import { About } from '@/apps/about/About';
 import { ConfigApp } from '@/apps/config/ConfigApp';
 import { ConsoleApp } from '@/apps/console/ConsoleApp';
 import { TalkToAI } from '@/apps/talk-to-ai/TalkToAI';
-import { LinkFolder } from '@/apps/arena/components/LinkFolder';
-import { ContentItem } from '@/apps/arena/utils/contentItems';
 import { GuestbookApp } from '@/apps/guestbook/GuestbookApp';
 
 export interface AppConfig {
@@ -20,19 +18,6 @@ export interface AppConfig {
   props?: Record<string, any>;
   singleInstance?: boolean; // If true, only one instance can be open at a time
 }
-
-const links: ContentItem[] = [
-  { id:  1, base_class: 'Block', class: 'Link', title: 'my site (leonw.ong)', source: { url: 'https://leonw.ong', title: '' } },
-  { id:  2, base_class: 'Block', class: 'Link', title: 'are.na blocks canvas', source: { url: 'https://abc.lok.computer', title: '' } },
-  { id:  3, base_class: 'Block', class: 'Link', title: 'my thoughts.page', source: { url: 'https://leon.thoughts.page', title: '' } },
-  { id:  4, base_class: 'Block', class: 'Link', title: 'my blog (chinese)', source: { url: 'https://l3on.site', title: '' } },
-  { id:  5, base_class: 'Block', class: 'Link', title: 'my are.na profile', source: { url: 'https://are.na/lok', title: '' } },
-  { id:  6, base_class: 'Block', class: 'Link', title: 'my omg.lol', source: { url: 'https://lok.omg.lol/', title: '' } },
-  { id:  7, base_class: 'Block', class: 'Link', title: 'my kinopio page', source: { url: 'https://kinopio.club/embed/?spaceId=WxFUq5kPNkJ0gFgapKSGk&zoom=60', title: '' } },
-  { id:  8, base_class: 'Block', class: 'Link', title: 'my letterbird (mail)', source: { url: 'https://letterbird.co/lok', title: '' } },
-  { id:  9, base_class: 'Block', class: 'Link', title: 'my special.fish', source: { url: 'https://special.fish/lok', title: '' } },
-  { id: 10, base_class: 'Block', class: 'Link', title: 'my yourworldoftext.com', source: { url: 'https://www.yourworldoftext.com/~lok', title: '' } },
-];
 
 export const APP_LIST: AppConfig[] = [
   {
@@ -96,14 +81,6 @@ export const APP_LIST: AppConfig[] = [
     singleInstance: true
   },
   {
-    name: "Links",
-    iconType: "folder",
-    component: LinkFolder,
-    defaultWidth: 300,
-    defaultHeight: 400,
-    props: { items: links, title: "Links" }
-  },
-  {
     name: "Guestbook",
     iconType: "mail",
     component: GuestbookApp,
@@ -111,4 +88,4 @@ export const APP_LIST: AppConfig[] = [
     defaultHeight: 600,
     singleInstance: true
   }
-]; 
+];
