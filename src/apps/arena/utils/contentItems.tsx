@@ -122,7 +122,7 @@ export const ContentItemListView = React.memo(({
   return (
     <div
       onClick={handleClick}
-      className="flex items-center space-x-4 p-2 hover:bg-accent/50 cursor-pointer focus:ring-2 focus:ring-accent focus:ring-opacity-50 select-none"
+      className="flex items-center space-x-4 p-2 hover:bg-accent/50 cursor-pointer focus:ring-2 focus:ring-accent focus:ring-opacity-50 select-none w-full"
       tabIndex={0}
     >
       {hasImage && renderThumbnail ? (

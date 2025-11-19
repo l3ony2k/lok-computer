@@ -6,6 +6,7 @@ import { ContentItemGrid, ContentItemListView, getGridConfiguration, ContentItem
 import { FixedSizeGrid, FixedSizeList, GridChildComponentProps, ListChildComponentProps } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { WebBrowser } from "@/apps/web/WebBrowser";
+import { RetroButton } from "@/components/ui/RetroButton";
 
 // Memoized content item components for better performance
 const MemoizedContentItemGrid = React.memo(ContentItemGrid);
@@ -25,108 +26,115 @@ interface AutoSizerProps {
   width: number;
 }
 
-const GridContent = React.memo(({ 
-  contents, 
+const GridContent = React.memo(({
+  contents,
   gridSize,
   onSingleClick,
   onDoubleClick,
   getIconType,
-  isMobile 
+  isMobile
 }: ContentRendererProps) => {
   const { gridIconSizeClass, itemWidth } = getGridConfiguration(gridSize);
   const itemWidthNum = parseInt(itemWidth.replace('px', ''), 10);
-  
-  return (
-    <AutoSizer>
-      {({ height, width }: AutoSizerProps) => {
-        const columnCount = Math.max(1, Math.floor(width / itemWidthNum));
-        const rowCount = Math.ceil(contents.length / columnCount);
-        const itemHeight = itemWidthNum + 32;
 
-        return (
-          <FixedSizeGrid
-            className="folder-grid"
-            columnCount={columnCount}
-            columnWidth={itemWidthNum}
-            height={height}
-            rowCount={rowCount}
-            rowHeight={itemHeight}
-            width={width}
-            style={{ overflow: 'auto' }}
-          >
-            {({ columnIndex, rowIndex, style }: GridChildComponentProps) => {
-              const itemIndex = rowIndex * columnCount + columnIndex;
-              const item = contents[itemIndex];
-              
-              if (!item) return null;
-              
-              return (
-                <div style={style}>
-                  <MemoizedContentItemGrid
-                    key={item.id}
-                    item={item}
-                    onSingleClick={() => onSingleClick(item.id)}
-                    onDoubleClick={() => onDoubleClick(item)}
-                    itemWidth={itemWidth}
-                    iconSizeClass={gridIconSizeClass}
-                    getIconType={getIconType}
-                    isMobile={isMobile}
-                  />
-                </div>
-              );
-            }}
-          </FixedSizeGrid>
-        );
-      }}
-    </AutoSizer>
+  return (
+    <div className="h-full w-full">
+      <AutoSizer>
+        {({ height, width }: AutoSizerProps) => {
+          // Add gap/padding to column width calculations
+          const gap = 8; // 4px padding on each side
+          const columnWidth = itemWidthNum + gap;
+          const columnCount = Math.max(1, Math.floor(width / columnWidth));
+          const rowCount = Math.ceil(contents.length / columnCount);
+          const itemHeight = columnWidth + 32;
+
+          return (
+            <FixedSizeGrid
+              className="folder-grid"
+              columnCount={columnCount}
+              columnWidth={columnWidth}
+              height={height}
+              rowCount={rowCount}
+              rowHeight={itemHeight}
+              width={width}
+              style={{ overflow: 'auto' }}
+            >
+              {({ columnIndex, rowIndex, style }: GridChildComponentProps) => {
+                const itemIndex = rowIndex * columnCount + columnIndex;
+                const item = contents[itemIndex];
+
+                if (!item) return null;
+
+                return (
+                  <div style={style} className="p-1">
+                    <MemoizedContentItemGrid
+                      key={item.id}
+                      item={item}
+                      onSingleClick={() => onSingleClick(item.id)}
+                      onDoubleClick={() => onDoubleClick(item)}
+                      itemWidth={itemWidth}
+                      iconSizeClass={gridIconSizeClass}
+                      getIconType={getIconType}
+                      isMobile={isMobile}
+                    />
+                  </div>
+                );
+              }}
+            </FixedSizeGrid>
+          );
+        }}
+      </AutoSizer>
+    </div>
   );
 });
 
-const ListContent = React.memo(({ 
-  contents, 
+const ListContent = React.memo(({
+  contents,
   gridSize,
   onSingleClick,
   onDoubleClick,
   getIconType,
-  isMobile 
+  isMobile
 }: ContentRendererProps) => {
   const { listIconSizeClass } = getGridConfiguration(gridSize);
- 
+
   // Dynamic item size to fix list view overlapping
   const itemSizeMap = {
     S: 40, // icon (h-6, 24px) + vertical padding (p-2, 16px)
     M: 48, // icon (h-8, 32px) + vertical padding (p-2, 16px)
     L: 56, // icon (h-10, 40px) + vertical padding (p-2, 16px)
   };
-  const itemSize = itemSizeMap[gridSize] || 40;
+  const itemSize = (itemSizeMap[gridSize] || 40) + 4; // Add 4px for gap
 
   return (
-    <AutoSizer>
-      {({ height, width }: AutoSizerProps) => (
-        <FixedSizeList
-          className="space-y-1 p-1"
-          height={height}
-          itemCount={contents.length}
-          itemSize={itemSize}
-          width={width}
-          style={{ overflow: 'auto' }}
-        >
-          {({ index, style }: ListChildComponentProps) => (
-            <div style={style}>
-              <MemoizedContentItemListView
-                key={contents[index].id}
-                item={contents[index]}
-                onSingleClick={() => onSingleClick(contents[index].id)}
-                onDoubleClick={() => onDoubleClick(contents[index])}
-                iconSizeClass={listIconSizeClass}
-                getIconType={getIconType}
-                isMobile={isMobile}
-              />
-            </div>
-          )}
-        </FixedSizeList>
-      )}
-    </AutoSizer>
+    <div className="h-full w-full">
+      <AutoSizer>
+        {({ height, width }: AutoSizerProps) => (
+          <FixedSizeList
+            className="space-y-1 p-1"
+            height={height}
+            itemCount={contents.length}
+            itemSize={itemSize}
+            width={width}
+            style={{ overflow: 'auto' }}
+          >
+            {({ index, style }: ListChildComponentProps) => (
+              <div style={{ ...style, width: width - 8, left: 4 }}>
+                <MemoizedContentItemListView
+                  key={contents[index].id}
+                  item={contents[index]}
+                  onSingleClick={() => onSingleClick(contents[index].id)}
+                  onDoubleClick={() => onDoubleClick(contents[index])}
+                  iconSizeClass={listIconSizeClass}
+                  getIconType={getIconType}
+                  isMobile={isMobile}
+                />
+              </div>
+            )}
+          </FixedSizeList>
+        )}
+      </AutoSizer>
+    </div>
   );
 });
 
@@ -185,16 +193,16 @@ export const LinkFolder: React.FC<{ items: ContentItem[], title: string }> = ({ 
       toolbar={
         <div className="flex items-center justify-between space-x-2 p-1 border-b border-border">
           <div className="flex items-center space-x-0">
-            <button onClick={() => setGridSize('S')} className={`retro-button text-xs px-1 ${gridSize === 'S' ? 'bg-accent' : ''}`} title="Small Icons">S</button>
-            <button onClick={() => setGridSize('M')} className={`retro-button text-xs px-1 ${gridSize === 'M' ? 'bg-accent' : ''}`} title="Medium Icons">M</button>
-            <button onClick={() => setGridSize('L')} className={`retro-button text-xs px-1 ${gridSize === 'L' ? 'bg-accent' : ''}`} title="Large Icons">L</button>
+            <RetroButton size="sm" active={gridSize === 'S'} onClick={() => setGridSize('S')} title="Small Icons">S</RetroButton>
+            <RetroButton size="sm" active={gridSize === 'M'} onClick={() => setGridSize('M')} title="Medium Icons">M</RetroButton>
+            <RetroButton size="sm" active={gridSize === 'L'} onClick={() => setGridSize('L')} title="Large Icons">L</RetroButton>
           </div>
           <div className="flex items-center space-x-2">
             <span className="text-xs opacity-50">Total: {items.length} items</span>
           </div>
           <div className="flex items-center space-x-0">
-            <button onClick={() => setIsListView(false)} className={`retro-button text-xs px-1 ${!isListView ? 'bg-accent' : ''}`}>Grid</button>
-            <button onClick={() => setIsListView(true)} className={`retro-button text-xs px-1 ${isListView ? 'bg-accent' : ''}`}>List</button>
+            <RetroButton size="sm" active={!isListView} onClick={() => setIsListView(false)}>Grid</RetroButton>
+            <RetroButton size="sm" active={isListView} onClick={() => setIsListView(true)}>List</RetroButton>
           </div>
         </div>
       }
@@ -202,4 +210,4 @@ export const LinkFolder: React.FC<{ items: ContentItem[], title: string }> = ({ 
       {isListView ? renderListView() : renderGridView()}
     </ArenaWindowLayout>
   );
-}; 
+};

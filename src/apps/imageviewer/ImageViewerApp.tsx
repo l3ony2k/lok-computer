@@ -1,23 +1,22 @@
 import React from 'react';
+import { WindowLayout } from '@/components/window/WindowLayout';
 
 interface ImageViewerAppProps {
-  imageUrl: string;
-  altText?: string;
-  aspectRatio?: number;
+  imageUrl?: string;
 }
 
-const ImageViewerApp: React.FC<ImageViewerAppProps> = ({ imageUrl, altText, aspectRatio }) => {
-  // aspectRatio is available here if needed for any logic, but not directly used for img styling due to object-contain
-  // console.log('ImageViewerApp aspectRatio:', aspectRatio); // For debugging if needed
+export const ImageViewerApp: React.FC<ImageViewerAppProps> = ({
+  imageUrl = "https://placehold.co/600x400?text=No+Image"
+}) => {
   return (
-    <div className="flex items-center justify-center h-full w-full p-0 window-content-area select-none">
-      <img 
-        src={imageUrl} 
-        alt={altText || 'Image view'} 
-        className="max-w-full max-h-full object-contain" 
+    <WindowLayout hasPadding={false} className="bg-black flex items-center justify-center">
+      <img
+        src={imageUrl}
+        alt="Viewed content"
+        className="max-w-full max-h-full object-contain"
       />
-    </div>
+    </WindowLayout>
   );
 };
 
-export default ImageViewerApp; 
+export default ImageViewerApp;

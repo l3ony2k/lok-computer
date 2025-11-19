@@ -8,6 +8,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { ContentItemGrid, ContentItemListView, getGridConfiguration, ContentItem, getItemTitle } from "../utils/contentItems";
 import { FixedSizeGrid, FixedSizeList, GridChildComponentProps, ListChildComponentProps } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
+import { RetroButton } from "@/components/ui/RetroButton";
 
 // Memoized content item components for better performance
 const MemoizedContentItemGrid = React.memo(ContentItemGrid);
@@ -29,19 +30,19 @@ interface AutoSizerProps {
 }
 
 // Memoized grid content renderer
-const GridContent = React.memo(({ 
-  contents, 
+const GridContent = React.memo(({
+  contents,
   gridSize,
   onSingleClick,
   onDoubleClick,
   renderThumbnail,
   getIconType,
-  isMobile 
+  isMobile
 }: ContentRendererProps) => {
   const { gridIconSizeClass, itemWidth } = getGridConfiguration(gridSize);
   // Convert itemWidth from string (e.g. '64px') to number for grid calculations
   const itemWidthNum = parseInt(itemWidth.replace('px', ''), 10);
-  
+
   if (contents.length === 0) {
     return (
       <div className="col-start-1 col-end-[-1] text-center p-4 opacity-50">
@@ -51,71 +52,76 @@ const GridContent = React.memo(({
   }
 
   return (
-    <AutoSizer>
-      {({ height, width }: AutoSizerProps) => {
-        const columnCount = Math.max(1, Math.floor(width / itemWidthNum));
-        const rowCount = Math.ceil(contents.length / columnCount);
-        const itemHeight = itemWidthNum + 32; // Approximate height based on content
+    <div className="h-full w-full">
+      <AutoSizer>
+        {({ height, width }: AutoSizerProps) => {
+          // Add gap/padding to column width calculations
+          const gap = 8; // 4px padding on each side
+          const columnWidth = itemWidthNum + gap;
+          const columnCount = Math.max(1, Math.floor(width / columnWidth));
+          const rowCount = Math.ceil(contents.length / columnCount);
+          const itemHeight = columnWidth + 32; // Approximate height based on content
 
-        return (
-          <FixedSizeGrid
-            className="folder-grid"
-            columnCount={columnCount}
-            columnWidth={itemWidthNum}
-            height={height}
-            rowCount={rowCount}
-            rowHeight={itemHeight}
-            width={width}
-            style={{ overflow: 'auto' }}
-          >
-            {({ columnIndex, rowIndex, style }: GridChildComponentProps) => {
-              const itemIndex = rowIndex * columnCount + columnIndex;
-              const item = contents[itemIndex];
-              
-              if (!item) return null;
-              
-              return (
-                <div style={style}>
-                  <MemoizedContentItemGrid
-                    key={item.id}
-                    item={item}
-                    onSingleClick={() => onSingleClick(item.id)}
-                    onDoubleClick={() => onDoubleClick(item)}
-                    itemWidth={itemWidth} // Pass the original string width
-                    iconSizeClass={gridIconSizeClass}
-                    renderThumbnail={renderThumbnail}
-                    getIconType={getIconType}
-                    isMobile={isMobile}
-                  />
-                </div>
-              );
-            }}
-          </FixedSizeGrid>
-        );
-      }}
-    </AutoSizer>
+          return (
+            <FixedSizeGrid
+              className="folder-grid"
+              columnCount={columnCount}
+              columnWidth={columnWidth}
+              height={height}
+              rowCount={rowCount}
+              rowHeight={itemHeight}
+              width={width}
+              style={{ overflow: 'auto' }}
+            >
+              {({ columnIndex, rowIndex, style }: GridChildComponentProps) => {
+                const itemIndex = rowIndex * columnCount + columnIndex;
+                const item = contents[itemIndex];
+
+                if (!item) return null;
+
+                return (
+                  <div style={style} className="p-1">
+                    <MemoizedContentItemGrid
+                      key={item.id}
+                      item={item}
+                      onSingleClick={() => onSingleClick(item.id)}
+                      onDoubleClick={() => onDoubleClick(item)}
+                      itemWidth={itemWidth} // Pass the original string width
+                      iconSizeClass={gridIconSizeClass}
+                      renderThumbnail={renderThumbnail}
+                      getIconType={getIconType}
+                      isMobile={isMobile}
+                    />
+                  </div>
+                );
+              }}
+            </FixedSizeGrid>
+          );
+        }}
+      </AutoSizer>
+    </div>
   );
 });
 
 // Memoized list content renderer
-const ListContent = React.memo(({ 
-  contents, 
+const ListContent = React.memo(({
+  contents,
   gridSize,
   onSingleClick,
   onDoubleClick,
   renderThumbnail,
   getIconType,
-  isMobile 
+  isMobile
 }: ContentRendererProps) => {
   const { listIconSizeClass } = getGridConfiguration(gridSize);
-  
+
   // Dynamic item size to fix list view overlapping
   const itemSizeMap = {
     S: 40, // icon (h-6, 24px) + vertical padding (p-2, 16px)
     M: 48, // icon (h-8, 32px) + vertical padding (p-2, 16px)
     L: 56, // icon (h-10, 40px) + vertical padding (p-2, 16px)
   };
-  const itemSize = itemSizeMap[gridSize] || 40;
+  const itemSize = (itemSizeMap[gridSize] || 40) + 4; // Add 4px for gap
 
   if (contents.length === 0) {
     return (
@@ -126,39 +132,41 @@ const ListContent = React.memo(({
   }
 
   return (
-    <AutoSizer>
-      {({ height, width }: AutoSizerProps) => (
-        <FixedSizeList
-          className="space-y-1 p-1"
-          height={height}
-          itemCount={contents.length}
-          itemSize={itemSize}
-          width={width}
-          style={{ overflow: 'auto' }}
-        >
-          {({ index, style }: ListChildComponentProps) => (
-            <div style={style}>
-              <MemoizedContentItemListView
-                key={contents[index].id}
-                item={contents[index]}
-                onSingleClick={() => onSingleClick(contents[index].id)}
-                onDoubleClick={() => onDoubleClick(contents[index])}
-                iconSizeClass={listIconSizeClass}
-                renderThumbnail={renderThumbnail}
-                getIconType={getIconType}
-                isMobile={isMobile}
-              />
-            </div>
-          )}
-        </FixedSizeList>
-      )}
-    </AutoSizer>
+    <div className="h-full w-full">
+      <AutoSizer>
+        {({ height, width }: AutoSizerProps) => (
+          <FixedSizeList
+            className="space-y-1 p-1"
+            height={height}
+            itemCount={contents.length}
+            itemSize={itemSize}
+            width={width}
+            style={{ overflow: 'auto' }}
+          >
+            {({ index, style }: ListChildComponentProps) => (
+              <div style={{ ...style, width: width - 8, left: 4 }}>
+                <MemoizedContentItemListView
+                  key={contents[index].id}
+                  item={contents[index]}
+                  onSingleClick={() => onSingleClick(contents[index].id)}
+                  onDoubleClick={() => onDoubleClick(contents[index])}
+                  iconSizeClass={listIconSizeClass}
+                  renderThumbnail={renderThumbnail}
+                  getIconType={getIconType}
+                  isMobile={isMobile}
+                />
+              </div>
+            )}
+          </FixedSizeList>
+        )}
+      </AutoSizer>
+    </div>
   );
 });
 
-export const ChannelExplorer: React.FC<{ channelSlug: string; username?: string }> = ({ 
-  channelSlug, 
-  username = "lok" 
+export const ChannelExplorer: React.FC<{ channelSlug: string; username?: string }> = ({
+  channelSlug,
+  username = "lok"
 }) => {
   const [loading, setLoading] = useState(true);
   const [loadingStatus, setLoadingStatus] = useState<string>("Initializing...");
@@ -174,27 +182,27 @@ export const ChannelExplorer: React.FC<{ channelSlug: string; username?: string 
     // Create an AbortController to cancel fetch requests if the component unmounts
     const abortController = new AbortController();
     let isMounted = true;
-    
+
     const fetchAllChannelContents = async () => {
       try {
         if (!isMounted) return;
         setLoading(true);
         setContents([]);
-        
+
         // First fetch to get an estimate of total content
         setLoadingStatus("Estimating total content...");
         const initialData = await getChannelContents(channelSlug, username, 1, itemsPerPage, abortController.signal);
-        
+
         if (!isMounted) return;
-        
+
         const totalItems = initialData.length || 0;
         const estimatedTotalPages = Math.ceil(totalItems / itemsPerPage);
-        
+
         console.log(`Channel ${channelSlug} has approximately ${totalItems} items (estimated ${estimatedTotalPages} pages)`);
-        
+
         // Add first page of content
         let allContents: ContentItem[] = [...(initialData.contents || [])];
-        
+
         if (estimatedTotalPages <= 1) {
           // If only one page, we're already done
           if (isMounted) {
@@ -205,50 +213,50 @@ export const ChannelExplorer: React.FC<{ channelSlug: string; username?: string 
           }
           return;
         }
-        
+
         // Fetch remaining pages in batches of 3
         const batchSize = 3;
         let currentPage = 2; // Start from page 2 since we already fetched page 1
-        
+
         while (currentPage <= estimatedTotalPages && isMounted) {
           // Calculate the batch of pages to fetch in parallel
           const pagesToFetch = [];
           for (let i = 0; i < batchSize && currentPage + i <= estimatedTotalPages; i++) {
             pagesToFetch.push(currentPage + i);
           }
-          
+
           // Update loading status
           if (isMounted) {
-            setLoadingStatus(`Fetching pages ${pagesToFetch[0]}-${pagesToFetch[pagesToFetch.length-1]}/${estimatedTotalPages}...`);
+            setLoadingStatus(`Fetching pages ${pagesToFetch[0]}-${pagesToFetch[pagesToFetch.length - 1]}/${estimatedTotalPages}...`);
           }
-          
+
           // Fetch multiple pages in parallel
-          const fetchPromises = pagesToFetch.map(page => 
+          const fetchPromises = pagesToFetch.map(page =>
             getChannelContents(channelSlug, username, page, itemsPerPage, abortController.signal)
           );
-          
+
           try {
             const results = await Promise.all(fetchPromises);
-            
+
             if (!isMounted) return;
-            
+
             // Process results and add to allContents
             let hasMoreContent = false;
             for (const data of results) {
               const pageContents = data.contents || [];
               allContents = [...allContents, ...pageContents];
-              
+
               // Check if we potentially have more pages
               if (pageContents.length === itemsPerPage) {
                 hasMoreContent = true;
               }
             }
-            
+
             console.log(`Fetched batch, now have ${allContents.length} items`);
-            
+
             // Update currentPage for next batch
             currentPage += pagesToFetch.length;
-            
+
             // If the last page in the batch had fewer items than itemsPerPage,
             // we've probably reached the end of content
             if (!hasMoreContent && currentPage > estimatedTotalPages) {
@@ -263,7 +271,7 @@ export const ChannelExplorer: React.FC<{ channelSlug: string; username?: string 
             throw err; // Re-throw other errors to be caught by the outer catch
           }
         }
-        
+
         if (isMounted) {
           // Sort content by position in descending order (newest first)
           allContents.sort((a, b) => (b.position || 0) - (a.position || 0));
@@ -284,7 +292,7 @@ export const ChannelExplorer: React.FC<{ channelSlug: string; username?: string 
     };
 
     fetchAllChannelContents();
-    
+
     // Cleanup function to abort any in-progress fetches when the component unmounts
     return () => {
       isMounted = false;
@@ -295,14 +303,14 @@ export const ChannelExplorer: React.FC<{ channelSlug: string; username?: string 
 
   const getIconType = (item: ContentItem): string => {
     if (item.base_class === "Channel") return "other-channel";
-    
+
     const blockClass = (item as ArenaBlock).class;
     if (blockClass === "Text") return "text";
     if (blockClass === "Link") return "link";
-    if (blockClass === "Image") return "image"; 
+    if (blockClass === "Image") return "image";
     if (blockClass === "Attachment") return "text";
     if (blockClass === "Media") return "video";
-    
+
     return "text"; // Default to text icon for unknown/other block types
   };
 
@@ -366,16 +374,16 @@ export const ChannelExplorer: React.FC<{ channelSlug: string; username?: string 
       toolbar={
         <div className="flex items-center justify-between space-x-2 p-1 border-b border-border">
           <div className="flex items-center space-x-0">
-            <button onClick={() => setGridSize('S')} className={`retro-button text-xs px-1 ${gridSize === 'S' ? 'bg-accent' : ''}`} title="Small Icons">S</button>
-            <button onClick={() => setGridSize('M')} className={`retro-button text-xs px-1 ${gridSize === 'M' ? 'bg-accent' : ''}`} title="Medium Icons">M</button>
-            <button onClick={() => setGridSize('L')} className={`retro-button text-xs px-1 ${gridSize === 'L' ? 'bg-accent' : ''}`} title="Large Icons">L</button>
+            <RetroButton size="sm" active={gridSize === 'S'} onClick={() => setGridSize('S')} title="Small Icons">S</RetroButton>
+            <RetroButton size="sm" active={gridSize === 'M'} onClick={() => setGridSize('M')} title="Medium Icons">M</RetroButton>
+            <RetroButton size="sm" active={gridSize === 'L'} onClick={() => setGridSize('L')} title="Large Icons">L</RetroButton>
           </div>
           <div className="flex items-center space-x-2">
             <span className="text-xs opacity-50">Total: {contents.length} items</span>
           </div>
           <div className="flex items-center space-x-0">
-            <button onClick={() => setIsListView(false)} className={`retro-button text-xs px-1 ${!isListView ? 'bg-accent' : ''}`}>Grid</button>
-            <button onClick={() => setIsListView(true)} className={`retro-button text-xs px-1 ${isListView ? 'bg-accent' : ''}`}>List</button>
+            <RetroButton size="sm" active={!isListView} onClick={() => setIsListView(false)}>Grid</RetroButton>
+            <RetroButton size="sm" active={isListView} onClick={() => setIsListView(true)}>List</RetroButton>
           </div>
         </div>
       }

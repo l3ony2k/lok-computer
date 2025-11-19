@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { ArenaBlock } from "@/types/arena";
 import { getBlock } from "@/lib/api";
+import { ArenaWindowLayout } from "../components/ArenaWindowLayout";
 
 // Helper functions for image source determination
 const getImageSource = (block: ArenaBlock): string => {
@@ -128,7 +129,7 @@ export const BlockViewer = ({ blockId }: { blockId: number | string }) => {
   const hasDescription = Boolean(block.description_html || block.description);
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto bg-background text-foreground">
+    <ArenaWindowLayout toolbar={null}>
       <div className="flex flex-col w-full max-w-4xl mx-auto">
 
         {/* Content Section */}
@@ -207,6 +208,6 @@ export const BlockViewer = ({ blockId }: { blockId: number | string }) => {
         </div>
 
       </div>
-    </div>
+    </ArenaWindowLayout>
   );
 };

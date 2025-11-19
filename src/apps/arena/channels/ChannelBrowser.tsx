@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { RetroButton } from "@/components/ui/RetroButton";
 import { ArenaChannel } from "@/types/arena";
 import { getUserChannels } from "@/lib/api";
 import { useWindowManager } from "@/hooks/useWindowManager";
@@ -22,7 +23,7 @@ export const ChannelBrowser: React.FC<{ username?: string }> = ({ username = "lo
       try {
         setLoading(true);
         setLoadError(null);
-        
+
         const fetchedChannels = await getUserChannels(username);
         setChannels(fetchedChannels);
       } catch (error) {
@@ -51,13 +52,13 @@ export const ChannelBrowser: React.FC<{ username?: string }> = ({ username = "lo
   };
 
   const handleGoToChannel = (slug: string) => {
-    if (!slug.trim()) return; 
+    if (!slug.trim()) return;
     addWindow({
-      title: slug, 
+      title: slug,
       content: <ChannelExplorer channelSlug={slug} username={username} />,
       width: 600,
       height: 500,
-      iconType: 'other-channel', 
+      iconType: 'other-channel',
     });
   };
 
@@ -134,30 +135,30 @@ export const ChannelBrowser: React.FC<{ username?: string }> = ({ username = "lo
       toolbar={
         <div className="flex items-center justify-between space-x-2 p-1 border-b border-border">
           <div className="flex items-center space-x-0">
-            <button onClick={() => setGridSize('S')} className={`retro-button text-xs px-1 ${gridSize === 'S' ? 'bg-accent' : ''}`} title="Small Icons">S</button>
-            <button onClick={() => setGridSize('M')} className={`retro-button text-xs px-1 ${gridSize === 'M' ? 'bg-accent' : ''}`} title="Medium Icons">M</button>
-            <button onClick={() => setGridSize('L')} className={`retro-button text-xs px-1 ${gridSize === 'L' ? 'bg-accent' : ''}`} title="Large Icons">L</button>
+            <RetroButton size="sm" active={gridSize === 'S'} onClick={() => setGridSize('S')} title="Small Icons">S</RetroButton>
+            <RetroButton size="sm" active={gridSize === 'M'} onClick={() => setGridSize('M')} title="Medium Icons">M</RetroButton>
+            <RetroButton size="sm" active={gridSize === 'L'} onClick={() => setGridSize('L')} title="Large Icons">L</RetroButton>
           </div>
           <div className="flex items-center flex-1 mx-2">
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              onKeyDown={handleKeyDown} 
+              onKeyDown={handleKeyDown}
               placeholder="Search titles or enter slug..."
-              className="search-input text-xs flex-1 h-[18px] border-r-0 focus:outline-none" 
+              className="search-input text-xs flex-1 h-[18px] border-r-0 focus:outline-none"
             />
-            <button 
-              onClick={() => handleGoToChannel(search)} 
-              className={`retro-button text-xs px-1 h-[18px]`} 
+            <RetroButton
+              size="sm"
+              onClick={() => handleGoToChannel(search)}
               title="Go to channel slug"
             >
               Go
-            </button>
+            </RetroButton>
           </div>
           <div className="flex items-center space-x-0">
-            <button onClick={() => setIsListView(false)} className={`retro-button text-xs px-1 ${!isListView ? 'bg-accent' : ''}`}>Grid</button>
-            <button onClick={() => setIsListView(true)} className={`retro-button text-xs px-1 ${isListView ? 'bg-accent' : ''}`}>List</button>
+            <RetroButton size="sm" active={!isListView} onClick={() => setIsListView(false)}>Grid</RetroButton>
+            <RetroButton size="sm" active={isListView} onClick={() => setIsListView(true)}>List</RetroButton>
           </div>
         </div>
       }

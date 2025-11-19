@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, ComponentType } from 'react';
 import { useWindowManager } from '@/hooks/useWindowManager';
 import { useTheme } from 'next-themes';
 import { APP_LIST } from '@/config/apps';
+import { WindowLayout } from '@/components/window/WindowLayout';
 
 interface LogEntry {
   id: number;
@@ -16,6 +17,42 @@ interface Command {
   description: string;
   action: (args?: string[]) => void;
 }
+
+interface LogItemProps {
+  log: LogEntry;
+  getLogColor: (type: LogEntry['type']) => string;
+  formatMessage: (msgParts: any[]) => string;
+}
+
+const LogItem: React.FC<LogItemProps> = ({ log, getLogColor, formatMessage }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const displayMessage = formatMessage(log.message);
+  const lines = displayMessage.split('\n');
+  const isLong = lines.length > 10;
+
+  const content = isLong && !isExpanded
+    ? lines.slice(0, 10).join('\n') + '\n...'
+    : displayMessage;
+
+  return (
+    <div className={`mb-1 ${getLogColor(log.type)}`}>
+      <div className="flex items-start">
+        <span className="text-neutral-600 mr-2 select-none text-xs shrink-0">[{log.timestamp}]</span>
+        <div className="flex-1 overflow-hidden min-w-0">
+          <span className="break-all whitespace-pre-wrap">{content}</span>
+          {isLong && (
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="block text-xs text-neutral-500 hover:text-neutral-300 mt-1 focus:outline-none underline decoration-dotted"
+            >
+              {isExpanded ? 'Show less' : `Show ${lines.length - 10} more lines...`}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export const ConsoleApp: React.FC = () => {
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -35,6 +72,13 @@ export const ConsoleApp: React.FC = () => {
       inputRef.current.focus();
     }
   }, []);
+
+  // Scroll to bottom when logs change
+  useEffect(() => {
+    if (consoleEndRef.current) {
+      consoleEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [logs]);
 
   const commands: Record<string, Command> = {
     help: {
@@ -157,6 +201,11 @@ export const ConsoleApp: React.FC = () => {
           windowTitles: windows.map(w => w.title)
         });
       }
+    },
+    'rm -rf /': {
+      name: 'rm -rf /',
+      description: 'Do not run this command',
+      action: () => simulateSystemDeletion()
     }
   };
 
@@ -196,15 +245,6 @@ export const ConsoleApp: React.FC = () => {
       console.info = originalConsoleInfo;
     };
   }, []);
-
-  useEffect(() => {
-    if (consoleEndRef.current) {
-      const scrollContainer = consoleEndRef.current.parentElement;
-      if (scrollContainer) {
-        scrollContainer.scrollTop = scrollContainer.scrollHeight;
-      }
-    }
-  }, [logs]);
 
   const formatMessage = (msgParts: any[]) => {
     return msgParts.map(part => {
@@ -250,175 +290,97 @@ export const ConsoleApp: React.FC = () => {
       '/apps',
       '/images',
       '/videos',
-      '/music',
-      '/documents',
-      '/downloads',
-      '/important-files',
-      '/definitely-not-memes',
-      '/crypto-wallets',
-      '/homework-folder',
-      '/secret-stuff'
     ];
 
-    let progress = 0;
-    const totalSteps = criticalPaths.length;
+    let i = 0;
     const interval = setInterval(() => {
-      if (progress < totalSteps) {
-        console.error(`Deleting ${criticalPaths[progress]}...`);
-        progress++;
-        setDeletionProgress(progress);
-      } else {
+      if (i >= criticalPaths.length) {
         clearInterval(interval);
-        // Show fatal error for 5 seconds
-        console.error('FATAL ERROR: Kernel not found');
-        console.error('FATAL ERROR: System files corrupted');
-        console.error('FATAL ERROR: Who am i?');
-        console.error('FATAL ERROR: Who are you?');
-        console.error('FATAL ERROR: I am not a computer');
-        console.error('FATAL ERROR: I am a human');
-        console.error('FATAL ERROR: I am a human');
-        console.error('FATAL ERROR: I am a human');
-        // Disable all pointer events during the freeze
-        document.documentElement.style.pointerEvents = 'none';
-
+        console.error('SYSTEM CRITICAL FAILURE. REBOOTING...');
         setTimeout(() => {
-          // Black out the screen
-          document.documentElement.style.filter = 'brightness(0)';
-
-          setTimeout(() => {
-            // Re-enable pointer events and restore screen
-            document.documentElement.style.pointerEvents = '';
-            document.documentElement.style.filter = '';
-            setIsDeleting(false);
-            setDeletionProgress(0);
-            console.info('jk! 😅');
-            console.info('be careful with dangerous commands tho!');
-          }, 5000);
-        }, 5000); // Wait 5 seconds before blackout
+          window.location.reload();
+        }, 2000);
+        return;
       }
-    }, 200);
+      console.log(`Deleting ${criticalPaths[i]}...`);
+      setDeletionProgress(Math.round(((i + 1) / criticalPaths.length) * 100));
+      i++;
+    }, 500);
   };
 
   const handleCommand = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && command.trim()) {
-      const fullCommand = command.trim();
+    if (e.key === 'Enter') {
+      const trimmedCommand = command.trim();
+      if (!trimmedCommand) return;
 
-      // Check for dangerous commands
-      const dangerousCommands = [
-        'rm',
-        'rm -rf',
-        'rm -r',
-        'rmdir /s',
-        'format',
-        'del',
-        'del /f',
-        'deltree',
-      ];
-
-      if (dangerousCommands.some(cmd => fullCommand.toLowerCase().startsWith(cmd))) {
-        simulateSystemDeletion();
-        setCommand('');
-        return;
-      }
-
-      const [cmdName, ...args] = fullCommand.split(' ');
-      const cmd = commands[cmdName.toLowerCase()];
-
-      // Add command to history
-      setCommandHistory(prev => [...prev, fullCommand]);
+      console.log(`> ${trimmedCommand}`);
+      setCommandHistory(prev => [...prev, trimmedCommand]);
       setHistoryIndex(-1);
+      setCommand('');
+
+      const [cmdName, ...args] = trimmedCommand.split(' ');
+      const cmd = commands[cmdName.toLowerCase()] || commands[trimmedCommand.toLowerCase()]; // Check for full command string too (like "rm -rf /")
 
       if (cmd) {
-        cmd.action(args);
+        try {
+          cmd.action(args);
+        } catch (err: any) {
+          console.error(`Error executing command: ${err.message}`);
+        }
       } else {
-        console.error(`Unknown command: ${cmdName}`);
+        console.error(`Command not found: ${cmdName}`);
       }
-      setCommand('');
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       if (commandHistory.length > 0) {
-        const newIndex = historyIndex + 1;
-        if (newIndex < commandHistory.length) {
-          setHistoryIndex(newIndex);
-          setCommand(commandHistory[commandHistory.length - 1 - newIndex]);
-        }
+        const newIndex = historyIndex === -1 ? commandHistory.length - 1 : Math.max(0, historyIndex - 1);
+        setHistoryIndex(newIndex);
+        setCommand(commandHistory[newIndex]);
       }
     } else if (e.key === 'ArrowDown') {
       e.preventDefault();
-      if (historyIndex > -1) {
-        const newIndex = historyIndex - 1;
-        setHistoryIndex(newIndex);
-        if (newIndex >= 0) {
-          setCommand(commandHistory[commandHistory.length - 1 - newIndex]);
-        } else {
+      if (historyIndex !== -1) {
+        const newIndex = historyIndex + 1;
+        if (newIndex >= commandHistory.length) {
+          setHistoryIndex(-1);
           setCommand('');
+        } else {
+          setHistoryIndex(newIndex);
+          setCommand(commandHistory[newIndex]);
         }
       }
     }
   };
 
-  const toggleExpand = (id: number) => {
-    setLogs(prevLogs =>
-      prevLogs.map(log =>
-        log.id === id ? { ...log, expanded: !log.expanded } : log
-      )
-    );
-  };
-
-  const shouldCollapse = (message: string) => {
-    const lines = message.split('\n');
-    return lines.length > 10;
-  };
-
   return (
-    <div className="h-full flex flex-col bg-neutral-900 text-neutral-300 font-mono text-xs select-text">
-      <div className="p-1 border-b border-neutral-700 text-neutral-400 select-none">
-        root@lok.computer
-      </div>
-      <div className="flex-1 overflow-auto p-2 space-y-1 scrollable-area">
-        {logs.map(log => {
-          const message = formatMessage(log.message);
-          const isCollapsible = shouldCollapse(message);
-          const displayMessage = !log.expanded && isCollapsible
-            ? message.split('\n').slice(0, 10).join('\n') + '\n...'
-            : message;
-
-          return (
-            <div key={log.id} className={`flex items-start ${getLogColor(log.type)}`}>
-              <span className="text-neutral-500 mr-2 select-none">{log.timestamp}</span>
-              <div className="flex-1">
-                <div className="flex items-start">
-                  {isCollapsible && (
-                    <button
-                      onClick={() => toggleExpand(log.id)}
-                      className="mr-1 text-neutral-500 hover:text-neutral-300 focus:outline-none"
-                    >
-                      {log.expanded ? '▼' : '▶'}
-                    </button>
-                  )}
-                  <span className="break-all whitespace-pre-wrap">{displayMessage}</span>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+    <WindowLayout
+      hasPadding={false}
+      className="bg-black font-mono text-sm"
+      footer={
+        <div className="p-1 border-t border-neutral-700 flex items-center bg-black">
+          <span className="text-neutral-500 mr-1">{'>'}</span>
+          <input
+            ref={inputRef}
+            type="text"
+            value={command}
+            onChange={(e) => setCommand(e.target.value)}
+            onKeyDown={handleCommand}
+            placeholder="Type 'help' for available commands"
+            className="bg-transparent flex-1 focus:outline-none text-neutral-300 placeholder-neutral-600"
+            disabled={isDeleting}
+            autoFocus
+          />
+        </div>
+      }
+    >
+      <div className="p-2 min-h-full">
+        {logs.map((log) => (
+          <LogItem key={log.id} log={log} getLogColor={getLogColor} formatMessage={formatMessage} />
+        ))}
         <div ref={consoleEndRef} />
       </div>
-      <div className="p-1 border-t border-neutral-700 flex items-center">
-        <span className="text-neutral-500 mr-1">{'>'}</span>
-        <input
-          ref={inputRef}
-          type="text"
-          value={command}
-          onChange={(e) => setCommand(e.target.value)}
-          onKeyDown={handleCommand}
-          placeholder="Type 'help' for available commands"
-          className="bg-transparent flex-1 focus:outline-none text-neutral-300 placeholder-neutral-600"
-          disabled={isDeleting}
-        />
-      </div>
-    </div>
+    </WindowLayout>
   );
 };
 
-export default ConsoleApp; 
+export default ConsoleApp;

@@ -1,6 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { ArenaWindowLayout } from "@/apps/arena/components/ArenaWindowLayout";
+import { WindowLayout } from '@/components/window/WindowLayout';
+import { RetroButton } from '@/components/ui/RetroButton';
+import { APP_CONFIG } from '@/config/constants';
 
 type Message = {
   id: string;
@@ -23,9 +26,8 @@ export const TalkToAI = () => {
       return [{ id: '1', text: 'Hello user, how can I help you?', sender: 'ai' }];
     }
   });
-  
+
   const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -50,30 +52,18 @@ export const TalkToAI = () => {
     scrollToBottom();
   }, [messages]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || isLoading) return;
-
-    // Add user message
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      text: input,
-      sender: 'user',
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setInput('');
-    setIsLoading(true);
-    scrollToBottom();
-
-    try {
+  const { mutate: sendMessage, isPending: isLoading } = useMutation({
+    mutationFn: async (userMessage: Message) => {
       // Convert messages to OpenAI format
       const apiMessages = messages.concat(userMessage).slice(-MAX_HISTORY).map(msg => ({
         role: msg.sender === 'user' ? 'user' : 'assistant',
         content: msg.text
       }));
 
-      const response = await fetch('/api/chat', {
+      // ... inside component ...
+
+      // ... inside component ...
+      const response = await fetch(APP_CONFIG.AI_CHAT_ENDPOINT, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -92,24 +82,45 @@ export const TalkToAI = () => {
         throw new Error('Invalid AI response format');
       }
 
+      return aiResponse;
+    },
+    onSuccess: (aiResponse) => {
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         text: aiResponse,
         sender: 'ai',
       };
-
       setMessages(prev => [...prev, aiMessage]);
       scrollToBottom();
-    } catch (error) {
-      console.error('Error getting AI response:', error);
-      toast.error('Failed to get AI response. Please try again.');
-    } finally {
-      setIsLoading(false);
       // Focus back on input after sending
       setTimeout(() => {
         inputRef.current?.focus();
       }, 0);
+    },
+    onError: (error) => {
+      console.error('Error getting AI response:', error);
+      toast.error('Failed to get AI response. Please try again.');
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 0);
     }
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || isLoading) return;
+
+    // Add user message
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      text: input,
+      sender: 'user',
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInput('');
+    scrollToBottom();
+    sendMessage(userMessage);
   };
 
   const handleClear = () => {
@@ -123,45 +134,22 @@ export const TalkToAI = () => {
   };
 
   return (
-    <ArenaWindowLayout
+    <WindowLayout
       toolbar={
         <div className="flex items-center justify-center p-1 border-b border-border">
           <span className="text-xs opacity-50">AI may go crazy. Use at your own risk.</span>
         </div>
       }
-    >
-      <div className="flex flex-col h-full">
-        <div className="window-content-area flex-1 p-2 overflow-y-auto">
-          <div className="space-y-4">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-xs md:max-w-md px-2 py-1 ${
-                    message.sender === 'user'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted'
-                  }`}
-                >
-                  {message.text}
-                </div>
-              </div>
-            ))}
-            <div ref={messagesEndRef} />
-          </div>
-        </div>
-        
+      footer={
         <div className="flex items-center justify-between space-x-2 p-1 border-t border-border">
-          <button
+          <RetroButton
             type="button"
             onClick={handleClear}
-            className="retro-button text-xs px-1 h-[18px]"
+            size="sm"
             title="Clear chat history"
           >
             Clear
-          </button>
+          </RetroButton>
           <form onSubmit={handleSubmit} className="flex items-center flex-1 mx-2">
             <input
               ref={inputRef}
@@ -172,17 +160,38 @@ export const TalkToAI = () => {
               disabled={isLoading}
               className="search-input text-xs flex-1 h-[18px] border-r-0 focus:outline-none"
             />
-            <button
+            <RetroButton
               type="submit"
               disabled={isLoading}
-              className="retro-button text-xs px-1 h-[18px] disabled:opacity-50"
+              size="sm"
+              className="disabled:opacity-50"
               title="Send message"
             >
               Send
-            </button>
+            </RetroButton>
           </form>
         </div>
+      }
+      hasPadding={true}
+    >
+      <div className="space-y-4">
+        {messages.map((message) => (
+          <div
+            key={message.id}
+            className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+          >
+            <div
+              className={`max-w-xs md:max-w-md px-2 py-1 ${message.sender === 'user'
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted'
+                }`}
+            >
+              {message.text}
+            </div>
+          </div>
+        ))}
+        <div ref={messagesEndRef} />
       </div>
-    </ArenaWindowLayout>
+    </WindowLayout>
   );
 };

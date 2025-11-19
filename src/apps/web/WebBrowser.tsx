@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, KeyboardEvent } from "react";
-import { ArenaWindowLayout } from "@/apps/arena/components/ArenaWindowLayout"; // Assuming this can be reused or a similar one exists
-// If ArenaWindowLayout is too specific, we might need a more generic WindowLayout or define styles locally.
+import { WindowLayout } from "@/components/window/WindowLayout";
+import { RetroButton } from "@/components/ui/RetroButton";
 
 // Simple SVG icons for toolbar (or use a library if available)
 const BackIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>;
@@ -55,7 +55,7 @@ export const WebBrowser: React.FC<{ initialUrl?: string }> = ({ initialUrl = "ht
             window.parent.postMessage({ type: 'navigation', url: document.location.href }, '*');
           });
         `;
-        
+
         try {
           iframe.contentDocument?.head.appendChild(script);
         } catch (e) {
@@ -77,7 +77,7 @@ export const WebBrowser: React.FC<{ initialUrl?: string }> = ({ initialUrl = "ht
     };
 
     window.addEventListener('message', handleMessage);
-    
+
     return () => {
       window.removeEventListener('message', handleMessage);
     };
@@ -87,14 +87,14 @@ export const WebBrowser: React.FC<{ initialUrl?: string }> = ({ initialUrl = "ht
     if (!isNavigatingRef.current) {
       isNavigatingRef.current = true;
       setIsLoading(true);
-      
+
       // Update URL input and history
       setCurrentUrlInput(newUrl);
       const newHistory = history.slice(0, historyIndex + 1);
       newHistory.push(newUrl);
       setHistory(newHistory);
       setHistoryIndex(newHistory.length - 1);
-      
+
       isNavigatingRef.current = false;
     }
   };
@@ -173,7 +173,7 @@ export const WebBrowser: React.FC<{ initialUrl?: string }> = ({ initialUrl = "ht
 
   const handleIframeLoad = () => {
     setIsLoading(false);
-    
+
     // Try to update URL from iframe if possible
     try {
       const iframe = iframeRef.current;
@@ -188,34 +188,36 @@ export const WebBrowser: React.FC<{ initialUrl?: string }> = ({ initialUrl = "ht
   };
 
   return (
-    <ArenaWindowLayout
+    <WindowLayout
       toolbar={
         <div className="flex items-center justify-between space-x-2 p-1 border-b border-border">
           <div className="flex items-center space-x-0">
-            <button 
-              onClick={goBack} 
+            <RetroButton
+              onClick={goBack}
               disabled={historyIndex === 0}
-              className="retro-button text-xs px-1 disabled:opacity-50" 
+              size="sm"
+              className="disabled:opacity-50"
               title="Backward"
             >
               <BackIcon />
-            </button>
-            <button 
-              onClick={goForward} 
+            </RetroButton>
+            <RetroButton
+              onClick={goForward}
               disabled={historyIndex === history.length - 1}
-              className="retro-button text-xs px-1 disabled:opacity-50" 
+              size="sm"
+              className="disabled:opacity-50"
               title="Forward"
             >
               <ForwardIcon />
-            </button>
-            <button 
-              onClick={handleRefresh} 
+            </RetroButton>
+            <RetroButton
+              onClick={handleRefresh}
               disabled={isLoading}
-              className="retro-button text-xs px-1" 
+              size="sm"
               title="Refresh"
             >
               <RefreshIcon className={isLoading ? "animate-spin" : ""} />
-            </button>
+            </RetroButton>
           </div>
           <div className="flex items-center flex-1 mx-2">
             <input
@@ -226,16 +228,19 @@ export const WebBrowser: React.FC<{ initialUrl?: string }> = ({ initialUrl = "ht
               placeholder="Enter URL..."
               className="search-input text-xs flex-1 h-[18px] border-r-0 focus:outline-none"
             />
-            <button
+            <RetroButton
               onClick={handleGo}
-              className="retro-button text-xs px-1 h-[18px]"
+              size="sm"
+              className="h-[18px]"
               title="Go to URL"
             >
               Go
-            </button>
+            </RetroButton>
           </div>
         </div>
       }
+      hasPadding={false}
+      isScrollable={false}
     >
       <iframe
         ref={iframeRef}
@@ -245,6 +250,6 @@ export const WebBrowser: React.FC<{ initialUrl?: string }> = ({ initialUrl = "ht
         sandbox="allow-forms allow-modals allow-pointer-lock allow-popups allow-popups-to-escape-sandbox allow-presentation allow-same-origin allow-scripts" // Common sandbox attributes
         onLoad={handleIframeLoad}
       />
-    </ArenaWindowLayout>
+    </WindowLayout>
   );
-}; 
+};

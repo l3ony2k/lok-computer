@@ -1,4 +1,5 @@
 import React from 'react';
+import { WindowLayout } from '@/components/window/WindowLayout';
 
 interface ArenaWindowLayoutProps {
   /** Toolbar area (e.g. buttons, inputs) */
@@ -12,11 +13,12 @@ interface ArenaWindowLayoutProps {
  */
 export const ArenaWindowLayout = ({ toolbar, children }: ArenaWindowLayoutProps) => {
   return (
-    <div className="flex flex-col h-full select-none">
-        {toolbar}
-      <div className="window-content-area flex-1 overflow-auto">
-        {children}
-      </div>
-    </div>
+    <WindowLayout
+      toolbar={toolbar}
+      isScrollable={true}
+      hasPadding={false} // Arena content usually handles its own padding or needs full width
+    >
+      {children}
+    </WindowLayout>
   );
 };
