@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { useDoubleClick } from "@/hooks/useDoubleClick";
 import { ArenaBlock, ArenaChannel } from "@/types/arena";
 import { CustomIcon } from "@/components/window/CustomIcon";
+import linkIcon from "@/assets/icons/link2.png";
 
 export interface ContentItem extends Partial<ArenaBlock>, Partial<ArenaChannel> {
   id: number;
@@ -16,20 +17,20 @@ export const getItemTitle = (item: ContentItem): string => {
 };
 
 // Component for grid view content item (used in both channel browser and explorer)
-export const ContentItemGrid = React.memo(({ 
-  item, 
-  onSingleClick, 
-  onDoubleClick, 
-  itemWidth, 
+export const ContentItemGrid = React.memo(({
+  item,
+  onSingleClick,
+  onDoubleClick,
+  itemWidth,
   iconSizeClass,
   renderThumbnail,
   getIconType,
   isMobile
-}: { 
-  item: ContentItem; 
-  onSingleClick: () => void; 
-  onDoubleClick: () => void; 
-  itemWidth: string; 
+}: {
+  item: ContentItem;
+  onSingleClick: () => void;
+  onDoubleClick: () => void;
+  itemWidth: string;
   iconSizeClass: string;
   renderThumbnail?: (image: any) => string;
   getIconType: (item: ContentItem) => string;
@@ -41,11 +42,13 @@ export const ContentItemGrid = React.memo(({
   );
   const handleClick = isMobile ? onDoubleClick : doubleClickHandler;
 
-  const hasImage = (item as ArenaBlock).class === "Image" && (item as ArenaBlock).image?.thumb;
-  
+  const isImageBlock = (item as ArenaBlock).class === "Image";
+  const isLinkBlock = (item as ArenaBlock).class === "Link";
+  const hasImage = (isImageBlock || isLinkBlock) && (item as ArenaBlock).image?.thumb;
+
   // Pre-compute icon type to avoid recalculations during rendering
   const iconType = useMemo(() => getIconType(item), [item, getIconType]);
-  
+
   // Pre-compute item title to avoid recalculations during rendering
   const itemTitle = useMemo(() => getItemTitle(item), [item]);
 
@@ -56,14 +59,23 @@ export const ContentItemGrid = React.memo(({
       style={{ width: itemWidth }}
       tabIndex={0}
     >
-      <div className={`folder-icon ${iconSizeClass}`}> 
+      <div className={`folder-icon ${iconSizeClass} relative`}>
         {hasImage && renderThumbnail ? (
-          <img 
-            src={renderThumbnail((item as ArenaBlock).image?.thumb)} 
-            alt={itemTitle}
-            className="w-full h-full object-cover"
-            loading="lazy"
-          />
+          <>
+            <img
+              src={renderThumbnail((item as ArenaBlock).image?.thumb)}
+              alt={itemTitle}
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+            {isLinkBlock && (
+              <img
+                src={linkIcon}
+                alt="Link"
+                className="absolute bottom-0 right-0 w-4 h-4 drop-shadow-md"
+              />
+            )}
+          </>
         ) : (
           <CustomIcon iconType={iconType} className="w-full h-full" />
         )}
@@ -74,18 +86,18 @@ export const ContentItemGrid = React.memo(({
 });
 
 // Component for list view content item (used in both channel browser and explorer)
-export const ContentItemListView = React.memo(({ 
-  item, 
-  onSingleClick, 
-  onDoubleClick, 
+export const ContentItemListView = React.memo(({
+  item,
+  onSingleClick,
+  onDoubleClick,
   iconSizeClass,
   renderThumbnail,
   getIconType,
   isMobile
-}: { 
-  item: ContentItem; 
-  onSingleClick: () => void; 
-  onDoubleClick: () => void; 
+}: {
+  item: ContentItem;
+  onSingleClick: () => void;
+  onDoubleClick: () => void;
   iconSizeClass: string;
   renderThumbnail?: (image: any) => string;
   getIconType: (item: ContentItem) => string;
@@ -97,11 +109,13 @@ export const ContentItemListView = React.memo(({
   );
   const handleClick = isMobile ? onDoubleClick : doubleClickHandler;
 
-  const hasImage = (item as ArenaBlock).class === "Image" && (item as ArenaBlock).image?.thumb;
-  
+  const isImageBlock = (item as ArenaBlock).class === "Image";
+  const isLinkBlock = (item as ArenaBlock).class === "Link";
+  const hasImage = (isImageBlock || isLinkBlock) && (item as ArenaBlock).image?.thumb;
+
   // Pre-compute icon type to avoid recalculations during rendering
   const iconType = useMemo(() => getIconType(item), [item, getIconType]);
-  
+
   // Pre-compute item title to avoid recalculations during rendering
   const itemTitle = useMemo(() => getItemTitle(item), [item]);
 
@@ -112,8 +126,8 @@ export const ContentItemListView = React.memo(({
       tabIndex={0}
     >
       {hasImage && renderThumbnail ? (
-        <img 
-          src={renderThumbnail((item as ArenaBlock).image?.thumb)} 
+        <img
+          src={renderThumbnail((item as ArenaBlock).image?.thumb)}
           alt={itemTitle}
           className={`${iconSizeClass} object-cover shrink-0 select-none`}
           loading="lazy"
@@ -129,12 +143,12 @@ export const ContentItemListView = React.memo(({
 // Shared utility to determine grid view configuration
 export const getGridConfiguration = (gridSize: 'S' | 'M' | 'L') => {
   // Icon size classes based on size
-  const iconSizeClasses = { 
-    S: { grid: 'w-12 h-12', list: 'w-6 h-6' }, 
-    M: { grid: 'w-20 h-20', list: 'w-8 h-8' }, 
-    L: { grid: 'w-28 h-28', list: 'w-10 h-10' } 
+  const iconSizeClasses = {
+    S: { grid: 'w-12 h-12', list: 'w-6 h-6' },
+    M: { grid: 'w-20 h-20', list: 'w-8 h-8' },
+    L: { grid: 'w-28 h-28', list: 'w-10 h-10' }
   };
-  
+
   // Fixed width for each grid item based on size
   const itemWidths = {
     S: '64px',
@@ -146,9 +160,9 @@ export const getGridConfiguration = (gridSize: 'S' | 'M' | 'L') => {
     gridIconSizeClass: iconSizeClasses[gridSize]?.grid || 'w-12 h-12',
     listIconSizeClass: iconSizeClasses[gridSize]?.list || 'w-6 h-6',
     itemWidth: itemWidths[gridSize],
-    gridTemplateStyle: { 
+    gridTemplateStyle: {
       gridTemplateColumns: `repeat(auto-fill, ${itemWidths[gridSize]})`,
       justifyContent: 'start'
     }
   };
-}; 
+};
