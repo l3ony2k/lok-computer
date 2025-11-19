@@ -67,7 +67,7 @@ export const TopBar: React.FC = () => {
             console.error("Failed to fetch channels for app menu", e);
           }
         }
-        
+
         if (app.name === 'Links' && app.props?.items) {
           baseItem.subItems = app.props.items.map((item: any) => ({
             name: item.title,
@@ -85,7 +85,7 @@ export const TopBar: React.FC = () => {
         if (baseItem.subItems && baseItem.subItems.length > 0) {
           baseItem.action = undefined;
         }
-        
+
         return baseItem;
       }));
       setAppMenuItems(generatedItems);
@@ -114,27 +114,27 @@ export const TopBar: React.FC = () => {
 
   return (
     <>
-      <div className="h-[30px] bg-retro-taskbar text-sm px-2 flex items-center border-b border-border select-none">
+      <div className="h-[35px] bg-retro-taskbar text-sm px-2 flex items-center border-b border-border select-none">
         <div className="flex items-center">
           <button
             onClick={toggleAppMenu}
-            className="font-mono font-bold text-s text-neutral-700 dark:text-neutral-100 tracking-tight hover:bg-accent px-1 py-0 rounded-sm select-none"
+            className="font-mono font-bold text-s text-neutral-700 dark:text-neutral-100 tracking-tight hover:bg-accent h-[24px] px-2 flex items-center justify-center rounded-sm select-none"
           >
             lok.computer
           </button>
         </div>
-        
+
         <div className="ml-auto flex items-center space-x-2 text-s font-mono font-bold select-none">
           <button
             onClick={toggleCalendar}
-            className="flex items-center space-x-2 hover:bg-accent px-1 py-0 rounded-sm select-none"
+            className="flex items-center space-x-2 hover:bg-accent h-[24px] px-2 rounded-sm select-none"
           >
             <span>{formatDate(currentTime)}</span>
             <span>{formatTime(currentTime)}</span>
           </button>
         </div>
       </div>
-      
+
       <AppMenu
         items={appMenuItems}
         isOpen={isAppMenuOpen}

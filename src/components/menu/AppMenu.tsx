@@ -81,10 +81,10 @@ const MenuItem: React.FC<{ item: AppMenuItem; onClose: () => void }> = ({ item, 
   );
 };
 
-export const AppMenu: React.FC<AppMenuProps> = ({ 
-  items, 
-  isOpen, 
-  onClose 
+export const AppMenu: React.FC<AppMenuProps> = ({
+  items,
+  isOpen,
+  onClose
 }) => {
   if (!isOpen) return null;
 
@@ -109,11 +109,11 @@ export const AppMenu: React.FC<AppMenuProps> = ({
           }
         `}
       </style>
-      <div 
-        className="fixed inset-0 z-[10000]" 
+      <div
+        className="fixed inset-0 z-[10000]"
         onClick={handleOutsideClick}
       >
-        <div className="absolute top-[30px] left-2 bg-retro-taskbar border border-border shadow-md min-w-[200px] select-none">
+        <div className="absolute top-[35px] left-2 bg-retro-taskbar border border-border shadow-md min-w-[200px] select-none">
           {items.map((item) => (
             <MenuItem key={item.name} item={item} onClose={onClose} />
           ))}

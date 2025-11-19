@@ -6,8 +6,8 @@ interface CalendarProps {
   date?: Date;
 }
 
-export const Calendar: React.FC<CalendarProps> = ({ 
-  isOpen, 
+export const Calendar: React.FC<CalendarProps> = ({
+  isOpen,
   onClose,
   date = new Date()
 }) => {
@@ -16,11 +16,11 @@ export const Calendar: React.FC<CalendarProps> = ({
   // Update clock time every second
   useEffect(() => {
     if (!isOpen) return;
-    
+
     const timer = setInterval(() => {
       setClockTime(new Date());
     }, 1000);
-    
+
     return () => clearInterval(timer);
   }, [isOpen]);
 
@@ -36,35 +36,34 @@ export const Calendar: React.FC<CalendarProps> = ({
   const month = date.getMonth();
   const year = date.getFullYear();
   const currentDay = date.getDate();
-  
+
   // Names for days and months
   const dayNames = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
-  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
-                      'July', 'August', 'September', 'October', 'November', 'December'];
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'];
 
   // Get first day of the month and total days
   const firstDayOfMonth = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  
+
   // Generate calendar grid
   const calendarDays = [];
-  
+
   // Add empty cells for days before the first day of the month
   for (let i = 0; i < firstDayOfMonth; i++) {
     calendarDays.push(<div key={`empty-${i}`} className="h-7 w-7"></div>);
   }
-  
+
   // Add cells for all days in the month
   for (let day = 1; day <= daysInMonth; day++) {
     const isCurrentDay = day === currentDay;
     calendarDays.push(
-      <div 
-        key={`day-${day}`} 
-        className={`h-7 w-7 flex items-center justify-center text-xs select-none ${
-          isCurrentDay 
-            ? 'bg-accent text-neutral-700 dark:text-neutral-100 font-bold' 
+      <div
+        key={`day-${day}`}
+        className={`h-7 w-7 flex items-center justify-center text-xs select-none ${isCurrentDay
+            ? 'bg-accent text-neutral-700 dark:text-neutral-100 font-bold'
             : 'text-neutral-700 dark:text-neutral-100'
-        }`}
+          }`}
       >
         {day}
       </div>
@@ -75,7 +74,7 @@ export const Calendar: React.FC<CalendarProps> = ({
   const seconds = clockTime.getSeconds();
   const minutes = clockTime.getMinutes();
   const hours = clockTime.getHours() % 12;
-  
+
   const secondDegrees = (seconds / 60) * 360;
   const minuteDegrees = ((minutes + seconds / 60) / 60) * 360;
   const hourDegrees = ((hours + minutes / 60) / 12) * 360;
@@ -102,11 +101,11 @@ export const Calendar: React.FC<CalendarProps> = ({
   }
 
   return (
-    <div 
-      className="fixed inset-0 z-[10000]" 
+    <div
+      className="fixed inset-0 z-[10000]"
       onClick={handleOutsideClick}
     >
-      <div className="absolute top-[30px] right-2 bg-retro-taskbar border border-border shadow-md p-3 select-none">
+      <div className="absolute top-[35px] right-2 bg-retro-taskbar border border-border shadow-md p-3 select-none">
         {/* Analog Clock */}
         <div className="flex justify-center mb-3 select-none">
           <svg width="110" height="110" viewBox="0 0 110 110">
@@ -120,12 +119,12 @@ export const Calendar: React.FC<CalendarProps> = ({
               strokeWidth="1"
               className="text-neutral-700 dark:text-neutral-100"
             />
-            
+
             {/* Minute marks */}
             <g transform="translate(55, 55)">
               {minuteMarks}
             </g>
-            
+
             {/* Hour Hand */}
             <line
               x1="55"
@@ -138,7 +137,7 @@ export const Calendar: React.FC<CalendarProps> = ({
               className="text-neutral-700 dark:text-neutral-100"
               transform={`rotate(${hourDegrees}, 55, 55)`}
             />
-            
+
             {/* Minute Hand */}
             <line
               x1="55"
@@ -151,7 +150,7 @@ export const Calendar: React.FC<CalendarProps> = ({
               className="text-neutral-700 dark:text-neutral-100"
               transform={`rotate(${minuteDegrees}, 55, 55)`}
             />
-            
+
             {/* Second Hand */}
             <line
               x1="55"
@@ -164,7 +163,7 @@ export const Calendar: React.FC<CalendarProps> = ({
               className="text-accent"
               transform={`rotate(${secondDegrees}, 55, 55)`}
             />
-            
+
             {/* Center Dot */}
             <circle
               cx="55"
@@ -175,11 +174,11 @@ export const Calendar: React.FC<CalendarProps> = ({
             />
           </svg>
         </div>
-        
+
         <div className="text-center text-sm mb-2 text-neutral-700 dark:text-neutral-100 select-none">
           {monthNames[month]} {year}
         </div>
-        
+
         <div className="grid grid-cols-7 gap-1 text-center">
           {/* Day names row */}
           {dayNames.map(day => (
@@ -187,7 +186,7 @@ export const Calendar: React.FC<CalendarProps> = ({
               {day}
             </div>
           ))}
-          
+
           {/* Calendar days */}
           {calendarDays}
         </div>

@@ -170,7 +170,7 @@
     }
 
     .taskbar {
-        @apply bg-retro-taskbar p-1 border-t border-border h-[30px] flex items-center select-none;
+        @apply bg-retro-taskbar p-1 border-t border-border h-[35px] flex items-center select-none;
     }
 
     .taskbar-button {
@@ -377,7 +377,7 @@
 }
 
 /* Guestbook messages styling */
-#guestbooks___guestbook-messages-container > div {
+#guestbooks___guestbook-messages-container>div {
     border: 1px solid hsl(var(--border));
     background-color: hsl(var(--card));
     margin-bottom: 1rem;
