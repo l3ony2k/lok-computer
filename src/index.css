@@ -53,6 +53,7 @@
         --destructive-foreground: 0 0% 98%;
 
         --border: 0 0% 78%;
+        --dot: 0 0% 79%;
         --input: 0 0% 78%;
         --ring: 0 0% 70%;
 
@@ -119,6 +120,7 @@
         --destructive-foreground: 0 0% 98%;
 
         --border: 0 0% 35%;
+        --dot: 0 0% 20;
         --input: 0 0% 35%;
         --ring: 0 0% 60%;
     }
@@ -133,7 +135,6 @@
 
     body {
         @apply bg-background text-foreground antialiased overflow-hidden;
-        background-image: radial-gradient(circle, hsl(var(--border)) 1px, transparent 1px);
         background-size: 20px 20px;
     }
 
@@ -165,7 +166,7 @@
 
     /* Fallback when no wallpaper or wallpaper fails to load */
     .desktop-container:not(.has-wallpaper) {
-        background-image: radial-gradient(circle, hsl(var(--border)) 1px, transparent 1px);
+        background-image: radial-gradient(circle, hsl(var(--dot)) 1px, transparent 1px);
         background-size: 20px 20px;
     }
 
@@ -377,7 +378,7 @@
 }
 
 /* Guestbook messages styling */
-#guestbooks___guestbook-messages-container>div {
+#guestbooks___guestbook-messages-container > div {
     border: 1px solid hsl(var(--border));
     background-color: hsl(var(--card));
     margin-bottom: 1rem;
