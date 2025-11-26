@@ -1,9 +1,10 @@
-name = "lok-computer-worker" 
+name = "lok-computer-worker"
 main = "worker.js"
-compatibility_date = "2025-05-15" 
-account_id = "50d0c53b7190ef6df5c5083b25de689f" 
+compatibility_date = "2025-05-15"
+account_id = "50d0c53b7190ef6df5c5083b25de689f"
 
 # Development environment variables
 [vars]
 AI_MODEL = "gemini-2.5-flash-lite"
 AI_TEMPERATURE = "0.8"
+FEDI_INSTANCE = "https://rex.cat"

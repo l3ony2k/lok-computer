@@ -2,6 +2,8 @@ import React, { useRef, useEffect } from 'react';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { WindowLayout } from '@/components/window/WindowLayout';
 import { RetroButton } from '@/components/ui/RetroButton';
+import { useWindowManager } from '@/hooks/useWindowManager';
+import { ImageViewerApp } from '@/apps/imageviewer/ImageViewerApp';
 
 interface Post {
   uri: string;
@@ -19,6 +21,18 @@ interface Post {
   replyCount?: number;
   repostCount?: number;
   likeCount?: number;
+  embed?: {
+    $type: string;
+    images?: {
+      thumb: string;
+      fullsize: string;
+      alt: string;
+      aspectRatio?: {
+        width: number;
+        height: number;
+      };
+    }[];
+  };
 }
 
 interface FeedItem {
@@ -59,22 +73,39 @@ const PROFILE_URL = APP_CONFIG.BSKY_PROFILE_URL;
 
 export const BskyPostsApp: React.FC = () => {
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const { addWindow } = useWindowManager();
 
   const fetchProfile = async () => {
-    const response = await fetch(PROFILE_URL);
-    if (!response.ok) {
-      throw new Error('Failed to fetch profile');
+    console.log('Fetching Bluesky profile...');
+    try {
+      const response = await fetch(PROFILE_URL);
+      if (!response.ok) {
+        throw new Error('Failed to fetch profile');
+      }
+      const data = await response.json() as Profile;
+      console.log(`Fetched profile for ${data.handle}`);
+      return data;
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      throw error;
     }
-    return response.json() as Promise<Profile>;
   };
 
   const fetchPosts = async ({ pageParam }: { pageParam?: string }) => {
-    const url = pageParam ? `${FEED_URL}&cursor=${pageParam}` : FEED_URL;
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error('Failed to fetch posts');
+    console.log(`Fetching posts... ${pageParam ? `(cursor: ${pageParam})` : '(initial)'}`);
+    try {
+      const url = pageParam ? `${FEED_URL}&cursor=${pageParam}` : FEED_URL;
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Failed to fetch posts');
+      }
+      const data = await response.json() as FeedResponse;
+      console.log(`Fetched ${data.feed.length} posts`);
+      return data;
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+      throw error;
     }
-    return response.json() as Promise<FeedResponse>;
   };
 
   const { data: profile } = useQuery({
@@ -248,6 +279,35 @@ export const BskyPostsApp: React.FC = () => {
                       <p className="text-sm whitespace-pre-wrap break-words mb-2">
                         {post.record.text}
                       </p>
+
+                      {/* Images */}
+                      {post.embed?.images && post.embed.images.length > 0 && (
+                        <div className={`grid gap-2 mb-2 ${post.embed.images.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                          {post.embed.images.map((image, index) => (
+                            <div
+                              key={index}
+                              className="cursor-pointer border border-border bg-secondary"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                addWindow({
+                                  title: 'Image Viewer',
+                                  content: <ImageViewerApp imageUrl={image.fullsize} />,
+                                  width: 800,
+                                  height: 600,
+                                  iconType: 'image',
+                                });
+                              }}
+                            >
+                              <img
+                                src={image.thumb}
+                                alt={image.alt}
+                                className="w-full h-auto object-cover"
+                                loading="lazy"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      )}
 
                       <div className="flex gap-4 text-xs opacity-50">
                         <span title="Replies">✉︎ {post.replyCount || 0}</span>

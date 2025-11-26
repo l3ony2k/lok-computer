@@ -16,6 +16,7 @@ import bskyIcon from '../../assets/icons/bsky.png'; // Add bsky icon
 import globeIcon from '../../assets/icons/globe.png'; // Add webpage icon
 import robotIcon from '../../assets/icons/robot.png'; // Add mail icon
 import mailIcon from '../../assets/icons/mail.png'; // Add mail icon for guestbook
+import noteIcon from '../../assets/icons/note.png'; // Add note icon for fedi
 // Add imports for any other icons you have...
 
 interface CustomIconProps {
@@ -40,28 +41,29 @@ const iconMap: { [key: string]: string } = { // The value is now the imported UR
   webpage: globeIcon, // Add webpage mapping
   mailbox: robotIcon, // Add mailbox icon mapping
   mail: mailIcon, // Add mail icon mapping for guestbook
+  fedi: noteIcon, // Add fedi icon mapping
   // Add other mappings corresponding to your imports
 };
 
 export const CustomIcon: React.FC<CustomIconProps> = ({ iconType, className }) => {
   // 3. Get the correct imported URL from the map
-  const iconSrc = iconType ? iconMap[iconType] : null; 
+  const iconSrc = iconType ? iconMap[iconType] : null;
 
   if (!iconSrc) {
     // Optionally return a default icon or null if type is missing/invalid
-    return null; 
+    return null;
   }
 
   // Use the imported URL directly
   return (
-    <img 
-      src={iconSrc} 
-      alt={`${iconType || 'icon'}`} 
-      className={`inline-block object-contain ${className || ''}`} 
+    <img
+      src={iconSrc}
+      alt={`${iconType || 'icon'}`}
+      className={`inline-block object-contain ${className || ''}`}
       // Prevent dragging the icon itself, which can interfere with window dragging
-      draggable="false" 
+      draggable="false"
       // Improve rendering performance for small, static images
-      loading="eager" 
+      loading="eager"
       decoding="sync"
     />
   );

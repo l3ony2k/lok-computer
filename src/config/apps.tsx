@@ -2,6 +2,7 @@ import React from 'react';
 import { ChannelBrowser } from '@/apps/arena/channels/ChannelBrowser';
 import { WebBrowser } from '@/apps/web/WebBrowser';
 import BskyPostsApp from '@/apps/bsky/BskyPostsApp';
+import FediApp from '@/apps/fedi/FediApp';
 import { WeatherApp } from '@/apps/weather/WeatherApp';
 import { About } from '@/apps/about/About';
 import { ConfigApp } from '@/apps/config/ConfigApp';
@@ -39,6 +40,13 @@ export const APP_LIST: AppConfig[] = [
     name: "Bsky",
     iconType: "bsky",
     component: BskyPostsApp,
+    defaultWidth: 450,
+    defaultHeight: 700
+  },
+  {
+    name: "Fedi",
+    iconType: "fedi",
+    component: FediApp,
     defaultWidth: 450,
     defaultHeight: 700
   },

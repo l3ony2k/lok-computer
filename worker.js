@@ -57,7 +57,7 @@ export default {
 
         // Prepare messages array with system instruction if provided
         const systemInstruction = env.AI_SYSTEM_INSTRUCTION;
-        const messageArray = systemInstruction 
+        const messageArray = systemInstruction
           ? [{ role: 'system', content: systemInstruction }, ...messages.slice(-10)]
           : messages.slice(-10);
 
@@ -130,9 +130,60 @@ export default {
       } catch (error) {
         console.error('Exception fetching Bluesky feed in Worker:', error);
         if (error.name === 'XRPCError' && typeof error.status === 'number') {
-             return makeJsonResponse({ error: 'Bluesky API request exception', details: error.message }, error.status);
+          return makeJsonResponse({ error: 'Bluesky API request exception', details: error.message }, error.status);
         }
         return makeJsonResponse({ error: 'Internal server error in Worker', details: error.message || 'Unknown error' }, 500);
+      }
+    }
+
+    // Route for Fedi/GoToSocial proxy
+    if (url.pathname.startsWith('/api/fedi/statuses')) {
+      try {
+        const fediInstance = env.FEDI_INSTANCE;
+        const fediToken = env.FEDI_ACCESS_TOKEN;
+
+        if (!fediInstance) {
+          return makeJsonResponse({ error: 'FEDI_INSTANCE not configured' }, 500);
+        }
+        if (!fediToken) {
+          return makeJsonResponse({ error: 'FEDI_ACCESS_TOKEN not configured' }, 500);
+        }
+
+        const accountId = url.searchParams.get('accountId');
+        const maxId = url.searchParams.get('max_id');
+        const limit = url.searchParams.get('limit') || '20';
+
+        if (!accountId) {
+          return makeJsonResponse({ error: 'Missing accountId parameter' }, 400);
+        }
+
+        const upstreamUrl = new URL(`${fediInstance}/api/v1/accounts/${accountId}/statuses`);
+        upstreamUrl.searchParams.append('limit', limit);
+        if (maxId) {
+          upstreamUrl.searchParams.append('max_id', maxId);
+        }
+        // Add other filters if needed, e.g. exclude_replies
+        // upstreamUrl.searchParams.append('exclude_replies', 'true');
+
+        const response = await fetch(upstreamUrl.toString(), {
+          headers: {
+            'Authorization': `Bearer ${fediToken}`,
+            'Content-Type': 'application/json',
+          }
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Fedi API error:', response.status, errorText);
+          return makeJsonResponse({ error: 'Failed to fetch from Fedi instance', details: errorText }, response.status);
+        }
+
+        const data = await response.json();
+        return makeJsonResponse(data);
+
+      } catch (error) {
+        console.error('Error in Fedi proxy:', error);
+        return makeJsonResponse({ error: 'Internal server error in Fedi proxy', details: error.message }, 500);
       }
     }
 
