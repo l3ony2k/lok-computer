@@ -343,7 +343,7 @@ export const ChannelExplorer: React.FC<{ channelSlug?: string; username?: string
     if (!selectedItem) {
       return (
         <div className="flex items-center justify-center h-full text-muted-foreground text-sm p-4 text-center">
-          Select an item to preview
+          Select an item<br />to preview
         </div>
       );
     }

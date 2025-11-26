@@ -113,7 +113,7 @@
         --muted: 0 0% 25%;
         --muted-foreground: 0 0% 65%;
 
-        --accent: 0 0% 30%;
+        --accent: 0 0% 46%;
         --accent-foreground: 0 0% 98%;
 
         --destructive: 0 62% 40%;
@@ -378,7 +378,7 @@
 }
 
 /* Guestbook messages styling */
-#guestbooks___guestbook-messages-container > div {
+#guestbooks___guestbook-messages-container>div {
     border: 1px solid hsl(var(--border));
     background-color: hsl(var(--card));
     margin-bottom: 1rem;
