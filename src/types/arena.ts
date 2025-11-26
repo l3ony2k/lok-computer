@@ -12,6 +12,7 @@ export interface ArenaChannel {
   open: boolean;
   collaboration: boolean;
   collaborator_count: number;
+  follower_count?: number;
   owner: {
     id: number;
     slug: string;

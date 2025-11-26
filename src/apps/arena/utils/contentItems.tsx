@@ -72,7 +72,7 @@ export const ContentItemGrid = React.memo(({
                             <img
                                 src={linkIcon}
                                 alt="Link"
-                                className="absolute bottom-0 right-0 w-4 h-4 drop-shadow-md"
+                                className="absolute bottom-0 right-0 w-6 h-6 drop-shadow-md"
                             />
                         )}
                     </>

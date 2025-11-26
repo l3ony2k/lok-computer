@@ -7,6 +7,7 @@ import { ArenaWindowLayout } from "../components/ArenaWindowLayout";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ContentItemGrid, ContentItemListView, getGridConfiguration, ContentItem, getItemTitle } from "../utils/contentItems";
 import { RetroButton } from "@/components/ui/RetroButton";
+import { Button } from "@/components/ui/button";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 
 // Memoized content item components for better performance
@@ -348,18 +349,37 @@ export const ChannelExplorer: React.FC<{ channelSlug?: string; username?: string
     }
 
     if (selectedItem.base_class === "Channel") {
+      const formatDate = (dateString?: string) => {
+        if (!dateString) return "Unknown";
+        return new Date(dateString).toLocaleDateString(undefined, {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+      };
+
       return (
         <div className="flex flex-col h-full p-4 overflow-y-auto">
           <div className="text-xl font-bold mb-2">{selectedItem.title}</div>
-          <div className="text-sm text-muted-foreground mb-4">
-            by {selectedItem.user?.full_name || "Unknown"}
+          <div className="text-sm text-muted-foreground mb-2">
+            by <a href={`https://www.are.na/${selectedItem.user?.slug}`} target="_blank" rel="noopener noreferrer" className="hover:underline text-primary">{selectedItem.user?.full_name || "Unknown"}</a>
           </div>
-          <div className="text-sm">
-            {selectedItem.length} items
+          <div className="text-sm mb-4">
+            {selectedItem.length} blocks / {selectedItem.follower_count || 0} followers
           </div>
-          <div className="mt-4 p-4 border border-border rounded-md bg-muted/20 text-center text-sm">
-            Double click to open channel
+
+          <div className="text-xs text-muted-foreground space-y-1 mb-6">
+            <div>Created: {formatDate(selectedItem.created_at)}</div>
+            <div>Updated: {formatDate(selectedItem.updated_at)}</div>
           </div>
+
+          <Button
+            onClick={() => handleItemDoubleClick(selectedItem)}
+            className="w-full"
+            variant="secondary"
+          >
+            Open Channel
+          </Button>
         </div>
       );
     }
