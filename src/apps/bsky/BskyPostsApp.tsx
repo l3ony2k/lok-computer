@@ -171,7 +171,7 @@ export const BskyPostsApp: React.FC = () => {
                     className="mb-1"
                     onClick={() => window.open(`https://bsky.app/profile/${profile.handle}`, '_blank')}
                   >
-                    Follow on Bluesky
+                    view on bsky
                   </RetroButton>
                 </div>
 
@@ -215,7 +215,7 @@ export const BskyPostsApp: React.FC = () => {
                 <div key={`${post.uri}-${reason?.indexedAt || post.record.createdAt}`} className="p-3 hover:bg-accent/5 transition-colors">
                   {reason && (
                     <div className="flex items-center gap-2 mb-1 ml-12 text-xs text-muted-foreground">
-                      <span>🔁</span>
+                      <span>↻</span>
                       <span>Reposted by {reason.by.displayName || reason.by.handle}</span>
                     </div>
                   )}
@@ -250,9 +250,9 @@ export const BskyPostsApp: React.FC = () => {
                       </p>
 
                       <div className="flex gap-4 text-xs opacity-50">
-                        <span title="Replies">💬 {post.replyCount || 0}</span>
-                        <span title="Reposts">🔁 {post.repostCount || 0}</span>
-                        <span title="Likes">❤️ {post.likeCount || 0}</span>
+                        <span title="Replies">✉︎ {post.replyCount || 0}</span>
+                        <span title="Reposts">↻ {post.repostCount || 0}</span>
+                        <span title="Likes">♡ {post.likeCount || 0}</span>
                       </div>
                     </div>
                   </div>
