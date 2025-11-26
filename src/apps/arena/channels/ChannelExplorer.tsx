@@ -285,16 +285,6 @@ export const ChannelExplorer: React.FC<{ channelSlug?: string; username?: string
         height: 500,
         iconType: "other-channel",
       });
-    } else if (item.class === "Link" && item.source?.url) {
-      // Handle Link items specifically (from LinkFolder logic)
-      const { WebBrowser } = require("@/apps/web/WebBrowser");
-      addWindow({
-        title: getItemTitle(item),
-        content: <WebBrowser initialUrl={item.source.url} />,
-        width: 800,
-        height: 600,
-        iconType: "link",
-      });
     } else {
       addWindow({
         title: getItemTitle(item),
