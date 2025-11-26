@@ -7,6 +7,7 @@ import { ArenaWindowLayout } from "../components/ArenaWindowLayout";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ContentItemGrid, ContentItemListView, getGridConfiguration, ContentItem, getItemTitle } from "../utils/contentItems";
 import { RetroButton } from "@/components/ui/RetroButton";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 
 // Memoized content item components for better performance
 const MemoizedContentItemGrid = React.memo(ContentItemGrid);
@@ -20,6 +21,7 @@ interface ContentRendererProps {
   renderThumbnail: (image: any) => string;
   getIconType: (item: ContentItem) => string;
   isMobile: boolean;
+  selectedId?: number | null;
 }
 
 // Memoized grid content renderer
@@ -30,7 +32,8 @@ const GridContent = React.memo(({
   onDoubleClick,
   renderThumbnail,
   getIconType,
-  isMobile
+  isMobile,
+  selectedId
 }: ContentRendererProps) => {
   const { gridIconSizeClass, itemWidth, gridTemplateStyle } = getGridConfiguration(gridSize);
 
@@ -45,17 +48,18 @@ const GridContent = React.memo(({
   return (
     <div className="folder-grid" style={gridTemplateStyle}>
       {contents.map((item) => (
-        <MemoizedContentItemGrid
-          key={item.id}
-          item={item}
-          onSingleClick={() => onSingleClick(item.id)}
-          onDoubleClick={() => onDoubleClick(item)}
-          itemWidth={itemWidth}
-          iconSizeClass={gridIconSizeClass}
-          renderThumbnail={renderThumbnail}
-          getIconType={getIconType}
-          isMobile={isMobile}
-        />
+        <div key={item.id} className={selectedId === item.id ? "ring-2 ring-accent" : ""}>
+          <MemoizedContentItemGrid
+            item={item}
+            onSingleClick={() => onSingleClick(item.id)}
+            onDoubleClick={() => onDoubleClick(item)}
+            itemWidth={itemWidth}
+            iconSizeClass={gridIconSizeClass}
+            renderThumbnail={renderThumbnail}
+            getIconType={getIconType}
+            isMobile={isMobile}
+          />
+        </div>
       ))}
     </div>
   );
@@ -69,7 +73,8 @@ const ListContent = React.memo(({
   onDoubleClick,
   renderThumbnail,
   getIconType,
-  isMobile
+  isMobile,
+  selectedId
 }: ContentRendererProps) => {
   const { listIconSizeClass } = getGridConfiguration(gridSize);
 
@@ -84,16 +89,17 @@ const ListContent = React.memo(({
   return (
     <div className="space-y-1 p-1">
       {contents.map((item) => (
-        <MemoizedContentItemListView
-          key={item.id}
-          item={item}
-          onSingleClick={() => onSingleClick(item.id)}
-          onDoubleClick={() => onDoubleClick(item)}
-          iconSizeClass={listIconSizeClass}
-          renderThumbnail={renderThumbnail}
-          getIconType={getIconType}
-          isMobile={isMobile}
-        />
+        <div key={item.id} className={selectedId === item.id ? "bg-muted/50 rounded-sm" : ""}>
+          <MemoizedContentItemListView
+            item={item}
+            onSingleClick={() => onSingleClick(item.id)}
+            onDoubleClick={() => onDoubleClick(item)}
+            iconSizeClass={listIconSizeClass}
+            renderThumbnail={renderThumbnail}
+            getIconType={getIconType}
+            isMobile={isMobile}
+          />
+        </div>
       ))}
     </div>
   );
@@ -113,6 +119,10 @@ export const ChannelExplorer: React.FC<{ channelSlug?: string; username?: string
   const [gridSize, setGridSize] = useState<'S' | 'M' | 'L'>('S');
   const itemsPerPage = 100;
   const isMobile = useIsMobile();
+
+  // Preview Mode State
+  const [showPreview, setShowPreview] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<ContentItem | null>(null);
 
   useEffect(() => {
     if (items) {
@@ -259,7 +269,10 @@ export const ChannelExplorer: React.FC<{ channelSlug?: string; username?: string
   };
 
   const handleItemSingleClick = (itemId: number) => {
-    // Using native focus, no custom focus state needed
+    const item = contents.find(c => c.id === itemId);
+    if (item) {
+      setSelectedItem(item);
+    }
   };
 
   const handleItemDoubleClick = (item: ContentItem) => {
@@ -308,6 +321,7 @@ export const ChannelExplorer: React.FC<{ channelSlug?: string; username?: string
       renderThumbnail={renderThumbnail}
       getIconType={getIconType}
       isMobile={isMobile}
+      selectedId={selectedItem?.id}
     />
   );
 
@@ -320,8 +334,38 @@ export const ChannelExplorer: React.FC<{ channelSlug?: string; username?: string
       renderThumbnail={renderThumbnail}
       getIconType={getIconType}
       isMobile={isMobile}
+      selectedId={selectedItem?.id}
     />
   );
+
+  const renderPreviewContent = () => {
+    if (!selectedItem) {
+      return (
+        <div className="flex items-center justify-center h-full text-muted-foreground text-sm p-4 text-center">
+          Select an item to preview
+        </div>
+      );
+    }
+
+    if (selectedItem.base_class === "Channel") {
+      return (
+        <div className="flex flex-col h-full p-4 overflow-y-auto">
+          <div className="text-xl font-bold mb-2">{selectedItem.title}</div>
+          <div className="text-sm text-muted-foreground mb-4">
+            by {selectedItem.user?.full_name || "Unknown"}
+          </div>
+          <div className="text-sm">
+            {selectedItem.length} items
+          </div>
+          <div className="mt-4 p-4 border border-border rounded-md bg-muted/20 text-center text-sm">
+            Double click to open channel
+          </div>
+        </div>
+      );
+    }
+
+    return <BlockViewer blockId={selectedItem.id} mode="embedded" />;
+  };
 
   return (
     <ArenaWindowLayout
@@ -332,12 +376,19 @@ export const ChannelExplorer: React.FC<{ channelSlug?: string; username?: string
             <RetroButton size="sm" active={gridSize === 'M'} onClick={() => setGridSize('M')} title="Medium Icons">M</RetroButton>
             <RetroButton size="sm" active={gridSize === 'L'} onClick={() => setGridSize('L')} title="Large Icons">L</RetroButton>
           </div>
+          <div className="flex items-center space-x-0">
+            <RetroButton size="sm" active={!isListView} onClick={() => setIsListView(false)}>Grid</RetroButton>
+            <RetroButton size="sm" active={isListView} onClick={() => setIsListView(true)}>List</RetroButton>
+          </div>
+        </div>
+      }
+      footer={
+        <div className="flex items-center justify-between space-x-2 p-1 border-t border-border bg-background">
           <div className="flex items-center space-x-2">
             <span className="text-xs opacity-50">Total: {contents.length} items</span>
           </div>
           <div className="flex items-center space-x-0">
-            <RetroButton size="sm" active={!isListView} onClick={() => setIsListView(false)}>Grid</RetroButton>
-            <RetroButton size="sm" active={isListView} onClick={() => setIsListView(true)}>List</RetroButton>
+            <RetroButton size="sm" active={showPreview} onClick={() => setShowPreview(!showPreview)}>Preview</RetroButton>
           </div>
         </div>
       }
@@ -351,7 +402,25 @@ export const ChannelExplorer: React.FC<{ channelSlug?: string; username?: string
           <div className="progress-bar"></div>
         </div>
       ) : (
-        isListView ? renderListView() : renderGridView()
+        showPreview ? (
+          <ResizablePanelGroup direction="horizontal" className="h-full w-full">
+            <ResizablePanel defaultSize={60} minSize={30}>
+              <div className="h-full overflow-y-auto">
+                {isListView ? renderListView() : renderGridView()}
+              </div>
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+            <ResizablePanel defaultSize={40} minSize={30}>
+              <div className="h-full bg-background border-l border-border overflow-hidden">
+                {renderPreviewContent()}
+              </div>
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        ) : (
+          <div className="h-full overflow-y-auto">
+            {isListView ? renderListView() : renderGridView()}
+          </div>
+        )
       )}
     </ArenaWindowLayout>
   );

@@ -86,7 +86,7 @@ const renderBlockByType = {
   Attachment: (block: ArenaBlock) => renderMediaOrAttachment(block)
 };
 
-export const BlockViewer = ({ blockId }: { blockId: number | string }) => {
+export const BlockViewer = ({ blockId, mode = "window" }: { blockId: number | string, mode?: "window" | "embedded" }) => {
   const [loading, setLoading] = useState(true);
   const [block, setBlock] = useState<ArenaBlock | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -131,85 +131,93 @@ export const BlockViewer = ({ blockId }: { blockId: number | string }) => {
 
   const hasDescription = Boolean(block.description_html || block.description);
 
-  return (
-    <ArenaWindowLayout toolbar={null}>
-      <div className="flex flex-col min-h-full w-full max-w-4xl mx-auto">
+  const content = (
+    <div className="flex flex-col min-h-full w-full max-w-4xl mx-auto">
 
-        {/* Content Section */}
-        <div className="w-full flex justify-center p-2">
-          {renderBlockContent()}
-        </div>
+      {/* Content Section */}
+      <div className="w-full flex justify-center p-2">
+        {renderBlockContent()}
+      </div>
 
-        {/* Metadata Area (Description + Metadata) */}
-        <div className="mt-auto w-full">
-          {/* Description Section (Optional) */}
-          {hasDescription && (
-            <>
-              <hr className="w-full border-border" />
-              <div
-                className="w-full prose dark:prose-invert max-w-none text-sm p-2"
-                dangerouslySetInnerHTML={{
-                  __html: block.description_html || block.description || ""
-                }}
-              />
-            </>
+      {/* Metadata Area (Description + Metadata) */}
+      <div className="mt-auto w-full">
+        {/* Description Section (Optional) */}
+        {hasDescription && (
+          <>
+            <hr className="w-full border-border" />
+            <div
+              className="w-full prose dark:prose-invert max-w-none text-sm p-2"
+              dangerouslySetInnerHTML={{
+                __html: block.description_html || block.description || ""
+              }}
+            />
+          </>
+        )}
+
+        {/* Metadata Section */}
+        <hr className="w-full border-border" />
+        <div className="w-full flex flex-wrap gap-x-8 gap-y-4 text-xs text-muted-foreground p-2">
+          <div className="flex flex-col gap-1">
+            <span className="font-bold text-foreground/70 uppercase tracking-wider text-[10px]">Type</span>
+            <span>{block.class}</span>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <span className="font-bold text-foreground/70 uppercase tracking-wider text-[10px]">Block ID</span>
+            <a
+              href={`https://www.are.na/block/${block.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-primary hover:underline w-fit"
+            >
+              #{block.id}
+            </a>
+          </div>
+
+          {block.source?.url && (
+            <div className="flex flex-col gap-1 max-w-[200px]">
+              <span className="font-bold text-foreground/70 uppercase tracking-wider text-[10px]">Source</span>
+              <a
+                href={block.source.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-primary hover:underline truncate block w-full"
+                title={block.source.url}
+              >
+                {block.source.title || block.source.url}
+              </a>
+            </div>
           )}
 
-          {/* Metadata Section */}
-          <hr className="w-full border-border" />
-          <div className="w-full flex flex-wrap gap-x-8 gap-y-4 text-xs text-muted-foreground p-2">
-            <div className="flex flex-col gap-1">
-              <span className="font-bold text-foreground/70 uppercase tracking-wider text-[10px]">Type</span>
-              <span>{block.class}</span>
-            </div>
+          <div className="flex flex-col gap-1">
+            <span className="font-bold text-foreground/70 uppercase tracking-wider text-[10px]">Connected By</span>
+            <a
+              href={`https://www.are.na/${block.user.slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-primary hover:underline w-fit"
+            >
+              {block.user.full_name}
+            </a>
+          </div>
 
-            <div className="flex flex-col gap-1">
-              <span className="font-bold text-foreground/70 uppercase tracking-wider text-[10px]">Block ID</span>
-              <a
-                href={`https://www.are.na/block/${block.id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-primary hover:underline w-fit"
-              >
-                #{block.id}
-              </a>
-            </div>
-
-            {block.source?.url && (
-              <div className="flex flex-col gap-1 max-w-[200px]">
-                <span className="font-bold text-foreground/70 uppercase tracking-wider text-[10px]">Source</span>
-                <a
-                  href={block.source.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-primary hover:underline truncate block w-full"
-                  title={block.source.url}
-                >
-                  {block.source.title || block.source.url}
-                </a>
-              </div>
-            )}
-
-            <div className="flex flex-col gap-1">
-              <span className="font-bold text-foreground/70 uppercase tracking-wider text-[10px]">Connected By</span>
-              <a
-                href={`https://www.are.na/${block.user.slug}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-primary hover:underline w-fit"
-              >
-                {block.user.full_name}
-              </a>
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <span className="font-bold text-foreground/70 uppercase tracking-wider text-[10px]">Connected Time</span>
-              <span>{formatDate(block.created_at)}</span>
-            </div>
+          <div className="flex flex-col gap-1">
+            <span className="font-bold text-foreground/70 uppercase tracking-wider text-[10px]">Connected Time</span>
+            <span>{formatDate(block.created_at)}</span>
           </div>
         </div>
-
       </div>
+
+    </div>
+  );
+
+  if (mode === "embedded") {
+    return <div className="h-full overflow-y-auto bg-background">{content}</div>;
+  }
+
+  return (
+    <ArenaWindowLayout toolbar={null}>
+      {content}
     </ArenaWindowLayout>
   );
 };
