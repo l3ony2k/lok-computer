@@ -55,7 +55,8 @@ export const FediApp: React.FC = () => {
     const fetchAccount = async () => {
         console.log(`Fetching Fedi account for ${USERNAME}...`);
         try {
-            const response = await fetch(`${INSTANCE_URL}/api/v1/accounts/lookup?acct=${USERNAME}`);
+            // Use relative path for worker proxy
+            const response = await fetch(`/api/fedi/account?username=${USERNAME}`);
             if (!response.ok) {
                 throw new Error('Failed to fetch account');
             }
@@ -78,7 +79,7 @@ export const FediApp: React.FC = () => {
 
         console.log(`Fetching statuses... ${pageParam ? `(max_id: ${pageParam})` : '(initial)'}`);
         try {
-            // Use the worker proxy instead of direct access
+            // Use relative path for worker proxy
             const url = new URL('/api/fedi/statuses', window.location.origin);
             url.searchParams.append('accountId', account.id);
 

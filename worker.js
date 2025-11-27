@@ -13,6 +13,10 @@ import { Agent, CredentialSession } from '@atproto/api'; // Standard npm import
  * Bluesky Configuration:
  * - BSKY_HANDLE: Bluesky account handle
  * - BSKY_APP_PASSWORD: Bluesky app-specific password
+ * 
+ * Fedi Configuration:
+ * - FEDI_INSTANCE: URL of the Mastodon/GoToSocial instance (e.g., https://rex.cat)
+ * - FEDI_ACCESS_TOKEN: Access token for the instance
  */
 
 // Helper to set CORS headers
@@ -136,7 +140,43 @@ export default {
       }
     }
 
-    // Route for Fedi/GoToSocial proxy
+    // Route for Fedi/GoToSocial account lookup
+    if (url.pathname === '/api/fedi/account') {
+      try {
+        const fediInstance = env.FEDI_INSTANCE;
+        const fediToken = env.FEDI_ACCESS_TOKEN;
+
+        if (!fediInstance || !fediToken) {
+          return makeJsonResponse({ error: 'Fedi configuration missing' }, 500);
+        }
+
+        const username = url.searchParams.get('username');
+        if (!username) {
+          return makeJsonResponse({ error: 'Missing username parameter' }, 400);
+        }
+
+        const upstreamUrl = `${fediInstance}/api/v1/accounts/lookup?acct=${username}`;
+        const response = await fetch(upstreamUrl, {
+          headers: {
+            'Authorization': `Bearer ${fediToken}`,
+            'Content-Type': 'application/json',
+          }
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          return makeJsonResponse({ error: 'Failed to fetch account', details: errorText }, response.status);
+        }
+
+        const data = await response.json();
+        return makeJsonResponse(data);
+      } catch (error) {
+        console.error('Error in Fedi account proxy:', error);
+        return makeJsonResponse({ error: 'Internal server error', details: error.message }, 500);
+      }
+    }
+
+    // Route for Fedi/GoToSocial statuses proxy
     if (url.pathname.startsWith('/api/fedi/statuses')) {
       try {
         const fediInstance = env.FEDI_INSTANCE;
@@ -162,8 +202,6 @@ export default {
         if (maxId) {
           upstreamUrl.searchParams.append('max_id', maxId);
         }
-        // Add other filters if needed, e.g. exclude_replies
-        // upstreamUrl.searchParams.append('exclude_replies', 'true');
 
         const response = await fetch(upstreamUrl.toString(), {
           headers: {
@@ -189,4 +227,4 @@ export default {
 
     return makeJsonResponse({ error: 'Not Found' }, 404);
   },
-}; 
+};
