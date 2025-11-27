@@ -110,7 +110,7 @@ export const ChannelBrowser: React.FC<{ username?: string }> = ({ username = "lo
     return (
       <div className="space-y-1 p-1">
         {filteredChannels.length === 0 ? (
-          <div className="text-center p-1 opacity-50">
+          <div className="text-center p-1 text-muted-foreground text-sm">
             Not found, just hit Go or Enter
           </div>
         ) : (

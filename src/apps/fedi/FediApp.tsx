@@ -20,6 +20,7 @@ interface Account {
     followers_count: number;
     following_count: number;
     statuses_count: number;
+    fields: { name: string; value: string; verified_at: string | null }[];
 }
 
 interface MediaAttachment {
@@ -146,16 +147,9 @@ export const FediApp: React.FC = () => {
 
     return (
         <WindowLayout hasPadding={false}>
-            {isLoading && !account ? (
-                <div className="flex justify-center items-center h-full p-4">
+            {!account ? (
+                <div className="flex justify-center items-center h-full p-4 text-muted-foreground text-sm">
                     <p>Loading profile...</p>
-                </div>
-            ) : isError ? (
-                <div className="text-red-500 p-4 text-center">
-                    <p>Error loading posts: {error instanceof Error ? error.message : 'Unknown error'}</p>
-                    <RetroButton onClick={() => refetch()} className="mt-2">
-                        Retry
-                    </RetroButton>
                 </div>
             ) : (
                 <div className="divide-y divide-border">
@@ -216,6 +210,18 @@ export const FediApp: React.FC = () => {
                                     />
                                 )}
 
+                                {/* Profile Fields */}
+                                {account.fields && account.fields.length > 0 && (
+                                    <div className="grid grid-cols-1 gap-2 mb-4 text-sm border border-border bg-secondary/20 p-2">
+                                        {account.fields.map((field, index) => (
+                                            <div key={index} className="flex flex-col sm:flex-row sm:justify-between border-b border-border/50 last:border-0 pb-1 last:pb-0">
+                                                <span className="font-semibold text-muted-foreground uppercase text-xs tracking-wider">{field.name}</span>
+                                                <span dangerouslySetInnerHTML={{ __html: field.value }} className="[&_a]:text-blue-400 [&_a]:underline" />
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
                                 {/* Stats */}
                                 <div className="flex gap-4 text-sm">
                                     <span className="hover:underline cursor-pointer">
@@ -235,99 +241,114 @@ export const FediApp: React.FC = () => {
                         </div>
                     )}
 
-                    {data?.pages.map((page, pageIndex) => (
-                        <React.Fragment key={pageIndex}>
-                            {page.statuses.map((status) => {
-                                const isReblog = !!status.reblog;
-                                const displayStatus = status.reblog || status;
+                    {isLoading ? (
+                        <div className="flex justify-center items-center p-8">
+                            <p className="text-muted-foreground text-sm">Loading posts...</p>
+                        </div>
+                    ) : isError ? (
+                        <div className="text-red-500 p-4 text-center">
+                            <p className="text-sm">Error loading posts: {error instanceof Error ? error.message : 'Unknown error'}</p>
+                            <RetroButton onClick={() => refetch()} className="mt-2">
+                                Retry
+                            </RetroButton>
+                        </div>
+                    ) : (
+                        <>
+                            {data?.pages.map((page, pageIndex) => (
+                                <React.Fragment key={pageIndex}>
+                                    {page.statuses.map((status) => {
+                                        const isReblog = !!status.reblog;
+                                        const displayStatus = status.reblog || status;
 
-                                return (
-                                    <div key={`${status.id}`} className="p-3 hover:bg-accent/5 transition-colors">
-                                        {isReblog && (
-                                            <div className="flex items-center gap-2 mb-1 ml-12 text-xs text-muted-foreground">
-                                                <span>↻</span>
-                                                <span>Reposted by {status.account.display_name || status.account.username}</span>
-                                            </div>
-                                        )}
-                                        <div className="flex items-start gap-3">
-                                            {displayStatus.account.avatar ? (
-                                                <img
-                                                    src={displayStatus.account.avatar}
-                                                    alt={displayStatus.account.username}
-                                                    className="w-10 h-10 border border-border bg-secondary"
-                                                />
-                                            ) : (
-                                                <div className="w-10 h-10 border border-border bg-secondary flex items-center justify-center">
-                                                    <span className="text-xs opacity-50">?</span>
-                                                </div>
-                                            )}
-
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-baseline gap-2 mb-1">
-                                                    <span className="font-bold text-sm truncate">
-                                                        {displayStatus.account.display_name || displayStatus.account.username}
-                                                    </span>
-                                                    <span className="text-xs opacity-50 truncate">
-                                                        @{displayStatus.account.username}
-                                                    </span>
-                                                    <span className="text-xs opacity-30 ml-auto whitespace-nowrap">
-                                                        {formatTime(displayStatus.created_at)}
-                                                    </span>
-                                                </div>
-
-                                                <div
-                                                    className="text-sm break-words mb-2 [&>p]:mb-2 last:[&>p]:mb-0 [&_a]:text-blue-400 [&_a]:underline"
-                                                    dangerouslySetInnerHTML={{ __html: displayStatus.content }}
-                                                />
-
-                                                {/* Images */}
-                                                {displayStatus.media_attachments && displayStatus.media_attachments.length > 0 && (
-                                                    <div className={`grid gap-2 mb-2 ${displayStatus.media_attachments.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
-                                                        {displayStatus.media_attachments.map((media, index) => (
-                                                            media.type === 'image' ? (
-                                                                <div
-                                                                    key={media.id}
-                                                                    className="cursor-pointer border border-border bg-secondary"
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        addWindow({
-                                                                            title: 'Image Viewer',
-                                                                            content: <ImageViewerApp imageUrl={media.url} />,
-                                                                            width: 800,
-                                                                            height: 600,
-                                                                            iconType: 'image',
-                                                                        });
-                                                                    }}
-                                                                >
-                                                                    <img
-                                                                        src={media.preview_url}
-                                                                        alt={media.description || 'Attachment'}
-                                                                        className="w-full h-auto object-cover"
-                                                                        loading="lazy"
-                                                                    />
-                                                                </div>
-                                                            ) : null // Handle other media types if needed
-                                                        ))}
+                                        return (
+                                            <div key={`${status.id}`} className="p-3 hover:bg-accent/5 transition-colors">
+                                                {isReblog && (
+                                                    <div className="flex items-center gap-2 mb-1 ml-12 text-xs text-muted-foreground">
+                                                        <span>↻</span>
+                                                        <span>Reposted by {status.account.display_name || status.account.username}</span>
                                                     </div>
                                                 )}
+                                                <div className="flex items-start gap-3">
+                                                    {displayStatus.account.avatar ? (
+                                                        <img
+                                                            src={displayStatus.account.avatar}
+                                                            alt={displayStatus.account.username}
+                                                            className="w-10 h-10 border border-border bg-secondary"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-10 h-10 border border-border bg-secondary flex items-center justify-center">
+                                                            <span className="text-xs opacity-50">?</span>
+                                                        </div>
+                                                    )}
 
-                                                <div className="flex gap-4 text-xs opacity-50">
-                                                    <span title="Replies">✉︎ {displayStatus.replies_count || 0}</span>
-                                                    <span title="Reposts">↻ {displayStatus.reblogs_count || 0}</span>
-                                                    <span title="Likes">♡ {displayStatus.favourites_count || 0}</span>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-baseline gap-2 mb-1">
+                                                            <span className="font-bold text-sm truncate">
+                                                                {displayStatus.account.display_name || displayStatus.account.username}
+                                                            </span>
+                                                            <span className="text-xs opacity-50 truncate">
+                                                                @{displayStatus.account.username}
+                                                            </span>
+                                                            <span className="text-xs opacity-30 ml-auto whitespace-nowrap">
+                                                                {formatTime(displayStatus.created_at)}
+                                                            </span>
+                                                        </div>
+
+                                                        <div
+                                                            className="text-sm break-words mb-2 [&>p]:mb-2 last:[&>p]:mb-0 [&_a]:text-blue-400 [&_a]:underline"
+                                                            dangerouslySetInnerHTML={{ __html: displayStatus.content }}
+                                                        />
+
+                                                        {/* Images */}
+                                                        {displayStatus.media_attachments && displayStatus.media_attachments.length > 0 && (
+                                                            <div className={`grid gap-2 mb-2 ${displayStatus.media_attachments.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                                                                {displayStatus.media_attachments.map((media, index) => (
+                                                                    media.type === 'image' ? (
+                                                                        <div
+                                                                            key={media.id}
+                                                                            className="cursor-pointer border border-border bg-secondary"
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                addWindow({
+                                                                                    title: 'Image Viewer',
+                                                                                    content: <ImageViewerApp imageUrl={media.url} />,
+                                                                                    width: 800,
+                                                                                    height: 600,
+                                                                                    iconType: 'image',
+                                                                                });
+                                                                            }}
+                                                                        >
+                                                                            <img
+                                                                                src={media.preview_url}
+                                                                                alt={media.description || 'Attachment'}
+                                                                                className="w-full h-auto object-cover"
+                                                                                loading="lazy"
+                                                                            />
+                                                                        </div>
+                                                                    ) : null // Handle other media types if needed
+                                                                ))}
+                                                            </div>
+                                                        )}
+
+                                                        <div className="flex gap-4 text-xs opacity-50">
+                                                            <span title="Replies">✉︎ {displayStatus.replies_count || 0}</span>
+                                                            <span title="Reposts">↻ {displayStatus.reblogs_count || 0}</span>
+                                                            <span title="Likes">♡ {displayStatus.favourites_count || 0}</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </React.Fragment>
-                    ))}
+                                        );
+                                    })}
+                                </React.Fragment>
+                            ))}
 
-                    {/* Load more indicator */}
-                    <div ref={loadMoreRef} className="p-4 text-center text-xs opacity-50">
-                        {isFetchingNextPage ? 'Loading more...' : hasNextPage ? 'Scroll for more' : 'End of feed'}
-                    </div>
+                            {/* Load more indicator */}
+                            <div ref={loadMoreRef} className="p-4 text-center text-xs opacity-50">
+                                {isFetchingNextPage ? 'Loading more...' : hasNextPage ? 'Scroll for more' : 'End of feed'}
+                            </div>
+                        </>
+                    )}
                 </div>
             )}
         </WindowLayout>

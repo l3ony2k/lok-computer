@@ -155,12 +155,12 @@ export const BskyPostsApp: React.FC = () => {
   return (
     <WindowLayout hasPadding={false}>
       {isLoading ? (
-        <div className="flex justify-center items-center h-full p-4">
+        <div className="flex justify-center items-center h-full p-4 text-muted-foreground text-sm">
           <p>Loading posts...</p>
         </div>
       ) : isError ? (
         <div className="text-red-500 p-4 text-center">
-          <p>Error loading posts: {error instanceof Error ? error.message : 'Unknown error'}</p>
+          <p className="text-sm">Error loading posts: {error instanceof Error ? error.message : 'Unknown error'}</p>
           <RetroButton onClick={() => refetch()} className="mt-2">
             Retry
           </RetroButton>

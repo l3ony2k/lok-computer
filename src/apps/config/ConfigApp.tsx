@@ -70,31 +70,29 @@ export const ConfigApp: React.FC = () => {
             <RetroButton
               active={theme === 'light'}
               onClick={() => setTheme('light')}
-              className="flex flex-col items-center justify-center p-3 h-24"
+              className="flex flex-row items-center justify-center items-center p-3 h-18 gap-2"
             >
-              <Sun className="w-6 h-6 mb-2" />
+              <Sun className="w-5 h-5" />
               <span>Light</span>
             </RetroButton>
             <RetroButton
               active={theme === 'dark'}
               onClick={() => setTheme('dark')}
-              className="flex flex-col items-center justify-center p-3 h-24"
+              className="flex flex-row items-center justify-center items-center p-3 h-18 gap-2"
             >
-              <Moon className="w-6 h-6 mb-2" />
+              <Moon className="w-5 h-5" />
               <span>Dark</span>
             </RetroButton>
             <RetroButton
               active={theme === 'system'}
               onClick={() => setTheme('system')}
-              className="flex flex-col items-center justify-center p-3 h-24"
+              className="flex flex-row items-center justify-center items-center p-3 h-18 gap-2"
             >
-              <Computer className="w-6 h-6 mb-2" />
+              <Computer className="w-5 h-5" />
               <span>System</span>
             </RetroButton>
           </div>
         </div>
-
-        <div className="h-px bg-border" />
 
         {/* Wallpaper Section */}
         <div>
@@ -118,7 +116,7 @@ export const ConfigApp: React.FC = () => {
                 </RetroButton>
               )}
             </div>
-            <div className="aspect-video w-full bg-muted rounded-md overflow-hidden border border-border relative">
+            <div className="aspect-video w-full bg-muted overflow-hidden border border-border relative">
               {settings.wallpaper ? (
                 <div
                   className="w-full h-full bg-center bg-cover"
@@ -151,7 +149,7 @@ export const ConfigApp: React.FC = () => {
                     style={{ backgroundImage: `url("${wallpaper.url}")` }}
                   />
                   {settings.wallpaper === wallpaper.url && (
-                    <CheckCircle className="w-4 h-4 absolute bottom-1 right-1 text-primary bg-white rounded-full" />
+                    <CheckCircle className="w-4 h-4 absolute bottom-1 right-1 text-primary" />
                   )}
                 </button>
               ))}

@@ -160,6 +160,7 @@ export default {
           headers: {
             'Authorization': `Bearer ${fediToken}`,
             'Content-Type': 'application/json',
+            'User-Agent': 'lok-computer-worker/1.0',
           }
         });
 
@@ -207,6 +208,7 @@ export default {
           headers: {
             'Authorization': `Bearer ${fediToken}`,
             'Content-Type': 'application/json',
+            'User-Agent': 'lok-computer-worker/1.0',
           }
         });
 

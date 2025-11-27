@@ -36,7 +36,7 @@ const renderMediaOrAttachment = (block: ArenaBlock) => (
         href={block.attachment.url}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-border rounded-lg hover:bg-muted transition-colors"
+        className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-border hover:bg-muted transition-colors"
       >
         <span className="text-4xl mb-2">📎</span>
         <span className="text-blue-500 underline">{block.attachment.file_name || "Download attachment"}</span>

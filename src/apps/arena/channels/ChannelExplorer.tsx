@@ -81,7 +81,7 @@ const ListContent = React.memo(({
 
   if (contents.length === 0) {
     return (
-      <div className="text-center p-1 opacity-50">
+      <div className="text-center p-1 text-muted-foreground text-sm">
         This channel is empty
       </div>
     );
@@ -90,7 +90,7 @@ const ListContent = React.memo(({
   return (
     <div className="space-y-1 p-1">
       {contents.map((item) => (
-        <div key={item.id} className={selectedId === item.id ? "bg-muted/50 rounded-sm" : ""}>
+        <div key={item.id} className={selectedId === item.id ? "bg-muted/50" : ""}>
           <MemoizedContentItemListView
             item={item}
             onSingleClick={() => onSingleClick(item.id)}
