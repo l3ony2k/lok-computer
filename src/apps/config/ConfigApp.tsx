@@ -14,15 +14,15 @@ const DEFAULT_WALLPAPERS = [
   },
   {
     name: "Ocean Waves",
-    url: "https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=800&auto=format&fit=crop"
+    url: "https://images.unsplash.com/photo-1484387436194-cf7cb70800ce?w=1280&auto=format&fit=crop"
   },
   {
     name: "Abstract Geometric",
-    url: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=800&auto=format&fit=crop"
+    url: "https://images.unsplash.com/photo-1605106702734-205df224ecce?w=1280&auto=format&fit=crop"
   },
   {
     name: "Retro Computer",
-    url: "https://images.unsplash.com/photo-1587620962725-abab7fe55159?w=800&auto=format&fit=crop"
+    url: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1280&auto=format&fit=crop"
   }
 ];
 
@@ -138,7 +138,7 @@ export const ConfigApp: React.FC = () => {
                 <button
                   key={wallpaper.url}
                   className={cn(
-                    "border border-border p-1 h-20 overflow-hidden relative hover:opacity-90 transition-opacity",
+                    "border border-border p-1 aspect-video overflow-hidden relative hover:opacity-90 transition-opacity",
                     settings.wallpaper === wallpaper.url && "border-primary border-2"
                   )}
                   onClick={() => setWallpaper(wallpaper.url)}
