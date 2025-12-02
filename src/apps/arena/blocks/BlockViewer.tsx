@@ -59,7 +59,7 @@ const renderBlockByType = {
 
   Text: (block: ArenaBlock) => (
     <div
-      className="prose dark:prose-invert max-w-none"
+      className="prose dark:prose-invert max-w-none prose-p:leading-relaxed prose-headings:font-bold prose-headings:text-foreground prose-p:text-foreground prose-strong:text-foreground prose-a:text-[var(--link-color)] prose-ul:text-foreground prose-ol:text-foreground prose-li:text-foreground prose-blockquote:text-foreground"
       dangerouslySetInnerHTML={{
         __html: block.content_html || block.content || ""
       }}
