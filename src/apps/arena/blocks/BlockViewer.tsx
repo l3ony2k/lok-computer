@@ -132,10 +132,10 @@ export const BlockViewer = ({ blockId, mode = "window" }: { blockId: number | st
   const hasDescription = Boolean(block.description_html || block.description);
 
   const content = (
-    <div className="flex flex-col min-h-full w-full max-w-4xl mx-auto">
+    <div className="flex flex-col min-h-full w-full">
 
       {/* Content Section */}
-      <div className="w-full flex justify-center p-2">
+      <div className="w-full flex justify-center p-2 max-w-4xl mx-auto">
         {renderBlockContent()}
       </div>
 
@@ -146,7 +146,7 @@ export const BlockViewer = ({ blockId, mode = "window" }: { blockId: number | st
           <>
             <hr className="w-full border-border" />
             <div
-              className="w-full prose dark:prose-invert max-w-none text-sm p-2"
+              className="w-full prose dark:prose-invert max-w-none text-sm p-2 truncate"
               dangerouslySetInnerHTML={{
                 __html: block.description_html || block.description || ""
               }}
