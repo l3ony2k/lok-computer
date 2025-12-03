@@ -59,7 +59,7 @@ export const About = () => {
               </div>
 
               <p className="mb-4">
-                <strong>lok.computer</strong> is yet another useless side project of <a href="https://leonw.ong/" className="underline text-blue-700 dark:text-blue-300">Leon</a>'s. It's a retro-inspired web desktop brings together modular mini apps like an are.na browser (yeh so orginal), weather (maybe?), and more (i don't know yet) — within a playful, windowed environment.
+                <strong>lok.computer</strong> is yet another useless side project of <a href="https://leonw.ong/" className="underline text-blue-700 dark:text-blue-300">Leon</a>'s. It's a retro-inspired web desktop brings together modular mini apps like an are.na browser (yeh so orginal), weather (maybe?), social media (bsky and fediverse), and more (i don't know yet), within a playful, windowed environment.
               </p>
 
               <p className="mb-4">
@@ -67,12 +67,12 @@ export const About = () => {
               </p>
 
               <p>
-                Made by Claude 3.7 Sonnet, Gemini 2.5 Pro Preview, Cline, and Windsurf.
+                Made with Claude (3.7|4.0|4.5) Sonnet, Gemini (2.5|3.0) Pro, Cline, Kilo Code, Windsurf, and Antigravity.
               </p>
             </div>
 
             <p className="mt-4 text-xs opacity-50 select-none">
-              Version 1.3.2
+              Version 1.4.0
             </p>
           </div>
         )}
