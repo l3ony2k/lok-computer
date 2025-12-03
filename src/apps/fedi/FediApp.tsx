@@ -215,7 +215,7 @@ export const FediApp: React.FC = () => {
                                     <div className="grid grid-cols-1 gap-2 mb-4 text-sm border border-border bg-secondary/20 p-2">
                                         {account.fields.map((field, index) => (
                                             <div key={index} className="flex flex-col sm:flex-row sm:justify-between border-b border-border/50 last:border-0 pb-1 last:pb-0">
-                                                <span className="font-semibold text-muted-foreground uppercase text-xs tracking-wider">{field.name}</span>
+                                                <span className="font-semibold text-muted-foreground uppercase text-xs tracking-wider mr-2">{field.name}</span>
                                                 <span dangerouslySetInnerHTML={{ __html: field.value }} className="min-w-0 max-w-full overflow-hidden text-ellipsis whitespace-nowrap [&_a]:text-blue-400 [&_a]:underline [&_a]:inline-block [&_a]:min-w-0 [&_a]:max-w-full [&_a]:overflow-hidden [&_a]:text-ellipsis [&_a]:whitespace-nowrap" />
                                             </div>
                                         ))}
