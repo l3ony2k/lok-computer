@@ -52,7 +52,8 @@ const renderBlockByType = {
       <img
         src={getImageSource(block)}
         alt={block.title || "Image"}
-        className="max-w-full object-contain max-h-[60vh]"
+        // removed max-h-[60vh]
+        className="max-w-full object-contain"
       />
     </div>
   ),
@@ -72,7 +73,8 @@ const renderBlockByType = {
         <img
           src={getImageSource(block)}
           alt={block.title || "Link thumbnail"}
-          className="max-w-full object-contain max-h-[60vh]"
+          // removed max-h-[60vh]
+          className="max-w-full object-contain"
         />
       ) : (
         <div className="flex items-center justify-center w-full h-40 bg-muted text-muted-foreground">
