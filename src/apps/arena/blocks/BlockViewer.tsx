@@ -36,10 +36,10 @@ const renderMediaOrAttachment = (block: ArenaBlock) => (
         href={block.attachment.url}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-border hover:bg-muted transition-colors"
+        className="flex flex-col items-center justify-center w-full p-8 border border-dashed border-border hover:bg-muted transition-colors"
       >
         <span className="text-4xl mb-2">📎</span>
-        <span className="text-blue-500 underline">{block.attachment.file_name || "Download attachment"}</span>
+        <span className="underline break-all">{block.attachment.file_name || "Download attachment"}</span>
       </a>
     )}
   </div>
@@ -146,7 +146,7 @@ export const BlockViewer = ({ blockId, mode = "window" }: { blockId: number | st
           <>
             <hr className="w-full border-border" />
             <div
-              className="w-full prose dark:prose-invert max-w-none text-sm p-2 truncate"
+              className="w-full prose dark:prose-invert max-w-none text-sm p-2 overflow-hidden"
               dangerouslySetInnerHTML={{
                 __html: block.description_html || block.description || ""
               }}

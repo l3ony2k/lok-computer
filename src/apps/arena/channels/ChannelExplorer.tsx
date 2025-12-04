@@ -363,13 +363,13 @@ export const ChannelExplorer: React.FC<{ channelSlug?: string; username?: string
             <div>Updated: {formatDate(selectedItem.updated_at)}</div>
           </div>
 
-          <Button
+          <RetroButton
             onClick={() => handleItemDoubleClick(selectedItem)}
             className="w-full"
             variant="secondary"
           >
             Open Channel
-          </Button>
+          </RetroButton>
         </div>
       );
     }
