@@ -80,7 +80,7 @@ export const ContentItemGrid = React.memo(({
                     <CustomIcon iconType={iconType} className="w-full h-full" />
                 )}
             </div>
-            <div className="folder-name">{itemTitle}</div>
+            <div className="folder-name" title={itemTitle}>{itemTitle}</div>
         </div>
     );
 });
@@ -135,7 +135,7 @@ export const ContentItemListView = React.memo(({
             ) : (
                 <CustomIcon iconType={iconType} className={`${iconSizeClass} shrink-0 select-none`} />
             )}
-            <span className="truncate text-sm select-none">{itemTitle}</span>
+            <span className="truncate text-sm select-none" title={itemTitle}>{itemTitle}</span>
         </div>
     );
 });
