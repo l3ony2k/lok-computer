@@ -122,7 +122,7 @@ export const ChannelExplorer: React.FC<{ channelSlug?: string; username?: string
   const isMobile = useIsMobile();
 
   // Preview Mode State
-  const [showPreview, setShowPreview] = useState(false);
+  const [previewMode, setPreviewMode] = useState<'off' | 'horizontal' | 'vertical'>('off');
   const [selectedItem, setSelectedItem] = useState<ContentItem | null>(null);
 
   useEffect(() => {
@@ -377,6 +377,12 @@ export const ChannelExplorer: React.FC<{ channelSlug?: string; username?: string
     return <BlockViewer blockId={selectedItem.id} mode="embedded" />;
   };
 
+  const handlePreviewToggle = () => {
+    if (previewMode === 'off') setPreviewMode('horizontal');
+    else if (previewMode === 'horizontal') setPreviewMode('vertical');
+    else setPreviewMode('off');
+  };
+
   return (
     <ArenaWindowLayout
       toolbar={
@@ -398,7 +404,13 @@ export const ChannelExplorer: React.FC<{ channelSlug?: string; username?: string
             <span className="text-xs opacity-50">Total: {contents.length} items</span>
           </div>
           <div className="flex items-center space-x-0">
-            <RetroButton size="sm" active={showPreview} onClick={() => setShowPreview(!showPreview)}>Preview</RetroButton>
+            <RetroButton
+              size="sm"
+              active={previewMode !== 'off'}
+              onClick={handlePreviewToggle}
+            >
+              Preview
+            </RetroButton>
           </div>
         </div>
       }
@@ -412,16 +424,16 @@ export const ChannelExplorer: React.FC<{ channelSlug?: string; username?: string
           <div className="progress-bar"></div>
         </div>
       ) : (
-        showPreview ? (
-          <ResizablePanelGroup direction="horizontal" className="h-full w-full">
-            <ResizablePanel defaultSize={60} minSize={30}>
+        previewMode !== 'off' ? (
+          <ResizablePanelGroup direction={previewMode === 'vertical' ? 'vertical' : 'horizontal'} className="h-full w-full">
+            <ResizablePanel defaultSize={50} minSize={20}>
               <div className="h-full overflow-y-auto">
                 {isListView ? renderListView() : renderGridView()}
               </div>
             </ResizablePanel>
             <ResizableHandle withHandle />
-            <ResizablePanel defaultSize={40} minSize={30}>
-              <div className="h-full bg-background border-l border-border overflow-hidden">
+            <ResizablePanel defaultSize={50} minSize={30}>
+              <div className={`h-full bg-background ${previewMode === 'vertical' ? 'border-t' : 'border-l'} border-border overflow-hidden`}>
                 {renderPreviewContent()}
               </div>
             </ResizablePanel>
