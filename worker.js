@@ -219,7 +219,14 @@ export default {
         }
 
         const data = await response.json();
-        return makeJsonResponse(data);
+
+        // SECURITY: Filter out private and direct posts at the API level
+        // This ensures private content is never sent to the client
+        const publicStatuses = data.filter(status =>
+          status.visibility === 'public' || status.visibility === 'unlisted'
+        );
+
+        return makeJsonResponse(publicStatuses);
 
       } catch (error) {
         console.error('Error in Fedi proxy:', error);

@@ -44,6 +44,7 @@ interface Status {
     favourites_count: number;
     reblog: Status | null;
     url: string;
+    visibility: 'public' | 'unlisted' | 'private' | 'direct';
 }
 
 const INSTANCE_URL = APP_CONFIG.FEDI_INSTANCE;
@@ -95,7 +96,7 @@ export const FediApp: React.FC = () => {
             const data = await response.json() as Status[];
             console.log(`Fetched ${data.length} statuses`);
 
-            // Pagination in Mastodon uses Link header, but we can also just use the ID of the last item for max_id
+            // Pagination: use the last item's ID for max_id
             const nextCursor = data.length > 0 ? data[data.length - 1].id : undefined;
 
             return { statuses: data, nextCursor };
