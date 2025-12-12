@@ -3,40 +3,130 @@ import { WindowLayout } from '@/components/window/WindowLayout';
 import { RetroButton } from '@/components/ui/RetroButton';
 
 // ============================================
+// Button variants configuration
+// ============================================
+const buttonVariants = [
+  {
+    id: 'default',
+    label: 'default',
+    path: '/88x31.gif',
+    url: 'https://lok.computer/88x31.gif',
+  },
+  {
+    id: 'light',
+    label: 'light',
+    path: '/88x31-light.gif',
+    url: 'https://lok.computer/88x31-light.gif',
+  },
+  {
+    id: 'dark',
+    label: 'dark',
+    path: '/88x31-dark.gif',
+    url: 'https://lok.computer/88x31-dark.gif',
+  },
+];
+
+// ============================================
 // About This Section
 // ============================================
-const AboutThis = () => (
-  <div className="max-w-lg mx-auto p-4">
-    <img
-      className="mb-6 select-none"
-      src="https://d2w9rnfcy7mm78.cloudfront.net/36349997/original_9ae0772fcf1074962bb42fc2b6a21dfd.jpg"
-      alt="a computer within a computer, that's basically what lok.computer is"
-      onLoad={() => console.log('[About] Hero image loaded')}
-      onError={() => console.error('[About] Failed to load hero image')}
-    />
-    <div className="select-text">
-      <div className="border-l-4 border-accent pl-4 italic mb-4">
-        A small OS in your browser, for curiosity and creation.
+const AboutThis = () => {
+  const [copied, setCopied] = useState(false);
+  const [activeVariant, setActiveVariant] = useState('default');
+
+  const currentVariant = buttonVariants.find(v => v.id === activeVariant) || buttonVariants[0];
+
+  const getEmbedCode = (variant: typeof buttonVariants[0]) => `<a href="https://lok.computer" target="_blank" rel="noopener noreferrer">
+  <img src="${variant.url}" alt="lok.computer" width="88" height="31" />
+</a>`;
+
+  const handleCopyEmbed = () => {
+    navigator.clipboard.writeText(getEmbedCode(currentVariant));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="max-w-lg mx-auto p-4">
+      <img
+        className="mb-6 select-none"
+        src="https://d2w9rnfcy7mm78.cloudfront.net/36349997/original_9ae0772fcf1074962bb42fc2b6a21dfd.jpg"
+        alt="a computer within a computer, that's basically what lok.computer is"
+        onLoad={() => console.log('[About] Hero image loaded')}
+        onError={() => console.error('[About] Failed to load hero image')}
+      />
+      <div className="select-text">
+        <div className="border-l-4 border-accent pl-4 italic mb-4">
+          A small OS in your browser, for curiosity and creation.
+        </div>
+
+        <p className="mb-4">
+          <strong>lok.computer</strong> is yet another useless side project of <a href="https://leonw.ong/" className="underline text-blue-700 dark:text-blue-300">Leon</a>'s. It's a retro-inspired web desktop brings together modular mini apps like an are.na browser (yeh so orginal), weather (maybe?), social media (bsky and fediverse), and more (i don't know yet), within a playful, windowed environment.
+        </p>
+
+        <p className="mb-4">
+          Under the hood: React, TypeScript, Vite, and Tailwind CSS. Oh try <a href="https://bun.sh" className="underline text-blue-700 dark:text-blue-300">bun.sh</a>, it's amazing.
+        </p>
+
+        <p>
+          Made with Claude (3.7|4.0|4.5) Sonnet, Gemini (2.5|3.0) Pro, Cline, Kilo Code, Windsurf, and Antigravity.
+        </p>
       </div>
 
-      <p className="mb-4">
-        <strong>lok.computer</strong> is yet another useless side project of <a href="https://leonw.ong/" className="underline text-blue-700 dark:text-blue-300">Leon</a>'s. It's a retro-inspired web desktop brings together modular mini apps like an are.na browser (yeh so orginal), weather (maybe?), social media (bsky and fediverse), and more (i don't know yet), within a playful, windowed environment.
-      </p>
+      {/* 88x31 Button Section */}
+      <div className="my-4">
+        <h4 className="font-bold mb-3 text-accent">88x31 Button</h4>
 
-      <p className="mb-4">
-        Under the hood: React, TypeScript, Vite, and Tailwind CSS. Oh try <a href="https://bun.sh" className="underline text-blue-700 dark:text-blue-300">bun.sh</a>, it's amazing.
-      </p>
+        {/* Variant Tabs */}
+        <div className="flex border-b border-border mb-4">
+          {buttonVariants.map((variant) => (
+            <button
+              key={variant.id}
+              onClick={() => setActiveVariant(variant.id)}
+              className={`px-3 py-1.5 text-xs transition-colors border-b-2 -mb-px ${activeVariant === variant.id
+                ? 'border-accent text-accent font-bold'
+                : 'border-transparent opacity-60 hover:opacity-100'
+                }`}
+            >
+              {variant.label}
+            </button>
+          ))}
+        </div>
 
-      <p>
-        Made with Claude (3.7|4.0|4.5) Sonnet, Gemini (2.5|3.0) Pro, Cline, Kilo Code, Windsurf, and Antigravity.
+        {/* Preview + Embed Code */}
+        <div className="flex gap-4 items-start">
+          {/* Button Preview */}
+          <div className="flex flex-col items-center gap-1 shrink-0">
+            <img
+              src={currentVariant.path}
+              alt={`lok.computer button (${currentVariant.label})`}
+              width={88}
+              height={31}
+              className="select-none border border-border"
+            />
+            <span className="text-xs opacity-60 font-mono">{currentVariant.path}</span>
+          </div>
+
+          {/* Embed Code */}
+          <div className="relative flex-1 min-w-0">
+            <pre className="bg-black/10 dark:bg-white/10 p-3 text-xs overflow-x-auto border border-border select-text">
+              <code>{getEmbedCode(currentVariant)}</code>
+            </pre>
+            <button
+              onClick={handleCopyEmbed}
+              className="absolute top-1 right-1 px-2 py-1 text-xs bg-accent/80 hover:bg-accent/90 border border-accent/50 transition-colors"
+            >
+              {copied ? 'copied!' : 'copy'}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <p className="mt-4 text-xs opacity-50 select-none">
+        Version 1.5.0
       </p>
     </div>
-
-    <p className="mt-4 text-xs opacity-50 select-none">
-      Version 1.4.1
-    </p>
-  </div>
-);
+  );
+};
 
 // ============================================
 // About Me Section
@@ -44,13 +134,13 @@ const AboutThis = () => (
 const socialLinks = {
   lok: [
     { text: "are.na", url: "https://are.na/lok" },
-    { text: "mastodon", url: "https://rex.cat/@lok" },
+    { text: "fediverse", url: "https://rex.cat/@lok" },
     { text: "bsky", url: "https://lok.on.computer" },
     { text: "neodb", url: "https://neodb.social/users/lok" },
     { text: "status.cafe", url: "https://status.cafe/users/lok" },
     { text: "special.fish", url: "https://special.fish/lok" },
     { text: "sr.ht", url: "https://sr.ht/~lok" },
-    { text: "codeburg", url: "https://codeburg.com/lok" },
+    { text: "codeberg", url: "https://codeberg.org/lok" },
     { text: "nekoweb", url: "https://lok.nekoweb.org" },
     { text: "signal", url: "https://signal.me/#eu/8Q-JFgLhjGbsPSfgMHep65NmUJNKxTr1uyO-arsGq6AUf2ZaxrtPHY4WLiLrwm9D" },
     { text: "matrix", url: "https://matrix.to/#/@lok:mtx.owu.one" },
@@ -70,7 +160,7 @@ const socialLinks = {
 const AboutMe = () => (
   <div className="select-text p-4 max-w-lg mx-auto">
     {/* Quote */}
-    <div className="border-l-2 border-current pl-4 italic mb-6" style={{ fontFamily: "'Times New Roman', serif", fontSize: '18px' }}>
+    <div className="border-l-2 border-current pl-4 italic my-4" style={{ fontFamily: "'Times New Roman', serif", fontSize: '18px' }}>
       "Men must live and create. Live to the point of tears." – Albert Camus
     </div>
 
@@ -84,7 +174,7 @@ const AboutMe = () => (
     </p>
 
     {/* Social Links */}
-    <div className="space-y-6 mt-8">
+    <div className="space-y-6 mt-4">
       {/* @lok section */}
       <div>
         <h3 className="font-bold mb-3 text-accent">@lok</h3>
