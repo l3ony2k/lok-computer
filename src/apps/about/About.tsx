@@ -184,6 +184,7 @@ const AboutMe = () => (
               className="p-3"
               key={link.text}
               size="sm"
+              title={link.url}
               onClick={() => window.open(link.url, '_blank', 'noopener,noreferrer')}
             >
               {link.text}
@@ -201,6 +202,7 @@ const AboutMe = () => (
               className="p-3"
               key={link.text}
               size="sm"
+              title={link.url}
               onClick={() => window.open(link.url, '_blank', 'noopener,noreferrer')}
             >
               {link.text}

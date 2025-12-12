@@ -133,6 +133,10 @@
         /* font-family: ui-monospace, Menlo, Monaco, "Cascadia Mono", "Segoe UI Mono", "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro", "Fira Mono", "Droid Sans Mono", "Consolas", "Courier New", monospace; */
     }
 
+    button {
+        cursor: default;
+    }
+
     body {
         @apply bg-background text-foreground antialiased overflow-hidden;
         background-size: 20px 20px;
@@ -205,7 +209,7 @@
 
 @layer components {
     .retro-button {
-        @apply px-1 py-0 border border-border shadow-retro-button bg-secondary hover:bg-accent active:shadow-retro-inset active:translate-y-px active:translate-x-px transition-all select-none;
+        @apply px-1 py-0 border border-border shadow-retro-button bg-secondary hover:bg-accent active:shadow-retro-inset active:translate-y-px active:translate-x-px transition-all select-none cursor-default;
     }
 
     .thin-scrollbar {
@@ -413,7 +417,7 @@
     font-family:
         ui-monospace, Menlo, Monaco, "Cascadia Mono", "Segoe UI Mono", "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro", "Fira Mono", "Droid Sans Mono", "Consolas", "Courier New",
         monospace;
-    font-size: 1rem;
+    font-size: 0.875rem;
     line-height: 1.4;
     color: hsl(var(--foreground));
 }
