@@ -78,11 +78,11 @@ export const WeatherApp: React.FC<WeatherAppProps> = () => {
       hasPadding={true}
     >
       {isLoading ? (
-        <div className="flex justify-center items-center h-full">
+        <div className="flex justify-center items-center h-full text-muted-foreground text-sm">
           <p>Loading weather data...</p>
         </div>
       ) : error ? (
-        <div className="text-red-500 p-4">
+        <div className="text-red-500 p-4 text-sm">
           <p>{error instanceof Error ? error.message : 'Failed to fetch weather data. Please try again.'}</p>
         </div>
       ) : (

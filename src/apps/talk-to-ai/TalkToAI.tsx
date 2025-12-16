@@ -28,6 +28,7 @@ export const TalkToAI = () => {
   });
 
   const [input, setInput] = useState('');
+  const [confirmClear, setConfirmClear] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -124,13 +125,26 @@ export const TalkToAI = () => {
   };
 
   const handleClear = () => {
+    if (!confirmClear) {
+      setConfirmClear(true);
+      return;
+    }
     const initialMessage = { id: Date.now().toString(), text: 'Hello user, how can I help you?', sender: 'ai' as const };
     setMessages([initialMessage]);
+    setConfirmClear(false);
     toast.success('Chat history cleared');
     // Focus back on input after clearing
     setTimeout(() => {
       inputRef.current?.focus();
     }, 0);
+  };
+
+  // Reset confirm state when clicking elsewhere
+  const handleClearBlur = () => {
+    // Small delay to allow click to register first
+    setTimeout(() => {
+      setConfirmClear(false);
+    }, 150);
   };
 
   return (
@@ -145,10 +159,13 @@ export const TalkToAI = () => {
           <RetroButton
             type="button"
             onClick={handleClear}
+            onBlur={handleClearBlur}
             size="sm"
-            title="Clear chat history"
+            title={confirmClear ? "Click again to confirm" : "Clear chat history"}
+            className={confirmClear ? "bg-red-600 hover:bg-red-700 text-white" : ""}
+            style={{ width: '60px' }}
           >
-            Clear
+            {confirmClear ? "Confirm?" : "Clear"}
           </RetroButton>
           <form onSubmit={handleSubmit} className="flex items-center flex-1 mx-2">
             <input
@@ -181,7 +198,7 @@ export const TalkToAI = () => {
             className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-xs md:max-w-md px-2 py-1 ${message.sender === 'user'
+              className={`max-w-xs md:max-w-md px-2 py-1 text-[0.875rem] ${message.sender === 'user'
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-muted'
                 }`}

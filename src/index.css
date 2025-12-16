@@ -191,7 +191,7 @@
     }
 
     .folder-item {
-        @apply flex flex-col items-center justify-center p-2 hover:bg-accent/50 cursor-pointer select-none;
+        @apply flex flex-col items-center justify-center p-2 hover:bg-accent/50 select-none;
     }
 
     .folder-icon {
@@ -229,7 +229,7 @@
     }
 
     .folder-item {
-        @apply flex flex-col items-center justify-center p-1 hover:bg-accent/50 cursor-pointer;
+        @apply flex flex-col items-center justify-center p-1 hover:bg-accent/50;
     }
 
     .folder-icon {
