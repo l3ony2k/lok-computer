@@ -9,6 +9,7 @@ import { ConfigApp } from '@/apps/config/ConfigApp';
 import { ConsoleApp } from '@/apps/console/ConsoleApp';
 import { TalkToAI } from '@/apps/talk-to-ai/TalkToAI';
 import { GuestbookApp } from '@/apps/guestbook/GuestbookApp';
+import { ShelfApp } from '@/apps/shelf/ShelfApp';
 
 export interface AppConfig {
   name: string;
@@ -94,6 +95,14 @@ export const APP_LIST: AppConfig[] = [
     component: GuestbookApp,
     defaultWidth: 500,
     defaultHeight: 600,
+    singleInstance: true
+  },
+  {
+    name: "Shelf",
+    iconType: "shelf",
+    component: ShelfApp,
+    defaultWidth: 600,
+    defaultHeight: 700,
     singleInstance: true
   }
 ];

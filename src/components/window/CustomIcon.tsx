@@ -17,6 +17,7 @@ import globeIcon from '../../assets/icons/globe.png'; // Add webpage icon
 import robotIcon from '../../assets/icons/robot.png'; // Add mail icon
 import mailIcon from '../../assets/icons/mail.png'; // Add mail icon for guestbook
 import fediIcon from '../../assets/icons/fedi.png'; // Add fedi icon for fedi
+import shelfIcon from '../../assets/icons/shelf.png'; // Add shelf icon
 // Add imports for any other icons you have...
 
 interface CustomIconProps {
@@ -42,6 +43,7 @@ const iconMap: { [key: string]: string } = { // The value is now the imported UR
   mailbox: robotIcon, // Add mailbox icon mapping
   mail: mailIcon, // Add mail icon mapping for guestbook
   fedi: fediIcon, // Add fedi icon mapping
+  shelf: shelfIcon, // Add shelf icon mapping
   // Add other mappings corresponding to your imports
 };
 

@@ -234,6 +234,48 @@ export default {
       }
     }
 
+    // Route for NeoDB shelf
+    if (url.pathname === '/api/neodb/shelf') {
+      try {
+        const neodbToken = env.NEODB_ACCESS_TOKEN;
+
+        if (!neodbToken) {
+          return makeJsonResponse({ error: 'NEODB_ACCESS_TOKEN not configured' }, 500);
+        }
+
+        const shelfType = url.searchParams.get('type') || 'wishlist';
+        const page = url.searchParams.get('page') || '1';
+
+        // Validate shelf type
+        const validTypes = ['wishlist', 'progress', 'complete', 'dropped'];
+        if (!validTypes.includes(shelfType)) {
+          return makeJsonResponse({ error: 'Invalid shelf type. Must be: wishlist, progress, complete, or dropped' }, 400);
+        }
+
+        const upstreamUrl = `https://neodb.social/api/user/lok/shelf/${shelfType}?page=${page}`;
+        const response = await fetch(upstreamUrl, {
+          headers: {
+            'Authorization': `Bearer ${neodbToken}`,
+            'Accept': 'application/json',
+            'User-Agent': 'lok-computer-worker/1.0',
+          }
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('NeoDB API error:', response.status, errorText);
+          return makeJsonResponse({ error: 'Failed to fetch from NeoDB', details: errorText }, response.status);
+        }
+
+        const data = await response.json();
+        return makeJsonResponse(data);
+
+      } catch (error) {
+        console.error('Error in NeoDB shelf proxy:', error);
+        return makeJsonResponse({ error: 'Internal server error', details: error.message }, 500);
+      }
+    }
+
     return makeJsonResponse({ error: 'Not Found' }, 404);
   },
 };

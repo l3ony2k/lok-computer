@@ -8,4 +8,5 @@ export const APP_CONFIG = {
     FEDI_INSTANCE: 'https://rex.cat',
     FEDI_USERNAME: 'lok',
     AI_CHAT_ENDPOINT: '/api/chat',
+    NEODB_SHELF_ENDPOINT: '/api/neodb/shelf',
 };
