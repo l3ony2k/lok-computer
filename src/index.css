@@ -1,6 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Emoji:wght@400&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Noto Emoji - grayscale for coherent color style */
+.noto-emoji {
+    font-family: 'Noto Emoji', sans-serif;
+    /* filter: grayscale(100%); */
+}
 
 @layer base {
     :root {

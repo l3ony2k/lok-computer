@@ -26,6 +26,7 @@ interface ShelfItem {
         url: string;
         category: string;
         display_title: string;
+        external_resources?: { url: string }[];
     };
     created_time: string;
     comment_text: string | null;
@@ -46,28 +47,67 @@ const SHELF_TABS: { value: ShelfType; label: string }[] = [
     { value: 'dropped', label: 'Dropped' },
 ];
 
-const ShelfContent: React.FC<{ type: ShelfType }> = ({ type }) => {
+const PAGE_SIZE = 50;
+
+// Category to Noto Emoji Unicode mapping (black & white compatible)
+const getCategorySymbol = (category: string): string => {
+    const symbols: Record<string, string> = {
+        movie: '🎬',
+        book: '📖',
+        tv: '📺',
+        music: '♪',
+        game: '🎮',
+        podcast: '🔈',
+        performance: '🎭',
+    };
+    return symbols[category] || '📄';
+};
+
+// Extract external links from item
+const getExternalLinks = (item: ShelfItem['item']) => {
+    const links: { label: string; url: string }[] = [];
+
+    // Always add NeoDB link
+    links.push({ label: 'neodb', url: `https://neodb.social${item.url}` });
+
+    // Parse external resources for IMDB, TMDB, Douban
+    if (item.external_resources) {
+        item.external_resources.forEach(res => {
+            const url = res.url;
+            if (url.includes('imdb.com')) {
+                links.push({ label: 'imdb', url });
+            } else if (url.includes('themoviedb.org') || url.includes('tmdb.org')) {
+                links.push({ label: 'tmdb', url });
+            } else if (url.includes('douban.com')) {
+                links.push({ label: 'douban', url });
+            }
+        });
+    }
+
+    return links;
+};
+
+interface ShelfContentProps {
+    type: ShelfType;
+    page: number;
+    onDataLoaded: (pages: number, count: number) => void;
+}
+
+const ShelfContent: React.FC<ShelfContentProps> = ({ type, page, onDataLoaded }) => {
     const { addWindow } = useWindowManager();
-    const [page, setPage] = useState(1);
 
     const { data, isLoading, isError, error, refetch } = useQuery({
         queryKey: ['neodbShelf', type, page],
         queryFn: async () => {
-            const response = await fetch(`${APP_CONFIG.NEODB_SHELF_ENDPOINT}?type=${type}&page=${page}`);
+            const response = await fetch(`${APP_CONFIG.NEODB_SHELF_ENDPOINT}?type=${type}&page=${page}&page_size=${PAGE_SIZE}`);
             if (!response.ok) throw new Error('Failed to fetch shelf');
-            return await response.json() as ShelfResponse;
+            const result = await response.json() as ShelfResponse;
+            onDataLoaded(result.pages, result.count);
+            return result;
         },
     });
 
     const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString();
-
-    const getCategoryEmoji = (category: string) => {
-        const emojis: Record<string, string> = {
-            movie: '🎬', book: '📚', tv: '📺', music: '🎵',
-            game: '🎮', podcast: '🎙️', performance: '🎭',
-        };
-        return emojis[category] || '📄';
-    };
 
     if (isLoading) {
         return (
@@ -95,107 +135,120 @@ const ShelfContent: React.FC<{ type: ShelfType }> = ({ type }) => {
     }
 
     return (
-        <div className="flex flex-col h-full">
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 p-3">
-                {data.data.map((shelfItem) => (
-                    <HoverCard key={shelfItem.post_id} openDelay={200} closeDelay={100}>
-                        <HoverCardTrigger asChild>
-                            <div
-                                className="cursor-pointer group"
-                                onClick={() => {
-                                    if (shelfItem.item.cover_image_url) {
-                                        addWindow({
-                                            title: shelfItem.item.display_title,
-                                            content: <ImageViewerApp imageUrl={shelfItem.item.cover_image_url} />,
-                                            width: 600,
-                                            height: 800,
-                                            iconType: 'image',
-                                        });
-                                    }
-                                }}
-                            >
-                                <div className="aspect-[2/3] bg-secondary border border-border overflow-hidden mb-1">
-                                    {shelfItem.item.cover_image_url ? (
-                                        <img
-                                            src={shelfItem.item.cover_image_url}
-                                            alt={shelfItem.item.display_title}
-                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                                            loading="lazy"
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-2xl opacity-30">
-                                            {getCategoryEmoji(shelfItem.item.category)}
-                                        </div>
-                                    )}
-                                </div>
-                                <p className="text-xs truncate text-center group-hover:text-primary transition-colors">
-                                    {shelfItem.item.display_title}
-                                </p>
+        <div className="flex flex-wrap gap-3 p-3 content-start">
+            {data.data.map((shelfItem) => (
+                <HoverCard key={shelfItem.post_id} openDelay={200} closeDelay={100}>
+                    <HoverCardTrigger asChild>
+                        <div
+                            className="cursor-pointer group flex-shrink-0"
+                            style={{ width: '80px' }}
+                            onClick={() => {
+                                if (shelfItem.item.cover_image_url) {
+                                    addWindow({
+                                        title: shelfItem.item.display_title,
+                                        content: <ImageViewerApp imageUrl={shelfItem.item.cover_image_url} />,
+                                        width: 600,
+                                        height: 800,
+                                        iconType: 'image',
+                                    });
+                                }
+                            }}
+                        >
+                            <div className="aspect-[2/3] bg-secondary border border-border overflow-hidden mb-1">
+                                {shelfItem.item.cover_image_url ? (
+                                    <img
+                                        src={shelfItem.item.cover_image_url}
+                                        alt={shelfItem.item.display_title}
+                                        className="w-full h-full object-cover transition-transform"
+                                        loading="lazy"
+                                    />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-2xl opacity-30 noto-emoji">
+                                        {getCategorySymbol(shelfItem.item.category)}
+                                    </div>
+                                )}
                             </div>
-                        </HoverCardTrigger>
-                        <HoverCardContent side="right" className="w-72 text-sm">
-                            <div className="space-y-2">
-                                <div className="flex items-start gap-2">
-                                    <span className="text-lg">{getCategoryEmoji(shelfItem.item.category)}</span>
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className="font-bold leading-tight">{shelfItem.item.display_title}</h4>
-                                        <p className="text-xs text-muted-foreground capitalize">{shelfItem.item.type}</p>
-                                    </div>
+                            {/* Title with emoji */}
+                            <p className="text-xs truncate text-center group-hover:text-primary transition-colors">
+                                <span className="noto-emoji opacity-60">{getCategorySymbol(shelfItem.item.category)}</span>{' '}
+                                {shelfItem.item.display_title}
+                            </p>
+                        </div>
+                    </HoverCardTrigger>
+                    <HoverCardContent side="right" className="w-72 text-sm">
+                        <div className="space-y-2">
+                            <div className="flex items-start gap-2">
+                                <span className="text-lg noto-emoji">{getCategorySymbol(shelfItem.item.category)}</span>
+                                <div className="flex-1 min-w-0">
+                                    <h4 className="font-bold leading-tight">{shelfItem.item.display_title}</h4>
+                                    <p className="text-xs text-muted-foreground capitalize">{shelfItem.item.type}</p>
                                 </div>
-
-                                {shelfItem.item.rating && (
-                                    <div className="text-xs">
-                                        <span className="text-yellow-500">★</span> {shelfItem.item.rating.toFixed(1)}
-                                        <span className="text-muted-foreground ml-1">({shelfItem.item.rating_count})</span>
-                                    </div>
-                                )}
-
-                                {shelfItem.rating_grade && (
-                                    <div className="text-xs bg-secondary/50 px-2 py-1">
-                                        My rating: <span className="font-bold">{shelfItem.rating_grade}/10</span>
-                                    </div>
-                                )}
-
-                                {shelfItem.item.brief && (
-                                    <p className="text-xs text-muted-foreground line-clamp-3">{shelfItem.item.brief}</p>
-                                )}
-
-                                {shelfItem.comment_text && (
-                                    <div className="text-xs italic border-l-2 border-primary/50 pl-2">
-                                        "{shelfItem.comment_text}"
-                                    </div>
-                                )}
-
-                                <div className="text-xs text-muted-foreground">Added: {formatDate(shelfItem.created_time)}</div>
-
-                                <RetroButton
-                                    className="w-full text-xs"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        window.open(`https://neodb.social${shelfItem.item.url}`, '_blank');
-                                    }}
-                                >
-                                    View on NeoDB
-                                </RetroButton>
                             </div>
-                        </HoverCardContent>
-                    </HoverCard>
-                ))}
-            </div>
 
-            {data.pages > 1 && (
-                <div className="flex justify-center items-center gap-2 p-3 border-t border-border mt-auto">
-                    <RetroButton onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>←</RetroButton>
-                    <span className="text-xs text-muted-foreground">Page {page} of {data.pages}</span>
-                    <RetroButton onClick={() => setPage((p) => Math.min(data.pages, p + 1))} disabled={page === data.pages}>→</RetroButton>
-                </div>
-            )}
+                            {shelfItem.item.rating && (
+                                <div className="text-xs">
+                                    <span className="text-yellow-500">★</span> {shelfItem.item.rating.toFixed(1)}
+                                    <span className="text-muted-foreground ml-1">({shelfItem.item.rating_count})</span>
+                                </div>
+                            )}
+
+                            {shelfItem.rating_grade && (
+                                <div className="text-xs bg-secondary/50 px-2 py-1">
+                                    My rating: <span className="font-bold">{shelfItem.rating_grade}/10</span>
+                                </div>
+                            )}
+
+                            {shelfItem.item.brief && (
+                                <p className="text-xs text-muted-foreground line-clamp-3">{shelfItem.item.brief}</p>
+                            )}
+
+                            {shelfItem.comment_text && (
+                                <div className="text-xs italic border-l-2 border-primary/50 pl-2">
+                                    "{shelfItem.comment_text}"
+                                </div>
+                            )}
+
+                            <div className="text-xs text-muted-foreground">Added: {formatDate(shelfItem.created_time)}</div>
+
+                            {/* External links row */}
+                            <div className="flex flex-wrap gap-1">
+                                {getExternalLinks(shelfItem.item).map((link) => (
+                                    <RetroButton
+                                        key={link.label}
+                                        size="sm"
+                                        className="text-xs"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            window.open(link.url, '_blank');
+                                        }}
+                                    >
+                                        {link.label}
+                                    </RetroButton>
+                                ))}
+                            </div>
+                        </div>
+                    </HoverCardContent>
+                </HoverCard>
+            ))}
         </div>
     );
 };
 
 export const ShelfApp: React.FC = () => {
     const [activeTab, setActiveTab] = useState<ShelfType>('wishlist');
+    const [page, setPage] = useState(1);
+    const [paginationInfo, setPaginationInfo] = useState<{ pages: number; count: number }>({ pages: 1, count: 0 });
+
+    // Reset page when tab changes
+    const handleTabChange = (tab: ShelfType) => {
+        setActiveTab(tab);
+        setPage(1);
+        setPaginationInfo({ pages: 1, count: 0 });
+    };
+
+    const handleDataLoaded = (pages: number, count: number) => {
+        setPaginationInfo({ pages, count });
+    };
 
     return (
         <WindowLayout
@@ -205,16 +258,30 @@ export const ShelfApp: React.FC = () => {
                         <RetroButton
                             key={tab.value}
                             active={activeTab === tab.value}
-                            onClick={() => setActiveTab(tab.value)}
+                            onClick={() => handleTabChange(tab.value)}
                         >
                             {tab.label}
                         </RetroButton>
                     ))}
                 </div>
             }
+            footer={
+                <div className="flex items-center justify-between space-x-2 p-1 border-t border-border bg-background">
+                    <div className="flex items-center space-x-2">
+                        <span className="text-xs opacity-50">Total: {paginationInfo.count} items</span>
+                    </div>
+                    {paginationInfo.pages > 1 && (
+                        <div className="flex items-center space-x-0">
+                            <RetroButton size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>←</RetroButton>
+                            <span className="text-xs text-muted-foreground px-2">Page {page} of {paginationInfo.pages}</span>
+                            <RetroButton size="sm" onClick={() => setPage((p) => Math.min(paginationInfo.pages, p + 1))} disabled={page === paginationInfo.pages}>→</RetroButton>
+                        </div>
+                    )}
+                </div>
+            }
             hasPadding={false}
         >
-            <ShelfContent type={activeTab} />
+            <ShelfContent type={activeTab} page={page} onDataLoaded={handleDataLoaded} />
         </WindowLayout>
     );
 };

@@ -245,6 +245,7 @@ export default {
 
         const shelfType = url.searchParams.get('type') || 'wishlist';
         const page = url.searchParams.get('page') || '1';
+        const pageSize = url.searchParams.get('page_size') || '20';
 
         // Validate shelf type
         const validTypes = ['wishlist', 'progress', 'complete', 'dropped'];
@@ -252,7 +253,7 @@ export default {
           return makeJsonResponse({ error: 'Invalid shelf type. Must be: wishlist, progress, complete, or dropped' }, 400);
         }
 
-        const upstreamUrl = `https://neodb.social/api/user/lok/shelf/${shelfType}?page=${page}`;
+        const upstreamUrl = `https://neodb.social/api/user/lok/shelf/${shelfType}?page=${page}&page_size=${pageSize}`;
         const response = await fetch(upstreamUrl, {
           headers: {
             'Authorization': `Bearer ${neodbToken}`,
