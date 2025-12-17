@@ -253,7 +253,7 @@ export const ShelfApp: React.FC = () => {
     return (
         <WindowLayout
             toolbar={
-                <div className="flex border-b border-accent sticky top-0 bg-background p-1 space-x-1">
+                <div className="flex border-b border-border sticky top-0 bg-background p-1 space-x-1">
                     {SHELF_TABS.map((tab) => (
                         <RetroButton
                             key={tab.value}

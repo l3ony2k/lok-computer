@@ -56,7 +56,7 @@ export const WeatherApp: React.FC<WeatherAppProps> = () => {
   return (
     <WindowLayout
       toolbar={
-        <div className="p-1 border-b flex items-center gap-0 select-none">
+        <div className="p-1 border-b border-border flex items-center gap-0 select-none">
           <form onSubmit={handleSearch} className="flex-1 flex items-center gap-0">
             <input
               type="text"

@@ -357,7 +357,7 @@ export const ConsoleApp: React.FC = () => {
       hasPadding={false}
       className="bg-black font-mono text-sm"
       footer={
-        <div className="p-1 border-t border-neutral-700 flex items-center bg-black">
+        <div className="p-1 border-t border-border flex items-center bg-black">
           <span className="text-neutral-500 mr-1">{'>'}</span>
           <input
             ref={inputRef}
