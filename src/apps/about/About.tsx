@@ -319,18 +319,21 @@ export const About = () => {
       toolbar={
         <div className="flex border-b border-accent sticky top-0 bg-background p-1 space-x-1">
           <RetroButton
+            size="sm"
             active={activeTab === 'about-this'}
             onClick={() => handleTabChange('about-this')}
           >
             About this
           </RetroButton>
           <RetroButton
+            size="sm"
             active={activeTab === 'about-me'}
             onClick={() => handleTabChange('about-me')}
           >
             About me
           </RetroButton>
           <RetroButton
+            size="sm"
             active={activeTab === 'projects'}
             onClick={() => handleTabChange('projects')}
           >

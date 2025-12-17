@@ -101,7 +101,7 @@ export const APP_LIST: AppConfig[] = [
     name: "Shelf",
     iconType: "shelf",
     component: ShelfApp,
-    defaultWidth: 600,
+    defaultWidth: 500,
     defaultHeight: 700,
     singleInstance: true
   }

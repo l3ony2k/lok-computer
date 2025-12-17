@@ -257,6 +257,7 @@ export const ShelfApp: React.FC = () => {
                     {SHELF_TABS.map((tab) => (
                         <RetroButton
                             key={tab.value}
+                            size="sm"
                             active={activeTab === tab.value}
                             onClick={() => handleTabChange(tab.value)}
                         >
