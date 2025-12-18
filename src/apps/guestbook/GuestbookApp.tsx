@@ -9,18 +9,24 @@ interface GuestbookAppProps {
 export const GuestbookApp: React.FC<GuestbookAppProps> = () => {
 
   useEffect(() => {
-    console.info('[Guestbook] App initialized, loading guestbook script');
+    console.log('[App:Guestbook] Loading script...');
 
     // Create and load the guestbook script
     const script = document.createElement('script');
     script.src = 'https://guestbooks.meadow.cafe/resources/js/embed_script/671/script.js';
     script.async = true;
+    script.onload = () => {
+      console.log('[App:Guestbook] Script loaded');
+    };
+    script.onerror = () => {
+      console.error('[App:Guestbook] Failed to load script');
+    };
 
     // Add script to document head
     document.head.appendChild(script);
 
     return () => {
-      console.info('[Guestbook] App cleanup, removing script');
+      console.log('[App:Guestbook] Cleanup');
       // Clean up the script when component unmounts
       if (document.head.contains(script)) {
         document.head.removeChild(script);
@@ -77,7 +83,7 @@ export const GuestbookApp: React.FC<GuestbookAppProps> = () => {
           </div>
 
           {/* Messages Section */}
-          <div id="guestbooks___guestbook-messages-container" className="space-y-3"></div>
+          <div id="guestbooks___guestbook-messages-container" className="space-y-3">loading messages...</div>
         </div>
       </div>
     </WindowLayout>

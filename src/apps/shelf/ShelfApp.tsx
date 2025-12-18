@@ -105,11 +105,13 @@ const ShelfContent: React.FC<ShelfContentProps> = ({ type, page, onDataLoaded })
             // Check cache first
             const cached = await getCachedData<ShelfResponse>(cacheKey);
             if (cached) {
+                console.log(`[Cache] Hit: neodb:shelf:${type}:${page}`);
                 onDataLoaded(cached.pages, cached.count);
                 return cached;
             }
 
             // Fetch fresh data
+            console.log(`[API:Shelf] GET ${type} page ${page}`);
             await incrementRequestCount('shelf');
             const response = await fetch(`${APP_CONFIG.NEODB_SHELF_ENDPOINT}?type=${type}&page=${page}&page_size=${PAGE_SIZE}`);
             if (!response.ok) throw new Error('Failed to fetch shelf');
@@ -117,6 +119,7 @@ const ShelfContent: React.FC<ShelfContentProps> = ({ type, page, onDataLoaded })
 
             // Store in cache
             await setCachedData(cacheKey, result, CACHE_TTL.NEODB_SHELF);
+            console.log(`[App:Shelf] Loaded ${result.data.length} ${type} items`);
 
             onDataLoaded(result.pages, result.count);
             return result;

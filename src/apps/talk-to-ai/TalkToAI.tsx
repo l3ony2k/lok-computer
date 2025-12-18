@@ -109,15 +109,14 @@ export const TalkToAI = () => {
 
   const { mutate: sendMessage, isPending: isLoading } = useMutation({
     mutationFn: async (userMessage: Message) => {
+      console.log('[App:AI] Sending message...');
       // Convert messages to OpenAI format
       const apiMessages = messages.concat(userMessage).slice(-MAX_HISTORY).map(msg => ({
         role: msg.sender === 'user' ? 'user' : 'assistant',
         content: msg.text
       }));
 
-      // ... inside component ...
-
-      // ... inside component ...
+      console.log(`[API:AI] POST chat (${apiMessages.length} messages)`);
       const response = await fetch(APP_CONFIG.AI_CHAT_ENDPOINT, {
         method: 'POST',
         headers: {
@@ -140,6 +139,7 @@ export const TalkToAI = () => {
       return aiResponse;
     },
     onSuccess: (aiResponse) => {
+      console.log('[App:AI] Response received');
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         text: aiResponse,

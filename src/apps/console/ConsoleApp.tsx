@@ -24,6 +24,37 @@ interface LogItemProps {
   formatMessage: (msgParts: any[]) => string;
 }
 
+// Highlight log prefixes with different colors
+const highlightPrefix = (text: string): React.ReactNode => {
+  // Match prefixes like [Cache], [API:X], [App:X], [Session], [Registry]
+  const prefixMatch = text.match(/^(\[[^\]]+\])\s*/);
+  if (!prefixMatch) return text;
+
+  const prefix = prefixMatch[1];
+  const rest = text.slice(prefixMatch[0].length);
+
+  // Determine prefix color based on category
+  let prefixClass = 'text-neutral-400';
+  if (prefix.startsWith('[Cache]')) {
+    prefixClass = 'text-green-400';
+  } else if (prefix.startsWith('[API:')) {
+    prefixClass = 'text-cyan-400';
+  } else if (prefix.startsWith('[App:')) {
+    prefixClass = 'text-yellow-400';
+  } else if (prefix.startsWith('[Session]')) {
+    prefixClass = 'text-purple-400';
+  } else if (prefix.startsWith('[Registry]')) {
+    prefixClass = 'text-pink-400';
+  }
+
+  return (
+    <>
+      <span className={prefixClass}>{prefix}</span>
+      {' '}{rest}
+    </>
+  );
+};
+
 const LogItem: React.FC<LogItemProps> = ({ log, getLogColor, formatMessage }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const displayMessage = formatMessage(log.message);
@@ -34,12 +65,19 @@ const LogItem: React.FC<LogItemProps> = ({ log, getLogColor, formatMessage }) =>
     ? lines.slice(0, 10).join('\n') + '\n...'
     : displayMessage;
 
+  // Highlight the first line's prefix
+  const firstNewline = content.indexOf('\n');
+  const firstLine = firstNewline >= 0 ? content.slice(0, firstNewline) : content;
+  const restLines = firstNewline >= 0 ? content.slice(firstNewline) : '';
+
   return (
     <div className={`mb-1 ${getLogColor(log.type)}`}>
       <div className="flex items-start">
         <span className="text-neutral-600 mr-2 select-none text-xs shrink-0">[{log.timestamp}]</span>
         <div className="flex-1 overflow-hidden min-w-0">
-          <span className="break-all whitespace-pre-wrap">{content}</span>
+          <span className="break-all whitespace-pre-wrap">
+            {highlightPrefix(firstLine)}{restLines}
+          </span>
           {isLong && (
             <button
               onClick={() => setIsExpanded(!isExpanded)}

@@ -105,6 +105,7 @@ export const WebBrowser: React.FC<{ initialUrl?: string }> = ({ initialUrl = "ht
     if (!isNavigatingRef.current) {
       isNavigatingRef.current = true;
       setIsLoading(true);
+      console.log(`[App:Web] Navigating to: ${newUrl}`);
 
       // Update URL input and history
       setCurrentUrlInput(newUrl);
@@ -134,6 +135,7 @@ export const WebBrowser: React.FC<{ initialUrl?: string }> = ({ initialUrl = "ht
 
   const navigate = (url: string) => {
     const sanitized = sanitizeUrl(url);
+    console.log(`[App:Web] Loading: ${sanitized}`);
     setIsLoading(true);
     setIframeSrc(sanitized);
     setCurrentUrlInput(sanitized);
