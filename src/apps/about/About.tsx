@@ -51,7 +51,7 @@ const AboutThis = () => {
         className="mb-6 select-none"
         src="https://d2w9rnfcy7mm78.cloudfront.net/36349997/original_9ae0772fcf1074962bb42fc2b6a21dfd.jpg"
         alt="a computer within a computer, that's basically what lok.computer is"
-        onLoad={() => console.log('[About] Hero image loaded')}
+        onLoad={() => console.log('[App:About] Hero image loaded')}
         onError={() => console.error('[About] Failed to load hero image')}
       />
       <div className="select-text">
@@ -303,14 +303,14 @@ export const About = () => {
   const [activeTab, setActiveTab] = useState('about-this');
 
   useEffect(() => {
-    console.info('[About] App initialized');
+    console.log('[App:About] Initialized');
     return () => {
-      console.info('[About] App cleanup');
+      console.log('[App:About] Cleanup');
     };
   }, []);
 
   const handleTabChange = (tab: string) => {
-    console.log('[About] Tab changed to:', tab);
+    console.log('[App:About] Tab:', tab);
     setActiveTab(tab);
   };
 

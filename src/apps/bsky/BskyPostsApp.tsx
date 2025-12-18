@@ -81,11 +81,11 @@ export const BskyPostsApp: React.FC = () => {
     // Check cache first
     const cached = await getCachedData<Profile>(cacheKey);
     if (cached) {
-      console.log(`[BskyApp] Cache hit for profile`);
+      console.log(`[Cache] Hit: bsky:profile`);
       return cached;
     }
 
-    console.log('[BskyApp] Fetching Bluesky profile...');
+    console.log('[API:Bsky] GET profile');
     try {
       await incrementRequestCount('bsky');
       const response = await fetch(PROFILE_URL);
@@ -97,7 +97,7 @@ export const BskyPostsApp: React.FC = () => {
       // Store in cache
       await setCachedData(cacheKey, data, CACHE_TTL.BSKY_PROFILE);
 
-      console.log(`[BskyApp] Fetched profile for ${data.handle}`);
+      console.log(`[App:Bsky] Profile loaded: ${data.handle}`);
       return data;
     } catch (error) {
       console.error('[BskyApp] Error fetching profile:', error);
@@ -111,11 +111,11 @@ export const BskyPostsApp: React.FC = () => {
     // Check cache first
     const cached = await getCachedData<FeedResponse>(cacheKey);
     if (cached) {
-      console.log(`[BskyApp] Cache hit for posts (cursor: ${pageParam || 'initial'})`);
+      console.log(`[Cache] Hit: bsky:posts:${pageParam || 'initial'}`);
       return cached;
     }
 
-    console.log(`[BskyApp] Fetching posts... ${pageParam ? `(cursor: ${pageParam})` : '(initial)'}`);
+    console.log(`[API:Bsky] GET posts ${pageParam ? `(cursor: ${pageParam})` : ''}`);
     try {
       await incrementRequestCount('bsky');
       const url = pageParam ? `${FEED_URL}&cursor=${pageParam}` : FEED_URL;
@@ -128,7 +128,7 @@ export const BskyPostsApp: React.FC = () => {
       // Store in cache
       await setCachedData(cacheKey, data, CACHE_TTL.BSKY_POSTS);
 
-      console.log(`[BskyApp] Fetched ${data.feed.length} posts`);
+      console.log(`[App:Bsky] Loaded ${data.feed.length} posts`);
       return data;
     } catch (error) {
       console.error('[BskyApp] Error fetching posts:', error);

@@ -50,7 +50,7 @@ function getStaticChannels(): ArenaChannel[] {
 
 export async function getUserChannels(username: string = DEFAULT_USERNAME): Promise<ArenaChannel[]> {
   if (USE_STATIC_CHANNELS) {
-    console.log("Using static channel list instead of API");
+    console.log("[API:Arena] Using static channel list");
     return getStaticChannels();
   }
 
@@ -68,7 +68,7 @@ export async function getUserChannels(username: string = DEFAULT_USERNAME): Prom
     toast.error("Failed to load channels");
 
     // Fallback to static channels
-    console.log("Falling back to static channel list");
+    console.log("[API:Arena] Falling back to static channels");
     return getStaticChannels();
   }
 }
@@ -87,7 +87,7 @@ export async function getChannelContents(
     try {
       const cached = await getCachedData<ArenaChannelContents>(cacheKey);
       if (cached) {
-        console.log(`[Arena API] Cache hit for channel ${channelSlug} page ${page}`);
+        console.log(`[Cache] Hit: arena:channel:${channelSlug}:${page}`);
         return cached;
       }
     } catch (e) {
@@ -99,7 +99,7 @@ export async function getChannelContents(
     await incrementRequestCount('arena');
     // No need to include username for public channels
     const url = `${API_BASE_URL}/channels/${channelSlug}?page=${page}&per=${perPage}`;
-    console.log(`[Arena API] Requesting channel contents from: ${url}`);
+    console.log(`[API:Arena] GET /channels/${channelSlug}?page=${page}`);
 
     const fetchOptions: RequestInit = {
       signal // Add AbortSignal to request options
@@ -112,7 +112,7 @@ export async function getChannelContents(
     }
 
     const data = await response.json();
-    console.log(`[Arena API] Received channel contents for ${channelSlug}, page ${page}`);
+    console.log(`[API:Arena] Received ${channelSlug} page ${page}`);
 
     // Store in cache
     try {
@@ -125,7 +125,7 @@ export async function getChannelContents(
   } catch (error: any) {
     // Don't show toast for aborted requests
     if (error.name === 'AbortError') {
-      console.log(`[Arena API] Fetch for channel ${channelSlug} was aborted`);
+      console.log(`[API:Arena] Aborted: ${channelSlug}`);
       throw error;
     }
 
@@ -142,7 +142,7 @@ export async function getBlock(blockId: number | string) {
   try {
     const cached = await getCachedData<any>(cacheKey);
     if (cached) {
-      console.log(`[Arena API] Cache hit for block ${blockId}`);
+      console.log(`[Cache] Hit: arena:block:${blockId}`);
       return cached;
     }
   } catch (e) {

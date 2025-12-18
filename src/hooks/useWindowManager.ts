@@ -133,20 +133,20 @@ export const createWindowManagerContext = () => {
         const session = await getAppState<WindowSession>(WINDOW_SESSION_KEY);
 
         if (mounted && session && session.windows.length > 0) {
-          console.info(`[WindowManager] Restoring ${session.windows.length} windows from session`);
+          console.info(`[Session] Restoring ${session.windows.length} windows`);
 
-          // Dynamic import to avoid circular dependency
-          const { getComponentConfig, createComponentElement } = await import("@/config/componentRegistry");
+          // Dynamic import to avoid circular dependency + use async versions
+          const { getComponentConfigAsync, createComponentElementAsync } = await import("@/config/componentRegistry");
 
           const restoredWindows: Window[] = [];
           let maxZIndex = session.lastZIndex || 1000;
 
           for (const savedWindow of session.windows) {
-            const componentConfig = getComponentConfig(savedWindow.componentType);
+            const componentConfig = await getComponentConfigAsync(savedWindow.componentType);
 
             if (componentConfig) {
               // Create the window content from component registry
-              const content = createComponentElement(savedWindow.componentType, savedWindow.props);
+              const content = await createComponentElementAsync(savedWindow.componentType, savedWindow.props);
 
               if (content) {
                 restoredWindows.push({

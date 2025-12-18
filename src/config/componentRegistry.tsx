@@ -4,119 +4,32 @@
  * This registry allows windows with dynamic content (like ChannelExplorer, BlockViewer, etc.)
  * to be serialized and restored across page reloads.
  * 
- * Unlike APP_LIST (which is for desktop icons with fixed configs), this registry
- * maps component type names to their constructors for session restoration.
+ * Static apps are auto-generated from APP_LIST to avoid duplication.
+ * Dynamic components (opened with various props) are defined manually.
  */
 
 import React, { ComponentType } from 'react';
 
-// Import all restorable components
-import { ChannelBrowser } from '@/apps/arena/channels/ChannelBrowser';
+// Dynamic components only - not in APP_LIST because they're opened with custom props
 import { ChannelExplorer } from '@/apps/arena/channels/ChannelExplorer';
 import { BlockViewer } from '@/apps/arena/blocks/BlockViewer';
 import { ImageViewerApp } from '@/apps/imageviewer/ImageViewerApp';
-import { WebBrowser } from '@/apps/web/WebBrowser';
-import BskyPostsApp from '@/apps/bsky/BskyPostsApp';
-import FediApp from '@/apps/fedi/FediApp';
-import { WeatherApp } from '@/apps/weather/WeatherApp';
-import { About } from '@/apps/about/About';
-import { ConfigApp } from '@/apps/config/ConfigApp';
-import { ConsoleApp } from '@/apps/console/ConsoleApp';
-import { TalkToAI } from '@/apps/talk-to-ai/TalkToAI';
-import { GuestbookApp } from '@/apps/guestbook/GuestbookApp';
-import { ShelfApp } from '@/apps/shelf/ShelfApp';
 
 /**
- * Props that should be persisted for each component type
- * This defines what props are serializable and should be saved/restored
+ * Config for each restorable component
  */
 export interface ComponentRestoreConfig {
     component: ComponentType<any>;
     defaultIcon: string;
-    // Optional: default dimensions if not provided
     defaultWidth?: number;
     defaultHeight?: number;
 }
 
 /**
- * The component registry maps component type identifiers to their configs
+ * Dynamic components that can be opened with various props
+ * These are NOT in APP_LIST because they're created dynamically (e.g., opening a specific channel)
  */
-export const COMPONENT_REGISTRY: Record<string, ComponentRestoreConfig> = {
-    // Static apps (from APP_LIST, for fallback compatibility)
-    'Are.na': {
-        component: ChannelBrowser,
-        defaultIcon: 'arena',
-        defaultWidth: 400,
-        defaultHeight: 500,
-    },
-    'Web': {
-        component: WebBrowser,
-        defaultIcon: 'webpage',
-        defaultWidth: 800,
-        defaultHeight: 600,
-    },
-    'Bsky': {
-        component: BskyPostsApp,
-        defaultIcon: 'bsky',
-        defaultWidth: 450,
-        defaultHeight: 700,
-    },
-    'Fedi': {
-        component: FediApp,
-        defaultIcon: 'fedi',
-        defaultWidth: 450,
-        defaultHeight: 700,
-    },
-    'AI Talk': {
-        component: TalkToAI,
-        defaultIcon: 'mailbox',
-        defaultWidth: 400,
-        defaultHeight: 600,
-    },
-    'Weather': {
-        component: WeatherApp,
-        defaultIcon: 'weather',
-        defaultWidth: 860,
-        defaultHeight: 525,
-    },
-    'Console': {
-        component: ConsoleApp,
-        defaultIcon: 'console',
-        defaultWidth: 700,
-        defaultHeight: 400,
-    },
-    'About': {
-        component: About,
-        defaultIcon: 'about',
-        defaultWidth: 500,
-        defaultHeight: 600,
-    },
-    'Config': {
-        component: ConfigApp,
-        defaultIcon: 'config',
-        defaultWidth: 400,
-        defaultHeight: 500,
-    },
-    'Guestbook': {
-        component: GuestbookApp,
-        defaultIcon: 'mail',
-        defaultWidth: 500,
-        defaultHeight: 600,
-    },
-    'Shelf': {
-        component: ShelfApp,
-        defaultIcon: 'shelf',
-        defaultWidth: 500,
-        defaultHeight: 700,
-    },
-
-    // Dynamic components (can be opened with various props)
-    'ChannelBrowser': {
-        component: ChannelBrowser,
-        defaultIcon: 'arena',
-        defaultWidth: 400,
-        defaultHeight: 500,
-    },
+const DYNAMIC_COMPONENTS: Record<string, ComponentRestoreConfig> = {
     'ChannelExplorer': {
         component: ChannelExplorer,
         defaultIcon: 'folder',
@@ -137,11 +50,62 @@ export const COMPONENT_REGISTRY: Record<string, ComponentRestoreConfig> = {
     },
 };
 
+// Cache for the full registry (lazy-initialized to avoid circular dependency)
+let _registryCache: Record<string, ComponentRestoreConfig> | null = null;
+
 /**
- * Get component config from registry
+ * Build the full component registry by combining APP_LIST entries with dynamic components.
+ * Uses lazy initialization to avoid circular dependency issues.
+ */
+async function buildRegistry(): Promise<Record<string, ComponentRestoreConfig>> {
+    if (_registryCache) {
+        return _registryCache;
+    }
+
+    // Dynamic import to avoid circular dependency
+    // (apps.tsx imports components → components might import useWindowManager → useWindowManager imports this)
+    const { APP_LIST } = await import('@/config/apps');
+
+    // Generate entries from APP_LIST
+    const staticApps: Record<string, ComponentRestoreConfig> = {};
+    for (const app of APP_LIST) {
+        staticApps[app.name] = {
+            component: app.component,
+            defaultIcon: app.iconType,
+            defaultWidth: app.defaultWidth,
+            defaultHeight: app.defaultHeight,
+        };
+    }
+
+    // Merge with dynamic components
+    _registryCache = {
+        ...staticApps,
+        ...DYNAMIC_COMPONENTS,
+    };
+
+    return _registryCache;
+}
+
+/**
+ * Get component config from registry (sync version for compatibility)
+ * Falls back to dynamic components if registry not yet built
  */
 export function getComponentConfig(componentType: string): ComponentRestoreConfig | undefined {
-    return COMPONENT_REGISTRY[componentType];
+    // If cache is built, use it
+    if (_registryCache) {
+        return _registryCache[componentType];
+    }
+
+    // Otherwise, check if it's a known dynamic component
+    return DYNAMIC_COMPONENTS[componentType];
+}
+
+/**
+ * Get component config from registry (async version - preferred)
+ */
+export async function getComponentConfigAsync(componentType: string): Promise<ComponentRestoreConfig | undefined> {
+    const registry = await buildRegistry();
+    return registry[componentType];
 }
 
 /**
@@ -153,7 +117,23 @@ export function createComponentElement(
 ): React.ReactElement | null {
     const config = getComponentConfig(componentType);
     if (!config) {
-        console.warn(`[ComponentRegistry] Unknown component type: ${componentType}`);
+        console.warn(`[Registry] Unknown component type: ${componentType}`);
+        return null;
+    }
+
+    return React.createElement(config.component, props || {});
+}
+
+/**
+ * Create a React element from component type and props (async version - preferred)
+ */
+export async function createComponentElementAsync(
+    componentType: string,
+    props?: Record<string, unknown>
+): Promise<React.ReactElement | null> {
+    const config = await getComponentConfigAsync(componentType);
+    if (!config) {
+        console.warn(`[Registry] Unknown component type: ${componentType}`);
         return null;
     }
 
@@ -164,5 +144,16 @@ export function createComponentElement(
  * Check if a component type is registered
  */
 export function isComponentRegistered(componentType: string): boolean {
-    return componentType in COMPONENT_REGISTRY;
+    if (_registryCache) {
+        return componentType in _registryCache;
+    }
+    return componentType in DYNAMIC_COMPONENTS;
+}
+
+/**
+ * Initialize the registry (call early in app lifecycle)
+ */
+export async function initializeRegistry(): Promise<void> {
+    await buildRegistry();
+    console.log('[Registry] Initialized with', Object.keys(_registryCache!).length, 'components');
 }

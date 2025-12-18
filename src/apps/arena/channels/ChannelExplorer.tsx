@@ -265,7 +265,7 @@ export const ChannelExplorer: React.FC<ChannelExplorerProps> = ({
         const totalItems = initialData.length || 0;
         const estimatedTotalPages = Math.ceil(totalItems / itemsPerPage);
 
-        console.log(`Channel ${channelSlug} has approximately ${totalItems} items (estimated ${estimatedTotalPages} pages)`);
+        console.log(`[App:Arena] Channel ${channelSlug} has ~${totalItems} items (~${estimatedTotalPages} pages)`);
 
         // Add first page of content
         let allContents: ContentItem[] = [...(initialData.contents || [])];
@@ -319,7 +319,7 @@ export const ChannelExplorer: React.FC<ChannelExplorerProps> = ({
               }
             }
 
-            console.log(`Fetched batch, now have ${allContents.length} items`);
+            console.log(`[App:Arena] Loaded ${allContents.length} items`);
 
             // Update currentPage for next batch
             currentPage += pagesToFetch.length;
@@ -332,7 +332,7 @@ export const ChannelExplorer: React.FC<ChannelExplorerProps> = ({
           } catch (err) {
             // If we're here with an AbortError, the component was unmounted
             if (err.name === 'AbortError') {
-              console.log('Fetch aborted due to component unmount');
+              console.log('[App:Arena] Fetch aborted');
               return;
             }
             throw err; // Re-throw other errors to be caught by the outer catch
@@ -344,7 +344,7 @@ export const ChannelExplorer: React.FC<ChannelExplorerProps> = ({
           allContents.sort((a, b) => (b.position || 0) - (a.position || 0));
           setContents(allContents);
           setError(null);
-          console.log(`Completed fetching all ${allContents.length} contents for channel ${channelSlug}`);
+          console.log(`[App:Arena] Complete: ${allContents.length} items for ${channelSlug}`);
         }
       } catch (err) {
         if (isMounted) {
@@ -364,7 +364,7 @@ export const ChannelExplorer: React.FC<ChannelExplorerProps> = ({
     return () => {
       isMounted = false;
       abortController.abort();
-      console.log('Aborting channel content fetches due to component unmount');
+      console.log('[App:Arena] Aborting fetches (unmount)');
     };
   }, [channelSlug, username, itemsPerPage, items]);
 

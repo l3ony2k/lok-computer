@@ -61,11 +61,11 @@ export const FediApp: React.FC = () => {
         // Check cache first
         const cached = await getCachedData<Account>(cacheKey);
         if (cached) {
-            console.log(`[FediApp] Cache hit for account`);
+            console.log(`[Cache] Hit: fedi:account`);
             return cached;
         }
 
-        console.log(`[FediApp] Fetching Fedi account for ${USERNAME}...`);
+        console.log(`[API:Fedi] GET account ${USERNAME}`);
         try {
             await incrementRequestCount('fedi');
             // Use relative path for worker proxy
@@ -78,7 +78,7 @@ export const FediApp: React.FC = () => {
             // Store in cache
             await setCachedData(cacheKey, data, CACHE_TTL.FEDI_ACCOUNT);
 
-            console.log(`[FediApp] Fetched account ${data.username} (${data.id})`);
+            console.log(`[App:Fedi] Profile loaded: ${data.username}`);
             return data;
         } catch (error) {
             console.error('[FediApp] Error fetching account:', error);
@@ -100,11 +100,11 @@ export const FediApp: React.FC = () => {
         // Check cache first
         const cached = await getCachedData<{ statuses: Status[]; nextCursor?: string }>(cacheKey);
         if (cached) {
-            console.log(`[FediApp] Cache hit for statuses (max_id: ${pageParam || 'initial'})`);
+            console.log(`[Cache] Hit: fedi:statuses:${pageParam || 'initial'}`);
             return cached;
         }
 
-        console.log(`[FediApp] Fetching statuses... ${pageParam ? `(max_id: ${pageParam})` : '(initial)'}`);
+        console.log(`[API:Fedi] GET statuses ${pageParam ? `(max_id: ${pageParam})` : ''}`);
         try {
             await incrementRequestCount('fedi');
             // Use relative path for worker proxy
@@ -120,7 +120,7 @@ export const FediApp: React.FC = () => {
                 throw new Error('Failed to fetch statuses');
             }
             const data = await response.json() as Status[];
-            console.log(`[FediApp] Fetched ${data.length} statuses`);
+            console.log(`[App:Fedi] Loaded ${data.length} statuses`);
 
             // Pagination: use the last item's ID for max_id
             const nextCursor = data.length > 0 ? data[data.length - 1].id : undefined;

@@ -67,11 +67,11 @@ export const WeatherApp: React.FC<WeatherAppProps> = () => {
     // Check cache first
     const cached = await getCachedData<string>(cacheKey);
     if (cached) {
-      console.info(`[WeatherApp] Cache hit for location: ${location || 'auto'}`);
+      console.log(`[Cache] Hit: weather:${location || 'auto'}`);
       return cached;
     }
 
-    console.info(`[WeatherApp] Fetching weather data${location ? ` for location: ${location}` : ' for current location'}`);
+    console.log(`[API:Weather] GET ${location || 'auto'}`);
     await incrementRequestCount('weather');
 
     // Using wttr.in with no format parameter to get the full ASCII art display
@@ -82,7 +82,7 @@ export const WeatherApp: React.FC<WeatherAppProps> = () => {
       ? `${APP_CONFIG.WEATHER_API_URL}/${encodeURIComponent(location)}?2dFq`
       : `${APP_CONFIG.WEATHER_API_URL}/?2dFq`;
 
-    console.log('[WeatherApp] Requesting data from:', url);
+    console.log('[API:Weather] Request:', url);
     const response = await fetch(url);
 
     if (!response.ok) {
@@ -109,7 +109,7 @@ export const WeatherApp: React.FC<WeatherAppProps> = () => {
     e.preventDefault();
     const trimmedQuery = searchInput.trim();
     if (trimmedQuery) {
-      console.log('[Weather] User searched for location:', trimmedQuery);
+      console.log('[App:Weather] Search:', trimmedQuery);
       setQuery(trimmedQuery);
     } else {
       console.warn('[Weather] Empty search query, fetching default location');

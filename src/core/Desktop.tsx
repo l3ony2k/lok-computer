@@ -1,10 +1,8 @@
 // src/core/Desktop.tsx
 import { useEffect, useRef } from "react";
 import { useWindowManager } from "@/components/WindowManager";
-import { ChannelBrowser } from "@/apps/arena/channels/ChannelBrowser";
 import { ChannelExplorer } from "@/apps/arena/channels/ChannelExplorer";
 import { About } from "@/apps/about/About";
-import { Moon, Sun, Search, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { FEATURED_CHANNELS } from "@/config/channels";
 import { WindowContainer, Taskbar } from "@/components/WindowManager";
@@ -76,19 +74,6 @@ export const Desktop = () => {
             window.removeEventListener('resize', handleResize);
         };
     }, [windows, updateWindowPosition, updateWindowDimensions]);
-
-    const handleOpenChannelBrowser = () => {
-        const app = APP_LIST.find(app => app.name === "Are.na Browser");
-        addWindow({
-            title: "@lok's Channels",
-            content: <ChannelBrowser username="lok" />,
-            width: app?.defaultWidth ?? WINDOW_DEFAULTS.DEFAULT_WIDTH,
-            height: app?.defaultHeight ?? WINDOW_DEFAULTS.DEFAULT_HEIGHT,
-            iconType: 'folder',
-            minWidth: WINDOW_DEFAULTS.MIN_WIDTH,
-            minHeight: WINDOW_DEFAULTS.MIN_HEIGHT,
-        });
-    };
 
     const handleOpenAbout = () => {
         const app = APP_LIST.find(app => app.name === "About");
