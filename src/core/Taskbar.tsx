@@ -38,7 +38,8 @@ export const Taskbar = () => {
   return (
     <div
       ref={taskbarRef}
-      className="taskbar h-[35px] flex items-center text-sm relative z-50 px-1 bg-retro-taskbar border-t border-border overflow-x-auto overflow-y-hidden scrollable-area"
+      className="taskbar h-[35px] flex items-center text-sm relative z-50 px-1 bg-retro-taskbar border-t border-border overflow-x-auto overflow-y-hidden scrollable-area [&::-webkit-scrollbar]:hidden"
+      style={{ scrollbarWidth: 'none' }}
     >
       <div className="flex items-center space-x-1 whitespace-nowrap h-full">
         {windows.map((window) => (

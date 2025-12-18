@@ -67,12 +67,14 @@ export const ContentItemGrid = React.memo(({
                             alt={itemTitle}
                             className="w-full h-full object-cover"
                             loading="lazy"
+                            draggable={false}
                         />
                         {isLinkBlock && (
                             <img
                                 src={linkIcon}
                                 alt="Link"
                                 className="absolute bottom-0 right-0 w-6 h-6 drop-shadow-md"
+                                draggable={false}
                             />
                         )}
                     </>
@@ -131,6 +133,7 @@ export const ContentItemListView = React.memo(({
                     alt={itemTitle}
                     className={`${iconSizeClass} object-cover shrink-0 select-none`}
                     loading="lazy"
+                    draggable={false}
                 />
             ) : (
                 <CustomIcon iconType={iconType} className={`${iconSizeClass} shrink-0 select-none`} />
