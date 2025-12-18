@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { WindowLayout } from "@/components/window/WindowLayout";
 import { RetroButton } from "@/components/ui/RetroButton";
-import { clearCache, clearExpiredCache, getUsageStats, resetUsageStats, type UsageStats } from "@/lib/storage";
+import { clearCache, getUsageStats, resetUsageStats, type UsageStats } from "@/lib/storage";
 import { toast } from "sonner";
 
 // Default wallpaper options
@@ -35,6 +35,8 @@ export const ConfigApp: React.FC = () => {
   const [customError, setCustomError] = useState("");
   const [stats, setStats] = useState<UsageStats | null>(null);
   const [isClearing, setIsClearing] = useState(false);
+  const [confirmClearCache, setConfirmClearCache] = useState(false);
+  const [confirmResetStats, setConfirmResetStats] = useState(false);
 
   // Load usage stats on mount
   useEffect(() => {
@@ -50,6 +52,10 @@ export const ConfigApp: React.FC = () => {
   }, []);
 
   const handleClearCache = async () => {
+    if (!confirmClearCache) {
+      setConfirmClearCache(true);
+      return;
+    }
     setIsClearing(true);
     try {
       await clearCache();
@@ -62,30 +68,22 @@ export const ConfigApp: React.FC = () => {
       toast.error('Failed to clear cache');
     } finally {
       setIsClearing(false);
+      setConfirmClearCache(false);
     }
   };
 
-  const handleClearExpired = async () => {
-    setIsClearing(true);
-    try {
-      const count = await clearExpiredCache();
-      if (count > 0) {
-        toast.success(`Cleared ${count} expired cache entries`);
-      } else {
-        toast.info('No expired cache entries found');
-      }
-      // Refresh stats
-      const data = await getUsageStats();
-      setStats(data);
-    } catch (error) {
-      console.error('[ConfigApp] Failed to clear expired cache:', error);
-      toast.error('Failed to clear expired cache');
-    } finally {
-      setIsClearing(false);
-    }
+  const handleClearCacheBlur = () => {
+    setTimeout(() => {
+      setConfirmClearCache(false);
+    }, 150);
   };
 
   const handleResetStats = async () => {
+    if (!confirmResetStats) {
+      setConfirmResetStats(true);
+      return;
+    }
+    setIsClearing(true);
     try {
       await resetUsageStats();
       const data = await getUsageStats();
@@ -94,7 +92,16 @@ export const ConfigApp: React.FC = () => {
     } catch (error) {
       console.error('[ConfigApp] Failed to reset stats:', error);
       toast.error('Failed to reset statistics');
+    } finally {
+      setIsClearing(false);
+      setConfirmResetStats(false);
     }
+  };
+
+  const handleResetStatsBlur = () => {
+    setTimeout(() => {
+      setConfirmResetStats(false);
+    }, 150);
   };
 
   const handleCustomWallpaper = () => {
@@ -124,7 +131,7 @@ export const ConfigApp: React.FC = () => {
 
   return (
     <WindowLayout hasPadding={false}>
-      <div className="p-4 space-y-6">
+      <div className="p-4 space-y-6 max-w-lg mx-auto">
         {/* Theme Section */}
         <div>
           <h2 className="text-lg font-bold mb-3 flex items-center">
@@ -299,28 +306,28 @@ export const ConfigApp: React.FC = () => {
           {/* Cache Actions */}
           <div className="flex flex-wrap gap-2">
             <RetroButton
-              onClick={handleClearExpired}
-              disabled={isClearing}
-              className="flex items-center gap-1"
-            >
-              <RefreshCw className={cn("w-4 h-4", isClearing && "animate-spin")} />
-              Clear Expired
-            </RetroButton>
-            <RetroButton
               onClick={handleClearCache}
+              onBlur={handleClearCacheBlur}
               disabled={isClearing}
-              className="flex items-center gap-1"
+              className={cn(
+                "flex items-center gap-1",
+                confirmClearCache && "bg-red-600 hover:bg-red-700 text-white"
+              )}
             >
               <Trash2 className="w-4 h-4" />
-              Clear All Cache
+              {confirmClearCache ? "Confirm?" : "Clear All Cache"}
             </RetroButton>
             <RetroButton
               onClick={handleResetStats}
+              onBlur={handleResetStatsBlur}
               disabled={isClearing}
-              size="sm"
-              className="text-xs opacity-70"
+              className={cn(
+                "flex items-center gap-1",
+                confirmResetStats && "bg-red-600 hover:bg-red-700 text-white"
+              )}
             >
-              Reset Stats
+              <RefreshCw className={cn("w-4 h-4", isClearing && "animate-spin")} />
+              {confirmResetStats ? "Confirm?" : "Reset Stats"}
             </RetroButton>
           </div>
           <p className="text-xs text-muted-foreground mt-2">

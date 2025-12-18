@@ -36,7 +36,15 @@ export const GuestbookApp: React.FC<GuestbookAppProps> = () => {
   }, []);
 
   return (
-    <WindowLayout>
+    <WindowLayout
+      footer={
+        <div className="flex items-center justify-end p-1 border-t border-border bg-background">
+          <span id="guestbooks___guestbook-made-with" className="text-xs opacity-50 select-none">
+            Lovingly made with <a target="_blank" href="https://guestbooks.meadow.cafe/guestbook/671" className="underline hover:opacity-80">Guestbooks</a>
+          </span>
+        </div>
+      }
+    >
       <div className="p-2">
         <div className="max-w-lg mx-auto space-y-4">
           {/* Guestbook Form Container */}
@@ -74,13 +82,6 @@ export const GuestbookApp: React.FC<GuestbookAppProps> = () => {
               <RetroButton type="submit" className="px-2 py-1 text-sm">Submit</RetroButton>
               <div id="guestbooks___error-message" className="text-sm text-destructive"></div>
             </form>
-          </div>
-
-          {/* Made with footer */}
-          <div id="guestbooks___guestbook-made-with" className="text-right">
-            <small className="text-xs opacity-50 fixed bottom-1 right-2 select-none">
-              Lovingly made with <a target="_blank" href="https://guestbooks.meadow.cafe/guestbook/671" className="underline text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300">Guestbooks</a>
-            </small>
           </div>
 
           {/* Messages Section */}
