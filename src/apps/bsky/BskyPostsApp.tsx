@@ -8,6 +8,20 @@ import { ImageViewerApp } from '@/apps/imageviewer/ImageViewerApp';
 import { APP_CONFIG } from '@/config/constants';
 import { getCachedData, setCachedData, incrementRequestCount, CACHE_TTL } from '@/lib/storage';
 
+interface Facet {
+  $type: string;
+  features: {
+    $type: string;
+    uri?: string; // for links
+    did?: string; // for mentions
+    tag?: string; // for hashtags
+  }[];
+  index: {
+    byteStart: number;
+    byteEnd: number;
+  };
+}
+
 interface Post {
   uri: string;
   cid: string;
@@ -20,6 +34,7 @@ interface Post {
   record: {
     text: string;
     createdAt: string;
+    facets?: Facet[];
   };
   replyCount?: number;
   repostCount?: number;
@@ -71,6 +86,95 @@ interface Profile {
 
 const FEED_URL = APP_CONFIG.BSKY_FEED_URL;
 const PROFILE_URL = APP_CONFIG.BSKY_PROFILE_URL;
+
+// Render post text with rich text facets (links, mentions, hashtags)
+const RichText: React.FC<{ text: string; facets?: Facet[] }> = ({ text, facets }) => {
+  if (!facets || facets.length === 0) {
+    return <>{text}</>;
+  }
+
+  // Convert string to byte array for proper indexing (Bluesky uses byte offsets)
+  const encoder = new TextEncoder();
+  const decoder = new TextDecoder();
+  const bytes = encoder.encode(text);
+
+  // Sort facets by byte start position
+  const sortedFacets = [...facets].sort((a, b) => a.index.byteStart - b.index.byteStart);
+
+  const elements: React.ReactNode[] = [];
+  let lastEnd = 0;
+
+  sortedFacets.forEach((facet, idx) => {
+    const { byteStart, byteEnd } = facet.index;
+
+    // Add text before this facet
+    if (byteStart > lastEnd) {
+      elements.push(decoder.decode(bytes.slice(lastEnd, byteStart)));
+    }
+
+    // Extract the facet text
+    const facetText = decoder.decode(bytes.slice(byteStart, byteEnd));
+
+    // Determine the facet type and render accordingly
+    const feature = facet.features[0];
+    if (feature) {
+      if (feature.$type === 'app.bsky.richtext.facet#link' && feature.uri) {
+        elements.push(
+          <a
+            key={idx}
+            href={feature.uri}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-500 hover:underline dark:text-blue-400"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {facetText}
+          </a>
+        );
+      } else if (feature.$type === 'app.bsky.richtext.facet#mention' && feature.did) {
+        elements.push(
+          <a
+            key={idx}
+            href={`https://bsky.app/profile/${feature.did}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-500 hover:underline dark:text-blue-400"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {facetText}
+          </a>
+        );
+      } else if (feature.$type === 'app.bsky.richtext.facet#tag' && feature.tag) {
+        elements.push(
+          <a
+            key={idx}
+            href={`https://bsky.app/hashtag/${feature.tag}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-500 hover:underline dark:text-blue-400"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {facetText}
+          </a>
+        );
+      } else {
+        // Unknown facet type, render as plain text
+        elements.push(facetText);
+      }
+    } else {
+      elements.push(facetText);
+    }
+
+    lastEnd = byteEnd;
+  });
+
+  // Add remaining text after the last facet
+  if (lastEnd < bytes.length) {
+    elements.push(decoder.decode(bytes.slice(lastEnd)));
+  }
+
+  return <>{elements}</>;
+};
 
 export const BskyPostsApp: React.FC = () => {
   const loadMoreRef = useRef<HTMLDivElement>(null);
@@ -308,7 +412,7 @@ export const BskyPostsApp: React.FC = () => {
                       </div>
 
                       <p className="text-sm whitespace-pre-wrap break-words mb-2">
-                        {post.record.text}
+                        <RichText text={post.record.text} facets={post.record.facets} />
                       </p>
 
                       {/* Images */}
