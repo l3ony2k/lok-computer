@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { ArenaBlock } from "@/types/arena";
 import { getBlock } from "@/lib/api";
+import { StateMessage } from '@/components/ui/StateMessage';
 import { ArenaWindowLayout } from "../components/ArenaWindowLayout";
 
 // Helper functions for image source determination
@@ -112,7 +113,7 @@ export const BlockViewer = ({ blockId, mode = "window" }: { blockId: number | st
   }, [blockId]);
 
   if (loading) {
-    return <div className="p-4 text-center">Loading...</div>;
+    return <StateMessage>Loading...</StateMessage>;
   }
 
   if (error || !block) {

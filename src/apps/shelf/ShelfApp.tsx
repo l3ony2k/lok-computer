@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { WindowLayout } from '@/components/window/WindowLayout';
 import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/hover-card';
 import { RetroButton } from '@/components/ui/RetroButton';
+import { StateMessage } from '@/components/ui/StateMessage';
 import { useWindowManager } from '@/hooks/useWindowManager';
 import { ImageViewerApp } from '@/apps/imageviewer/ImageViewerApp';
 import { APP_CONFIG } from '@/config/constants';
@@ -131,9 +132,9 @@ const ShelfContent: React.FC<ShelfContentProps> = ({ type, page, onDataLoaded })
 
     if (isLoading) {
         return (
-            <div className="flex justify-center items-center h-48 text-muted-foreground text-sm">
-                <p>Loading {type}...</p>
-            </div>
+            <StateMessage minHeight="h-48">
+                Loading {type}...
+            </StateMessage>
         );
     }
 
@@ -148,9 +149,9 @@ const ShelfContent: React.FC<ShelfContentProps> = ({ type, page, onDataLoaded })
 
     if (!data || data.data.length === 0) {
         return (
-            <div className="flex justify-center items-center h-48 text-muted-foreground text-sm">
-                <p>No items in {type}</p>
-            </div>
+            <StateMessage minHeight="h-48">
+                No items in {type}
+            </StateMessage>
         );
     }
 

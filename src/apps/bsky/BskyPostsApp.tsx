@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { WindowLayout } from '@/components/window/WindowLayout';
+import { StateMessage } from '@/components/ui/StateMessage';
 import { RetroButton } from '@/components/ui/RetroButton';
 import { useWindowManager } from '@/hooks/useWindowManager';
 import { ImageViewerApp } from '@/apps/imageviewer/ImageViewerApp';
@@ -185,9 +186,9 @@ export const BskyPostsApp: React.FC = () => {
   return (
     <WindowLayout hasPadding={false}>
       {isLoading ? (
-        <div className="flex justify-center items-center h-full p-4 text-muted-foreground text-sm">
-          <p>Loading posts...</p>
-        </div>
+        <StateMessage>
+          Loading posts...
+        </StateMessage>
       ) : isError ? (
         <div className="text-red-500 p-4 text-center">
           <p className="text-sm">Error loading posts: {error instanceof Error ? error.message : 'Unknown error'}</p>
@@ -358,8 +359,9 @@ export const BskyPostsApp: React.FC = () => {
             {isFetchingNextPage ? 'Loading more...' : hasNextPage ? 'Scroll for more' : 'End of feed'}
           </div>
         </div>
-      )}
-    </WindowLayout>
+      )
+      }
+    </WindowLayout >
   );
 };
 

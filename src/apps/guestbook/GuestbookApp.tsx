@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { WindowLayout } from '@/components/window/WindowLayout';
+import { StateMessage } from '@/components/ui/StateMessage';
 import { RetroButton } from '@/components/ui/RetroButton';
 
 interface GuestbookAppProps {
@@ -83,7 +84,9 @@ export const GuestbookApp: React.FC<GuestbookAppProps> = () => {
           </div>
 
           {/* Messages Section */}
-          <div id="guestbooks___guestbook-messages-container" className="space-y-3">loading messages...</div>
+          <div id="guestbooks___guestbook-messages-container" className="space-y-3">
+            <StateMessage minHeight="h-24">Loading messages...</StateMessage>
+          </div>
         </div>
       </div>
     </WindowLayout>

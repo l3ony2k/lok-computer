@@ -6,7 +6,8 @@ import { useWindowManager } from "@/hooks/useWindowManager";
 import { ChannelExplorer } from "./ChannelExplorer";
 import { ArenaWindowLayout } from "../components/ArenaWindowLayout";
 import { useIsMobile } from '@/hooks/use-mobile';
-import { ContentItemGrid, ContentItemListView, getGridConfiguration, ContentItem } from "../utils/contentItems";
+import { ContentItemGrid, ContentItemListView, getGridConfiguration, ContentItem, getItemTitle } from '../utils/contentItems';
+import { StateMessage } from '@/components/ui/StateMessage';
 import { getAppState, setAppState } from "@/lib/storage";
 
 // View state interface for ChannelBrowser
@@ -158,9 +159,9 @@ export const ChannelBrowser: React.FC<{ username?: string }> = ({ username = "lo
     return (
       <div className="space-y-1 p-1">
         {filteredChannels.length === 0 ? (
-          <div className="text-center p-1 text-muted-foreground text-sm">
+          <StateMessage minHeight="h-24">
             Not found, just hit Go or Enter
-          </div>
+          </StateMessage>
         ) : (
           filteredChannels.map((channel) => (
             <ContentItemListView
@@ -215,7 +216,7 @@ export const ChannelBrowser: React.FC<{ username?: string }> = ({ username = "lo
         <div className="px-2 py-1 mb-2 bg-yellow-100 dark:bg-yellow-900 text-xs">{loadError}</div>
       )}
       {loading ? (
-        <div className="text-center p-4">Loading channels...</div>
+        <StateMessage>Loading channels...</StateMessage>
       ) : (
         isListView ? renderListView() : renderGridView()
       )}

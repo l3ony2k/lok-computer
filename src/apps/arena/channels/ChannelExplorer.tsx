@@ -7,6 +7,7 @@ import { ArenaWindowLayout } from "../components/ArenaWindowLayout";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ContentItemGrid, ContentItemListView, getGridConfiguration, ContentItem, getItemTitle } from "../utils/contentItems";
 import { RetroButton } from "@/components/ui/RetroButton";
+import { StateMessage } from "@/components/ui/StateMessage";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { getAppState, setAppState } from "@/lib/storage";
 
@@ -48,9 +49,9 @@ const GridContent = React.memo(({
 
   if (contents.length === 0) {
     return (
-      <div className="col-start-1 col-end-[-1] text-center p-4 opacity-50">
+      <StateMessage minHeight="h-24">
         This channel is empty
-      </div>
+      </StateMessage>
     );
   }
 
@@ -89,9 +90,9 @@ const ListContent = React.memo(({
 
   if (contents.length === 0) {
     return (
-      <div className="text-center p-1 text-muted-foreground text-sm">
+      <StateMessage minHeight="h-24">
         This channel is empty
-      </div>
+      </StateMessage>
     );
   }
 
@@ -448,9 +449,9 @@ export const ChannelExplorer: React.FC<ChannelExplorerProps> = ({
   const renderPreviewContent = () => {
     if (!selectedItem) {
       return (
-        <div className="flex items-center justify-center h-full text-muted-foreground text-sm p-4 text-center">
+        <StateMessage>
           Select an item<br />to preview
-        </div>
+        </StateMessage>
       );
     }
 
@@ -534,10 +535,12 @@ export const ChannelExplorer: React.FC<ChannelExplorerProps> = ({
         <div className="px-2 py-1 mb-2 bg-yellow-100 dark:bg-yellow-900 text-xs">{error}</div>
       )}
       {loading ? (
-        <div className="p-4 text-center">
-          <div className="text-xs mb-1">{loadingStatus}</div>
-          <div className="progress-bar"></div>
-        </div>
+        <StateMessage>
+          <div className="text-center">
+            <div className="mb-1">{loadingStatus}</div>
+            <div className="progress-bar" />
+          </div>
+        </StateMessage>
       ) : (
         previewMode !== 'off' ? (
           <ResizablePanelGroup direction={previewMode === 'vertical' ? 'vertical' : 'horizontal'} className="h-full w-full">

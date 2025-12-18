@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { WindowLayout } from '@/components/window/WindowLayout';
+import { StateMessage } from '@/components/ui/StateMessage';
 import { RetroButton } from '@/components/ui/RetroButton';
 import { APP_CONFIG } from '@/config/constants';
 import { getCachedData, setCachedData, incrementRequestCount, getAppState, setAppState, CACHE_TTL } from '@/lib/storage';
@@ -142,9 +143,9 @@ export const WeatherApp: React.FC<WeatherAppProps> = () => {
       hasPadding={true}
     >
       {isLoading ? (
-        <div className="flex justify-center items-center h-full text-muted-foreground text-sm">
-          <p>Loading weather data...</p>
-        </div>
+        <StateMessage>
+          Loading weather data...
+        </StateMessage>
       ) : error ? (
         <div className="text-red-500 p-4 text-sm">
           <p>{error instanceof Error ? error.message : 'Failed to fetch weather data. Please try again.'}</p>

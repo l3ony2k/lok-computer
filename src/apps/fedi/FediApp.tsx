@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { WindowLayout } from '@/components/window/WindowLayout';
+import { StateMessage } from '@/components/ui/StateMessage';
 import { RetroButton } from '@/components/ui/RetroButton';
 import { useWindowManager } from '@/hooks/useWindowManager';
 import { ImageViewerApp } from '@/apps/imageviewer/ImageViewerApp';
@@ -180,9 +181,9 @@ export const FediApp: React.FC = () => {
     return (
         <WindowLayout hasPadding={false}>
             {!account ? (
-                <div className="flex justify-center items-center h-full p-4 text-muted-foreground text-sm">
-                    <p>Loading profile...</p>
-                </div>
+                <StateMessage>
+                    Loading profile...
+                </StateMessage>
             ) : (
                 <div className="divide-y divide-border">
                     {account && (
@@ -274,9 +275,9 @@ export const FediApp: React.FC = () => {
                     )}
 
                     {isLoading ? (
-                        <div className="flex justify-center items-center p-8">
-                            <p className="text-muted-foreground text-sm">Loading posts...</p>
-                        </div>
+                        <StateMessage>
+                            Loading posts...
+                        </StateMessage>
                     ) : isError ? (
                         <div className="text-red-500 p-4 text-center">
                             <p className="text-sm">Error loading posts: {error instanceof Error ? error.message : 'Unknown error'}</p>
