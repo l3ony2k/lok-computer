@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTheme } from "next-themes";
-import { Sun, Moon, Computer, Image, CheckCircle, X } from "lucide-react";
+import { Sun, Moon, Computer, Image, CheckCircle, X, Database, Trash2, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { WindowLayout } from "@/components/window/WindowLayout";
 import { RetroButton } from "@/components/ui/RetroButton";
+import { clearCache, clearExpiredCache, getUsageStats, resetUsageStats, type UsageStats } from "@/lib/storage";
+import { toast } from "sonner";
 
 // Default wallpaper options
 const DEFAULT_WALLPAPERS = [
@@ -31,6 +33,69 @@ export const ConfigApp: React.FC = () => {
   const { settings, updateSetting } = useUserSettings();
   const [customWallpaperUrl, setCustomWallpaperUrl] = useState("");
   const [customError, setCustomError] = useState("");
+  const [stats, setStats] = useState<UsageStats | null>(null);
+  const [isClearing, setIsClearing] = useState(false);
+
+  // Load usage stats on mount
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const data = await getUsageStats();
+        setStats(data);
+      } catch (error) {
+        console.error('[ConfigApp] Failed to load stats:', error);
+      }
+    };
+    loadStats();
+  }, []);
+
+  const handleClearCache = async () => {
+    setIsClearing(true);
+    try {
+      await clearCache();
+      toast.success('Cache cleared successfully');
+      // Refresh stats
+      const data = await getUsageStats();
+      setStats(data);
+    } catch (error) {
+      console.error('[ConfigApp] Failed to clear cache:', error);
+      toast.error('Failed to clear cache');
+    } finally {
+      setIsClearing(false);
+    }
+  };
+
+  const handleClearExpired = async () => {
+    setIsClearing(true);
+    try {
+      const count = await clearExpiredCache();
+      if (count > 0) {
+        toast.success(`Cleared ${count} expired cache entries`);
+      } else {
+        toast.info('No expired cache entries found');
+      }
+      // Refresh stats
+      const data = await getUsageStats();
+      setStats(data);
+    } catch (error) {
+      console.error('[ConfigApp] Failed to clear expired cache:', error);
+      toast.error('Failed to clear expired cache');
+    } finally {
+      setIsClearing(false);
+    }
+  };
+
+  const handleResetStats = async () => {
+    try {
+      await resetUsageStats();
+      const data = await getUsageStats();
+      setStats(data);
+      toast.success('Statistics reset');
+    } catch (error) {
+      console.error('[ConfigApp] Failed to reset stats:', error);
+      toast.error('Failed to reset statistics');
+    }
+  };
 
   const handleCustomWallpaper = () => {
     if (!customWallpaperUrl) {
@@ -58,7 +123,7 @@ export const ConfigApp: React.FC = () => {
   };
 
   return (
-    <WindowLayout>
+    <WindowLayout hasPadding={false}>
       <div className="p-4 space-y-6">
         {/* Theme Section */}
         <div>
@@ -181,6 +246,86 @@ export const ConfigApp: React.FC = () => {
               <p className="text-xs text-destructive mt-1">{customError}</p>
             )}
           </div>
+        </div>
+
+        {/* Cache Management Section */}
+        <div>
+          <h2 className="text-lg font-bold mb-3 flex items-center">
+            <Database className="w-5 h-5 mr-2" />
+            Cache & Storage
+          </h2>
+
+          {/* Usage Statistics */}
+          {stats && (
+            <div className="mb-4 p-3 border border-border bg-muted/30 text-sm">
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <span className="text-muted-foreground">Total Requests:</span>
+                  <span className="ml-2 font-mono">{stats.totalRequests}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Cache Hits:</span>
+                  <span className="ml-2 font-mono text-green-600">{stats.cacheHits}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Cache Misses:</span>
+                  <span className="ml-2 font-mono text-yellow-600">{stats.cacheMisses}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Hit Rate:</span>
+                  <span className="ml-2 font-mono">
+                    {stats.cacheHits + stats.cacheMisses > 0
+                      ? `${Math.round((stats.cacheHits / (stats.cacheHits + stats.cacheMisses)) * 100)}%`
+                      : 'N/A'}
+                  </span>
+                </div>
+              </div>
+
+              {Object.keys(stats.requestsByApp).length > 0 && (
+                <div className="mt-2 pt-2 border-t border-border">
+                  <span className="text-muted-foreground text-xs">Requests by App:</span>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {Object.entries(stats.requestsByApp).map(([app, count]) => (
+                      <span key={app} className="text-xs bg-muted px-2 py-0.5">
+                        {app}: {count}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Cache Actions */}
+          <div className="flex flex-wrap gap-2">
+            <RetroButton
+              onClick={handleClearExpired}
+              disabled={isClearing}
+              className="flex items-center gap-1"
+            >
+              <RefreshCw className={cn("w-4 h-4", isClearing && "animate-spin")} />
+              Clear Expired
+            </RetroButton>
+            <RetroButton
+              onClick={handleClearCache}
+              disabled={isClearing}
+              className="flex items-center gap-1"
+            >
+              <Trash2 className="w-4 h-4" />
+              Clear All Cache
+            </RetroButton>
+            <RetroButton
+              onClick={handleResetStats}
+              disabled={isClearing}
+              size="sm"
+              className="text-xs opacity-70"
+            >
+              Reset Stats
+            </RetroButton>
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            Clearing cache will force fresh data to be fetched from APIs.
+          </p>
         </div>
       </div>
     </WindowLayout>

@@ -12,7 +12,7 @@ interface DesktopIconsProps {
   handleOpenSettingsWindow: () => void;
 }
 
-export const DesktopIcons: React.FC<DesktopIconsProps> = ({ 
+export const DesktopIcons: React.FC<DesktopIconsProps> = ({
   addWindow,
   addOrFocusWindow,
   handleOpenAbout,
@@ -28,7 +28,7 @@ export const DesktopIcons: React.FC<DesktopIconsProps> = ({
   useEffect(() => {
     const updateColumns = () => {
       if (!containerRef.current) return;
-      
+
       const containerHeight = containerRef.current.clientHeight - TASKBAR_HEIGHT;
       const totalIconsHeight = APP_LIST.length * ICON_HEIGHT;
       const neededColumns = Math.ceil(totalIconsHeight / containerHeight);
@@ -70,6 +70,8 @@ export const DesktopIcons: React.FC<DesktopIconsProps> = ({
               height: app.defaultHeight,
               iconType: app.iconType,
               singleInstance: true,
+              componentType: app.name, // Track component type for session restoration
+              props: app.props,        // Store props for restoration
             });
           } else {
             addWindow({
@@ -78,6 +80,8 @@ export const DesktopIcons: React.FC<DesktopIconsProps> = ({
               width: app.defaultWidth,
               height: app.defaultHeight,
               iconType: app.iconType,
+              componentType: app.name, // Track component type for session restoration
+              props: app.props,        // Store props for restoration
             });
           }
         };
@@ -88,13 +92,13 @@ export const DesktopIcons: React.FC<DesktopIconsProps> = ({
   const getIconColumn = (index: number) => {
     return Math.floor(index / Math.ceil(APP_LIST.length / columns));
   };
-  
+
   return (
-    <div 
+    <div
       ref={containerRef}
       className="absolute top-4 right-4 bottom-[34px] flex justify-end z-10 select-none"
       style={{ width: `${COLUMN_WIDTH * columns}px` }}
-    > 
+    >
       {Array.from({ length: columns }).map((_, columnIndex) => (
         <div key={columnIndex} className="flex flex-col items-end space-y-2">
           {APP_LIST.filter((_, index) => getIconColumn(index) === columnIndex).map((app) => {
@@ -102,17 +106,17 @@ export const DesktopIcons: React.FC<DesktopIconsProps> = ({
             const action = getActionForApp(app);
             const doubleClickHandler = useDoubleClick(singleClickHandlerForHook, action);
             const clickAction = isMobile ? action : doubleClickHandler;
-            
+
             return (
               <button
                 key={app.name}
-                onClick={clickAction} 
+                onClick={clickAction}
                 className="flex flex-col items-center space-y-1 p-2 hover:bg-black/10 dark:hover:bg-white/10 transition-colors duration-100 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-opacity-50 w-20 select-none"
                 aria-label={`Open ${app.name}`}
                 tabIndex={0}
               >
                 <CustomIcon iconType={app.iconType} className="w-10 h-10" />
-                <span 
+                <span
                   className="text-xs text-center break-words w-full text-neutral-200 font-bold select-none"
                   style={{ textShadow: "0px 0px 3px rgba(0, 0, 0, 0.8)" }}
                 >

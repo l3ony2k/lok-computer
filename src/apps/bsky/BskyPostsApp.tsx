@@ -4,6 +4,8 @@ import { WindowLayout } from '@/components/window/WindowLayout';
 import { RetroButton } from '@/components/ui/RetroButton';
 import { useWindowManager } from '@/hooks/useWindowManager';
 import { ImageViewerApp } from '@/apps/imageviewer/ImageViewerApp';
+import { APP_CONFIG } from '@/config/constants';
+import { getCachedData, setCachedData, incrementRequestCount, CACHE_TTL } from '@/lib/storage';
 
 interface Post {
   uri: string;
@@ -66,8 +68,6 @@ interface Profile {
   indexedAt: string;
 }
 
-import { APP_CONFIG } from '@/config/constants';
-
 const FEED_URL = APP_CONFIG.BSKY_FEED_URL;
 const PROFILE_URL = APP_CONFIG.BSKY_PROFILE_URL;
 
@@ -76,34 +76,62 @@ export const BskyPostsApp: React.FC = () => {
   const { addWindow } = useWindowManager();
 
   const fetchProfile = async () => {
-    console.log('Fetching Bluesky profile...');
+    const cacheKey = 'bsky:profile';
+
+    // Check cache first
+    const cached = await getCachedData<Profile>(cacheKey);
+    if (cached) {
+      console.log(`[BskyApp] Cache hit for profile`);
+      return cached;
+    }
+
+    console.log('[BskyApp] Fetching Bluesky profile...');
     try {
+      await incrementRequestCount('bsky');
       const response = await fetch(PROFILE_URL);
       if (!response.ok) {
         throw new Error('Failed to fetch profile');
       }
       const data = await response.json() as Profile;
-      console.log(`Fetched profile for ${data.handle}`);
+
+      // Store in cache
+      await setCachedData(cacheKey, data, CACHE_TTL.BSKY_PROFILE);
+
+      console.log(`[BskyApp] Fetched profile for ${data.handle}`);
       return data;
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.error('[BskyApp] Error fetching profile:', error);
       throw error;
     }
   };
 
   const fetchPosts = async ({ pageParam }: { pageParam?: string }) => {
-    console.log(`Fetching posts... ${pageParam ? `(cursor: ${pageParam})` : '(initial)'}`);
+    const cacheKey = `bsky:posts:${pageParam || 'initial'}`;
+
+    // Check cache first
+    const cached = await getCachedData<FeedResponse>(cacheKey);
+    if (cached) {
+      console.log(`[BskyApp] Cache hit for posts (cursor: ${pageParam || 'initial'})`);
+      return cached;
+    }
+
+    console.log(`[BskyApp] Fetching posts... ${pageParam ? `(cursor: ${pageParam})` : '(initial)'}`);
     try {
+      await incrementRequestCount('bsky');
       const url = pageParam ? `${FEED_URL}&cursor=${pageParam}` : FEED_URL;
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error('Failed to fetch posts');
       }
       const data = await response.json() as FeedResponse;
-      console.log(`Fetched ${data.feed.length} posts`);
+
+      // Store in cache
+      await setCachedData(cacheKey, data, CACHE_TTL.BSKY_POSTS);
+
+      console.log(`[BskyApp] Fetched ${data.feed.length} posts`);
       return data;
     } catch (error) {
-      console.error('Error fetching posts:', error);
+      console.error('[BskyApp] Error fetching posts:', error);
       throw error;
     }
   };
@@ -111,6 +139,7 @@ export const BskyPostsApp: React.FC = () => {
   const { data: profile } = useQuery({
     queryKey: ['bskyProfile'],
     queryFn: fetchProfile,
+    staleTime: CACHE_TTL.BSKY_PROFILE,
   });
 
   const {
@@ -127,6 +156,7 @@ export const BskyPostsApp: React.FC = () => {
     queryFn: fetchPosts,
     getNextPageParam: (lastPage) => lastPage.cursor,
     initialPageParam: undefined as string | undefined,
+    staleTime: CACHE_TTL.BSKY_POSTS,
   });
 
   // Intersection Observer for infinite scrolling
@@ -295,6 +325,8 @@ export const BskyPostsApp: React.FC = () => {
                                   width: 800,
                                   height: 600,
                                   iconType: 'image',
+                                  componentType: 'ImageViewer',
+                                  props: { imageUrl: image.fullsize },
                                 });
                               }}
                             >

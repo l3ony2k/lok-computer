@@ -22,11 +22,11 @@ export const Desktop = () => {
     const { theme, setTheme } = useTheme();
     const { settings } = useUserSettings();
     const desktopContainerRef = useRef<HTMLDivElement>(null);
-    
+
     // Apply the wallpaper as a CSS variable if it exists
     useEffect(() => {
         const rootElement = document.documentElement;
-        
+
         if (settings.wallpaper) {
             rootElement.style.setProperty('--wallpaper-url', `url("${settings.wallpaper}")`);
         } else {
@@ -102,6 +102,7 @@ export const Desktop = () => {
                 minWidth: WINDOW_DEFAULTS.MIN_WIDTH,
                 minHeight: WINDOW_DEFAULTS.MIN_HEIGHT,
                 singleInstance: true,
+                componentType: "About",
             });
         } else {
             addWindow({
@@ -112,6 +113,7 @@ export const Desktop = () => {
                 iconType: 'about',
                 minWidth: WINDOW_DEFAULTS.MIN_WIDTH,
                 minHeight: WINDOW_DEFAULTS.MIN_HEIGHT,
+                componentType: "About",
             });
         }
     };
@@ -126,6 +128,8 @@ export const Desktop = () => {
             iconType: 'folder',
             minWidth: WINDOW_DEFAULTS.MIN_WIDTH,
             minHeight: WINDOW_DEFAULTS.MIN_HEIGHT,
+            componentType: 'ChannelExplorer',
+            props: { channelSlug: slug, username: 'lok' },
         });
     };
 
@@ -138,27 +142,29 @@ export const Desktop = () => {
         if (app?.singleInstance) {
             addOrFocusWindow({
                 title: 'Config',
-                iconType: 'config', 
+                iconType: 'config',
                 content: <ConfigApp />,
                 width: app?.defaultWidth ?? WINDOW_DEFAULTS.DEFAULT_WIDTH,
                 height: app?.defaultHeight ?? WINDOW_DEFAULTS.DEFAULT_HEIGHT,
-                x: 150, 
+                x: 150,
                 y: 100,
                 minWidth: WINDOW_DEFAULTS.MIN_WIDTH,
                 minHeight: WINDOW_DEFAULTS.MIN_HEIGHT,
                 singleInstance: true,
+                componentType: "Config",
             });
         } else {
             addWindow({
                 title: 'Config',
-                iconType: 'config', 
+                iconType: 'config',
                 content: <ConfigApp />,
                 width: app?.defaultWidth ?? WINDOW_DEFAULTS.DEFAULT_WIDTH,
                 height: app?.defaultHeight ?? WINDOW_DEFAULTS.DEFAULT_HEIGHT,
-                x: 150, 
+                x: 150,
                 y: 100,
                 minWidth: WINDOW_DEFAULTS.MIN_WIDTH,
                 minHeight: WINDOW_DEFAULTS.MIN_HEIGHT,
+                componentType: "Config",
             });
         }
     };
@@ -169,7 +175,7 @@ export const Desktop = () => {
 
             <div ref={desktopContainerRef} className={`desktop-container relative overflow-hidden ${settings.wallpaper ? 'has-wallpaper' : ''}`}>
                 <WindowContainer />
-                <DesktopIcons 
+                <DesktopIcons
                     addWindow={addWindow}
                     addOrFocusWindow={addOrFocusWindow}
                     handleOpenAbout={handleOpenAbout}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { ArenaBlock } from "@/types/arena";
 import { getChannelContents } from "@/lib/api";
 import { useWindowManager } from "@/hooks/useWindowManager";
@@ -8,6 +8,15 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { ContentItemGrid, ContentItemListView, getGridConfiguration, ContentItem, getItemTitle } from "../utils/contentItems";
 import { RetroButton } from "@/components/ui/RetroButton";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
+import { getAppState, setAppState } from "@/lib/storage";
+
+// Interface for persisted channel view state
+interface ChannelViewState {
+  gridSize: 'S' | 'M' | 'L';
+  isListView: boolean;
+  previewMode: 'off' | 'horizontal' | 'vertical';
+  selectedBlockId?: number;
+}
 
 // Memoized content item components for better performance
 const MemoizedContentItemGrid = React.memo(ContentItemGrid);
@@ -48,7 +57,7 @@ const GridContent = React.memo(({
   return (
     <div className="folder-grid" style={gridTemplateStyle}>
       {contents.map((item) => (
-        <div key={item.id} className={selectedId === item.id ? "ring-2 ring-accent" : ""}>
+        <div key={item.id} data-item-id={item.id} className={selectedId === item.id ? "ring-2 ring-accent" : ""}>
           <MemoizedContentItemGrid
             item={item}
             onSingleClick={() => onSingleClick(item.id)}
@@ -89,7 +98,7 @@ const ListContent = React.memo(({
   return (
     <div className="space-y-1 p-1">
       {contents.map((item) => (
-        <div key={item.id} className={selectedId === item.id ? "bg-muted/50" : ""}>
+        <div key={item.id} data-item-id={item.id} className={selectedId === item.id ? "bg-muted/50" : ""}>
           <MemoizedContentItemListView
             item={item}
             onSingleClick={() => onSingleClick(item.id)}
@@ -105,24 +114,128 @@ const ListContent = React.memo(({
   );
 });
 
-export const ChannelExplorer: React.FC<{ channelSlug?: string; username?: string; items?: ContentItem[] }> = ({
+// Props interface for ChannelExplorer
+interface ChannelExplorerProps {
+  channelSlug?: string;
+  username?: string;
+  items?: ContentItem[];
+  // Initial view state (for session restoration)
+  initialGridSize?: 'S' | 'M' | 'L';
+  initialIsListView?: boolean;
+  initialPreviewMode?: 'off' | 'horizontal' | 'vertical';
+  initialSelectedBlockId?: number;
+}
+
+export const ChannelExplorer: React.FC<ChannelExplorerProps> = ({
   channelSlug,
   username = "lok",
-  items
+  items,
+  initialGridSize = 'S',
+  initialIsListView = false,
+  initialPreviewMode = 'off',
+  initialSelectedBlockId,
 }) => {
   const [loading, setLoading] = useState(!items);
   const [loadingStatus, setLoadingStatus] = useState<string>("Initializing...");
   const [contents, setContents] = useState<ContentItem[]>(items || []);
   const [error, setError] = useState<string | null>(null);
-  const [isListView, setIsListView] = useState(false);
+  const [isListView, setIsListView] = useState(initialIsListView);
   const { addWindow } = useWindowManager();
-  const [gridSize, setGridSize] = useState<'S' | 'M' | 'L'>('S');
+  const [gridSize, setGridSize] = useState<'S' | 'M' | 'L'>(initialGridSize);
   const itemsPerPage = 100;
   const isMobile = useIsMobile();
 
   // Preview Mode State
-  const [previewMode, setPreviewMode] = useState<'off' | 'horizontal' | 'vertical'>('off');
+  const [previewMode, setPreviewMode] = useState<'off' | 'horizontal' | 'vertical'>(initialPreviewMode);
   const [selectedItem, setSelectedItem] = useState<ContentItem | null>(null);
+
+  // Track if initial load is complete to avoid saving immediately
+  const isViewStateLoaded = useRef(false);
+  const savedSelectedBlockId = useRef<number | undefined>(undefined);
+  const viewStateKey = channelSlug ? `channel:view:${channelSlug}` : null;
+
+  // Load saved view state on mount
+  useEffect(() => {
+    if (!viewStateKey) return;
+
+    const loadViewState = async () => {
+      try {
+        const savedState = await getAppState<ChannelViewState>(viewStateKey);
+        if (savedState) {
+          setGridSize(savedState.gridSize);
+          setIsListView(savedState.isListView);
+          setPreviewMode(savedState.previewMode);
+          // Store selected block ID for restoration once contents load
+          savedSelectedBlockId.current = savedState.selectedBlockId;
+          console.debug(`[ChannelExplorer] Loaded view state for ${channelSlug}, selectedBlockId: ${savedState.selectedBlockId}`);
+        }
+      } catch (error) {
+        console.error('[ChannelExplorer] Failed to load view state:', error);
+      } finally {
+        isViewStateLoaded.current = true;
+      }
+    };
+
+    loadViewState();
+  }, [viewStateKey, channelSlug]);
+
+  // Save view state when it changes (debounced)
+  useEffect(() => {
+    if (!viewStateKey || !isViewStateLoaded.current) return;
+
+    const saveViewState = async () => {
+      try {
+        const state: ChannelViewState = {
+          gridSize,
+          isListView,
+          previewMode,
+          selectedBlockId: selectedItem?.id,
+        };
+        await setAppState(viewStateKey, state);
+      } catch (error) {
+        console.error('[ChannelExplorer] Failed to save view state:', error);
+      }
+    };
+
+    // Debounce save to avoid excessive writes
+    const timeout = setTimeout(saveViewState, 300);
+    return () => clearTimeout(timeout);
+  }, [viewStateKey, gridSize, isListView, previewMode, selectedItem?.id]);
+
+  // Restore selected item once contents are loaded
+  useEffect(() => {
+    // Get the block ID to restore from either prop or saved state
+    const blockIdToRestore = initialSelectedBlockId || savedSelectedBlockId.current;
+
+    if (blockIdToRestore && contents.length > 0 && !selectedItem) {
+      const item = contents.find(c => c.id === blockIdToRestore);
+      if (item) {
+        setSelectedItem(item);
+        console.debug(`[ChannelExplorer] Restored selected block: ${item.id}`);
+
+        // Scroll to the selected item after a short delay to ensure DOM is ready
+        setTimeout(() => {
+          const element = document.querySelector(`[data-item-id="${item.id}"]`);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 100);
+      }
+    }
+  }, [initialSelectedBlockId, contents, selectedItem]);
+
+  // Scroll to selected item when switching between grid/list view
+  useEffect(() => {
+    if (selectedItem && !loading) {
+      // Small delay to let the new view render
+      setTimeout(() => {
+        const element = document.querySelector(`[data-item-id="${selectedItem.id}"]`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 50);
+    }
+  }, [isListView]); // Only trigger on view mode change
 
   useEffect(() => {
     if (items) {
@@ -283,6 +396,8 @@ export const ChannelExplorer: React.FC<{ channelSlug?: string; username?: string
         width: 600,
         height: 500,
         iconType: "other-channel",
+        componentType: 'ChannelExplorer',
+        props: { channelSlug: item.slug!, username },
       });
     } else {
       addWindow({
@@ -291,6 +406,8 @@ export const ChannelExplorer: React.FC<{ channelSlug?: string; username?: string
         width: 600,
         height: 500,
         iconType: getIconType(item),
+        componentType: 'BlockViewer',
+        props: { blockId: item.id },
       });
     }
   };

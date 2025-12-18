@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { WindowLayout } from '@/components/window/WindowLayout';
 import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/hover-card';
@@ -6,6 +6,7 @@ import { RetroButton } from '@/components/ui/RetroButton';
 import { useWindowManager } from '@/hooks/useWindowManager';
 import { ImageViewerApp } from '@/apps/imageviewer/ImageViewerApp';
 import { APP_CONFIG } from '@/config/constants';
+import { getCachedData, setCachedData, incrementRequestCount, getAppState, setAppState, CACHE_TTL } from '@/lib/storage';
 
 type ShelfType = 'wishlist' | 'progress' | 'complete' | 'dropped';
 
@@ -99,12 +100,28 @@ const ShelfContent: React.FC<ShelfContentProps> = ({ type, page, onDataLoaded })
     const { data, isLoading, isError, error, refetch } = useQuery({
         queryKey: ['neodbShelf', type, page],
         queryFn: async () => {
+            const cacheKey = `neodb:shelf:${type}:${page}`;
+
+            // Check cache first
+            const cached = await getCachedData<ShelfResponse>(cacheKey);
+            if (cached) {
+                onDataLoaded(cached.pages, cached.count);
+                return cached;
+            }
+
+            // Fetch fresh data
+            await incrementRequestCount('shelf');
             const response = await fetch(`${APP_CONFIG.NEODB_SHELF_ENDPOINT}?type=${type}&page=${page}&page_size=${PAGE_SIZE}`);
             if (!response.ok) throw new Error('Failed to fetch shelf');
             const result = await response.json() as ShelfResponse;
+
+            // Store in cache
+            await setCachedData(cacheKey, result, CACHE_TTL.NEODB_SHELF);
+
             onDataLoaded(result.pages, result.count);
             return result;
         },
+        staleTime: CACHE_TTL.NEODB_SHELF,
     });
 
     const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString();
@@ -150,6 +167,8 @@ const ShelfContent: React.FC<ShelfContentProps> = ({ type, page, onDataLoaded })
                                         width: 600,
                                         height: 800,
                                         iconType: 'image',
+                                        componentType: 'ImageViewer',
+                                        props: { imageUrl: shelfItem.item.cover_image_url },
                                     });
                                 }
                             }}
@@ -234,10 +253,61 @@ const ShelfContent: React.FC<ShelfContentProps> = ({ type, page, onDataLoaded })
     );
 };
 
+// App state interface
+interface ShelfAppState {
+    activeTab: ShelfType;
+    page: number;
+}
+
+const APP_STATE_KEY = 'app:shelf';
+
 export const ShelfApp: React.FC = () => {
     const [activeTab, setActiveTab] = useState<ShelfType>('wishlist');
     const [page, setPage] = useState(1);
     const [paginationInfo, setPaginationInfo] = useState<{ pages: number; count: number }>({ pages: 1, count: 0 });
+    const isInitialLoad = useRef(true);
+
+    // Load persisted state on mount
+    useEffect(() => {
+        let mounted = true;
+
+        const loadState = async () => {
+            try {
+                const saved = await getAppState<ShelfAppState>(APP_STATE_KEY);
+                if (mounted && saved) {
+                    setActiveTab(saved.activeTab);
+                    setPage(saved.page);
+                }
+            } catch (error) {
+                console.error('[ShelfApp] Failed to load state:', error);
+            } finally {
+                if (mounted) {
+                    isInitialLoad.current = false;
+                }
+            }
+        };
+
+        loadState();
+
+        return () => {
+            mounted = false;
+        };
+    }, []);
+
+    // Save state when it changes
+    useEffect(() => {
+        if (isInitialLoad.current) return;
+
+        const saveState = async () => {
+            try {
+                await setAppState<ShelfAppState>(APP_STATE_KEY, { activeTab, page });
+            } catch (error) {
+                console.error('[ShelfApp] Failed to save state:', error);
+            }
+        };
+
+        saveState();
+    }, [activeTab, page]);
 
     // Reset page when tab changes
     const handleTabChange = (tab: ShelfType) => {

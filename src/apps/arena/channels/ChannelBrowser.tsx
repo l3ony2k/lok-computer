@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { RetroButton } from "@/components/ui/RetroButton";
 import { ArenaChannel } from "@/types/arena";
 import { getUserChannels } from "@/lib/api";
@@ -7,6 +7,15 @@ import { ChannelExplorer } from "./ChannelExplorer";
 import { ArenaWindowLayout } from "../components/ArenaWindowLayout";
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ContentItemGrid, ContentItemListView, getGridConfiguration, ContentItem } from "../utils/contentItems";
+import { getAppState, setAppState } from "@/lib/storage";
+
+// View state interface for ChannelBrowser
+interface BrowserViewState {
+  gridSize: 'S' | 'M' | 'L';
+  isListView: boolean;
+}
+
+const VIEW_STATE_KEY = 'app:arena-browser';
 
 export const ChannelBrowser: React.FC<{ username?: string }> = ({ username = "lok" }) => {
   const [channels, setChannels] = useState<ArenaChannel[]>([]);
@@ -17,6 +26,41 @@ export const ChannelBrowser: React.FC<{ username?: string }> = ({ username = "lo
   const [loadError, setLoadError] = useState<string | null>(null);
   const [gridSize, setGridSize] = useState<'S' | 'M' | 'L'>('S');
   const isMobile = useIsMobile();
+  const isViewStateLoaded = useRef(false);
+
+  // Load saved view state on mount
+  useEffect(() => {
+    const loadViewState = async () => {
+      try {
+        const savedState = await getAppState<BrowserViewState>(VIEW_STATE_KEY);
+        if (savedState) {
+          setGridSize(savedState.gridSize);
+          setIsListView(savedState.isListView);
+        }
+      } catch (error) {
+        console.error('[ChannelBrowser] Failed to load view state:', error);
+      } finally {
+        isViewStateLoaded.current = true;
+      }
+    };
+    loadViewState();
+  }, []);
+
+  // Save view state when it changes
+  useEffect(() => {
+    if (!isViewStateLoaded.current) return;
+
+    const saveViewState = async () => {
+      try {
+        await setAppState(VIEW_STATE_KEY, { gridSize, isListView });
+      } catch (error) {
+        console.error('[ChannelBrowser] Failed to save view state:', error);
+      }
+    };
+
+    const timeout = setTimeout(saveViewState, 300);
+    return () => clearTimeout(timeout);
+  }, [gridSize, isListView]);
 
   useEffect(() => {
     const fetchChannels = async () => {
@@ -48,6 +92,8 @@ export const ChannelBrowser: React.FC<{ username?: string }> = ({ username = "lo
       width: 600,
       height: 500,
       iconType: 'folder',
+      componentType: 'ChannelExplorer',
+      props: { channelSlug: channel.slug, username },
     });
   };
 
@@ -59,6 +105,8 @@ export const ChannelBrowser: React.FC<{ username?: string }> = ({ username = "lo
       width: 600,
       height: 500,
       iconType: 'other-channel',
+      componentType: 'ChannelExplorer',
+      props: { channelSlug: slug, username },
     });
   };
 

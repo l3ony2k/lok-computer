@@ -5,6 +5,7 @@ import { RetroButton } from '@/components/ui/RetroButton';
 import { useWindowManager } from '@/hooks/useWindowManager';
 import { ImageViewerApp } from '@/apps/imageviewer/ImageViewerApp';
 import { APP_CONFIG } from '@/config/constants';
+import { getCachedData, setCachedData, incrementRequestCount, CACHE_TTL } from '@/lib/storage';
 
 interface Account {
     id: string;
@@ -55,18 +56,32 @@ export const FediApp: React.FC = () => {
     const { addWindow } = useWindowManager();
 
     const fetchAccount = async () => {
-        console.log(`Fetching Fedi account for ${USERNAME}...`);
+        const cacheKey = `fedi:account:${USERNAME}`;
+
+        // Check cache first
+        const cached = await getCachedData<Account>(cacheKey);
+        if (cached) {
+            console.log(`[FediApp] Cache hit for account`);
+            return cached;
+        }
+
+        console.log(`[FediApp] Fetching Fedi account for ${USERNAME}...`);
         try {
+            await incrementRequestCount('fedi');
             // Use relative path for worker proxy
             const response = await fetch(`/api/fedi/account?username=${USERNAME}`);
             if (!response.ok) {
                 throw new Error('Failed to fetch account');
             }
             const data = await response.json() as Account;
-            console.log(`Fetched account ${data.username} (${data.id})`);
+
+            // Store in cache
+            await setCachedData(cacheKey, data, CACHE_TTL.FEDI_ACCOUNT);
+
+            console.log(`[FediApp] Fetched account ${data.username} (${data.id})`);
             return data;
         } catch (error) {
-            console.error('Error fetching account:', error);
+            console.error('[FediApp] Error fetching account:', error);
             throw error;
         }
     };
@@ -74,13 +89,24 @@ export const FediApp: React.FC = () => {
     const { data: account } = useQuery({
         queryKey: ['fediAccount', USERNAME],
         queryFn: fetchAccount,
+        staleTime: CACHE_TTL.FEDI_ACCOUNT,
     });
 
     const fetchStatuses = async ({ pageParam }: { pageParam?: string }) => {
         if (!account) return { statuses: [], nextCursor: undefined };
 
-        console.log(`Fetching statuses... ${pageParam ? `(max_id: ${pageParam})` : '(initial)'}`);
+        const cacheKey = `fedi:statuses:${account.id}:${pageParam || 'initial'}`;
+
+        // Check cache first
+        const cached = await getCachedData<{ statuses: Status[]; nextCursor?: string }>(cacheKey);
+        if (cached) {
+            console.log(`[FediApp] Cache hit for statuses (max_id: ${pageParam || 'initial'})`);
+            return cached;
+        }
+
+        console.log(`[FediApp] Fetching statuses... ${pageParam ? `(max_id: ${pageParam})` : '(initial)'}`);
         try {
+            await incrementRequestCount('fedi');
             // Use relative path for worker proxy
             const url = new URL('/api/fedi/statuses', window.location.origin);
             url.searchParams.append('accountId', account.id);
@@ -94,14 +120,18 @@ export const FediApp: React.FC = () => {
                 throw new Error('Failed to fetch statuses');
             }
             const data = await response.json() as Status[];
-            console.log(`Fetched ${data.length} statuses`);
+            console.log(`[FediApp] Fetched ${data.length} statuses`);
 
             // Pagination: use the last item's ID for max_id
             const nextCursor = data.length > 0 ? data[data.length - 1].id : undefined;
+            const result = { statuses: data, nextCursor };
 
-            return { statuses: data, nextCursor };
+            // Store in cache
+            await setCachedData(cacheKey, result, CACHE_TTL.FEDI_STATUSES);
+
+            return result;
         } catch (error) {
-            console.error('Error fetching statuses:', error);
+            console.error('[FediApp] Error fetching statuses:', error);
             throw error;
         }
     };
@@ -121,6 +151,7 @@ export const FediApp: React.FC = () => {
         getNextPageParam: (lastPage) => lastPage.nextCursor,
         initialPageParam: undefined as string | undefined,
         enabled: !!account, // Only fetch statuses when account is loaded
+        staleTime: CACHE_TTL.FEDI_STATUSES,
     });
 
     // Intersection Observer for infinite scrolling
@@ -316,6 +347,8 @@ export const FediApp: React.FC = () => {
                                                                                     width: 800,
                                                                                     height: 600,
                                                                                     iconType: 'image',
+                                                                                    componentType: 'ImageViewer',
+                                                                                    props: { imageUrl: media.url },
                                                                                 });
                                                                             }}
                                                                         >

@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { WindowLayout } from '@/components/window/WindowLayout';
 import { RetroButton } from '@/components/ui/RetroButton';
 import { APP_CONFIG } from '@/config/constants';
+import { getAppState, setAppState } from '@/lib/storage';
 
 type Message = {
   id: string;
@@ -11,26 +12,79 @@ type Message = {
   sender: 'user' | 'ai';
 };
 
-const STORAGE_KEY = 'ai-chat-history';
+const APP_STATE_KEY = 'app:ai-chat';
 const MAX_HISTORY = 10;
+const INITIAL_MESSAGE: Message = { id: '1', text: 'Hello user, how can I help you?', sender: 'ai' };
 
 export const TalkToAI = () => {
-  const [messages, setMessages] = useState<Message[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : [
-        { id: '1', text: 'Hello user, how can I help you?', sender: 'ai' },
-      ];
-    } catch (error) {
-      console.error('Failed to load chat history:', error);
-      return [{ id: '1', text: 'Hello user, how can I help you?', sender: 'ai' }];
-    }
-  });
-
+  const [messages, setMessages] = useState<Message[]>([INITIAL_MESSAGE]);
+  const [isInitialized, setIsInitialized] = useState(false);
   const [input, setInput] = useState('');
   const [confirmClear, setConfirmClear] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Load messages from IndexedDB on mount
+  useEffect(() => {
+    let mounted = true;
+
+    const loadMessages = async () => {
+      try {
+        // Try IndexedDB first
+        const saved = await getAppState<Message[]>(APP_STATE_KEY);
+
+        if (mounted) {
+          if (saved && saved.length > 0) {
+            setMessages(saved);
+          } else {
+            // Migrate from localStorage if exists
+            try {
+              const legacyData = localStorage.getItem('ai-chat-history');
+              if (legacyData) {
+                const parsed = JSON.parse(legacyData);
+                if (parsed && parsed.length > 0) {
+                  setMessages(parsed);
+                  // Save to IndexedDB and clear localStorage
+                  await setAppState(APP_STATE_KEY, parsed);
+                  localStorage.removeItem('ai-chat-history');
+                  console.info('[TalkToAI] Migrated chat history from localStorage to IndexedDB');
+                }
+              }
+            } catch (e) {
+              console.warn('[TalkToAI] Failed to migrate from localStorage:', e);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('[TalkToAI] Failed to load chat history:', error);
+      } finally {
+        if (mounted) {
+          setIsInitialized(true);
+        }
+      }
+    };
+
+    loadMessages();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // Save messages to IndexedDB whenever they change
+  useEffect(() => {
+    if (!isInitialized) return;
+
+    const saveMessages = async () => {
+      try {
+        await setAppState(APP_STATE_KEY, messages);
+      } catch (error) {
+        console.error('[TalkToAI] Failed to save chat history:', error);
+      }
+    };
+
+    saveMessages();
+  }, [messages, isInitialized]);
 
   // Initial focus
   useEffect(() => {
