@@ -7,7 +7,6 @@ import { ArenaWindowLayout } from "../components/ArenaWindowLayout";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ContentItemGrid, ContentItemListView, getGridConfiguration, ContentItem, getItemTitle } from "../utils/contentItems";
 import { RetroButton } from "@/components/ui/RetroButton";
-import { Button } from "@/components/ui/button";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 
 // Memoized content item components for better performance
@@ -366,7 +365,6 @@ export const ChannelExplorer: React.FC<{ channelSlug?: string; username?: string
           <RetroButton
             onClick={() => handleItemDoubleClick(selectedItem)}
             className="w-full"
-            variant="secondary"
           >
             Open Channel
           </RetroButton>
