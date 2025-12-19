@@ -305,6 +305,8 @@
 .scrollable-area {
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--border)) hsl(var(--background));
+    /* Prevent scroll chaining - stops scrollIntoView from bubbling to ancestors */
+    overscroll-behavior: contain;
 }
 
 .dark .window-content-area,

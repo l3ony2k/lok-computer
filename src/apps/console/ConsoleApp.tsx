@@ -114,7 +114,7 @@ export const ConsoleApp: React.FC = () => {
   // Scroll to bottom when logs change
   useEffect(() => {
     if (consoleEndRef.current) {
-      consoleEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      consoleEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
   }, [logs]);
 

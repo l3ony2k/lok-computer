@@ -218,7 +218,7 @@ export const ChannelExplorer: React.FC<ChannelExplorerProps> = ({
         setTimeout(() => {
           const element = document.querySelector(`[data-item-id="${item.id}"]`);
           if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
           }
         }, 100);
       }
@@ -232,7 +232,7 @@ export const ChannelExplorer: React.FC<ChannelExplorerProps> = ({
       setTimeout(() => {
         const element = document.querySelector(`[data-item-id="${selectedItem.id}"]`);
         if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
       }, 50);
     }
