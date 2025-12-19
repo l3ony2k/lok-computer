@@ -201,7 +201,18 @@ export const Calendar: React.FC<CalendarProps> = ({
         </div>
 
         <div className="text-center text-sm mb-2 text-neutral-700 dark:text-neutral-100 select-none">
-          {clockTime.getDate()} {monthNames[month]} {year} @{getSwatchBeats(clockTime)}
+          {clockTime.getDate()} {monthNames[month]} {year}{' '}
+          <a
+            href="https://gwil.garden/internet-time/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="cursor-help hover:text-accent"
+            title={`Swatch Internet Time (.beats)
+A decimal time concept dividing the day into 1000 beats.
+No time zones, same time worldwide!`}
+          >
+            @{getSwatchBeats(clockTime)}
+          </a>
         </div>
 
         <div className="grid grid-cols-7 gap-1 text-center">
