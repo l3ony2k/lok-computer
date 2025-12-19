@@ -6,6 +6,28 @@ interface CalendarProps {
   date?: Date;
 }
 
+// Calculate Swatch Internet Time (.beats) with centibeats
+// 1 day = 1000 beats, measured from Biel Mean Time (UTC+1)
+const getSwatchBeats = (date: Date): string => {
+  // Get UTC time including milliseconds for centibeats
+  const utcHours = date.getUTCHours();
+  const utcMinutes = date.getUTCMinutes();
+  const utcSeconds = date.getUTCSeconds();
+  const utcMilliseconds = date.getUTCMilliseconds();
+
+  // Convert to Biel Mean Time (UTC+1) in seconds with milliseconds
+  const bielSeconds = ((utcHours + 1) * 3600) + (utcMinutes * 60) + utcSeconds + (utcMilliseconds / 1000);
+
+  // Calculate beats with centibeats (1 beat = 86.4 seconds, 1000 beats per day)
+  const beats = (bielSeconds / 86.4) % 1000;
+
+  // Format: beats.centibeats (e.g., 500.75)
+  const wholeBeats = Math.floor(beats).toString().padStart(3, '0');
+  const centibeats = Math.floor((beats % 1) * 100).toString().padStart(2, '0');
+
+  return `${wholeBeats}.${centibeats}`;
+};
+
 export const Calendar: React.FC<CalendarProps> = ({
   isOpen,
   onClose,
@@ -16,6 +38,9 @@ export const Calendar: React.FC<CalendarProps> = ({
   // Update clock time every second
   useEffect(() => {
     if (!isOpen) return;
+
+    // Immediately update to current time when opened
+    setClockTime(new Date());
 
     const timer = setInterval(() => {
       setClockTime(new Date());
@@ -61,8 +86,8 @@ export const Calendar: React.FC<CalendarProps> = ({
       <div
         key={`day-${day}`}
         className={`h-7 w-7 flex items-center justify-center text-xs select-none ${isCurrentDay
-            ? 'bg-accent text-neutral-700 dark:text-neutral-100 font-bold'
-            : 'text-neutral-700 dark:text-neutral-100'
+          ? 'bg-accent text-neutral-700 dark:text-neutral-100 font-bold'
+          : 'text-neutral-700 dark:text-neutral-100'
           }`}
       >
         {day}
@@ -176,7 +201,7 @@ export const Calendar: React.FC<CalendarProps> = ({
         </div>
 
         <div className="text-center text-sm mb-2 text-neutral-700 dark:text-neutral-100 select-none">
-          {monthNames[month]} {year}
+          {clockTime.getDate()} {monthNames[month]} {year} @{getSwatchBeats(clockTime)}
         </div>
 
         <div className="grid grid-cols-7 gap-1 text-center">
