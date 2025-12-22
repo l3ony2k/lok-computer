@@ -441,3 +441,35 @@
     /* @apply text-xs bg-accent text-accent-foreground border border-border px-1 ml-2; */
     @apply text-xs retro-button px-1 ml-2 opacity-50;
 }
+
+/* 88x31 Button marquee animation for text overflow */
+@keyframes marquee-scroll {
+
+    0%,
+    20% {
+        transform: translateX(0);
+    }
+
+    80%,
+    100% {
+        transform: translateX(calc(-100% + 80px));
+    }
+}
+
+.animate-marquee-if-overflow {
+    display: inline-block;
+    padding: 0 4px;
+}
+
+/* Apply marquee on hover when text might overflow */
+a:hover .animate-marquee-if-overflow {
+    animation: marquee-scroll 3s ease-in-out infinite alternate;
+}
+
+/* 88x31 button image rendering - cross-browser pixelated/crisp rendering */
+.pixelated-image {
+    image-rendering: auto;
+    image-rendering: crisp-edges;
+    image-rendering: pixelated;
+    image-rendering: -webkit-optimize-contrast;
+}

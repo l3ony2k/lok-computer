@@ -1,50 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { WindowLayout } from '@/components/window/WindowLayout';
 import { RetroButton } from '@/components/ui/RetroButton';
+import { getAppState, setAppState } from '@/lib/storage';
 
-// ============================================
-// Button variants configuration
-// ============================================
-const buttonVariants = [
-  {
-    id: 'default',
-    label: 'default',
-    path: '/88x31.gif',
-    url: 'https://lok.computer/88x31.gif',
-  },
-  {
-    id: 'light',
-    label: 'light',
-    path: '/88x31-light.gif',
-    url: 'https://lok.computer/88x31-light.gif',
-  },
-  {
-    id: 'dark',
-    label: 'dark',
-    path: '/88x31-dark.gif',
-    url: 'https://lok.computer/88x31-dark.gif',
-  },
-];
+// Import local 88x31 button images
+import omglolButton from '@/assets/buttons/omglol.png';
+import letterboxdButton from '@/assets/buttons/letterboxd.png';
 
 // ============================================
 // About This Section
 // ============================================
 const AboutThis = () => {
-  const [copied, setCopied] = useState(false);
-  const [activeVariant, setActiveVariant] = useState('default');
-
-  const currentVariant = buttonVariants.find(v => v.id === activeVariant) || buttonVariants[0];
-
-  const getEmbedCode = (variant: typeof buttonVariants[0]) => `<a href="https://lok.computer" target="_blank" rel="noopener noreferrer">
-  <img src="${variant.url}" alt="lok.computer" width="88" height="31" />
-</a>`;
-
-  const handleCopyEmbed = () => {
-    navigator.clipboard.writeText(getEmbedCode(currentVariant));
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
   return (
     <div className="max-w-lg mx-auto p-4">
       <img
@@ -72,55 +38,6 @@ const AboutThis = () => {
         </p>
       </div>
 
-      {/* 88x31 Button Section */}
-      <div className="my-4">
-        <h4 className="font-bold mb-3 text-accent">88x31 Button</h4>
-
-        {/* Variant Tabs */}
-        <div className="flex border-b border-border mb-4">
-          {buttonVariants.map((variant) => (
-            <button
-              key={variant.id}
-              onClick={() => setActiveVariant(variant.id)}
-              className={`px-3 py-1.5 text-xs transition-colors border-b-2 -mb-px ${activeVariant === variant.id
-                ? 'border-accent text-accent font-bold'
-                : 'border-transparent opacity-60 hover:opacity-100'
-                }`}
-            >
-              {variant.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Preview + Embed Code */}
-        <div className="flex gap-4 items-start">
-          {/* Button Preview */}
-          <div className="flex flex-col items-center gap-1 shrink-0">
-            <img
-              src={currentVariant.path}
-              alt={`lok.computer button (${currentVariant.label})`}
-              width={88}
-              height={31}
-              className="select-none border border-border"
-            />
-            <span className="text-xs opacity-60 font-mono">{currentVariant.path}</span>
-          </div>
-
-          {/* Embed Code */}
-          <div className="relative flex-1 min-w-0">
-            <pre className="bg-black/10 dark:bg-white/10 p-3 text-xs overflow-x-auto border border-border select-text">
-              <code>{getEmbedCode(currentVariant)}</code>
-            </pre>
-            <button
-              onClick={handleCopyEmbed}
-              className="absolute top-1 right-1 px-2 py-1 text-xs bg-accent/80 hover:bg-accent/90 border border-accent/50 transition-colors"
-            >
-              {copied ? 'copied!' : 'copy'}
-            </button>
-          </div>
-        </div>
-      </div>
-
       <p className="mt-4 text-xs opacity-50 select-none">
         Version 1.5.0
       </p>
@@ -128,20 +45,26 @@ const AboutThis = () => {
   );
 };
 
+
 // ============================================
 // About Me Section
 // ============================================
+
+// Social links configuration
+// Add optional 'image' field for 88x31 button images
+// If no image is set, the text will be displayed with marquee if overflow
 const socialLinks = {
   lok: [
     { text: "are.na", url: "https://are.na/lok" },
-    { text: "fediverse", url: "https://rex.cat/@lok" },
+    { text: "fediverse", url: "https://rex.cat/@lok", image: "" },
     { text: "bsky", url: "https://lok.on.computer" },
     { text: "neodb", url: "https://neodb.social/users/lok" },
-    { text: "status.cafe", url: "https://status.cafe/users/lok" },
+    { text: "status.cafe", url: "https://status.cafe/users/lok", image: "https://status.cafe/assets/button.png" },
     { text: "special.fish", url: "https://special.fish/lok" },
+    { text: "omg.lol", url: "https://omg.lol/lok", image: omglolButton },
     { text: "sr.ht", url: "https://sr.ht/~lok" },
     { text: "codeberg", url: "https://codeberg.org/lok" },
-    { text: "nekoweb", url: "https://lok.nekoweb.org" },
+    { text: "nekoweb", url: "https://lok.nekoweb.org", image: "https://nekoweb.org/assets/buttons/button11.gif" },
     { text: "signal", url: "https://signal.me/#eu/8Q-JFgLhjGbsPSfgMHep65NmUJNKxTr1uyO-arsGq6AUf2ZaxrtPHY4WLiLrwm9D" },
     { text: "matrix", url: "https://matrix.to/#/@lok:mtx.owu.one" },
     { text: "xmpp", url: "https://xmpp.link/#lok@xmpp.is" },
@@ -152,10 +75,47 @@ const socialLinks = {
     { text: "telegram", url: "https://t.me/l3on_y2k" },
     { text: "twitter", url: "https://twitter.com/l3on_y2k" },
     { text: "reddit", url: "https://reddit.com/user/l3on_y2k" },
-    { text: "letterboxd", url: "https://letterboxd.com/l3on_y2k/" },
+    { text: "letterboxd", url: "https://letterboxd.com/l3on_y2k/", image: letterboxdButton },
     { text: "mail", url: "mailto:l3on.y2k@proton.me" },
   ],
 };
+
+// 88x31 Link Button component with skeleton and no layout shift on hover
+const LinkButton88x31 = ({ link }: { link: { text: string; url: string; image?: string } }) => {
+  return (
+    <a
+      href={link.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      title={link.text}
+      className="relative block cursor-default bg-secondary flex items-center justify-center"
+      style={{ width: 88, height: 31 }}
+    >
+      {link.image ? (
+        <>
+          <span className="absolute text-[8px] opacity-40">loading...</span>
+          <img
+            src={link.image}
+            alt={link.text}
+            width={88}
+            height={31}
+            className="relative hover:outline hover:outline-2 hover:outline-accent pixelated-image"
+          />
+        </>
+      ) : (
+        <div
+          className="w-full h-full border border-border bg-secondary flex items-center justify-center overflow-hidden hover:outline hover:outline-2 hover:outline-accent"
+          style={{ width: 88, height: 31 }}
+        >
+          <div className="text-xs font-bold whitespace-nowrap animate-marquee-if-overflow">
+            {link.text}
+          </div>
+        </div>
+      )}
+    </a>
+  );
+};
+
 
 const AboutMe = () => (
   <div className="select-text p-4 max-w-lg mx-auto">
@@ -173,22 +133,14 @@ const AboutMe = () => (
       This is my personal space, not much going on here, but still feel free to wander through and poke around. Every visit inspires me, and I hope you feel just as welcomed here.
     </p>
 
-    {/* Social Links */}
+    {/* Social Links as 88x31 buttons */}
     <div className="space-y-6 mt-4">
       {/* @lok section */}
       <div>
         <h3 className="font-bold mb-3 text-accent">@lok</h3>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1">
           {socialLinks.lok.map((link) => (
-            <RetroButton
-              className="p-3"
-              key={link.text}
-              size="sm"
-              title={link.url}
-              onClick={() => window.open(link.url, '_blank', 'noopener,noreferrer')}
-            >
-              {link.text}
-            </RetroButton>
+            <LinkButton88x31 key={link.text} link={link} />
           ))}
         </div>
       </div>
@@ -196,23 +148,17 @@ const AboutMe = () => (
       {/* @l3on_y2k section */}
       <div>
         <h3 className="font-bold mb-3 text-accent">@l3on_y2k</h3>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1">
           {socialLinks.l3on_y2k.map((link) => (
-            <RetroButton
-              className="p-3"
-              key={link.text}
-              size="sm"
-              title={link.url}
-              onClick={() => window.open(link.url, '_blank', 'noopener,noreferrer')}
-            >
-              {link.text}
-            </RetroButton>
+            <LinkButton88x31 key={link.text} link={link} />
           ))}
         </div>
       </div>
     </div>
   </div>
 );
+
+
 
 // ============================================
 // Projects Section
@@ -299,20 +245,64 @@ const Projects = () => (
 // ============================================
 // Main About Component
 // ============================================
+interface AboutAppState {
+  activeTab: string;
+}
+
+const APP_STATE_KEY = 'app:about';
+
 export const About = () => {
   const [activeTab, setActiveTab] = useState('about-this');
+  const isInitialLoad = useRef(true);
 
+  // Load persisted state on mount
   useEffect(() => {
+    let mounted = true;
+
+    const loadState = async () => {
+      try {
+        const saved = await getAppState<AboutAppState>(APP_STATE_KEY);
+        if (mounted && saved) {
+          setActiveTab(saved.activeTab);
+        }
+      } catch (error) {
+        console.error('[App:About] Failed to load state:', error);
+      } finally {
+        if (mounted) {
+          isInitialLoad.current = false;
+        }
+      }
+    };
+
+    loadState();
     console.log('[App:About] Initialized');
+
     return () => {
+      mounted = false;
       console.log('[App:About] Cleanup');
     };
   }, []);
+
+  // Save state when tab changes
+  useEffect(() => {
+    if (isInitialLoad.current) return;
+
+    const saveState = async () => {
+      try {
+        await setAppState<AboutAppState>(APP_STATE_KEY, { activeTab });
+      } catch (error) {
+        console.error('[App:About] Failed to save state:', error);
+      }
+    };
+
+    saveState();
+  }, [activeTab]);
 
   const handleTabChange = (tab: string) => {
     console.log('[App:About] Tab:', tab);
     setActiveTab(tab);
   };
+
 
   return (
     <WindowLayout

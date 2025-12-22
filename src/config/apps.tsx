@@ -10,6 +10,7 @@ import { ConsoleApp } from '@/apps/console/ConsoleApp';
 import { TalkToAI } from '@/apps/talk-to-ai/TalkToAI';
 import { GuestbookApp } from '@/apps/guestbook/GuestbookApp';
 import { ShelfApp } from '@/apps/shelf/ShelfApp';
+import { ButtonsApp } from '@/apps/buttons/ButtonsApp';
 
 export interface AppConfig {
   name: string;
@@ -72,6 +73,14 @@ export const APP_LIST: AppConfig[] = [
     component: ConsoleApp,
     defaultWidth: 700,
     defaultHeight: 400
+  },
+  {
+    name: "Buttons",
+    iconType: "note",
+    component: ButtonsApp,
+    defaultWidth: 500,
+    defaultHeight: 600,
+    singleInstance: true
   },
   {
     name: "About",
