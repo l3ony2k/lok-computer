@@ -10,7 +10,7 @@ import { ConsoleApp } from '@/apps/console/ConsoleApp';
 import { TalkToAI } from '@/apps/talk-to-ai/TalkToAI';
 import { GuestbookApp } from '@/apps/guestbook/GuestbookApp';
 import { ShelfApp } from '@/apps/shelf/ShelfApp';
-import { ButtonsApp } from '@/apps/buttons/ButtonsApp';
+import { LinksApp } from '@/apps/links/LinksApp';
 
 export interface AppConfig {
   name: string;
@@ -33,7 +33,7 @@ export const APP_LIST: AppConfig[] = [
   },
   {
     name: "Web",
-    iconType: "webpage",
+    iconType: "globe",
     component: WebBrowser,
     defaultWidth: 800,
     defaultHeight: 600
@@ -75,9 +75,9 @@ export const APP_LIST: AppConfig[] = [
     defaultHeight: 400
   },
   {
-    name: "Buttons",
-    iconType: "note",
-    component: ButtonsApp,
+    name: "Links",
+    iconType: "webpage",
+    component: LinksApp,
     defaultWidth: 500,
     defaultHeight: 600,
     singleInstance: true

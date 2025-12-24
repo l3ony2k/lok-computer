@@ -14,11 +14,26 @@ import { useTheme } from "next-themes";
 import { adjustWindowToViewport, type WindowDimensions, type ViewportDimensions } from "@/lib/utils";
 import { WINDOW_DEFAULTS } from "@/config/window";
 import { APP_LIST } from "@/config/apps";
+import { Oneko } from "@/components/oneko/Oneko";
+import { PopupDialog, PopupDialogButtons } from "@/components/ui/PopupDialog";
+import { RetroButton } from "@/components/ui/RetroButton";
 
 export const Desktop = () => {
     const { addWindow, addOrFocusWindow, windows, updateWindowPosition, updateWindowDimensions } = useWindowManager();
     const { theme, setTheme } = useTheme();
-    const { settings } = useUserSettings();
+    const { settings, updateSetting, isLoading } = useUserSettings();
+
+    // Only show oneko prompt after settings have loaded and user hasn't been asked
+    const showOnekoPrompt = !isLoading && !settings.oneko?.hasBeenAsked;
+
+    const handleOnekoResponse = (enabled: boolean) => {
+        updateSetting('oneko', {
+            enabled,
+            hasBeenAsked: true,
+            speed: 10,
+            variant: 'default',
+        });
+    };
     const desktopContainerRef = useRef<HTMLDivElement>(null);
 
     // Apply the wallpaper as a CSS variable if it exists
@@ -169,6 +184,29 @@ export const Desktop = () => {
             </div>
 
             <Taskbar />
+
+            {/* Oneko cat */}
+            <Oneko />
+
+            {/* Oneko first-time prompt (non-intrusive, draggable) */}
+            <PopupDialog
+                title="Oneko"
+                iconType="config"
+                isOpen={showOnekoPrompt}
+                onClose={() => handleOnekoResponse(false)}
+                width={300}
+                intrusive={false}
+            >
+                <p>Do you want a cat chasing your cursor?</p>
+                <PopupDialogButtons>
+                    <RetroButton onClick={() => handleOnekoResponse(true)}>
+                        Yes
+                    </RetroButton>
+                    <RetroButton onClick={() => handleOnekoResponse(false)}>
+                        No
+                    </RetroButton>
+                </PopupDialogButtons>
+            </PopupDialog>
         </div>
     );
 };

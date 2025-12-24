@@ -39,13 +39,17 @@ const AboutThis = () => {
           Under the hood: React, TypeScript, Vite, and Tailwind CSS. Oh try <a href="https://bun.sh" className="underline text-blue-700 dark:text-blue-300">bun.sh</a>, it's amazing.
         </p>
 
-        <p>
+        <p className="mb-4">
           Made with Claude (3.7|4.0|4.5) Sonnet, Gemini (2.5|3.0) Pro, Cline, Kilo Code, Windsurf, and Antigravity.
+        </p>
+
+        <p>
+          thank you to: <a href="https://github.com/adryd325/oneko.js" className="underline text-blue-700 dark:text-blue-300">oneko.js</a>, <a href="https://www.reddit.com/r/neocities/comments/1n1rkww/slowly_working_on_external_link_88x31_buttons/" className="underline text-blue-700 dark:text-blue-300">u/rosevarro</a>, <a href="https://sweetfish.site/" className="underline text-blue-700 dark:text-blue-300">sweetfish.site</a>, <a href="https://88x31.kate.pet/" className="underline text-blue-700 dark:text-blue-300">kate.pet</a>.
         </p>
       </div>
 
       <p className="mt-4 text-xs opacity-50 select-none">
-        Version 1.5.0
+        Version 1.5.5
       </p>
     </div>
   );

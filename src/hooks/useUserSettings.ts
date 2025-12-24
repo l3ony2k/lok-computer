@@ -4,9 +4,16 @@ import { getAppState, setAppState } from "@/lib/storage";
 /**
  * Interface defining all user settings
  */
+export interface OnekoSettings {
+  enabled: boolean;
+  hasBeenAsked: boolean;
+  speed: number;
+  variant: 'default' | 'dark';
+}
+
 export interface UserSettings {
   wallpaper?: string;
-  // Future additions can go here
+  oneko?: OnekoSettings;
 }
 
 // Default settings to use if nothing is stored

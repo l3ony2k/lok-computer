@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from "next-themes";
-import { Sun, Moon, Computer, Image, CheckCircle, X, Database, Trash2, RefreshCw } from "lucide-react";
+import { Sun, Moon, Computer, Image, CheckCircle, X, Database, Trash2, RefreshCw, Cat } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { WindowLayout } from "@/components/window/WindowLayout";
 import { RetroButton } from "@/components/ui/RetroButton";
 import { clearCache, getUsageStats, resetUsageStats, type UsageStats } from "@/lib/storage";
 import { toast } from "sonner";
+import onekoDefault from '@/assets/oneko.gif';
+import onekoDark from '@/assets/oneko-dark.gif';
 
 // Default wallpaper options
 const DEFAULT_WALLPAPERS = [
@@ -255,6 +257,106 @@ export const ConfigApp: React.FC = () => {
           </div>
         </div>
 
+        {/* Oneko Cat Section */}
+        <div>
+          <h2 className="text-lg font-bold mb-3 flex items-center">
+            <Cat className="w-5 h-5 mr-2" />
+            Oneko Cat
+          </h2>
+
+          {/* Enable/Disable Toggle */}
+          <div className="mb-4">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={settings.oneko?.enabled ?? false}
+                onChange={(e) => updateSetting('oneko', {
+                  ...settings.oneko,
+                  enabled: e.target.checked,
+                  hasBeenAsked: true,
+                  speed: settings.oneko?.speed ?? 10,
+                  variant: settings.oneko?.variant ?? 'default',
+                })}
+                className="w-4 h-4"
+              />
+              <span className="text-sm">Enable cat cursor follower</span>
+            </label>
+          </div>
+
+          {/* Speed Slider */}
+          <div className="mb-4">
+            <h3 className="text-sm font-medium mb-1">Speed: {settings.oneko?.speed ?? 10}</h3>
+            <input
+              type="range"
+              min="1"
+              max="20"
+              value={settings.oneko?.speed ?? 10}
+              onChange={(e) => updateSetting('oneko', {
+                ...settings.oneko,
+                enabled: settings.oneko?.enabled ?? false,
+                hasBeenAsked: settings.oneko?.hasBeenAsked ?? true,
+                speed: parseInt(e.target.value),
+                variant: settings.oneko?.variant ?? 'default',
+              })}
+              className="w-full"
+            />
+          </div>
+
+          {/* Variant Selector */}
+          <div className="mb-4">
+            <h3 className="text-sm font-medium mb-2">Cat Variant</h3>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                className={cn(
+                  "p-2 border border-border flex flex-col items-center gap-1",
+                  (settings.oneko?.variant ?? 'default') === 'default' && "border-primary border-2"
+                )}
+                onClick={() => updateSetting('oneko', {
+                  ...settings.oneko,
+                  enabled: settings.oneko?.enabled ?? false,
+                  hasBeenAsked: settings.oneko?.hasBeenAsked ?? true,
+                  speed: settings.oneko?.speed ?? 10,
+                  variant: 'default',
+                })}
+              >
+                <img
+                  src={onekoDefault}
+                  alt="Default cat"
+                  className="w-8 h-8"
+                  style={{ imageRendering: 'pixelated' }}
+                />
+                <span className="text-xs">Default</span>
+                {(settings.oneko?.variant ?? 'default') === 'default' && (
+                  <CheckCircle className="w-4 h-4 text-primary" />
+                )}
+              </button>
+              <button
+                className={cn(
+                  "p-2 border border-border flex flex-col items-center gap-1",
+                  settings.oneko?.variant === 'dark' && "border-primary border-2"
+                )}
+                onClick={() => updateSetting('oneko', {
+                  ...settings.oneko,
+                  enabled: settings.oneko?.enabled ?? false,
+                  hasBeenAsked: settings.oneko?.hasBeenAsked ?? true,
+                  speed: settings.oneko?.speed ?? 10,
+                  variant: 'dark',
+                })}
+              >
+                <img
+                  src={onekoDark}
+                  alt="Dark cat"
+                  className="w-8 h-8"
+                  style={{ imageRendering: 'pixelated' }}
+                />
+                <span className="text-xs">Dark</span>
+                {settings.oneko?.variant === 'dark' && (
+                  <CheckCircle className="w-4 h-4 text-primary" />
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
         {/* Cache Management Section */}
         <div>
           <h2 className="text-lg font-bold mb-3 flex items-center">

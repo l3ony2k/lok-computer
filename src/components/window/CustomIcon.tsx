@@ -13,7 +13,8 @@ import arenaIcon from '../../assets/icons/arena.png'; // Add arena icon
 import lokComputerIcon from '../../assets/icons/lok-computer.png'; // Add lok-computer icon
 import weather2Icon from '../../assets/icons/weather2.png'; // Add weather icon
 import bskyIcon from '../../assets/icons/bsky.png'; // Add bsky icon
-import globeIcon from '../../assets/icons/globe.png'; // Add webpage icon
+import globeIcon from '../../assets/icons/globe.png'; // Add globe icon
+import webpageIcon from '../../assets/icons/webpage.png'; // Add webpage icon
 import robotIcon from '../../assets/icons/robot.png'; // Add mail icon
 import mailIcon from '../../assets/icons/mail.png'; // Add mail icon for guestbook
 import fediIcon from '../../assets/icons/fedi.png'; // Add fedi icon for fedi
@@ -40,7 +41,8 @@ const iconMap: { [key: string]: string } = { // The value is now the imported UR
   about: lokComputerIcon, // Map 'about' type to lok-computer icon
   weather: weather2Icon, // Map 'weather' type
   bsky: bskyIcon, // Add bsky mapping
-  webpage: globeIcon, // Add webpage mapping
+  globe: globeIcon, // Add globe mapping
+  webpage: webpageIcon, // Add webpage mapping
   mailbox: robotIcon, // Add mailbox icon mapping
   mail: mailIcon, // Add mail icon mapping for guestbook
   fedi: fediIcon, // Add fedi icon mapping

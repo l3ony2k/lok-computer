@@ -21,7 +21,7 @@ const buttonSections = [
             { url: "https://yvas.me", image: "https://yvas.me/_app/immutable/assets/savy_banner.dFhLlH1h.gif", alt: "yvas.me" },
             { url: "https://ro3or.com", image: "https://ro3or.com/button.gif", alt: "鹅玉" },
             { url: "https://dimden.dev/", image: "https://dimden.dev/services/images/88x31.gif", alt: "dimden.dev" },
-            { url: "https://sweetfish.site", image: "https://sweetfish.site/img/button1.png", alt: "sweetfish.site" },
+            { url: "https://sweetfish.site", image: "https://sweetfish.site/img/button3.png", alt: "sweetfish.site" },
             { url: "https://mengru.space", image: "https://mengru.space/logo.jpg", alt: "mengru.space" },
         ],
     },
@@ -30,7 +30,7 @@ const buttonSections = [
         title: 'Other',
         buttons: [
             { url: "https://people.pledge.party", image: "https://people.pledge.party/badges/people_pledge_badge_party_black_white_88x31.png", alt: "People Pledge Party" },
-            { url: "", image: wwwButton, alt: "88x31 Collection" },
+            { url: "", image: wwwButton, alt: "www" },
             { url: "", image: lightdarkButton, alt: "Light/Dark Buttons" },
             { url: "", image: imissxpButton, alt: "I miss XP" },
             { url: "", image: madewithwindowsButton, alt: "Made with Windows" },
@@ -74,7 +74,7 @@ const ButtonsTab = () => (
                     <div className="flex flex-wrap gap-1">
                         {section.buttons.map((button) => (
                             <a
-                                key={button.url}
+                                key={button.alt}
                                 href={button.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
@@ -104,65 +104,52 @@ const ButtonsTab = () => (
 // My Buttons Tab - Embed code for own buttons
 // ============================================
 const MyButtonsTab = () => {
-    const [copied, setCopied] = useState(false);
-    const [activeVariant, setActiveVariant] = useState('default');
+    const [copiedId, setCopiedId] = useState<string | null>(null);
 
-    const currentVariant = myButtonVariants.find(v => v.id === activeVariant) || myButtonVariants[0];
+    const getEmbedCode = (variant: typeof myButtonVariants[0]) =>
+        `<a href="https://lok.computer" target="_blank" rel="noopener noreferrer"><img src="${variant.url}" alt="lok.computer" width="88" height="31" /></a>`;
 
-    const getEmbedCode = (variant: typeof myButtonVariants[0]) => `<a href="https://lok.computer" target="_blank" rel="noopener noreferrer"><img src="${variant.url}" alt="lok.computer" width="88" height="31" /></a>`;
-
-    const handleCopyEmbed = () => {
-        navigator.clipboard.writeText(getEmbedCode(currentVariant));
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+    const handleCopyEmbed = (variant: typeof myButtonVariants[0]) => {
+        navigator.clipboard.writeText(getEmbedCode(variant));
+        setCopiedId(variant.id);
+        setTimeout(() => setCopiedId(null), 2000);
     };
 
     return (
         <div className="max-w-lg mx-auto p-4">
-            <h4 className="font-bold mb-3 text-accent">88x31 Button</h4>
+            <h4 className="font-bold mb-3 text-accent">88x31 Buttons</h4>
 
-            {/* Variant Tabs */}
-            <div className="flex border-b border-border mb-4">
+            <div className="space-y-3">
                 {myButtonVariants.map((variant) => (
-                    <button
-                        key={variant.id}
-                        onClick={() => setActiveVariant(variant.id)}
-                        className={`px-3 py-1.5 text-xs transition-colors border-b-2 -mb-px ${activeVariant === variant.id
-                            ? 'border-accent text-accent font-bold'
-                            : 'border-transparent opacity-60 hover:opacity-100'
-                            }`}
-                    >
-                        {variant.label}
-                    </button>
+                    <div key={variant.id}>
+                        <span className="text-xs opacity-60 mb-1 block">{variant.label}</span>
+                        <div className="flex gap-2 items-stretch">
+                            {/* Button Preview */}
+                            <div className="shrink-0 flex items-center border border-border">
+                                <img
+                                    src={variant.path}
+                                    alt={`lok.computer button (${variant.label})`}
+                                    width={88}
+                                    height={31}
+                                    className="select-none"
+                                />
+                            </div>
+
+                            {/* Embed Code */}
+                            <div className="relative flex-1 min-w-0">
+                                <pre className="bg-black/10 dark:bg-white/10 px-2 py-1 text-xs overflow-x-auto border border-border select-text h-full flex items-center">
+                                    <code className="truncate">{getEmbedCode(variant)}</code>
+                                </pre>
+                                <button
+                                    onClick={() => handleCopyEmbed(variant)}
+                                    className="absolute top-1 right-1 px-2 py-0.5 text-xs bg-accent/80 hover:bg-accent/90 border border-accent/50 transition-colors"
+                                >
+                                    {copiedId === variant.id ? 'copied!' : 'copy'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 ))}
-            </div>
-
-            {/* Preview + Embed Code */}
-            <div className="flex gap-4 items-start">
-                {/* Button Preview */}
-                <div className="flex flex-col items-center gap-1 shrink-0">
-                    <img
-                        src={currentVariant.path}
-                        alt={`lok.computer button (${currentVariant.label})`}
-                        width={88}
-                        height={31}
-                        className="select-none border border-border"
-                    />
-                    <span className="text-xs opacity-60 font-mono">{currentVariant.path}</span>
-                </div>
-
-                {/* Embed Code */}
-                <div className="relative flex-1 min-w-0">
-                    <pre className="bg-black/10 dark:bg-white/10 p-3 text-xs overflow-x-auto border border-border select-text">
-                        <code>{getEmbedCode(currentVariant)}</code>
-                    </pre>
-                    <button
-                        onClick={handleCopyEmbed}
-                        className="absolute top-1 right-1 px-2 py-1 text-xs bg-accent/80 hover:bg-accent/90 border border-accent/50 transition-colors"
-                    >
-                        {copied ? 'copied!' : 'copy'}
-                    </button>
-                </div>
             </div>
         </div>
     );
@@ -171,16 +158,16 @@ const MyButtonsTab = () => {
 // ============================================
 // App state persistence
 // ============================================
-interface ButtonsAppState {
+interface LinksAppState {
     activeTab: string;
 }
 
-const APP_STATE_KEY = 'app:buttons';
+const APP_STATE_KEY = 'app:links';
 
 // ============================================
-// Main Buttons App Component
+// Main Links App Component
 // ============================================
-export const ButtonsApp = () => {
+export const LinksApp = () => {
     const [activeTab, setActiveTab] = useState('buttons');
     const isInitialLoad = useRef(true);
 
@@ -190,12 +177,12 @@ export const ButtonsApp = () => {
 
         const loadState = async () => {
             try {
-                const saved = await getAppState<ButtonsAppState>(APP_STATE_KEY);
+                const saved = await getAppState<LinksAppState>(APP_STATE_KEY);
                 if (mounted && saved) {
                     setActiveTab(saved.activeTab);
                 }
             } catch (error) {
-                console.error('[App:Buttons] Failed to load state:', error);
+                console.error('[App:Links] Failed to load state:', error);
             } finally {
                 if (mounted) {
                     isInitialLoad.current = false;
@@ -204,11 +191,11 @@ export const ButtonsApp = () => {
         };
 
         loadState();
-        console.log('[App:Buttons] Initialized');
+        console.log('[App:Links] Initialized');
 
         return () => {
             mounted = false;
-            console.log('[App:Buttons] Cleanup');
+            console.log('[App:Links] Cleanup');
         };
     }, []);
 
@@ -218,9 +205,9 @@ export const ButtonsApp = () => {
 
         const saveState = async () => {
             try {
-                await setAppState<ButtonsAppState>(APP_STATE_KEY, { activeTab });
+                await setAppState<LinksAppState>(APP_STATE_KEY, { activeTab });
             } catch (error) {
-                console.error('[App:Buttons] Failed to save state:', error);
+                console.error('[App:Links] Failed to save state:', error);
             }
         };
 
@@ -228,7 +215,7 @@ export const ButtonsApp = () => {
     }, [activeTab]);
 
     const handleTabChange = (tab: string) => {
-        console.log('[App:Buttons] Tab:', tab);
+        console.log('[App:Links] Tab:', tab);
         setActiveTab(tab);
     };
 
@@ -263,4 +250,4 @@ export const ButtonsApp = () => {
     );
 };
 
-export default ButtonsApp;
+export default LinksApp;
