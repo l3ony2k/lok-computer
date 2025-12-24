@@ -6,6 +6,12 @@ import { getAppState, setAppState } from '@/lib/storage';
 // Import local 88x31 button images
 import omglolButton from '@/assets/buttons/omglol.png';
 import letterboxdButton from '@/assets/buttons/letterboxd.png';
+import blueskyButton from '@/assets/buttons/bluesky.png';
+import instagramButton from '@/assets/buttons/instagram.png';
+import mastodonButton from '@/assets/buttons/mastodon.png';
+import tumblrButton from '@/assets/buttons/tumblr.png';
+import telegramButton from '@/assets/buttons/telegram.gif'
+import twitterButton from '@/assets/buttons/twitter.gif'
 
 // ============================================
 // About This Section
@@ -56,8 +62,8 @@ const AboutThis = () => {
 const socialLinks = {
   lok: [
     { text: "are.na", url: "https://are.na/lok" },
-    { text: "fediverse", url: "https://rex.cat/@lok", image: "" },
-    { text: "bsky", url: "https://lok.on.computer" },
+    { text: "fediverse", url: "https://rex.cat/@lok", image: mastodonButton },
+    { text: "bsky", url: "https://lok.on.computer", image: blueskyButton },
     { text: "neodb", url: "https://neodb.social/users/lok" },
     { text: "status.cafe", url: "https://status.cafe/users/lok", image: "https://status.cafe/assets/button.png" },
     { text: "special.fish", url: "https://special.fish/lok" },
@@ -66,14 +72,15 @@ const socialLinks = {
     { text: "codeberg", url: "https://codeberg.org/lok" },
     { text: "nekoweb", url: "https://lok.nekoweb.org", image: "https://nekoweb.org/assets/buttons/button11.gif" },
     { text: "signal", url: "https://signal.me/#eu/8Q-JFgLhjGbsPSfgMHep65NmUJNKxTr1uyO-arsGq6AUf2ZaxrtPHY4WLiLrwm9D" },
+    { text: "tumblr", url: "https://tumblr.com/lokw", image: tumblrButton },
     { text: "matrix", url: "https://matrix.to/#/@lok:mtx.owu.one" },
     { text: "xmpp", url: "https://xmpp.link/#lok@xmpp.is" },
   ],
   l3on_y2k: [
     { text: "github", url: "https://github.com/l3ony2k" },
-    { text: "instagram", url: "https://instagram.com/l3on_y2k" },
-    { text: "telegram", url: "https://t.me/l3on_y2k" },
-    { text: "twitter", url: "https://twitter.com/l3on_y2k" },
+    { text: "instagram", url: "https://instagram.com/l3on_y2k", image: instagramButton },
+    { text: "telegram", url: "https://t.me/l3on_y2k", image: telegramButton },
+    { text: "twitter", url: "https://twitter.com/l3on_y2k", image: twitterButton },
     { text: "reddit", url: "https://reddit.com/user/l3on_y2k" },
     { text: "letterboxd", url: "https://letterboxd.com/l3on_y2k/", image: letterboxdButton },
     { text: "mail", url: "mailto:l3on.y2k@proton.me" },

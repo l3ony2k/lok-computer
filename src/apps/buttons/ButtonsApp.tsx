@@ -6,6 +6,8 @@ import { getAppState, setAppState } from '@/lib/storage';
 // Import local 88x31 button images
 import wwwButton from '@/assets/buttons/www.png';
 import lightdarkButton from '@/assets/buttons/lightdark.png';
+import imissxpButton from '@/assets/buttons/imissxp.gif';
+import madewithwindowsButton from '@/assets/buttons/made_with_windows.gif';
 
 // ============================================
 // External 88x31 Buttons configuration
@@ -28,8 +30,10 @@ const buttonSections = [
         title: 'Other',
         buttons: [
             { url: "https://people.pledge.party", image: "https://people.pledge.party/badges/people_pledge_badge_party_black_white_88x31.png", alt: "People Pledge Party" },
-            { url: "https://88x31.kate.pet/", image: wwwButton, alt: "88x31 Collection" },
-            { url: "https://shirosama.neocities.org/88x31s", image: lightdarkButton, alt: "Light/Dark Buttons" },
+            { url: "", image: wwwButton, alt: "88x31 Collection" },
+            { url: "", image: lightdarkButton, alt: "Light/Dark Buttons" },
+            { url: "", image: imissxpButton, alt: "I miss XP" },
+            { url: "", image: madewithwindowsButton, alt: "Made with Windows" },
         ],
     },
 ];
