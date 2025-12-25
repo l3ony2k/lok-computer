@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { WindowLayout } from '@/components/window/WindowLayout';
 import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/hover-card';
@@ -7,7 +7,8 @@ import { StateMessage } from '@/components/ui/StateMessage';
 import { useWindowManager } from '@/hooks/useWindowManager';
 import { ImageViewerApp } from '@/apps/imageviewer/ImageViewerApp';
 import { APP_CONFIG } from '@/config/constants';
-import { getCachedData, setCachedData, incrementRequestCount, getAppState, setAppState, CACHE_TTL } from '@/lib/storage';
+import { getCachedData, setCachedData, incrementRequestCount, CACHE_TTL } from '@/lib/storage';
+import { usePersistedState } from '@/hooks/useStorage';
 
 type ShelfType = 'wishlist' | 'progress' | 'complete' | 'dropped';
 
@@ -264,60 +265,28 @@ interface ShelfAppState {
 }
 
 const APP_STATE_KEY = 'app:shelf';
+const DEFAULT_STATE: ShelfAppState = { activeTab: 'wishlist', page: 1 };
 
 export const ShelfApp: React.FC = () => {
-    const [activeTab, setActiveTab] = useState<ShelfType>('wishlist');
-    const [page, setPage] = useState(1);
+    // Using usePersistedState hook instead of manual load/save useEffects
+    const [persistedState, setPersistedState] = usePersistedState<ShelfAppState>(APP_STATE_KEY, DEFAULT_STATE);
     const [paginationInfo, setPaginationInfo] = useState<{ pages: number; count: number }>({ pages: 1, count: 0 });
-    const isInitialLoad = useRef(true);
 
-    // Load persisted state on mount
-    useEffect(() => {
-        let mounted = true;
-
-        const loadState = async () => {
-            try {
-                const saved = await getAppState<ShelfAppState>(APP_STATE_KEY);
-                if (mounted && saved) {
-                    setActiveTab(saved.activeTab);
-                    setPage(saved.page);
-                }
-            } catch (error) {
-                console.error('[ShelfApp] Failed to load state:', error);
-            } finally {
-                if (mounted) {
-                    isInitialLoad.current = false;
-                }
-            }
-        };
-
-        loadState();
-
-        return () => {
-            mounted = false;
-        };
-    }, []);
-
-    // Save state when it changes
-    useEffect(() => {
-        if (isInitialLoad.current) return;
-
-        const saveState = async () => {
-            try {
-                await setAppState<ShelfAppState>(APP_STATE_KEY, { activeTab, page });
-            } catch (error) {
-                console.error('[ShelfApp] Failed to save state:', error);
-            }
-        };
-
-        saveState();
-    }, [activeTab, page]);
+    // Extract values for convenience
+    const activeTab = persistedState.activeTab;
+    const page = persistedState.page;
 
     // Reset page when tab changes
     const handleTabChange = (tab: ShelfType) => {
-        setActiveTab(tab);
-        setPage(1);
+        setPersistedState({ activeTab: tab, page: 1 });
         setPaginationInfo({ pages: 1, count: 0 });
+    };
+
+    const setPage = (pageOrUpdater: number | ((prev: number) => number)) => {
+        setPersistedState(prev => ({
+            ...prev,
+            page: typeof pageOrUpdater === 'function' ? pageOrUpdater(prev.page) : pageOrUpdater,
+        }));
     };
 
     const handleDataLoaded = (pages: number, count: number) => {

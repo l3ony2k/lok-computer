@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { WindowLayout } from '@/components/window/WindowLayout';
 import { RetroButton } from '@/components/ui/RetroButton';
-import { getAppState, setAppState } from '@/lib/storage';
+import { usePersistedState } from '@/hooks/useStorage';
 
 // Import local 88x31 button images
 import omglolButton from '@/assets/buttons/omglol.png';
@@ -12,6 +12,7 @@ import mastodonButton from '@/assets/buttons/mastodon.png';
 import tumblrButton from '@/assets/buttons/tumblr.png';
 import telegramButton from '@/assets/buttons/telegram.gif'
 import twitterButton from '@/assets/buttons/twitter.gif'
+import mailButton from '@/assets/buttons/email.png'
 
 // ============================================
 // About This Section
@@ -87,7 +88,7 @@ const socialLinks = {
     { text: "twitter", url: "https://twitter.com/l3on_y2k", image: twitterButton },
     { text: "reddit", url: "https://reddit.com/user/l3on_y2k" },
     { text: "letterboxd", url: "https://letterboxd.com/l3on_y2k/", image: letterboxdButton },
-    { text: "mail", url: "mailto:l3on.y2k@proton.me" },
+    { text: "mail", url: "mailto:l3on.y2k@proton.me", image: mailButton },
   ],
 };
 
@@ -256,58 +257,11 @@ const Projects = () => (
 // ============================================
 // Main About Component
 // ============================================
-interface AboutAppState {
-  activeTab: string;
-}
-
 const APP_STATE_KEY = 'app:about';
 
 export const About = () => {
-  const [activeTab, setActiveTab] = useState('about-this');
-  const isInitialLoad = useRef(true);
-
-  // Load persisted state on mount
-  useEffect(() => {
-    let mounted = true;
-
-    const loadState = async () => {
-      try {
-        const saved = await getAppState<AboutAppState>(APP_STATE_KEY);
-        if (mounted && saved) {
-          setActiveTab(saved.activeTab);
-        }
-      } catch (error) {
-        console.error('[App:About] Failed to load state:', error);
-      } finally {
-        if (mounted) {
-          isInitialLoad.current = false;
-        }
-      }
-    };
-
-    loadState();
-    console.log('[App:About] Initialized');
-
-    return () => {
-      mounted = false;
-      console.log('[App:About] Cleanup');
-    };
-  }, []);
-
-  // Save state when tab changes
-  useEffect(() => {
-    if (isInitialLoad.current) return;
-
-    const saveState = async () => {
-      try {
-        await setAppState<AboutAppState>(APP_STATE_KEY, { activeTab });
-      } catch (error) {
-        console.error('[App:About] Failed to save state:', error);
-      }
-    };
-
-    saveState();
-  }, [activeTab]);
+  // Using usePersistedState hook instead of manual load/save useEffects
+  const [activeTab, setActiveTab] = usePersistedState(APP_STATE_KEY, 'about-this');
 
   const handleTabChange = (tab: string) => {
     console.log('[App:About] Tab:', tab);

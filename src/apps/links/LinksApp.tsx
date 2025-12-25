@@ -1,13 +1,16 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { WindowLayout } from '@/components/window/WindowLayout';
 import { RetroButton } from '@/components/ui/RetroButton';
-import { getAppState, setAppState } from '@/lib/storage';
+import { usePersistedState } from '@/hooks/useStorage';
 
 // Import local 88x31 button images
 import wwwButton from '@/assets/buttons/www.png';
 import lightdarkButton from '@/assets/buttons/lightdark.png';
 import imissxpButton from '@/assets/buttons/imissxp.gif';
 import madewithwindowsButton from '@/assets/buttons/made_with_windows.gif';
+import bitButton from '@/assets/buttons/32b-pcb.png';
+import ilikecomputerButton from '@/assets/buttons/i_like_computer.png';
+import guestbookButton from '@/assets/buttons/guestbook.gif';
 
 // ============================================
 // External 88x31 Buttons configuration
@@ -30,10 +33,13 @@ const buttonSections = [
         title: 'Other',
         buttons: [
             { url: "https://people.pledge.party", image: "https://people.pledge.party/badges/people_pledge_badge_party_black_white_88x31.png", alt: "People Pledge Party" },
-            { url: "", image: wwwButton, alt: "www" },
-            { url: "", image: lightdarkButton, alt: "Light/Dark Buttons" },
-            { url: "", image: imissxpButton, alt: "I miss XP" },
-            { url: "", image: madewithwindowsButton, alt: "Made with Windows" },
+            { url: "https://en.wikipedia.org/wiki/World_Wide_Web", image: wwwButton, alt: "World Wide Web" },
+            { url: "#", image: lightdarkButton, alt: "Light/Dark Buttons" },
+            { url: "https://win32.run/", image: imissxpButton, alt: "I miss XP" },
+            { url: "#", image: madewithwindowsButton, alt: "Made with Windows" },
+            { url: "https://32bit.cafe/", image: bitButton, alt: "32Bit Cafe" },
+            { url: "#", image: ilikecomputerButton, alt: "I Like Computer" },
+            { url: "https://guestbooks.meadow.cafe/guestbook/671", image: guestbookButton, alt: "Sign my Guestbook" },
         ],
     },
 ];
@@ -202,63 +208,13 @@ const MyButtonsTab = () => {
 };
 
 // ============================================
-// App state persistence
-// ============================================
-interface LinksAppState {
-    activeTab: string;
-}
-
-const APP_STATE_KEY = 'app:links';
-
-// ============================================
 // Main Links App Component
 // ============================================
+const APP_STATE_KEY = 'app:links';
+
 export const LinksApp = () => {
-    const [activeTab, setActiveTab] = useState('buttons');
-    const isInitialLoad = useRef(true);
-
-    // Load persisted state on mount
-    useEffect(() => {
-        let mounted = true;
-
-        const loadState = async () => {
-            try {
-                const saved = await getAppState<LinksAppState>(APP_STATE_KEY);
-                if (mounted && saved) {
-                    setActiveTab(saved.activeTab);
-                }
-            } catch (error) {
-                console.error('[App:Links] Failed to load state:', error);
-            } finally {
-                if (mounted) {
-                    isInitialLoad.current = false;
-                }
-            }
-        };
-
-        loadState();
-        console.log('[App:Links] Initialized');
-
-        return () => {
-            mounted = false;
-            console.log('[App:Links] Cleanup');
-        };
-    }, []);
-
-    // Save state when tab changes
-    useEffect(() => {
-        if (isInitialLoad.current) return;
-
-        const saveState = async () => {
-            try {
-                await setAppState<LinksAppState>(APP_STATE_KEY, { activeTab });
-            } catch (error) {
-                console.error('[App:Links] Failed to save state:', error);
-            }
-        };
-
-        saveState();
-    }, [activeTab]);
+    // Using usePersistedState hook instead of manual load/save useEffects
+    const [activeTab, setActiveTab] = usePersistedState(APP_STATE_KEY, 'buttons');
 
     const handleTabChange = (tab: string) => {
         console.log('[App:Links] Tab:', tab);

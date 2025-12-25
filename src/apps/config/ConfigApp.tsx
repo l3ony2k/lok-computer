@@ -319,11 +319,13 @@ export const ConfigApp: React.FC = () => {
                   variant: 'default',
                 })}
               >
-                <img
-                  src={onekoDefault}
-                  alt="Default cat"
+                <div
                   className="w-8 h-8"
-                  style={{ imageRendering: 'pixelated' }}
+                  style={{
+                    backgroundImage: `url(${onekoDefault})`,
+                    backgroundPosition: '-96px -96px', // Idle sprite position (-3 * 32, -3 * 32)
+                    imageRendering: 'pixelated',
+                  }}
                 />
                 <span className="text-xs">Default</span>
                 {(settings.oneko?.variant ?? 'default') === 'default' && (
@@ -343,11 +345,13 @@ export const ConfigApp: React.FC = () => {
                   variant: 'dark',
                 })}
               >
-                <img
-                  src={onekoDark}
-                  alt="Dark cat"
+                <div
                   className="w-8 h-8"
-                  style={{ imageRendering: 'pixelated' }}
+                  style={{
+                    backgroundImage: `url(${onekoDark})`,
+                    backgroundPosition: '-96px -96px', // Idle sprite position (-3 * 32, -3 * 32)
+                    imageRendering: 'pixelated',
+                  }}
                 />
                 <span className="text-xs">Dark</span>
                 {settings.oneko?.variant === 'dark' && (
