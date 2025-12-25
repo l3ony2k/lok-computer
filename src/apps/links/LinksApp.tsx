@@ -39,26 +39,62 @@ const buttonSections = [
 ];
 
 // ============================================
-// My button variants configuration
+// My button variants configuration - 88x31
 // ============================================
-const myButtonVariants = [
+const my88x31Variants = [
     {
-        id: 'default',
+        id: '88x31-default',
         label: 'default',
         path: '/88x31.gif',
         url: 'https://lok.computer/88x31.gif',
+        width: 88,
+        height: 31,
     },
     {
-        id: 'light',
+        id: '88x31-light',
         label: 'light',
         path: '/88x31-light.gif',
         url: 'https://lok.computer/88x31-light.gif',
+        width: 88,
+        height: 31,
     },
     {
-        id: 'dark',
+        id: '88x31-dark',
         label: 'dark',
         path: '/88x31-dark.gif',
         url: 'https://lok.computer/88x31-dark.gif',
+        width: 88,
+        height: 31,
+    },
+];
+
+// ============================================
+// My button variants configuration - 80x15
+// ============================================
+const my80x15Variants = [
+    {
+        id: '80x15-default',
+        label: 'default',
+        path: '/80x15.gif',
+        url: 'https://lok.computer/80x15.gif',
+        width: 80,
+        height: 15,
+    },
+    {
+        id: '80x15-light',
+        label: 'light',
+        path: '/80x15-light.gif',
+        url: 'https://lok.computer/80x15-light.gif',
+        width: 80,
+        height: 15,
+    },
+    {
+        id: '80x15-dark',
+        label: 'dark',
+        path: '/80x15-dark.gif',
+        url: 'https://lok.computer/80x15-dark.gif',
+        width: 80,
+        height: 15,
     },
 ];
 
@@ -103,46 +139,49 @@ const ButtonsTab = () => (
 // ============================================
 // My Buttons Tab - Embed code for own buttons
 // ============================================
+type ButtonVariant = typeof my88x31Variants[0];
+
 const MyButtonsTab = () => {
     const [copiedId, setCopiedId] = useState<string | null>(null);
 
-    const getEmbedCode = (variant: typeof myButtonVariants[0]) =>
-        `<a href="https://lok.computer" target="_blank" rel="noopener noreferrer"><img src="${variant.url}" alt="lok.computer" width="88" height="31" /></a>`;
+    const getEmbedCode = (variant: ButtonVariant) =>
+        `<a href="https://lok.computer" target="_blank" rel="noopener noreferrer"><img src="${variant.url}" alt="lok.computer" width="${variant.width}" height="${variant.height}" /></a>`;
 
-    const handleCopyEmbed = (variant: typeof myButtonVariants[0]) => {
+    const handleCopyEmbed = (variant: ButtonVariant) => {
         navigator.clipboard.writeText(getEmbedCode(variant));
         setCopiedId(variant.id);
         setTimeout(() => setCopiedId(null), 2000);
     };
 
-    return (
-        <div className="max-w-lg mx-auto p-4">
-            <h4 className="font-bold mb-3 text-accent">88x31 Buttons</h4>
-
-            <div className="space-y-3">
-                {myButtonVariants.map((variant) => (
+    const renderButtonSection = (title: string, variants: ButtonVariant[]) => (
+        <>
+            <h4 className="font-bold mb-3 text-accent">{title}</h4>
+            <div className="space-y-3 mb-6">
+                {variants.map((variant) => (
                     <div key={variant.id}>
                         <span className="text-xs opacity-60 mb-1 block">{variant.label}</span>
                         <div className="flex gap-2 items-stretch">
                             {/* Button Preview */}
-                            <div className="shrink-0 flex items-center border border-border">
+                            <div className="shrink-0 flex items-center">
                                 <img
                                     src={variant.path}
                                     alt={`lok.computer button (${variant.label})`}
-                                    width={88}
-                                    height={31}
+                                    width={variant.width}
+                                    height={variant.height}
                                     className="select-none"
                                 />
                             </div>
 
                             {/* Embed Code */}
                             <div className="relative flex-1 min-w-0">
-                                <pre className="bg-black/10 dark:bg-white/10 px-2 py-1 text-xs overflow-x-auto border border-border select-text h-full flex items-center">
-                                    <code className="truncate">{getEmbedCode(variant)}</code>
+                                <pre className="bg-black/10 dark:bg-white/10 px-2 py-1 text-xs overflow-x-auto border border-border select-text h-full flex items-center [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                                    <code className="whitespace-nowrap">
+                                        {getEmbedCode(variant)}
+                                    </code>
                                 </pre>
                                 <button
                                     onClick={() => handleCopyEmbed(variant)}
-                                    className="absolute top-1 right-1 px-2 py-0.5 text-xs bg-accent/80 hover:bg-accent/90 border border-accent/50 transition-colors"
+                                    className="absolute top-1 right-1 px-1 py-0 text-xs bg-accent hover:bg-accent/50 border border-border transition-colors"
                                 >
                                     {copiedId === variant.id ? 'copied!' : 'copy'}
                                 </button>
@@ -151,6 +190,13 @@ const MyButtonsTab = () => {
                     </div>
                 ))}
             </div>
+        </>
+    );
+
+    return (
+        <div className="max-w-lg mx-auto p-4">
+            {renderButtonSection('88x31 Buttons', my88x31Variants)}
+            {renderButtonSection('80x15 Buttons', my80x15Variants)}
         </div>
     );
 };
