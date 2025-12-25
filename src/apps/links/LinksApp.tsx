@@ -11,6 +11,7 @@ import madewithwindowsButton from '@/assets/buttons/made_with_windows.gif';
 import bitButton from '@/assets/buttons/32b-pcb.png';
 import ilikecomputerButton from '@/assets/buttons/i_like_computer.png';
 import guestbookButton from '@/assets/buttons/guestbook.gif';
+import ublockButton from '@/assets/buttons/ublock.png';
 
 // ============================================
 // External 88x31 Buttons configuration
@@ -40,6 +41,7 @@ const buttonSections = [
             { url: "https://32bit.cafe/", image: bitButton, alt: "32Bit Cafe" },
             { url: "#", image: ilikecomputerButton, alt: "I Like Computer" },
             { url: "https://guestbooks.meadow.cafe/guestbook/671", image: guestbookButton, alt: "Sign my Guestbook" },
+            { url: "https://ublockorigin.com/", image: ublockButton, alt: "uBlock Origin Now!" },
         ],
     },
 ];
