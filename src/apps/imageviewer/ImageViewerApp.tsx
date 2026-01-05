@@ -137,26 +137,31 @@ export const ImageViewerApp: React.FC<ImageViewerAppProps> = ({
       hasPadding={false}
       isScrollable={false}
       toolbar={
-        <div className="p-1 border-b border-border flex items-center gap-1 select-none bg-background">
-          <RetroButton size="sm" onClick={handleZoomOut} title="Zoom Out">
-            −
-          </RetroButton>
-          <RetroButton size="sm" onClick={handleZoomIn} title="Zoom In">
-            +
-          </RetroButton>
-          <span className="text-xs px-2 min-w-[50px] text-center">
-            {Math.round(scale * 100)}%
-          </span>
-          <RetroButton size="sm" onClick={handleReset} title="Reset to 100% (actual size)">
-            1:1
-          </RetroButton>
-          <div className="w-px h-4 bg-border mx-1" />
-          <RetroButton size="sm" onClick={handleFitWidth} title="Fit Width to Window">
-            ↔ W
-          </RetroButton>
-          <RetroButton size="sm" onClick={handleFitHeight} title="Fit Height to Window">
-            ↕ H
-          </RetroButton>
+        <div className="p-1 border-b border-border flex items-center justify-between select-none bg-background">
+          {/* Zoom controls group - no gaps */}
+          <div className="flex items-center space-x-0">
+            <RetroButton size="sm" onClick={handleZoomOut} title="Zoom Out">
+              −
+            </RetroButton>
+            <RetroButton size="sm" onClick={handleZoomIn} title="Zoom In">
+              +
+            </RetroButton>
+            <span className="text-xs px-2 min-w-[50px] text-center border border-border h-[18px] flex items-center justify-center">
+              {Math.round(scale * 100)}%
+            </span>
+            <RetroButton size="sm" onClick={handleReset} title="Reset to 100% (actual size)">
+              1:1
+            </RetroButton>
+          </div>
+          {/* Fit controls group - aligned right */}
+          <div className="flex items-center space-x-0">
+            <RetroButton size="sm" onClick={handleFitWidth} title="Fit Width to Window">
+              ↔ W
+            </RetroButton>
+            <RetroButton size="sm" onClick={handleFitHeight} title="Fit Height to Window">
+              ↕ H
+            </RetroButton>
+          </div>
         </div>
       }
       footer={
@@ -175,7 +180,7 @@ export const ImageViewerApp: React.FC<ImageViewerAppProps> = ({
     >
       <div
         ref={containerRef}
-        className="h-full w-full overflow-hidden bg-secondary/30 relative"
+        className="h-full w-full overflow-hidden bg-background relative"
         style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
