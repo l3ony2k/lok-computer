@@ -11,9 +11,18 @@ export interface OnekoSettings {
   variant: 'default' | 'dark';
 }
 
+export interface CrtSettings {
+  enabled: boolean;
+  scanlines: number; // 0-100 intensity
+  flicker: number; // 0-100 intensity
+  rgbOffset: number; // 0-100 intensity
+  curvature: number; // 0-100 intensity
+}
+
 export interface UserSettings {
   wallpaper?: string;
   oneko?: OnekoSettings;
+  crt?: CrtSettings;
 }
 
 // Default settings to use if nothing is stored

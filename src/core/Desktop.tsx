@@ -47,6 +47,41 @@ export const Desktop = () => {
         }
     }, [settings.wallpaper]);
 
+    // Apply CRT effect based on settings
+    useEffect(() => {
+        const rootElement = document.documentElement;
+
+        if (settings.crt?.enabled) {
+            rootElement.classList.add('crt-effect');
+
+            // Set per-effect intensity CSS variables
+            rootElement.style.setProperty('--crt-scanlines', String(settings.crt.scanlines ?? 0));
+            rootElement.style.setProperty('--crt-flicker', String(settings.crt.flicker ?? 0));
+            rootElement.style.setProperty('--crt-rgb-offset', String(settings.crt.rgbOffset ?? 0));
+            rootElement.style.setProperty('--crt-curvature', String(settings.crt.curvature ?? 0));
+
+            // Toggle flicker animation class based on intensity
+            if ((settings.crt.flicker ?? 0) > 0) {
+                rootElement.classList.add('crt-flicker-active');
+            } else {
+                rootElement.classList.remove('crt-flicker-active');
+            }
+
+            // Toggle RGB offset class based on intensity
+            if ((settings.crt.rgbOffset ?? 0) > 0) {
+                rootElement.classList.add('crt-rgb-active');
+            } else {
+                rootElement.classList.remove('crt-rgb-active');
+            }
+        } else {
+            rootElement.classList.remove('crt-effect', 'crt-flicker-active', 'crt-rgb-active');
+            rootElement.style.removeProperty('--crt-scanlines');
+            rootElement.style.removeProperty('--crt-flicker');
+            rootElement.style.removeProperty('--crt-rgb-offset');
+            rootElement.style.removeProperty('--crt-curvature');
+        }
+    }, [settings.crt]);
+
     // Global resize handler
     useEffect(() => {
         const handleResize = () => {

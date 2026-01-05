@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from "next-themes";
-import { Sun, Moon, Computer, Image, CheckCircle, X, Database, Trash2, RefreshCw, Cat } from "lucide-react";
+import { Sun, Moon, Computer, Image, CheckCircle, X, Database, Trash2, RefreshCw, Cat, Monitor } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { WindowLayout } from "@/components/window/WindowLayout";
@@ -327,7 +327,7 @@ export const ConfigApp: React.FC = () => {
                     imageRendering: 'pixelated',
                   }}
                 />
-                <span className="text-xs">Default</span>
+                <span className="text-xs">white</span>
                 {(settings.oneko?.variant ?? 'default') === 'default' && (
                   <CheckCircle className="w-4 h-4 text-primary" />
                 )}
@@ -353,7 +353,7 @@ export const ConfigApp: React.FC = () => {
                     imageRendering: 'pixelated',
                   }}
                 />
-                <span className="text-xs">Dark</span>
+                <span className="text-xs">black</span>
                 {settings.oneko?.variant === 'dark' && (
                   <CheckCircle className="w-4 h-4 text-primary" />
                 )}
@@ -361,6 +361,118 @@ export const ConfigApp: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* CRT Effect Section */}
+        <div>
+          <h2 className="text-lg font-bold mb-3 flex items-center">
+            <Monitor className="w-5 h-5 mr-2" />
+            CRT Effect
+          </h2>
+
+          {/* Enable/Disable Toggle */}
+          <div className="mb-4">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={settings.crt?.enabled ?? false}
+                onChange={(e) => updateSetting('crt', {
+                  ...settings.crt,
+                  enabled: e.target.checked,
+                  scanlines: settings.crt?.scanlines ?? 50,
+                  flicker: settings.crt?.flicker ?? 0,
+                  rgbOffset: settings.crt?.rgbOffset ?? 0,
+                  curvature: settings.crt?.curvature ?? 50,
+                })}
+                className="w-4 h-4"
+              />
+              <span className="text-sm">Enable CRT monitor effect</span>
+            </label>
+          </div>
+
+          {/* Individual Effect Sliders */}
+          <div className="mb-4 space-y-4">
+            {/* Scanlines Slider */}
+            <div>
+              <h3 className="text-sm font-medium mb-1">Scanlines: {settings.crt?.scanlines ?? 0}%</h3>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={settings.crt?.scanlines ?? 0}
+                onChange={(e) => updateSetting('crt', {
+                  ...settings.crt,
+                  enabled: settings.crt?.enabled ?? false,
+                  scanlines: parseInt(e.target.value),
+                  flicker: settings.crt?.flicker ?? 0,
+                  rgbOffset: settings.crt?.rgbOffset ?? 0,
+                  curvature: settings.crt?.curvature ?? 50,
+                })}
+                className="w-full"
+              />
+            </div>
+
+            {/* Flicker Slider */}
+            <div>
+              <h3 className="text-sm font-medium mb-1">Flicker: {settings.crt?.flicker ?? 0}%</h3>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={settings.crt?.flicker ?? 0}
+                onChange={(e) => updateSetting('crt', {
+                  ...settings.crt,
+                  enabled: settings.crt?.enabled ?? false,
+                  scanlines: settings.crt?.scanlines ?? 50,
+                  flicker: parseInt(e.target.value),
+                  rgbOffset: settings.crt?.rgbOffset ?? 0,
+                  curvature: settings.crt?.curvature ?? 50,
+                })}
+                className="w-full"
+              />
+            </div>
+
+            {/* RGB Offset Slider */}
+            <div>
+              <h3 className="text-sm font-medium mb-1">RGB Offset: {settings.crt?.rgbOffset ?? 0}%</h3>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={settings.crt?.rgbOffset ?? 0}
+                onChange={(e) => updateSetting('crt', {
+                  ...settings.crt,
+                  enabled: settings.crt?.enabled ?? false,
+                  scanlines: settings.crt?.scanlines ?? 50,
+                  flicker: settings.crt?.flicker ?? 0,
+                  rgbOffset: parseInt(e.target.value),
+                  curvature: settings.crt?.curvature ?? 50,
+                })}
+                className="w-full"
+              />
+            </div>
+
+            {/* Curvature Slider */}
+            <div>
+              <h3 className="text-sm font-medium mb-1">Screen Curvature: {settings.crt?.curvature ?? 0}%</h3>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={settings.crt?.curvature ?? 0}
+                onChange={(e) => updateSetting('crt', {
+                  ...settings.crt,
+                  enabled: settings.crt?.enabled ?? false,
+                  scanlines: settings.crt?.scanlines ?? 50,
+                  flicker: settings.crt?.flicker ?? 0,
+                  rgbOffset: settings.crt?.rgbOffset ?? 0,
+                  curvature: parseInt(e.target.value),
+                })}
+                className="w-full"
+              />
+            </div>
+          </div>
+        </div>
+
         {/* Cache Management Section */}
         <div>
           <h2 className="text-lg font-bold mb-3 flex items-center">
