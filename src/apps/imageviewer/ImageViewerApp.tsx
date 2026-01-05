@@ -26,14 +26,33 @@ export const ImageViewerApp: React.FC<ImageViewerAppProps> = ({
 
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Load image to get natural dimensions
+  // Load image to get natural dimensions and auto-fit on first load
   useEffect(() => {
     const img = new Image();
     img.onload = () => {
-      setNaturalSize({ width: img.naturalWidth, height: img.naturalHeight });
-      // Reset scale and pan when image changes
-      setScale(1);
+      const natWidth = img.naturalWidth;
+      const natHeight = img.naturalHeight;
+      setNaturalSize({ width: natWidth, height: natHeight });
       setPanOffset({ x: 0, y: 0 });
+
+      // Auto-fit to window: use the smaller scale so entire image is visible
+      requestAnimationFrame(() => {
+        if (containerRef.current) {
+          const containerWidth = containerRef.current.clientWidth;
+          const containerHeight = containerRef.current.clientHeight;
+
+          // Calculate scale needed to fit each dimension
+          const scaleToFitWidth = containerWidth / natWidth;
+          const scaleToFitHeight = containerHeight / natHeight;
+
+          // Use the smaller scale so image fits entirely (no cropping)
+          const initialScale = Math.min(scaleToFitWidth, scaleToFitHeight);
+
+          setScale(Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, +initialScale.toFixed(2))));
+        } else {
+          setScale(1);
+        }
+      });
     };
     img.onerror = () => {
       setNaturalSize(null);
@@ -145,7 +164,7 @@ export const ImageViewerApp: React.FC<ImageViewerAppProps> = ({
           {naturalSize ? (
             <>
               <span>{naturalSize.width} × {naturalSize.height}</span>
-              <span className="opacity-50">|</span>
+              <span className="opacity-50">@</span>
               <span>{displayWidth} × {displayHeight} px</span>
             </>
           ) : (
