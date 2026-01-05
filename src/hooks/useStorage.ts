@@ -65,7 +65,9 @@ export const usePersistedState = <T>(
         const loadValue = async () => {
             try {
                 const stored = await getAppState<T>(key);
-                if (mounted && stored !== null) {
+                // Only set value if stored is truthy (not null, undefined, or empty string)
+                // This prevents corrupted/empty values from overriding valid defaults
+                if (mounted && stored !== null && stored !== undefined && stored !== '') {
                     setValue(stored);
                 }
             } catch (error) {

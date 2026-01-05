@@ -260,14 +260,12 @@ const Projects = () => (
 const APP_STATE_KEY = 'app:about';
 
 export const About = () => {
-  // Using usePersistedState hook instead of manual load/save useEffects
   const [activeTab, setActiveTab] = usePersistedState(APP_STATE_KEY, 'about-this');
 
   const handleTabChange = (tab: string) => {
     console.log('[App:About] Tab:', tab);
     setActiveTab(tab);
   };
-
 
   return (
     <WindowLayout
