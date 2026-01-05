@@ -17,6 +17,7 @@ import { APP_LIST } from "@/config/apps";
 import { Oneko } from "@/components/oneko/Oneko";
 import { PopupDialog, PopupDialogButtons } from "@/components/ui/PopupDialog";
 import { RetroButton } from "@/components/ui/RetroButton";
+import { CrtFilter } from "@/components/effects/CrtFilter";
 
 export const Desktop = () => {
     const { addWindow, addOrFocusWindow, windows, updateWindowPosition, updateWindowDimensions } = useWindowManager();
@@ -222,6 +223,11 @@ export const Desktop = () => {
 
             {/* Oneko cat */}
             <Oneko />
+
+            {/* CRT RGB Filter (SVG) */}
+            {settings.crt?.enabled && (settings.crt?.rgbOffset ?? 0) > 0 && (
+                <CrtFilter rgbOffset={settings.crt.rgbOffset ?? 0} />
+            )}
 
             {/* Oneko first-time prompt (non-intrusive, draggable) */}
             <PopupDialog

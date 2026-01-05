@@ -536,7 +536,7 @@ a:hover .animate-marquee-if-overflow {
     position: relative;
 }
 
-/* Scanlines overlay - much stronger visibility */
+/* Scanlines overlay - brightness-neutral with alternating dark/light lines */
 .crt-effect::before {
     content: '';
     position: fixed;
@@ -545,13 +545,12 @@ a:hover .animate-marquee-if-overflow {
     width: 100%;
     height: 100%;
     pointer-events: none;
-    z-index: 9999;
+    z-index: 2147483647;
     background: repeating-linear-gradient(0deg,
-            transparent,
-            transparent 2px,
-            rgba(0, 0, 0, calc(0.4 * var(--crt-scanlines) / 100)) 2px,
-            rgba(0, 0, 0, calc(0.4 * var(--crt-scanlines) / 100)) 4px);
-    opacity: calc(var(--crt-scanlines) / 100);
+            rgba(255, 255, 255, calc(0.08 * var(--crt-scanlines) / 100)) 0px,
+            rgba(255, 255, 255, calc(0.08 * var(--crt-scanlines) / 100)) 2px,
+            rgba(0, 0, 0, calc(0.15 * var(--crt-scanlines) / 100)) 2px,
+            rgba(0, 0, 0, calc(0.15 * var(--crt-scanlines) / 100)) 4px);
 }
 
 /* Screen curvature effect using vignette */
@@ -563,7 +562,7 @@ a:hover .animate-marquee-if-overflow {
     width: 100%;
     height: 100%;
     pointer-events: none;
-    z-index: 9998;
+    z-index: 2147483646;
     background: radial-gradient(ellipse at center,
             transparent 50%,
             rgba(0, 0, 0, calc(0.5 * var(--crt-curvature) / 100)) 100%);
@@ -575,11 +574,9 @@ a:hover .animate-marquee-if-overflow {
     animation: crt-flicker 0.1s infinite;
 }
 
-/* RGB offset / Chromatic aberration - applied to body content */
-.crt-effect.crt-rgb-active>* {
-    text-shadow:
-        calc(-2px * var(--crt-rgb-offset) / 100) 0 rgba(255, 0, 0, calc(0.5 * var(--crt-rgb-offset) / 100)),
-        calc(2px * var(--crt-rgb-offset) / 100) 0 rgba(0, 255, 255, calc(0.5 * var(--crt-rgb-offset) / 100));
+/* RGB offset / Chromatic aberration - uses SVG filter for full coverage */
+.crt-effect.crt-rgb-active {
+    filter: url(#crt-rgb-filter) brightness(1.02) contrast(1.05);
 }
 
 /* Glow effect for that phosphor look when CRT is enabled */

@@ -379,9 +379,9 @@ export const ConfigApp: React.FC = () => {
                   ...settings.crt,
                   enabled: e.target.checked,
                   scanlines: settings.crt?.scanlines ?? 50,
-                  flicker: settings.crt?.flicker ?? 0,
-                  rgbOffset: settings.crt?.rgbOffset ?? 0,
-                  curvature: settings.crt?.curvature ?? 50,
+                  flicker: settings.crt?.flicker ?? 10,
+                  rgbOffset: settings.crt?.rgbOffset ?? 50,
+                  curvature: settings.crt?.curvature ?? 20,
                 })}
                 className="w-4 h-4"
               />
@@ -403,9 +403,9 @@ export const ConfigApp: React.FC = () => {
                   ...settings.crt,
                   enabled: settings.crt?.enabled ?? false,
                   scanlines: parseInt(e.target.value),
-                  flicker: settings.crt?.flicker ?? 0,
-                  rgbOffset: settings.crt?.rgbOffset ?? 0,
-                  curvature: settings.crt?.curvature ?? 50,
+                  flicker: settings.crt?.flicker ?? 10,
+                  rgbOffset: settings.crt?.rgbOffset ?? 50,
+                  curvature: settings.crt?.curvature ?? 20,
                 })}
                 className="w-full"
               />
@@ -424,8 +424,8 @@ export const ConfigApp: React.FC = () => {
                   enabled: settings.crt?.enabled ?? false,
                   scanlines: settings.crt?.scanlines ?? 50,
                   flicker: parseInt(e.target.value),
-                  rgbOffset: settings.crt?.rgbOffset ?? 0,
-                  curvature: settings.crt?.curvature ?? 50,
+                  rgbOffset: settings.crt?.rgbOffset ?? 50,
+                  curvature: settings.crt?.curvature ?? 20,
                 })}
                 className="w-full"
               />
@@ -443,9 +443,9 @@ export const ConfigApp: React.FC = () => {
                   ...settings.crt,
                   enabled: settings.crt?.enabled ?? false,
                   scanlines: settings.crt?.scanlines ?? 50,
-                  flicker: settings.crt?.flicker ?? 0,
+                  flicker: settings.crt?.flicker ?? 10,
                   rgbOffset: parseInt(e.target.value),
-                  curvature: settings.crt?.curvature ?? 50,
+                  curvature: settings.crt?.curvature ?? 20,
                 })}
                 className="w-full"
               />
@@ -463,8 +463,8 @@ export const ConfigApp: React.FC = () => {
                   ...settings.crt,
                   enabled: settings.crt?.enabled ?? false,
                   scanlines: settings.crt?.scanlines ?? 50,
-                  flicker: settings.crt?.flicker ?? 0,
-                  rgbOffset: settings.crt?.rgbOffset ?? 0,
+                  flicker: settings.crt?.flicker ?? 10,
+                  rgbOffset: settings.crt?.rgbOffset ?? 50,
                   curvature: parseInt(e.target.value),
                 })}
                 className="w-full"
