@@ -5,6 +5,7 @@ import { WindowLayout } from '@/components/window/WindowLayout';
 import { RetroButton } from '@/components/ui/RetroButton';
 import { APP_CONFIG } from '@/config/constants';
 import { usePersistedState } from '@/hooks/useStorage';
+import { TypoText } from './TypoText';
 
 type Message = {
   id: string;
@@ -16,11 +17,22 @@ const APP_STATE_KEY = 'app:ai-chat';
 const MAX_HISTORY = 10;
 const INITIAL_MESSAGES: Message[] = [{ id: '1', text: 'Hello user, how can I help you?', sender: 'ai' }];
 
+// Set to true to test typo effect without real API
+const DEV_MODE = false;
+const MOCK_RESPONSES = [
+  "That's a great question! Let me think about that for a moment. I believe the answer involves considering multiple perspectives and weighing the pros and cons carefully.",
+  "I'd be happy to help you with that! Here's what I think we should do: first, analyze the problem, then break it down into smaller steps.",
+  "Interesting! Based on my understanding, this could be approached in several ways. The most straightforward method would be to start with the basics and build from there.",
+  "Thanks for asking! I enjoy helping with questions like this. The key insight here is that sometimes the simplest solution is the best one.",
+  "Good question! Let me explain this step by step. First, we need to understand the underlying concepts before we can tackle the more complex aspects.",
+];
+
 export const TalkToAI = () => {
   // Using usePersistedState hook instead of manual load/save useEffects
   const [messages, setMessages] = usePersistedState<Message[]>(APP_STATE_KEY, INITIAL_MESSAGES);
   const [input, setInput] = useState('');
   const [confirmClear, setConfirmClear] = useState(false);
+  const [latestAiMessageId, setLatestAiMessageId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -43,6 +55,15 @@ export const TalkToAI = () => {
   const { mutate: sendMessage, isPending: isLoading } = useMutation({
     mutationFn: async (userMessage: Message) => {
       console.log('[App:AI] Sending message...');
+
+      // DEV_MODE: Return mock response instead of calling API
+      if (DEV_MODE) {
+        await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
+        const randomResponse = MOCK_RESPONSES[Math.floor(Math.random() * MOCK_RESPONSES.length)];
+        console.log('[App:AI] DEV_MODE: Returning mock response');
+        return randomResponse;
+      }
+
       // Convert messages to OpenAI format
       const apiMessages = messages.concat(userMessage).slice(-MAX_HISTORY).map(msg => ({
         role: msg.sender === 'user' ? 'user' : 'assistant',
@@ -73,12 +94,14 @@ export const TalkToAI = () => {
     },
     onSuccess: (aiResponse) => {
       console.log('[App:AI] Response received');
+      const aiMessageId = (Date.now() + 1).toString();
       const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        id: aiMessageId,
         text: aiResponse,
         sender: 'ai',
       };
       setMessages(prev => [...prev, aiMessage]);
+      setLatestAiMessageId(aiMessageId); // Track for typo animation
       scrollToBottom();
       // Focus back on input after sending
       setTimeout(() => {
@@ -190,7 +213,17 @@ export const TalkToAI = () => {
                 : 'bg-muted'
                 }`}
             >
-              {message.text}
+              {message.sender === 'ai' ? (
+                <TypoText
+                  text={message.text}
+                  isNew={message.id === latestAiMessageId}
+                  speed={30}
+                  jitter={15}
+                  typoChance={4}
+                />
+              ) : (
+                message.text
+              )}
             </div>
           </div>
         ))}

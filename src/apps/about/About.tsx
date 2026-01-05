@@ -45,7 +45,7 @@ const AboutThis = () => {
         </p>
 
         <p>
-          thank you to: <a href="https://github.com/adryd325/oneko.js" className="underline text-blue-700 dark:text-blue-300">oneko.js</a>, <a href="https://www.reddit.com/r/neocities/comments/1n1rkww/slowly_working_on_external_link_88x31_buttons/" className="underline text-blue-700 dark:text-blue-300">u/rosevarro</a>, <a href="https://sweetfish.site/" className="underline text-blue-700 dark:text-blue-300">sweetfish.site</a>, <a href="https://88x31.kate.pet/" className="underline text-blue-700 dark:text-blue-300">kate.pet</a>.
+          thank you to: <a href="https://github.com/adryd325/oneko.js" className="underline text-blue-700 dark:text-blue-300">adryd325's oneko.js</a>, <a href="https://www.reddit.com/r/neocities/comments/1n1rkww/slowly_working_on_external_link_88x31_buttons/" className="underline text-blue-700 dark:text-blue-300">u/rosevarro</a>, <a href="https://sweetfish.site/" className="underline text-blue-700 dark:text-blue-300">sweetfish.site</a>, <a href="https://88x31.kate.pet/" className="underline text-blue-700 dark:text-blue-300">kate.pet's 88x31 buttons</a>, <a href="https://www.neatnik.net/typo" className="underline text-blue-700 dark:text-blue-300">neatnik's typo</a>.
         </p>
       </div>
 

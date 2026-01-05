@@ -3,6 +3,8 @@ import { ArenaBlock } from "@/types/arena";
 import { getBlock } from "@/lib/api";
 import { StateMessage } from '@/components/ui/StateMessage';
 import { ArenaWindowLayout } from "../components/ArenaWindowLayout";
+import { useWindowManager } from "@/hooks/useWindowManager";
+import { ImageViewerApp } from "@/apps/imageviewer/ImageViewerApp";
 
 // Helper functions for image source determination
 const getImageSource = (block: ArenaBlock): string => {
@@ -46,53 +48,76 @@ const renderMediaOrAttachment = (block: ArenaBlock) => (
   </div>
 );
 
-// Block type renderers
-const renderBlockByType = {
-  Image: (block: ArenaBlock) => (
-    <div className="flex flex-col items-center justify-center w-full h-full min-h-[200px]">
-      <img
-        src={getImageSource(block)}
-        alt={block.title || "Image"}
-        // removed max-h-[60vh]
-        className="max-w-full object-contain"
-      />
-    </div>
-  ),
+// Block type renderers - now factory functions that accept onImageClick
+const createBlockRenderers = (onImageClick?: (imageUrl: string, title: string) => void) => ({
+  Image: (block: ArenaBlock) => {
+    const imageUrl = getImageSource(block);
+    return (
+      <div className="flex flex-col items-center justify-center w-full h-full min-h-[200px]">
+        <img
+          src={imageUrl}
+          alt={block.title || "Image"}
+          className="max-w-full object-contain cursor-pointer hover:opacity-90 transition-opacity"
+          onClick={() => onImageClick?.(imageUrl, block.title || "Image")}
+        />
+      </div>
+    );
+  },
 
   Text: (block: ArenaBlock) => (
     <div
       className="prose dark:prose-invert max-w-none prose-p:leading-relaxed prose-headings:font-bold prose-headings:text-foreground prose-p:text-foreground prose-strong:text-foreground prose-a:text-[var(--link-color)] prose-ul:text-foreground prose-ol:text-foreground prose-li:text-foreground prose-blockquote:text-foreground"
       dangerouslySetInnerHTML={{
-        __html: block.content_html || block.content || ""
+        __html: (block as any).content_html || block.content || ""
       }}
     />
   ),
 
-  Link: (block: ArenaBlock) => (
-    <div className="flex flex-col items-center justify-center w-full h-full min-h-[200px]">
-      {block.image ? (
-        <img
-          src={getImageSource(block)}
-          alt={block.title || "Link thumbnail"}
-          // removed max-h-[60vh]
-          className="max-w-full object-contain"
-        />
-      ) : (
-        <div className="flex items-center justify-center w-full h-40 bg-muted text-muted-foreground">
-          No Thumbnail
-        </div>
-      )}
-    </div>
-  ),
+  Link: (block: ArenaBlock) => {
+    const imageUrl = getImageSource(block);
+    return (
+      <div className="flex flex-col items-center justify-center w-full h-full min-h-[200px]">
+        {block.image ? (
+          <img
+            src={imageUrl}
+            alt={block.title || "Link thumbnail"}
+            className="max-w-full object-contain cursor-pointer hover:opacity-90 transition-opacity"
+            onClick={() => onImageClick?.(imageUrl, block.title || "Link thumbnail")}
+          />
+        ) : (
+          <div className="flex items-center justify-center w-full h-40 bg-muted text-muted-foreground">
+            No Thumbnail
+          </div>
+        )}
+      </div>
+    );
+  },
 
   Media: (block: ArenaBlock) => renderMediaOrAttachment(block),
   Attachment: (block: ArenaBlock) => renderMediaOrAttachment(block)
-};
+});
 
 export const BlockViewer = ({ blockId, mode = "window" }: { blockId: number | string, mode?: "window" | "embedded" }) => {
   const [loading, setLoading] = useState(true);
   const [block, setBlock] = useState<ArenaBlock | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { addWindow } = useWindowManager();
+
+  // Handler to open image in ImageViewerApp
+  const handleImageClick = (imageUrl: string, title: string) => {
+    addWindow({
+      title: title,
+      content: <ImageViewerApp imageUrl={imageUrl} />,
+      width: 800,
+      height: 600,
+      iconType: 'image',
+      componentType: 'ImageViewer',
+      props: { imageUrl },
+    });
+  };
+
+  // Create renderers with the image click handler
+  const blockRenderers = createBlockRenderers(handleImageClick);
 
   useEffect(() => {
     const fetchBlock = async () => {
@@ -121,11 +146,11 @@ export const BlockViewer = ({ blockId, mode = "window" }: { blockId: number | st
   }
 
   const renderBlockContent = () => {
-    const blockClass = block.class as keyof typeof renderBlockByType;
+    const blockClass = block.class as keyof typeof blockRenderers;
 
     // Use the type-specific renderer if available
-    if (renderBlockByType[blockClass]) {
-      return renderBlockByType[blockClass](block);
+    if (blockRenderers[blockClass]) {
+      return blockRenderers[blockClass](block);
     }
 
     // Fallback for unsupported block types

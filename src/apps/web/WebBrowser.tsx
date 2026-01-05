@@ -11,7 +11,7 @@ interface Bookmark {
 }
 
 const BOOKMARKS: Bookmark[] = [
-  { name: "are.na", url: "https://are.na" },
+  { name: "are.na", url: "https://are.na/lok" },
   { name: "blog", url: "https://lok.bearblog.dev" },
   { name: "journal", url: "https://journal.lok.computer" },
   { name: "canvas", url: "https://abc.lok.computer" },
