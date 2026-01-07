@@ -41,7 +41,7 @@ const AboutThis = () => {
         </p>
 
         <p className="mb-4">
-          Made with Claude (3.7|4.0|4.5) Sonnet, Gemini (2.5|3.0) Pro, Cline, Kilo Code, Windsurf, and Antigravity.
+          Made with Claude (3.7|4.0|4.5) Sonnet, Claude 4.5 Opus, Gemini (2.5|3.0) Pro, Cline, Kilo Code, Windsurf, Claude Code, Codex CLI, Opencode and Antigravity.
         </p>
 
         <p>
@@ -50,7 +50,7 @@ const AboutThis = () => {
       </div>
 
       <p className="mt-4 text-xs opacity-50 select-none">
-        Version 1.5.5
+        Version 1.6.0
       </p>
     </div>
   );

@@ -122,6 +122,28 @@ export const ImageViewerApp: React.FC<ImageViewerAppProps> = ({
     setIsDragging(false);
   }, []);
 
+  // Touch handlers for touchscreen panning
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length !== 1) return; // Only single touch
+    const touch = e.touches[0];
+    setIsDragging(true);
+    setDragStart({ x: touch.clientX - panOffset.x, y: touch.clientY - panOffset.y });
+  }, [panOffset]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!isDragging || e.touches.length !== 1) return;
+    e.preventDefault(); // Prevent page scroll
+    const touch = e.touches[0];
+    setPanOffset({
+      x: touch.clientX - dragStart.x,
+      y: touch.clientY - dragStart.y,
+    });
+  }, [isDragging, dragStart]);
+
+  const handleTouchEnd = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
   // Mouse wheel for zooming
   const handleWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
@@ -180,13 +202,16 @@ export const ImageViewerApp: React.FC<ImageViewerAppProps> = ({
     >
       <div
         ref={containerRef}
-        className="h-full w-full overflow-hidden bg-background relative"
+        className="h-full w-full overflow-hidden bg-background relative touch-none"
         style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseLeave}
         onWheel={handleWheel}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
         {naturalSize && (
           <div
