@@ -26,8 +26,8 @@ const App = () => (
           {/* <Sonner position="top-center" /> */}
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="*" element={<NotFound />} />
+              {/* All paths render Index - RouteInterpreter handles deep links */}
+              <Route path="/*" element={<Index />} />
             </Routes>
           </BrowserRouter>
         </TooltipProvider>
