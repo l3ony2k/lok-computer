@@ -13,6 +13,7 @@ import tumblrButton from '@/assets/buttons/tumblr.png';
 import telegramButton from '@/assets/buttons/telegram.gif'
 import twitterButton from '@/assets/buttons/twitter.gif'
 import mailButton from '@/assets/buttons/email.png'
+import l3onButton from '@/assets/buttons/l3on.gif'
 
 // ============================================
 // About This Section
@@ -82,6 +83,7 @@ const socialLinks = {
     { text: "xmpp", url: "https://xmpp.link/#lok@xmpp.is" },
   ],
   l3on_y2k: [
+    { text: "blog", url: "https://l3on.site", image: l3onButton },
     { text: "github", url: "https://github.com/l3ony2k" },
     { text: "instagram", url: "https://instagram.com/l3on_y2k", image: instagramButton },
     { text: "telegram", url: "https://t.me/l3on_y2k", image: telegramButton },
