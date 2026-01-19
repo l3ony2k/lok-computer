@@ -182,37 +182,6 @@
         background-size: 20px 20px;
     }
 
-    .taskbar {
-        @apply bg-retro-taskbar p-1 border-t border-border h-[35px] flex items-center select-none;
-    }
-
-    .taskbar-button {
-        @apply h-[24px] px-2 text-sm bg-secondary border border-border shadow-retro-button hover:bg-accent flex items-center justify-center select-none;
-    }
-
-    .window-titlebar {
-        @apply flex items-center px-2 py-0.5 bg-retro-window-titlebar text-black font-mono text-sm cursor-move select-none h-[30px] border-b border-border;
-    }
-
-    .folder-grid {
-        @apply grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-4 p-4;
-    }
-
-    .folder-item {
-        @apply flex flex-col items-center justify-center p-2 hover:bg-accent/50 select-none;
-    }
-
-    .folder-icon {
-        @apply w-12 h-12 mb-2 flex items-center justify-center select-none;
-    }
-
-    .folder-name {
-        @apply text-xs text-center truncate w-full select-none;
-    }
-
-    .search-input {
-        @apply w-full p-1 text-xs bg-background border border-border shadow-retro-inset;
-    }
 }
 
 @layer components {
@@ -225,7 +194,7 @@
     }
 
     .window-titlebar {
-        @apply flex items-center px-1 py-0.5 bg-retro-window-titlebar text-black dark:text-white font-mono text-sm cursor-move select-none h-[30px] border-b border-border;
+        @apply flex items-center px-1 py-0.5 bg-retro-window-titlebar text-black dark:text-white font-mono text-sm select-none h-[30px] border-b border-border;
     }
 
     .window-content {
@@ -249,7 +218,7 @@
     }
 
     .taskbar {
-        @apply bg-retro-taskbar p-1 border-t border-border flex items-center;
+        @apply bg-retro-taskbar p-1 border-t border-border h-[35px] flex items-center select-none;
     }
 
     .taskbar-button {
