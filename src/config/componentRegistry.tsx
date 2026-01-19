@@ -126,10 +126,14 @@ export function createComponentElement(
 
 /**
  * Create a React element from component type and props (async version - preferred)
+ * @param componentType - The type of component to create
+ * @param props - Props to pass to the component
+ * @param onPropsChange - Optional callback for components to report state changes
  */
 export async function createComponentElementAsync(
     componentType: string,
-    props?: Record<string, unknown>
+    props?: Record<string, unknown>,
+    onPropsChange?: (props: Record<string, unknown>) => void
 ): Promise<React.ReactElement | null> {
     const config = await getComponentConfigAsync(componentType);
     if (!config) {
@@ -137,7 +141,13 @@ export async function createComponentElementAsync(
         return null;
     }
 
-    return React.createElement(config.component, props || {});
+    // Inject onPropsChange callback if provided
+    const elementProps = { ...props };
+    if (onPropsChange) {
+        elementProps.onPropsChange = onPropsChange;
+    }
+
+    return React.createElement(config.component, elementProps);
 }
 
 /**

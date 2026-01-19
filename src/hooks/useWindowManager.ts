@@ -145,8 +145,20 @@ export const createWindowManagerContext = () => {
             const componentConfig = await getComponentConfigAsync(savedWindow.componentType);
 
             if (componentConfig) {
-              // Create the window content from component registry
-              const content = await createComponentElementAsync(savedWindow.componentType, savedWindow.props);
+              // Create a callback for this window to update its props
+              const windowId = savedWindow.id;
+              const onPropsChange = (newProps: Record<string, unknown>) => {
+                setWindows(prev => prev.map(w =>
+                  w.id === windowId ? { ...w, props: { ...w.props, ...newProps } } : w
+                ));
+              };
+
+              // Create the window content from component registry with the callback
+              const content = await createComponentElementAsync(
+                savedWindow.componentType,
+                savedWindow.props,
+                onPropsChange
+              );
 
               if (content) {
                 restoredWindows.push({

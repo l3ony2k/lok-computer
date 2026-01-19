@@ -267,7 +267,13 @@ interface ShelfAppState {
 const APP_STATE_KEY = 'app:shelf';
 const DEFAULT_STATE: ShelfAppState = { activeTab: 'wishlist', page: 1 };
 
-export const ShelfApp: React.FC = () => {
+interface ShelfAppProps {
+    initialTab?: ShelfType;
+    initialPage?: number;
+    onPropsChange?: (props: Partial<ShelfAppProps>) => void;
+}
+
+export const ShelfApp: React.FC<ShelfAppProps> = ({ initialTab, initialPage, onPropsChange }) => {
     // Using usePersistedState hook instead of manual load/save useEffects
     const [persistedState, setPersistedState] = usePersistedState<ShelfAppState>(APP_STATE_KEY, DEFAULT_STATE);
     const [paginationInfo, setPaginationInfo] = useState<{ pages: number; count: number }>({ pages: 1, count: 0 });
@@ -276,17 +282,36 @@ export const ShelfApp: React.FC = () => {
     const activeTab = persistedState.activeTab;
     const page = persistedState.page;
 
+    // Deep link priority: if initial props are provided and differ from state, override state on mount
+    React.useEffect(() => {
+        if (initialTab && initialTab !== activeTab) {
+            setPersistedState(prev => ({ ...prev, activeTab: initialTab }));
+        }
+        if (initialPage && initialPage !== page && initialPage > 0) {
+            setPersistedState(prev => ({ ...prev, page: initialPage }));
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [initialTab, initialPage]);
+
     // Reset page when tab changes
     const handleTabChange = (tab: ShelfType) => {
         setPersistedState({ activeTab: tab, page: 1 });
         setPaginationInfo({ pages: 1, count: 0 });
+        // Sync to window props for share URL
+        if (onPropsChange) {
+            onPropsChange({ initialTab: tab, initialPage: 1 });
+        }
     };
 
     const setPage = (pageOrUpdater: number | ((prev: number) => number)) => {
-        setPersistedState(prev => ({
-            ...prev,
-            page: typeof pageOrUpdater === 'function' ? pageOrUpdater(prev.page) : pageOrUpdater,
-        }));
+        setPersistedState(prev => {
+            const newPage = typeof pageOrUpdater === 'function' ? pageOrUpdater(prev.page) : pageOrUpdater;
+            // Sync to window props for share URL
+            if (onPropsChange) {
+                onPropsChange({ initialTab: prev.activeTab, initialPage: newPage });
+            }
+            return { ...prev, page: newPage };
+        });
     };
 
     const handleDataLoaded = (pages: number, count: number) => {

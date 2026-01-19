@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { WindowLayout } from '@/components/window/WindowLayout';
 import { RetroButton } from '@/components/ui/RetroButton';
 import { usePersistedState } from '@/hooks/useStorage';
@@ -51,7 +51,7 @@ const AboutThis = () => {
       </div>
 
       <p className="mt-4 text-xs opacity-50 select-none">
-        Version 1.6.0
+        Version 1.6.2
       </p>
     </div>
   );
@@ -261,12 +261,29 @@ const Projects = () => (
 // ============================================
 const APP_STATE_KEY = 'app:about';
 
-export const About = () => {
-  const [activeTab, setActiveTab] = usePersistedState(APP_STATE_KEY, 'about-this');
+interface AboutProps {
+  initialTab?: string;
+  onPropsChange?: (props: Partial<AboutProps>) => void;
+}
+
+export const About: React.FC<AboutProps> = ({ initialTab, onPropsChange }) => {
+  const [activeTab, setActiveTab] = usePersistedState(APP_STATE_KEY, initialTab || 'about-this');
+
+  // Deep link priority: override persisted state if initialTab is provided and differs
+  useEffect(() => {
+    if (initialTab && initialTab !== activeTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
 
   const handleTabChange = (tab: string) => {
     console.log('[App:About] Tab:', tab);
     setActiveTab(tab);
+
+    // Sync to window props for share URL
+    if (onPropsChange) {
+      onPropsChange({ initialTab: tab });
+    }
   };
 
   return (

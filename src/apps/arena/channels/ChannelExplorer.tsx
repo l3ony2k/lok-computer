@@ -125,6 +125,8 @@ interface ChannelExplorerProps {
   initialIsListView?: boolean;
   initialPreviewMode?: 'off' | 'horizontal' | 'vertical';
   initialSelectedBlockId?: number;
+  // Callback to sync state back to window props (for share URL generation)
+  onPropsChange?: (props: Partial<ChannelExplorerProps>) => void;
 }
 
 export const ChannelExplorer: React.FC<ChannelExplorerProps> = ({
@@ -135,6 +137,7 @@ export const ChannelExplorer: React.FC<ChannelExplorerProps> = ({
   initialIsListView = false,
   initialPreviewMode = 'off',
   initialSelectedBlockId,
+  onPropsChange,
 }) => {
   const [loading, setLoading] = useState(!items);
   const [loadingStatus, setLoadingStatus] = useState<string>("Initializing...");
@@ -151,8 +154,9 @@ export const ChannelExplorer: React.FC<ChannelExplorerProps> = ({
   const [selectedItem, setSelectedItem] = useState<ContentItem | null>(null);
 
   // Track if initial load is complete to avoid saving immediately
-  const isViewStateLoaded = useRef(false);
-  const savedSelectedBlockId = useRef<number | undefined>(undefined);
+  const [isViewStateLoaded, setIsViewStateLoaded] = useState(false);
+  const [savedSelectedBlockId, setSavedSelectedBlockId] = useState<number | undefined>(undefined);
+  const isInitialRestoreComplete = useRef(false); // Prevents save from overwriting selectedBlockId before restore
   const viewStateKey = channelSlug ? `channel:view:${channelSlug}` : null;
 
   // Load saved view state on mount
@@ -167,13 +171,13 @@ export const ChannelExplorer: React.FC<ChannelExplorerProps> = ({
           setIsListView(savedState.isListView);
           setPreviewMode(savedState.previewMode);
           // Store selected block ID for restoration once contents load
-          savedSelectedBlockId.current = savedState.selectedBlockId;
+          setSavedSelectedBlockId(savedState.selectedBlockId);
           console.debug(`[ChannelExplorer] Loaded view state for ${channelSlug}, selectedBlockId: ${savedState.selectedBlockId}`);
         }
       } catch (error) {
         console.error('[ChannelExplorer] Failed to load view state:', error);
       } finally {
-        isViewStateLoaded.current = true;
+        setIsViewStateLoaded(true);
       }
     };
 
@@ -182,7 +186,8 @@ export const ChannelExplorer: React.FC<ChannelExplorerProps> = ({
 
   // Save view state when it changes (debounced)
   useEffect(() => {
-    if (!viewStateKey || !isViewStateLoaded.current) return;
+    // Skip if view state not loaded OR if initial restore hasn't completed yet
+    if (!viewStateKey || !isViewStateLoaded || !isInitialRestoreComplete.current) return;
 
     const saveViewState = async () => {
       try {
@@ -193,6 +198,16 @@ export const ChannelExplorer: React.FC<ChannelExplorerProps> = ({
           selectedBlockId: selectedItem?.id,
         };
         await setAppState(viewStateKey, state);
+
+        // Sync state to window props for share URL generation
+        if (onPropsChange) {
+          onPropsChange({
+            initialGridSize: gridSize,
+            initialIsListView: isListView,
+            initialPreviewMode: previewMode,
+            initialSelectedBlockId: selectedItem?.id,
+          });
+        }
       } catch (error) {
         console.error('[ChannelExplorer] Failed to save view state:', error);
       }
@@ -201,12 +216,16 @@ export const ChannelExplorer: React.FC<ChannelExplorerProps> = ({
     // Debounce save to avoid excessive writes
     const timeout = setTimeout(saveViewState, 300);
     return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewStateKey, gridSize, isListView, previewMode, selectedItem?.id]);
 
-  // Restore selected item once contents are loaded
+  // Restore selected item once contents are loaded AND view state is loaded
   useEffect(() => {
+    // Wait until view state is loaded to get the savedSelectedBlockId
+    if (!isViewStateLoaded) return;
+
     // Get the block ID to restore from either prop or saved state
-    const blockIdToRestore = initialSelectedBlockId || savedSelectedBlockId.current;
+    const blockIdToRestore = initialSelectedBlockId || savedSelectedBlockId;
 
     if (blockIdToRestore && contents.length > 0 && !selectedItem) {
       const item = contents.find(c => c.id === blockIdToRestore);
@@ -223,7 +242,13 @@ export const ChannelExplorer: React.FC<ChannelExplorerProps> = ({
         }, 100);
       }
     }
-  }, [initialSelectedBlockId, contents, selectedItem]);
+
+    // Mark initial restore as complete (even if no block was restored)
+    // This allows save effect to run normally going forward
+    if (isViewStateLoaded && contents.length > 0) {
+      isInitialRestoreComplete.current = true;
+    }
+  }, [isViewStateLoaded, initialSelectedBlockId, savedSelectedBlockId, contents, selectedItem]);
 
   // Scroll to selected item when switching between grid/list view
   useEffect(() => {

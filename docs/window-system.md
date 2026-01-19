@@ -75,6 +75,100 @@ addOrFocusWindow({
 
 ---
 
+## Title Bar Context Menu
+
+Clicking the app icon in the window title bar shows a context menu with window actions.
+
+### Menu Items
+
+The menu uses a **fixed layout** to maintain user muscle memory. 
+
+| Item | Action | Availability |
+|------|--------|--------------|
+| **Restore** | Restores from Maximize | Only if window is maximized |
+| **Minimize** | Minimizes to Taskbar | Always available |
+| **Maximize** | Maximizes to Fullscreen| Only if window is not maximized |
+| **Share Window** | Copies deep link | Always available |
+| **About** | App Information | Currently placeholder |
+| **Close** | Closes window | Always available |
+
+*Note: Disabled actions appear with 50% opacity and `cursor-not-allowed`.*
+
+### Share Window URL Generation
+
+Uses `generateShareUrl(componentType, props)` from `routes.ts` to create proper deep-link URLs.
+
+**Examples:**
+| Window Type | Props | Generated URL |
+|-------------|-------|---------------|
+| About | `{}` | `https://lok.computer/about` |
+| About | `{initialTab: 'projects'}` | `https://lok.computer/about?tab=projects` |
+| ChannelExplorer | `{channelSlug: 'ephemeral'}` | `https://lok.computer/explorer/ephemeral` |
+| BlockViewer | `{blockId: 12345}` | `https://lok.computer/block/12345` |
+
+
+### State Synchronization
+
+To ensure shared URLs verify the current state (not just initial props), apps utilize a synchronization mechanism:
+
+1.  **Callback**: Apps receive an `onPropsChange` callback via props (injected by `componentRegistry`).
+2.  **Trigger**: Apps call this function when internal state changes (e.g., tab selection, view mode).
+3.  **Update**: The window manager updates `window.props` with the new values.
+4.  **Generate**: `generateShareUrl` uses the updated props to create the link.
+
+**Examples:**
+| Window Type | Props Sync | Generated URL |
+|-------------|------------|---------------|
+| About | `{initialTab: 'projects'}` | `https://lok.computer/about?tab=projects` |
+| Shelf | `{initialTab: 'progress', initialPage: 2}` | `https://lok.computer/shelf?tab=progress&page=2` |
+| ChannelExplorer | `{initialPreviewMode: 'horizontal', initialSelectedBlockId: 123}` | `.../slug?preview=horizontal&block=123` |
+
+### Components
+
+- **ContextMenu** (`src/components/menu/ContextMenu.tsx`): Reusable context menu component
+- **DraggableWindow** (`src/components/window/DraggableWindow.tsx`): Integrates the context menu
+- **generateShareUrl** (`src/config/routes.ts`): URL generation function
+
+### Extending the Menu
+
+Edit `getContextMenuItems()` in `DraggableWindow.tsx`:
+
+```tsx
+return [
+  {
+    type: 'item',
+    label: 'Window',
+    subItems: windowSubItems,
+  },
+  {
+    type: 'item',
+    label: 'Share Window',
+    action: () => { /* copy URL */ },
+  },
+  // Add new items here
+  {
+    type: 'item',
+    label: 'New Feature',
+    action: () => { /* your action */ },
+  },
+];
+```
+
+### ContextMenuItem Interface
+
+```typescript
+interface ContextMenuItem {
+  type: 'item' | 'divider';
+  label?: string;
+  icon?: string;      // iconType for CustomIcon
+  action?: () => void;
+  disabled?: boolean;
+  subItems?: ContextMenuItem[];
+}
+```
+
+---
+
 ## Window Interface
 
 ```typescript

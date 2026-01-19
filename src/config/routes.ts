@@ -14,6 +14,8 @@ export interface RouteConfig {
     componentType: string;
     /** Extract props from URL params and query string */
     extractProps: (params: Record<string, string>, query: URLSearchParams) => Record<string, unknown>;
+    /** Generate URL path from props (reverse of extractProps) */
+    generateUrl?: (props: Record<string, unknown>) => string | null;
     /** Generate window title from props */
     getTitle: (props: Record<string, unknown>) => string;
     /** Window icon type */
@@ -40,7 +42,27 @@ export const ROUTES: RouteConfig[] = [
             initialGridSize: query.get('size') as 'S' | 'M' | 'L' || undefined,
             initialIsListView: query.get('view') === 'list',
             initialPreviewMode: query.get('preview') as 'off' | 'horizontal' | 'vertical' || undefined,
+            initialSelectedBlockId: query.get('block') ? parseInt(query.get('block')!, 10) : undefined,
         }),
+        generateUrl: (props) => {
+            if (!props.channelSlug) return null;
+            let url = `/explorer/${encodeURIComponent(String(props.channelSlug))}`;
+            const queryParts: string[] = [];
+            // Include view state
+            if (props.initialIsListView) queryParts.push('view=list');
+            // Include grid size
+            if (props.initialGridSize) queryParts.push(`size=${encodeURIComponent(String(props.initialGridSize))}`);
+            // Include preview mode
+            if (props.initialPreviewMode && props.initialPreviewMode !== 'off') {
+                queryParts.push(`preview=${encodeURIComponent(String(props.initialPreviewMode))}`);
+            }
+            // Include selected block
+            if (props.initialSelectedBlockId) {
+                queryParts.push(`block=${encodeURIComponent(String(props.initialSelectedBlockId))}`);
+            }
+            if (queryParts.length > 0) url += '?' + queryParts.join('&');
+            return url;
+        },
         getTitle: (props) => String(props.channelSlug || 'Channel'),
         iconType: 'folder',
         defaultWidth: 600,
@@ -54,6 +76,10 @@ export const ROUTES: RouteConfig[] = [
         extractProps: (params) => ({
             blockId: parseInt(params.blockId, 10),
         }),
+        generateUrl: (props) => {
+            if (!props.blockId) return null;
+            return `/block/${encodeURIComponent(String(props.blockId))}`;
+        },
         getTitle: (props) => `Block #${props.blockId}`,
         iconType: 'block',
         defaultWidth: 500,
@@ -67,6 +93,10 @@ export const ROUTES: RouteConfig[] = [
         extractProps: (_, query) => ({
             imageUrl: query.get('url') || '',
         }),
+        generateUrl: (props) => {
+            if (!props.imageUrl) return '/image';
+            return `/image?url=${encodeURIComponent(String(props.imageUrl))}`;
+        },
         getTitle: () => 'Image',
         iconType: 'image',
         defaultWidth: 600,
@@ -80,6 +110,10 @@ export const ROUTES: RouteConfig[] = [
         extractProps: (_, query) => ({
             initialTab: query.get('tab') || undefined,
         }),
+        generateUrl: (props) => {
+            if (props.initialTab) return `/about?tab=${encodeURIComponent(String(props.initialTab))}`;
+            return '/about';
+        },
         getTitle: () => 'About',
         iconType: 'about',
         singleInstance: true,
@@ -91,6 +125,7 @@ export const ROUTES: RouteConfig[] = [
         pattern: 'config',
         componentType: 'Config',
         extractProps: () => ({}),
+        generateUrl: () => '/config',
         getTitle: () => 'Config',
         iconType: 'config',
         singleInstance: true,
@@ -102,6 +137,7 @@ export const ROUTES: RouteConfig[] = [
         pattern: 'arena',
         componentType: 'Are.na',
         extractProps: () => ({ username: 'lok' }),
+        generateUrl: () => '/arena',
         getTitle: () => 'Are.na',
         iconType: 'arena',
         defaultWidth: 400,
@@ -113,7 +149,24 @@ export const ROUTES: RouteConfig[] = [
         componentType: 'Shelf',
         extractProps: (_, query) => ({
             initialTab: query.get('tab') || undefined,
+            initialPage: query.get('page') ? parseInt(query.get('page')!, 10) : undefined,
         }),
+        generateUrl: (props) => {
+            let url = '/shelf';
+            const queryParts: string[] = [];
+
+            if (props.initialTab) {
+                queryParts.push(`tab=${encodeURIComponent(String(props.initialTab))}`);
+            }
+            if (props.initialPage && Number(props.initialPage) > 1) {
+                queryParts.push(`page=${encodeURIComponent(String(props.initialPage))}`);
+            }
+
+            if (queryParts.length > 0) {
+                url += '?' + queryParts.join('&');
+            }
+            return url;
+        },
         getTitle: () => 'Shelf',
         iconType: 'shelf',
         singleInstance: true,
@@ -125,6 +178,7 @@ export const ROUTES: RouteConfig[] = [
         pattern: 'guestbook',
         componentType: 'Guestbook',
         extractProps: () => ({}),
+        generateUrl: () => '/guestbook',
         getTitle: () => 'Guestbook',
         iconType: 'mail',
         singleInstance: true,
@@ -136,6 +190,7 @@ export const ROUTES: RouteConfig[] = [
         pattern: 'ai',
         componentType: 'AI Talk',
         extractProps: () => ({}),
+        generateUrl: () => '/ai',
         getTitle: () => 'AI Talk',
         iconType: 'mailbox',
         singleInstance: true,
@@ -147,6 +202,7 @@ export const ROUTES: RouteConfig[] = [
         pattern: 'weather',
         componentType: 'Weather',
         extractProps: () => ({}),
+        generateUrl: () => '/weather',
         getTitle: () => 'Weather',
         iconType: 'weather',
         defaultWidth: 860,
@@ -157,6 +213,7 @@ export const ROUTES: RouteConfig[] = [
         pattern: 'bsky',
         componentType: 'Bsky',
         extractProps: () => ({}),
+        generateUrl: () => '/bsky',
         getTitle: () => 'Bsky',
         iconType: 'bsky',
         defaultWidth: 450,
@@ -167,6 +224,7 @@ export const ROUTES: RouteConfig[] = [
         pattern: 'fedi',
         componentType: 'Fedi',
         extractProps: () => ({}),
+        generateUrl: () => '/fedi',
         getTitle: () => 'Fedi',
         iconType: 'fedi',
         defaultWidth: 450,
@@ -177,6 +235,7 @@ export const ROUTES: RouteConfig[] = [
         pattern: 'links',
         componentType: 'Links',
         extractProps: () => ({}),
+        generateUrl: () => '/links',
         getTitle: () => 'Links',
         iconType: 'webpage',
         singleInstance: true,
@@ -188,6 +247,7 @@ export const ROUTES: RouteConfig[] = [
         pattern: 'console',
         componentType: 'Console',
         extractProps: () => ({}),
+        generateUrl: () => '/console',
         getTitle: () => 'Console',
         iconType: 'console',
         defaultWidth: 700,
@@ -200,6 +260,10 @@ export const ROUTES: RouteConfig[] = [
         extractProps: (_, query) => ({
             initialUrl: query.get('url') || undefined,
         }),
+        generateUrl: (props) => {
+            if (props.initialUrl) return `/web?url=${encodeURIComponent(String(props.initialUrl))}`;
+            return '/web';
+        },
         getTitle: () => 'Web',
         iconType: 'globe',
         defaultWidth: 800,
@@ -259,4 +323,30 @@ export function parseWindowSpec(spec: string): { path: string; query: URLSearchP
         path: path || '',
         query: new URLSearchParams(queryString || ''),
     };
+}
+
+/**
+ * Generate a shareable URL from a window's componentType and props
+ * Returns null if the componentType is not found or doesn't have a generateUrl function
+ * 
+ * @param componentType - The component type key (e.g., 'About', 'ChannelExplorer')
+ * @param props - Optional props to include in the URL
+ * @returns Full shareable URL or null if generation fails
+ */
+export function generateShareUrl(
+    componentType: string,
+    props?: Record<string, unknown>
+): string | null {
+    const route = ROUTES.find(r => r.componentType === componentType);
+
+    if (!route || !route.generateUrl) {
+        return null;
+    }
+
+    const path = route.generateUrl(props || {});
+    if (!path) {
+        return null;
+    }
+
+    return `https://lok.computer${path}`;
 }

@@ -20,7 +20,7 @@ Users can open apps directly via URL.
 | `/about` | About | `initialTab` |
 | `/config` | Config | - |
 | `/arena` | Are.na | `username` |
-| `/shelf` | Shelf | `initialTab` |
+| `/shelf` | Shelf | `initialTab`, `initialPage` |
 | `/guestbook` | Guestbook | - |
 | `/ai` | AI Talk | - |
 | `/weather` | Weather | - |
@@ -29,7 +29,7 @@ Users can open apps directly via URL.
 | `/links` | Links | - |
 | `/console` | Console | - |
 | `/web` | Web | `initialUrl` |
-| `/explorer/:channelSlug` | ChannelExplorer | `channelSlug`, `view`, `size`, `preview` |
+| `/explorer/:channelSlug` | ChannelExplorer | `channelSlug`, `view`, `size`, `preview`, `block` |
 | `/block/:blockId` | BlockViewer | `blockId` |
 | `/image` | ImageViewer | `url` |
 
@@ -47,12 +47,18 @@ Users can open apps directly via URL.
 | `view` | `list`, `grid` | View mode |
 | `size` | `S`, `M`, `L` | Icon size |
 | `preview` | `off`, `horizontal`, `vertical` | Preview panel |
+| `block` | `number` | Selected block ID |
 
 ### Tabbed Apps
 ```
 /about?tab=projects
-/shelf?tab=movie
+/shelf?tab=movie&page=2
 ```
+
+| Param | Values | Description |
+|-------|--------|-------------|
+| `tab` | string | Active tab ID |
+| `page` | number | Page number (Shelf only) |
 
 ### Web Browser
 ```
@@ -90,11 +96,14 @@ export const ROUTES: RouteConfig[] = [
       channelSlug: params.channelSlug,
       initialGridSize: query.get('size'),
       initialIsListView: query.get('view') === 'list',
+      initialPreviewMode: query.get('preview'),
+      initialSelectedBlockId: query.get('block'),
     }),
-    getTitle: (props) => String(props.channelSlug),
+    generateUrl: (props) => {
+      // Logic to reconstruct URL with query params
+    },
     iconType: 'folder',
-    defaultWidth: 600,
-    defaultHeight: 500,
+    // ...
   },
 ];
 ```
