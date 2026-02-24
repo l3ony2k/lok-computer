@@ -156,12 +156,6 @@
         color: hsl(var(--accent-foreground));
     }
 
-    /* Firefox support */
-    ::-moz-selection {
-        background-color: hsl(var(--accent));
-        color: hsl(var(--accent-foreground));
-    }
-
     /* Desktop background with custom wallpaper */
     .desktop-container {
         @apply flex-1 relative overflow-hidden;
@@ -246,29 +240,6 @@
     scrollbar-color: hsl(var(--border)) hsl(var(--background));
 }
 
-/* Global webkit scrollbar styles for ALL elements */
-*::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
-
-*::-webkit-scrollbar-track {
-    background: hsl(var(--background));
-}
-
-*::-webkit-scrollbar-thumb {
-    background: hsl(var(--border));
-    border-radius: 4px;
-}
-
-*::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--accent));
-}
-
-*::-webkit-scrollbar-corner {
-    background: hsl(var(--background));
-}
-
 /* Unified thin scrollbar styles for all scrollable areas */
 .window-content-area,
 .scrollable-area {
@@ -278,39 +249,11 @@
     overscroll-behavior: contain;
 }
 
-.dark .window-content-area,
-.dark .scrollable-area {
-    color-scheme: dark;
-    scrollbar-color: hsl(var(--border)) hsl(var(--background));
+.scrollable-area {
+    scrollbar-gutter: stable;
 }
 
-/* Webkit scrollbar styles for Chromium browsers */
-.window-content-area::-webkit-scrollbar,
-.scrollable-area::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
 
-.window-content-area::-webkit-scrollbar-track,
-.scrollable-area::-webkit-scrollbar-track {
-    background: hsl(var(--background));
-}
-
-.window-content-area::-webkit-scrollbar-thumb,
-.scrollable-area::-webkit-scrollbar-thumb {
-    background: hsl(var(--border));
-    border-radius: 4px;
-}
-
-.window-content-area::-webkit-scrollbar-thumb:hover,
-.scrollable-area::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--accent));
-}
-
-.window-content-area::-webkit-scrollbar-corner,
-.scrollable-area::-webkit-scrollbar-corner {
-    background: hsl(var(--background));
-}
 
 /* Guestbook challenge question styling (dynamically loaded content) */
 #guestbooks___challenge-answer-container .guestbooks___input-container {
@@ -435,12 +378,9 @@ a:hover .animate-marquee-if-overflow {
     animation: marquee-scroll 3s ease-in-out infinite alternate;
 }
 
-/* 88x31 button image rendering - cross-browser pixelated/crisp rendering */
+/* 88x31 button image rendering */
 .pixelated-image {
-    image-rendering: auto;
-    image-rendering: crisp-edges;
     image-rendering: pixelated;
-    image-rendering: -webkit-optimize-contrast;
 }
 
 /* ========================================
