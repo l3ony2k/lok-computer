@@ -8,6 +8,13 @@ import { ChannelExplorer } from '@/apps/arena/channels/ChannelExplorer';
 import { WebBrowser } from '@/apps/web/WebBrowser';
 import { Calendar } from '@/components/calendar/Calendar';
 
+interface LinkAppItem {
+  title: string;
+  source: {
+    url: string;
+  };
+}
+
 export const TopBar: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isAppMenuOpen, setIsAppMenuOpen] = useState(false);
@@ -69,7 +76,7 @@ export const TopBar: React.FC = () => {
         }
 
         if (app.name === 'Links' && app.props?.items) {
-          baseItem.subItems = app.props.items.map((item: any) => ({
+          baseItem.subItems = (app.props.items as LinkAppItem[]).map((item) => ({
             name: item.title,
             iconType: 'link',
             action: () => addWindow({

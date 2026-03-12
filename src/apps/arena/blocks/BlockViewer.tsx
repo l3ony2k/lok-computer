@@ -1,57 +1,106 @@
-import { useState, useEffect } from "react";
-import { ArenaBlock } from "@/types/arena";
+import { useEffect, useState } from "react";
+import { ArenaBlock, ArenaConnection } from "@/types/arena";
 import { getBlock } from "@/lib/api";
-import { StateMessage } from '@/components/ui/StateMessage';
+import { StateMessage } from "@/components/ui/StateMessage";
 import { ArenaWindowLayout } from "../components/ArenaWindowLayout";
 import { useWindowManager } from "@/hooks/useWindowManager";
 import { ImageViewerApp } from "@/apps/imageviewer/ImageViewerApp";
+import { getPreviewImageUrl } from "../utils/contentItemHelpers";
 
-// Helper functions for image source determination
-const getImageSource = (block: ArenaBlock): string => {
-  if (!block.image) return "";
-
-  const image = block.image as any;
-
-  if (image.large?.url) return image.large.url;
-  if (image.display?.url) return image.display.url;
-  if (image.original?.url) return image.original.url;
-
-  return "";
+const getBestImageSource = (block: ArenaBlock): string => {
+  return block.image?.large?.src ?? block.image?.medium?.src ?? block.image?.original.src ?? "";
 };
 
-const formatDate = (dateString: string) => {
+const formatDateTime = (dateString: string) => {
   const date = new Date(dateString);
-  const pad = (n: number) => n.toString().padStart(2, '0');
+  const pad = (value: number) => value.toString().padStart(2, "0");
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
 };
 
-// Shared renderer for Media and Attachment types
-const renderMediaOrAttachment = (block: ArenaBlock) => (
-  <div className="flex flex-col items-center justify-center w-full">
-    {block.embed?.html && (
+const titleCase = (value: string) => {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+};
+
+const mergeConnection = (block: ArenaBlock, connection?: ArenaConnection | null): ArenaBlock => {
+  if (block.connection || !connection) {
+    return block;
+  }
+
+  return {
+    ...block,
+    connection,
+  };
+};
+
+const renderAttachment = (block: ArenaBlock) => {
+  const previewImage = getPreviewImageUrl(block.image);
+
+  if (previewImage) {
+    return (
+      <div className="flex flex-col items-center justify-center w-full h-full min-h-[200px]">
+        <img
+          src={previewImage}
+          alt={block.title || "Attachment preview"}
+          className="max-w-full object-contain"
+        />
+      </div>
+    );
+  }
+
+  if (!block.attachment?.url) {
+    return <p>This attachment does not include a downloadable file.</p>;
+  }
+
+  return (
+    <a
+      href={block.attachment.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex flex-col items-center justify-center w-full p-8 border border-dashed border-border hover:bg-muted transition-colors"
+    >
+      <span className="text-4xl mb-2">📎</span>
+      <span className="underline break-all">{block.attachment.fileName || "Download attachment"}</span>
+    </a>
+  );
+};
+
+const renderEmbed = (block: ArenaBlock) => {
+  if (block.embed?.html) {
+    return (
       <div
         className="max-w-full [&>iframe]:max-w-full"
         dangerouslySetInnerHTML={{ __html: block.embed.html }}
       />
-    )}
-    {!block.embed?.html && block.attachment?.url && (
-      <a
-        href={block.attachment.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex flex-col items-center justify-center w-full p-8 border border-dashed border-border hover:bg-muted transition-colors"
-      >
-        <span className="text-4xl mb-2">📎</span>
-        <span className="underline break-all">{block.attachment.file_name || "Download attachment"}</span>
-      </a>
-    )}
-  </div>
-);
+    );
+  }
 
-// Block type renderers - now factory functions that accept onImageClick
+  const previewImage = getPreviewImageUrl(block.image);
+  if (previewImage) {
+    return (
+      <div className="flex flex-col items-center justify-center w-full h-full min-h-[200px]">
+        <img
+          src={previewImage}
+          alt={block.title || "Embed preview"}
+          className="max-w-full object-contain"
+        />
+      </div>
+    );
+  }
+
+  if (block.embed?.url) {
+    return (
+      <a href={block.embed.url} target="_blank" rel="noopener noreferrer" className="underline">
+        Open embed source
+      </a>
+    );
+  }
+
+  return <p>This embed does not include a preview.</p>;
+};
+
 const createBlockRenderers = (onImageClick?: (imageUrl: string, title: string) => void) => ({
-  Image: (block: ArenaBlock) => {
-    const imageUrl = getImageSource(block);
+  image: (block: ArenaBlock) => {
+    const imageUrl = getBestImageSource(block);
     return (
       <div className="flex flex-col items-center justify-center w-full h-full min-h-[200px]">
         <img
@@ -63,18 +112,14 @@ const createBlockRenderers = (onImageClick?: (imageUrl: string, title: string) =
       </div>
     );
   },
-
-  Text: (block: ArenaBlock) => (
+  text: (block: ArenaBlock) => (
     <div
       className="prose dark:prose-invert max-w-none prose-p:leading-relaxed prose-headings:font-bold prose-headings:text-foreground prose-p:text-foreground prose-strong:text-foreground prose-a:text-[var(--link-color)] prose-ul:text-foreground prose-ol:text-foreground prose-li:text-foreground prose-blockquote:text-foreground"
-      dangerouslySetInnerHTML={{
-        __html: (block as any).content_html || block.content || ""
-      }}
+      dangerouslySetInnerHTML={{ __html: block.textHtml || "" }}
     />
   ),
-
-  Link: (block: ArenaBlock) => {
-    const imageUrl = getImageSource(block);
+  link: (block: ArenaBlock) => {
+    const imageUrl = getBestImageSource(block);
     return (
       <div className="flex flex-col items-center justify-center w-full h-full min-h-[200px]">
         {block.image ? (
@@ -92,52 +137,73 @@ const createBlockRenderers = (onImageClick?: (imageUrl: string, title: string) =
       </div>
     );
   },
-
-  Media: (block: ArenaBlock) => renderMediaOrAttachment(block),
-  Attachment: (block: ArenaBlock) => renderMediaOrAttachment(block)
+  attachment: (block: ArenaBlock) => renderAttachment(block),
+  embed: (block: ArenaBlock) => renderEmbed(block),
 });
 
-export const BlockViewer = ({ blockId, mode = "window" }: { blockId: number | string, mode?: "window" | "embedded" }) => {
-  const [loading, setLoading] = useState(true);
-  const [block, setBlock] = useState<ArenaBlock | null>(null);
+interface BlockViewerProps {
+  blockId: number | string;
+  mode?: "window" | "embedded";
+  initialBlock?: ArenaBlock;
+  initialConnection?: ArenaConnection | null;
+}
+
+export const BlockViewer = ({
+  blockId,
+  mode = "window",
+  initialBlock,
+  initialConnection,
+}: BlockViewerProps) => {
+  const [loading, setLoading] = useState(!initialBlock);
+  const [block, setBlock] = useState<ArenaBlock | null>(initialBlock ?? null);
   const [error, setError] = useState<string | null>(null);
   const { addWindow } = useWindowManager();
 
-  // Handler to open image in ImageViewerApp
   const handleImageClick = (imageUrl: string, title: string) => {
     addWindow({
-      title: title,
+      title,
       content: <ImageViewerApp imageUrl={imageUrl} />,
       width: 800,
       height: 600,
-      iconType: 'image',
-      componentType: 'ImageViewer',
+      iconType: "image",
+      componentType: "ImageViewer",
       props: { imageUrl },
     });
   };
 
-  // Create renderers with the image click handler
   const blockRenderers = createBlockRenderers(handleImageClick);
 
   useEffect(() => {
+    let isActive = true;
+
     const fetchBlock = async () => {
       try {
         setLoading(true);
-        const data = await getBlock(blockId);
-        setBlock(data);
-        setError(null);
-      } catch (err) {
-        setError("Failed to load block");
-        console.error(err);
+        const data = await getBlock(blockId, initialBlock ?? null);
+        if (isActive) {
+          setBlock(mergeConnection(data, initialConnection ?? initialBlock?.connection ?? null));
+          setError(null);
+        }
+      } catch (fetchError) {
+        if (isActive) {
+          setError("Failed to load block");
+          console.error(fetchError);
+        }
       } finally {
-        setLoading(false);
+        if (isActive) {
+          setLoading(false);
+        }
       }
     };
 
     fetchBlock();
-  }, [blockId]);
 
-  if (loading) {
+    return () => {
+      isActive = false;
+    };
+  }, [blockId, initialBlock, initialConnection]);
+
+  if (loading && !block) {
     return <StateMessage>Loading...</StateMessage>;
   }
 
@@ -146,54 +212,46 @@ export const BlockViewer = ({ blockId, mode = "window" }: { blockId: number | st
   }
 
   const renderBlockContent = () => {
-    const blockClass = block.class as keyof typeof blockRenderers;
-
-    // Use the type-specific renderer if available
-    if (blockRenderers[blockClass]) {
-      return blockRenderers[blockClass](block);
+    const renderer = blockRenderers[block.kind];
+    if (renderer) {
+      return renderer(block);
     }
 
-    // Fallback for unsupported block types
-    return <p>This block type ({block.class}) is not supported in the viewer.</p>;
+    return <p>This block type ({block.kind}) is not supported in the viewer.</p>;
   };
 
-  const hasDescription = Boolean(block.description_html || block.description);
+  const hasDescription = Boolean(block.descriptionHtml || block.descriptionPlain);
+  const connectedBy = block.connection?.connectedBy ?? block.owner;
+  const connectedAt = block.connection?.connectedAt ?? block.createdAt;
 
   const content = (
     <div className="flex flex-col min-h-full w-full">
-
-      {/* Content Section */}
       <div className="w-full flex justify-center p-2 max-w-4xl mx-auto">
         {renderBlockContent()}
       </div>
 
-      {/* Metadata Area (Description + Metadata) */}
       <div className="mt-auto w-full">
-        {/* Description Section (Optional) */}
         {hasDescription && (
           <>
             <hr className="w-full border-border" />
             <div
               className="w-full prose dark:prose-invert max-w-none text-sm p-2 overflow-hidden"
-              dangerouslySetInnerHTML={{
-                __html: block.description_html || block.description || ""
-              }}
+              dangerouslySetInnerHTML={{ __html: block.descriptionHtml || "" }}
             />
           </>
         )}
 
-        {/* Metadata Section */}
         <hr className="w-full border-border" />
         <div className="w-full flex flex-wrap gap-x-8 gap-y-4 text-xs text-muted-foreground p-2">
           <div className="flex flex-col gap-1">
             <span className="font-bold text-foreground/70 uppercase tracking-wider text-[10px]">Type</span>
-            <span>{block.class}</span>
+            <span>{titleCase(block.kind)}</span>
           </div>
 
           <div className="flex flex-col gap-1">
             <span className="font-bold text-foreground/70 uppercase tracking-wider text-[10px]">Block ID</span>
             <a
-              href={`https://www.are.na/block/${block.id}`}
+              href={block.arenaUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-primary hover:underline w-fit"
@@ -217,25 +275,26 @@ export const BlockViewer = ({ blockId, mode = "window" }: { blockId: number | st
             </div>
           )}
 
-          <div className="flex flex-col gap-1">
-            <span className="font-bold text-foreground/70 uppercase tracking-wider text-[10px]">Connected By</span>
-            <a
-              href={`https://www.are.na/${block.user.slug}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-primary hover:underline w-fit"
-            >
-              {block.user.full_name}
-            </a>
-          </div>
+          {connectedBy && (
+            <div className="flex flex-col gap-1">
+              <span className="font-bold text-foreground/70 uppercase tracking-wider text-[10px]">Connected By</span>
+              <a
+                href={`https://www.are.na/${connectedBy.slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-primary hover:underline w-fit"
+              >
+                {connectedBy.name}
+              </a>
+            </div>
+          )}
 
           <div className="flex flex-col gap-1">
             <span className="font-bold text-foreground/70 uppercase tracking-wider text-[10px]">Connected Time</span>
-            <span>{formatDate(block.created_at)}</span>
+            <span>{formatDateTime(connectedAt)}</span>
           </div>
         </div>
       </div>
-
     </div>
   );
 

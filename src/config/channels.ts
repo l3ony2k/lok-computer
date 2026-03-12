@@ -24,4 +24,4 @@ export const FEATURED_CHANNELS = [
 export const DEFAULT_USERNAME = "lok";
 
 // Configure whether to use the API for channel list or the static list above
-export const USE_STATIC_CHANNELS = true;
+export const USE_STATIC_CHANNELS = false;

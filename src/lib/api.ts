@@ -1,175 +1,306 @@
-
-import { ArenaChannel, ArenaChannelContents } from "@/types/arena";
+import {
+  ArenaBlock,
+  ArenaChannel,
+  ArenaChannelPage,
+  ArenaChannelPreview,
+  ArenaItem,
+} from "@/types/arena";
 import { toast } from "sonner";
-import { FEATURED_CHANNELS, USE_STATIC_CHANNELS, DEFAULT_USERNAME } from "@/config/channels";
-import { getCachedData, setCachedData, incrementRequestCount, CACHE_TTL } from "@/lib/storage";
+import { DEFAULT_USERNAME, FEATURED_CHANNELS, USE_STATIC_CHANNELS } from "@/config/channels";
+import { CACHE_TTL, getCachedData, incrementRequestCount, setCachedData } from "@/lib/storage";
+import {
+  RawArenaItem,
+  RawArenaListResponse,
+  RawBlock,
+  RawChannel,
+  RawOwner,
+  normalizeArenaItem,
+  normalizeBlock,
+  normalizeChannel,
+  normalizePaginationMeta,
+} from "@/lib/arena-normalizers";
 
+const API_BASE_URL = "https://api.are.na/v3";
+const ARENA_CACHE_PREFIX = "arena:v3";
+const USER_CHANNELS_PAGE_SIZE = 100;
+const CHANNEL_PAGE_SIZE = 100;
 
-const API_BASE_URL = "https://api.are.na/v2";
+interface RequestOptions {
+  signal?: AbortSignal;
+  cacheKey?: string;
+  ttlMs?: number;
+}
 
-// Simulated channels response for when we can't use the API
-function getStaticChannels(): ArenaChannel[] {
-  return FEATURED_CHANNELS.map((channel, index) => ({
-    id: index + 1,
-    title: channel.title,
-    length: 0,
-    status: "closed",
-    user_id: 0,
-    slug: channel.slug,
-    added_to_at: new Date().toISOString(),
-    published: true,
-    updated_at: new Date().toISOString(),
-    created_at: new Date().toISOString(),
-    open: true,
-    collaboration: false,
-    collaborator_count: 0,
-    owner: {
-      id: 0,
-      slug: DEFAULT_USERNAME,
-      username: DEFAULT_USERNAME,
-      first_name: "",
-      last_name: "",
-      full_name: DEFAULT_USERNAME,
-      avatar: ""
+function buildArenaUrl(path: string, params?: Record<string, string | number | undefined>): string {
+  const searchParams = new URLSearchParams();
+
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) {
+        searchParams.set(key, String(value));
+      }
+    });
+  }
+
+  const query = searchParams.toString();
+  return `${API_BASE_URL}${path}${query ? `?${query}` : ""}`;
+}
+
+async function fetchArenaJson<T>(path: string, params?: Record<string, string | number | undefined>, options?: RequestOptions): Promise<T> {
+  const url = buildArenaUrl(path, params);
+
+  if (options?.cacheKey) {
+    const cached = await getCachedData<T>(options.cacheKey);
+    if (cached) {
+      console.log(`[Cache] Hit: ${options.cacheKey}`);
+      return cached;
+    }
+  }
+
+  await incrementRequestCount("arena");
+
+  const response = await fetch(url, {
+    signal: options?.signal,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Are.na request failed (${response.status})`);
+  }
+
+  const data = (await response.json()) as T;
+
+  if (options?.cacheKey && options.ttlMs) {
+    await setCachedData(options.cacheKey, data, options.ttlMs);
+  }
+
+  return data;
+}
+
+function createStaticOwner(username: string): RawOwner {
+  return {
+    id: 0,
+    type: "User",
+    name: username,
+    slug: username,
+    avatar: null,
+    initials: username.slice(0, 2).toUpperCase(),
+  };
+}
+
+function getStaticChannels(username: string = DEFAULT_USERNAME): ArenaChannel[] {
+  const owner = createStaticOwner(username);
+
+  return FEATURED_CHANNELS.map((channel, index) =>
+    normalizeChannel({
+      id: index + 1,
+      type: "Channel",
+      slug: channel.slug,
+      title: channel.title,
+      description: null,
+      state: "available",
+      visibility: "closed",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      owner,
+      counts: {
+        blocks: 0,
+        channels: 0,
+        contents: 0,
+        collaborators: 0,
+      },
+      connection: null,
+    })
+  );
+}
+
+async function getUserChannelsPage(username: string, page: number, signal?: AbortSignal): Promise<RawArenaListResponse<RawArenaItem>> {
+  return fetchArenaJson<RawArenaListResponse<RawArenaItem>>(
+    `/users/${username}/contents`,
+    {
+      type: "Channel",
+      per: USER_CHANNELS_PAGE_SIZE,
+      page,
     },
-    contents_updated_at: new Date().toISOString(),
-    class: "Channel",
-    user: {
-      id: 0,
-      slug: DEFAULT_USERNAME,
-      username: DEFAULT_USERNAME,
-      first_name: "",
-      last_name: "",
-      full_name: DEFAULT_USERNAME,
-      avatar: ""
-    },
-    base_class: "Channel",
-    current_user_channels_index: null
-  }));
+    {
+      signal,
+      cacheKey: `${ARENA_CACHE_PREFIX}:user:${username}:channels:${page}`,
+      ttlMs: CACHE_TTL.ARENA_CHANNEL,
+    }
+  );
+}
+
+function isArenaChannel(item: ArenaItem): item is ArenaChannel {
+  return item.kind === "channel";
+}
+
+function mergeBlockConnection(block: ArenaBlock, fallbackConnection: ArenaBlock["connection"]): ArenaBlock {
+  if (block.connection || !fallbackConnection) {
+    return block;
+  }
+
+  return {
+    ...block,
+    connection: fallbackConnection,
+  };
 }
 
 export async function getUserChannels(username: string = DEFAULT_USERNAME): Promise<ArenaChannel[]> {
   if (USE_STATIC_CHANNELS) {
     console.log("[API:Arena] Using static channel list");
-    return getStaticChannels();
+    return getStaticChannels(username);
   }
 
   try {
-    const response = await fetch(`${API_BASE_URL}/users/${username}/channels?per=100`);
+    const firstPage = await getUserChannelsPage(username, 1);
+    const firstItems = firstPage.data.map(normalizeArenaItem).filter(isArenaChannel);
+    const { totalPages } = normalizePaginationMeta(firstPage.meta);
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch channels: ${response.status}`);
+    if (totalPages <= 1) {
+      return firstItems;
     }
 
-    const data = await response.json();
-    return data.channels || [];
-  } catch (error) {
-    console.error("Error fetching user channels:", error);
-    toast.error("Failed to load channels");
+    const remainingPageNumbers = Array.from({ length: totalPages - 1 }, (_, index) => index + 2);
+    const remainingPages = await Promise.all(
+      remainingPageNumbers.map((page) => getUserChannelsPage(username, page))
+    );
 
-    // Fallback to static channels
+    return [
+      ...firstItems,
+      ...remainingPages.flatMap((page) => page.data.map(normalizeArenaItem).filter(isArenaChannel)),
+    ];
+  } catch (error) {
+    console.error("[Arena API] Failed to fetch user channels:", error);
+    toast.error("Failed to load channels");
     console.log("[API:Arena] Falling back to static channels");
-    return getStaticChannels();
+    return getStaticChannels(username);
   }
 }
 
 export async function getChannelContents(
   channelSlug: string,
-  username: string = DEFAULT_USERNAME,
   page: number = 1,
-  perPage: number = 100,
+  perPage: number = CHANNEL_PAGE_SIZE,
   signal?: AbortSignal
-): Promise<ArenaChannelContents> {
-  const cacheKey = `arena:channel:${channelSlug}:${page}`;
-
-  // Check cache first (but not if we have an abort signal - those are for fresh fetches)
-  if (!signal) {
-    try {
-      const cached = await getCachedData<ArenaChannelContents>(cacheKey);
-      if (cached) {
-        console.log(`[Cache] Hit: arena:channel:${channelSlug}:${page}`);
-        return cached;
-      }
-    } catch (e) {
-      console.warn('[Arena API] Cache check failed:', e);
+): Promise<ArenaChannelPage> {
+  const rawPage = await fetchArenaJson<RawArenaListResponse<RawArenaItem>>(
+    `/channels/${channelSlug}/contents`,
+    {
+      page,
+      per: perPage,
+      sort: "position_desc",
+    },
+    {
+      signal,
+      cacheKey: `${ARENA_CACHE_PREFIX}:channel:${channelSlug}:contents:${page}:${perPage}`,
+      ttlMs: CACHE_TTL.ARENA_CHANNEL,
     }
+  );
+
+  return {
+    items: rawPage.data.map(normalizeArenaItem),
+    meta: normalizePaginationMeta(rawPage.meta),
+  };
+}
+
+export async function getAllChannelContents(
+  channelSlug: string,
+  signal?: AbortSignal
+): Promise<ArenaItem[]> {
+  const firstPage = await getChannelContents(channelSlug, 1, CHANNEL_PAGE_SIZE, signal);
+
+  if (firstPage.meta.totalPages <= 1) {
+    return firstPage.items;
   }
 
+  const remainingPageNumbers = Array.from(
+    { length: firstPage.meta.totalPages - 1 },
+    (_, index) => index + 2
+  );
+  const remainingPages = await Promise.all(
+    remainingPageNumbers.map((page) => getChannelContents(channelSlug, page, CHANNEL_PAGE_SIZE, signal))
+  );
+
+  return [...firstPage.items, ...remainingPages.flatMap((page) => page.items)];
+}
+
+export async function getBlock(
+  blockId: number | string,
+  initialBlock?: ArenaBlock | null
+): Promise<ArenaBlock> {
   try {
-    await incrementRequestCount('arena');
-    // No need to include username for public channels
-    const url = `${API_BASE_URL}/channels/${channelSlug}?page=${page}&per=${perPage}`;
-    console.log(`[API:Arena] GET /channels/${channelSlug}?page=${page}`);
+    const rawBlock = await fetchArenaJson<RawBlock>(
+      `/blocks/${blockId}`,
+      undefined,
+      {
+        cacheKey: `${ARENA_CACHE_PREFIX}:block:${blockId}`,
+        ttlMs: CACHE_TTL.ARENA_BLOCK,
+      }
+    );
 
-    const fetchOptions: RequestInit = {
-      signal // Add AbortSignal to request options
-    };
-
-    const response = await fetch(url, fetchOptions);
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch channel contents: ${response.status}`);
-    }
-
-    const data = await response.json();
-    console.log(`[API:Arena] Received ${channelSlug} page ${page}`);
-
-    // Store in cache
-    try {
-      await setCachedData(cacheKey, data, CACHE_TTL.ARENA_CHANNEL);
-    } catch (e) {
-      console.warn('[Arena API] Failed to cache data:', e);
-    }
-
-    return data;
-  } catch (error: any) {
-    // Don't show toast for aborted requests
-    if (error.name === 'AbortError') {
-      console.log(`[API:Arena] Aborted: ${channelSlug}`);
-      throw error;
-    }
-
-    console.error(`[Arena API] Error fetching channel ${channelSlug}:`, error);
-    toast.error(`Failed to load channel: ${channelSlug}`);
+    return mergeBlockConnection(normalizeBlock(rawBlock), initialBlock?.connection ?? null);
+  } catch (error) {
+    console.error(`[Arena API] Error fetching block ${blockId}:`, error);
+    toast.error(`Failed to load block: ${blockId}`);
     throw error;
   }
 }
 
-export async function getBlock(blockId: number | string) {
-  const cacheKey = `arena:block:${blockId}`;
-
-  // Check cache first
+async function getChannelFollowersCount(channelSlug: string): Promise<number | undefined> {
   try {
-    const cached = await getCachedData<any>(cacheKey);
-    if (cached) {
-      console.log(`[Cache] Hit: arena:block:${blockId}`);
-      return cached;
-    }
-  } catch (e) {
-    console.warn('[Arena API] Cache check failed:', e);
-  }
+    const response = await fetchArenaJson<RawArenaListResponse<RawOwner>>(
+      `/channels/${channelSlug}/followers`,
+      {
+        per: 1,
+      },
+      {
+        cacheKey: `${ARENA_CACHE_PREFIX}:channel:${channelSlug}:followers`,
+        ttlMs: CACHE_TTL.ARENA_CHANNEL,
+      }
+    );
 
-  try {
-    await incrementRequestCount('arena');
-    const response = await fetch(`${API_BASE_URL}/blocks/${blockId}`);
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch block: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    // Store in cache
-    try {
-      await setCachedData(cacheKey, data, CACHE_TTL.ARENA_BLOCK);
-    } catch (e) {
-      console.warn('[Arena API] Failed to cache data:', e);
-    }
-
-    return data;
+    return response.meta.total_count;
   } catch (error) {
-    console.error(`[Arena API] Error fetching block ${blockId}:`, error);
-    toast.error(`Failed to load block: ${blockId}`);
+    console.warn(`[Arena API] Failed to fetch followers for ${channelSlug}:`, error);
+    return undefined;
+  }
+}
+
+export async function getChannelPreview(
+  channelSlug: string,
+  initialChannel?: ArenaChannel | null
+): Promise<ArenaChannelPreview> {
+  try {
+    const rawChannel = await fetchArenaJson<RawChannel>(
+      `/channels/${channelSlug}`,
+      undefined,
+      {
+        cacheKey: `${ARENA_CACHE_PREFIX}:channel:${channelSlug}:detail`,
+        ttlMs: CACHE_TTL.ARENA_CHANNEL,
+      }
+    );
+
+    const followers = await getChannelFollowersCount(channelSlug);
+    const normalizedChannel = normalizeChannel(rawChannel, followers);
+
+    return {
+      ...normalizedChannel,
+      connection: normalizedChannel.connection ?? initialChannel?.connection ?? null,
+      counts: {
+        ...normalizedChannel.counts,
+        ...(typeof followers === "number"
+          ? { followers }
+          : initialChannel?.counts.followers !== undefined
+            ? { followers: initialChannel.counts.followers }
+            : {}),
+      },
+    };
+  } catch (error) {
+    console.error(`[Arena API] Error fetching channel ${channelSlug}:`, error);
+
+    if (initialChannel) {
+      return initialChannel;
+    }
+
     throw error;
   }
 }

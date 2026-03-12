@@ -6,7 +6,8 @@ import { useWindowManager } from "@/hooks/useWindowManager";
 import { ChannelExplorer } from "./ChannelExplorer";
 import { ArenaWindowLayout } from "../components/ArenaWindowLayout";
 import { useIsMobile } from '@/hooks/use-mobile';
-import { ContentItemGrid, ContentItemListView, getGridConfiguration, ContentItem, getItemTitle } from '../utils/contentItems';
+import { ContentItemGrid, ContentItemListView } from '../utils/contentItems';
+import { ContentItem, getGridConfiguration } from "../utils/contentItemHelpers";
 import { StateMessage } from '@/components/ui/StateMessage';
 import { getAppState, setAppState } from "@/lib/storage";
 

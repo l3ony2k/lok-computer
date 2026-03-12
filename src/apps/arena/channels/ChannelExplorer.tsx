@@ -1,49 +1,48 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { ArenaBlock } from "@/types/arena";
-import { getChannelContents } from "@/lib/api";
+import React, { useEffect, useRef, useState } from "react";
+import { ArenaBlock, ArenaChannel, ArenaConnection } from "@/types/arena";
+import { getChannelContents, getChannelPreview } from "@/lib/api";
 import { useWindowManager } from "@/hooks/useWindowManager";
 import { BlockViewer } from "../blocks/BlockViewer";
 import { ArenaWindowLayout } from "../components/ArenaWindowLayout";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ContentItemGrid, ContentItemListView, getGridConfiguration, ContentItem, getItemTitle } from "../utils/contentItems";
+import {
+  ContentItemGrid,
+  ContentItemListView,
+} from "../utils/contentItems";
+import { ContentItem, getGridConfiguration, getItemTitle } from "../utils/contentItemHelpers";
 import { RetroButton } from "@/components/ui/RetroButton";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { getAppState, setAppState } from "@/lib/storage";
 
-// Interface for persisted channel view state
 interface ChannelViewState {
-  gridSize: 'S' | 'M' | 'L';
+  gridSize: "S" | "M" | "L";
   isListView: boolean;
-  previewMode: 'off' | 'horizontal' | 'vertical';
+  previewMode: "off" | "horizontal" | "vertical";
   selectedBlockId?: number;
 }
 
-// Memoized content item components for better performance
 const MemoizedContentItemGrid = React.memo(ContentItemGrid);
 const MemoizedContentItemListView = React.memo(ContentItemListView);
 
 interface ContentRendererProps {
   contents: ContentItem[];
-  gridSize: 'S' | 'M' | 'L';
+  gridSize: "S" | "M" | "L";
   onSingleClick: (itemId: number) => void;
   onDoubleClick: (item: ContentItem) => void;
-  renderThumbnail: (image: any) => string;
   getIconType: (item: ContentItem) => string;
   isMobile: boolean;
   selectedId?: number | null;
 }
 
-// Memoized grid content renderer
 const GridContent = React.memo(({
   contents,
   gridSize,
   onSingleClick,
   onDoubleClick,
-  renderThumbnail,
   getIconType,
   isMobile,
-  selectedId
+  selectedId,
 }: ContentRendererProps) => {
   const { gridIconSizeClass, itemWidth, gridTemplateStyle } = getGridConfiguration(gridSize);
 
@@ -65,7 +64,6 @@ const GridContent = React.memo(({
             onDoubleClick={() => onDoubleClick(item)}
             itemWidth={itemWidth}
             iconSizeClass={gridIconSizeClass}
-            renderThumbnail={renderThumbnail}
             getIconType={getIconType}
             isMobile={isMobile}
           />
@@ -75,16 +73,14 @@ const GridContent = React.memo(({
   );
 });
 
-// Memoized list content renderer
 const ListContent = React.memo(({
   contents,
   gridSize,
   onSingleClick,
   onDoubleClick,
-  renderThumbnail,
   getIconType,
   isMobile,
-  selectedId
+  selectedId,
 }: ContentRendererProps) => {
   const { listIconSizeClass } = getGridConfiguration(gridSize);
 
@@ -105,7 +101,6 @@ const ListContent = React.memo(({
             onSingleClick={() => onSingleClick(item.id)}
             onDoubleClick={() => onDoubleClick(item)}
             iconSizeClass={listIconSizeClass}
-            renderThumbnail={renderThumbnail}
             getIconType={getIconType}
             isMobile={isMobile}
           />
@@ -115,27 +110,65 @@ const ListContent = React.memo(({
   );
 });
 
-// Props interface for ChannelExplorer
 interface ChannelExplorerProps {
   channelSlug?: string;
   username?: string;
   items?: ContentItem[];
-  // Initial view state (for session restoration)
-  initialGridSize?: 'S' | 'M' | 'L';
+  initialGridSize?: "S" | "M" | "L";
   initialIsListView?: boolean;
-  initialPreviewMode?: 'off' | 'horizontal' | 'vertical';
+  initialPreviewMode?: "off" | "horizontal" | "vertical";
   initialSelectedBlockId?: number;
-  // Callback to sync state back to window props (for share URL generation)
   onPropsChange?: (props: Partial<ChannelExplorerProps>) => void;
 }
+
+const isArenaBlock = (item: ContentItem): item is ArenaBlock => item.kind !== "channel";
+const isArenaChannel = (item: ContentItem): item is ArenaChannel => item.kind === "channel";
+
+const isAbortError = (error: unknown): boolean => {
+  return error instanceof Error && error.name === "AbortError";
+};
+
+const formatDate = (dateString?: string) => {
+  if (!dateString) {
+    return "Unknown";
+  }
+
+  return new Date(dateString).toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+};
+
+const getConnectionPosition = (item: ContentItem): number => {
+  return item.connection?.position ?? Number.MIN_SAFE_INTEGER;
+};
+
+const sortItemsForExplorer = (items: ContentItem[]): ContentItem[] => {
+  return [...items].sort((left, right) => {
+    const leftPinned = left.connection?.pinned ?? false;
+    const rightPinned = right.connection?.pinned ?? false;
+
+    if (leftPinned !== rightPinned) {
+      return leftPinned ? -1 : 1;
+    }
+
+    const positionDiff = getConnectionPosition(right) - getConnectionPosition(left);
+    if (positionDiff !== 0) {
+      return positionDiff;
+    }
+
+    return right.id - left.id;
+  });
+};
 
 export const ChannelExplorer: React.FC<ChannelExplorerProps> = ({
   channelSlug,
   username = "lok",
   items,
-  initialGridSize = 'S',
+  initialGridSize = "S",
   initialIsListView = false,
-  initialPreviewMode = 'off',
+  initialPreviewMode = "off",
   initialSelectedBlockId,
   onPropsChange,
 }) => {
@@ -145,23 +178,23 @@ export const ChannelExplorer: React.FC<ChannelExplorerProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [isListView, setIsListView] = useState(initialIsListView);
   const { addWindow } = useWindowManager();
-  const [gridSize, setGridSize] = useState<'S' | 'M' | 'L'>(initialGridSize);
-  const itemsPerPage = 100;
-  const isMobile = useIsMobile();
-
-  // Preview Mode State
-  const [previewMode, setPreviewMode] = useState<'off' | 'horizontal' | 'vertical'>(initialPreviewMode);
+  const [gridSize, setGridSize] = useState<"S" | "M" | "L">(initialGridSize);
+  const [previewMode, setPreviewMode] = useState<"off" | "horizontal" | "vertical">(initialPreviewMode);
   const [selectedItem, setSelectedItem] = useState<ContentItem | null>(null);
-
-  // Track if initial load is complete to avoid saving immediately
+  const [selectedChannelPreview, setSelectedChannelPreview] = useState<ArenaChannel | null>(null);
   const [isViewStateLoaded, setIsViewStateLoaded] = useState(false);
   const [savedSelectedBlockId, setSavedSelectedBlockId] = useState<number | undefined>(undefined);
-  const isInitialRestoreComplete = useRef(false); // Prevents save from overwriting selectedBlockId before restore
+  const isInitialRestoreComplete = useRef(false);
+  const contentViewportRef = useRef<HTMLDivElement | null>(null);
   const viewStateKey = channelSlug ? `channel:view:${channelSlug}` : null;
+  const itemsPerPage = 100;
+  const isMobile = useIsMobile();
+  const selectedItemId = selectedItem?.id;
 
-  // Load saved view state on mount
   useEffect(() => {
-    if (!viewStateKey) return;
+    if (!viewStateKey) {
+      return;
+    }
 
     const loadViewState = async () => {
       try {
@@ -170,12 +203,11 @@ export const ChannelExplorer: React.FC<ChannelExplorerProps> = ({
           setGridSize(savedState.gridSize);
           setIsListView(savedState.isListView);
           setPreviewMode(savedState.previewMode);
-          // Store selected block ID for restoration once contents load
           setSavedSelectedBlockId(savedState.selectedBlockId);
           console.debug(`[ChannelExplorer] Loaded view state for ${channelSlug}, selectedBlockId: ${savedState.selectedBlockId}`);
         }
-      } catch (error) {
-        console.error('[ChannelExplorer] Failed to load view state:', error);
+      } catch (stateError) {
+        console.error("[ChannelExplorer] Failed to load view state:", stateError);
       } finally {
         setIsViewStateLoaded(true);
       }
@@ -184,10 +216,10 @@ export const ChannelExplorer: React.FC<ChannelExplorerProps> = ({
     loadViewState();
   }, [viewStateKey, channelSlug]);
 
-  // Save view state when it changes (debounced)
   useEffect(() => {
-    // Skip if view state not loaded OR if initial restore hasn't completed yet
-    if (!viewStateKey || !isViewStateLoaded || !isInitialRestoreComplete.current) return;
+    if (!viewStateKey || !isViewStateLoaded || !isInitialRestoreComplete.current) {
+      return;
+    }
 
     const saveViewState = async () => {
       try {
@@ -199,184 +231,146 @@ export const ChannelExplorer: React.FC<ChannelExplorerProps> = ({
         };
         await setAppState(viewStateKey, state);
 
-        // Sync state to window props for share URL generation
-        if (onPropsChange) {
-          onPropsChange({
-            initialGridSize: gridSize,
-            initialIsListView: isListView,
-            initialPreviewMode: previewMode,
-            initialSelectedBlockId: selectedItem?.id,
-          });
-        }
-      } catch (error) {
-        console.error('[ChannelExplorer] Failed to save view state:', error);
+        onPropsChange?.({
+          initialGridSize: gridSize,
+          initialIsListView: isListView,
+          initialPreviewMode: previewMode,
+          initialSelectedBlockId: selectedItem?.id,
+        });
+      } catch (stateError) {
+        console.error("[ChannelExplorer] Failed to save view state:", stateError);
       }
     };
 
-    // Debounce save to avoid excessive writes
     const timeout = setTimeout(saveViewState, 300);
     return () => clearTimeout(timeout);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [viewStateKey, gridSize, isListView, previewMode, selectedItem?.id]);
+  }, [viewStateKey, isViewStateLoaded, gridSize, isListView, previewMode, selectedItem?.id, onPropsChange]);
 
-  // Restore selected item once contents are loaded AND view state is loaded
   useEffect(() => {
-    // Wait until view state is loaded to get the savedSelectedBlockId
-    if (!isViewStateLoaded) return;
+    if (!isViewStateLoaded) {
+      return;
+    }
 
-    // Get the block ID to restore from either prop or saved state
-    const blockIdToRestore = initialSelectedBlockId || savedSelectedBlockId;
+    const itemIdToRestore = initialSelectedBlockId || savedSelectedBlockId;
+    const shouldScrollToRestoredItem = Boolean(initialSelectedBlockId);
 
-    if (blockIdToRestore && contents.length > 0 && !selectedItem) {
-      const item = contents.find(c => c.id === blockIdToRestore);
-      if (item) {
-        setSelectedItem(item);
-        console.debug(`[ChannelExplorer] Restored selected block: ${item.id}`);
-
-        // Scroll to the selected item after a short delay to ensure DOM is ready
-        setTimeout(() => {
-          const element = document.querySelector(`[data-item-id="${item.id}"]`);
-          if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-          }
-        }, 100);
+    if (itemIdToRestore && contents.length > 0 && !selectedItem) {
+      const restoredItem = contents.find((item) => item.id === itemIdToRestore);
+      if (restoredItem) {
+        setSelectedItem(restoredItem);
+        if (shouldScrollToRestoredItem) {
+          setTimeout(() => {
+            const element = document.querySelector(`[data-item-id="${restoredItem.id}"]`);
+            if (element) {
+              element.scrollIntoView({ behavior: "smooth", block: "nearest" });
+            }
+          }, 100);
+        }
       }
     }
 
-    // Mark initial restore as complete (even if no block was restored)
-    // This allows save effect to run normally going forward
-    if (isViewStateLoaded && contents.length > 0) {
+    if (contents.length > 0) {
       isInitialRestoreComplete.current = true;
     }
   }, [isViewStateLoaded, initialSelectedBlockId, savedSelectedBlockId, contents, selectedItem]);
 
-  // Scroll to selected item when switching between grid/list view
   useEffect(() => {
-    if (selectedItem && !loading) {
-      // Small delay to let the new view render
-      setTimeout(() => {
-        const element = document.querySelector(`[data-item-id="${selectedItem.id}"]`);
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
-      }, 50);
+    if (loading || initialSelectedBlockId || !contentViewportRef.current) {
+      return;
     }
-  }, [isListView]); // Only trigger on view mode change
+
+    contentViewportRef.current.scrollTo({ top: 0, behavior: "auto" });
+  }, [channelSlug, loading, initialSelectedBlockId, contents.length]);
+
+  useEffect(() => {
+    if (!selectedItem || loading) {
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      const element = document.querySelector(`[data-item-id="${selectedItemId}"]`);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+    }, 50);
+
+    return () => clearTimeout(timeout);
+  }, [isListView, loading, selectedItem, selectedItemId]);
 
   useEffect(() => {
     if (items) {
-      setContents(items);
+      setContents(sortItemsForExplorer(items));
       setLoading(false);
       return;
     }
 
-    if (!channelSlug) return;
+    if (!channelSlug) {
+      return;
+    }
 
-    // Create an AbortController to cancel fetch requests if the component unmounts
     const abortController = new AbortController();
     let isMounted = true;
 
     const fetchAllChannelContents = async () => {
       try {
-        if (!isMounted) return;
         setLoading(true);
+        setError(null);
         setContents([]);
+        setLoadingStatus("Loading channel...");
 
-        // First fetch to get an estimate of total content
-        setLoadingStatus("Estimating total content...");
-        const initialData = await getChannelContents(channelSlug, username, 1, itemsPerPage, abortController.signal);
+        const firstPage = await getChannelContents(channelSlug, 1, itemsPerPage, abortController.signal);
 
-        if (!isMounted) return;
-
-        const totalItems = initialData.length || 0;
-        const estimatedTotalPages = Math.ceil(totalItems / itemsPerPage);
-
-        console.log(`[App:Arena] Channel ${channelSlug} has ~${totalItems} items (~${estimatedTotalPages} pages)`);
-
-        // Add first page of content
-        let allContents: ContentItem[] = [...(initialData.contents || [])];
-
-        if (estimatedTotalPages <= 1) {
-          // If only one page, we're already done
-          if (isMounted) {
-            // Sort content by position in descending order (newest first)
-            allContents.sort((a, b) => (b.position || 0) - (a.position || 0));
-            setContents(allContents);
-            setError(null);
-          }
+        if (!isMounted) {
           return;
         }
 
-        // Fetch remaining pages in batches of 3
-        const batchSize = 3;
-        let currentPage = 2; // Start from page 2 since we already fetched page 1
+        const allItems: ContentItem[] = [...firstPage.items];
+        const { totalCount, totalPages } = firstPage.meta;
+        setLoadingStatus(`Loaded ${allItems.length} of ${totalCount} items...`);
 
-        while (currentPage <= estimatedTotalPages && isMounted) {
-          // Calculate the batch of pages to fetch in parallel
-          const pagesToFetch = [];
-          for (let i = 0; i < batchSize && currentPage + i <= estimatedTotalPages; i++) {
-            pagesToFetch.push(currentPage + i);
-          }
+        if (totalPages > 1) {
+          const batchSize = 3;
+          let currentPage = 2;
 
-          // Update loading status
-          if (isMounted) {
-            setLoadingStatus(`Fetching pages ${pagesToFetch[0]}-${pagesToFetch[pagesToFetch.length - 1]}/${estimatedTotalPages}...`);
-          }
+          while (currentPage <= totalPages && isMounted) {
+            const pagesToFetch = Array.from(
+              { length: Math.min(batchSize, totalPages - currentPage + 1) },
+              (_, index) => currentPage + index
+            );
 
-          // Fetch multiple pages in parallel
-          const fetchPromises = pagesToFetch.map(page =>
-            getChannelContents(channelSlug, username, page, itemsPerPage, abortController.signal)
-          );
+            setLoadingStatus(`Fetching pages ${pagesToFetch[0]}-${pagesToFetch[pagesToFetch.length - 1]} of ${totalPages}...`);
 
-          try {
-            const results = await Promise.all(fetchPromises);
+            const results = await Promise.all(
+              pagesToFetch.map((pageNumber) =>
+                getChannelContents(channelSlug, pageNumber, itemsPerPage, abortController.signal)
+              )
+            );
 
-            if (!isMounted) return;
-
-            // Process results and add to allContents
-            let hasMoreContent = false;
-            for (const data of results) {
-              const pageContents = data.contents || [];
-              allContents = [...allContents, ...pageContents];
-
-              // Check if we potentially have more pages
-              if (pageContents.length === itemsPerPage) {
-                hasMoreContent = true;
-              }
-            }
-
-            console.log(`[App:Arena] Loaded ${allContents.length} items`);
-
-            // Update currentPage for next batch
-            currentPage += pagesToFetch.length;
-
-            // If the last page in the batch had fewer items than itemsPerPage,
-            // we've probably reached the end of content
-            if (!hasMoreContent && currentPage > estimatedTotalPages) {
-              break;
-            }
-          } catch (err) {
-            // If we're here with an AbortError, the component was unmounted
-            if (err.name === 'AbortError') {
-              console.log('[App:Arena] Fetch aborted');
+            if (!isMounted) {
               return;
             }
-            throw err; // Re-throw other errors to be caught by the outer catch
+
+            results.forEach((page) => {
+              allItems.push(...page.items);
+            });
+
+            setLoadingStatus(`Loaded ${allItems.length} of ${totalCount} items...`);
+            currentPage += pagesToFetch.length;
           }
         }
 
         if (isMounted) {
-          // Sort content by position in descending order (newest first)
-          allContents.sort((a, b) => (b.position || 0) - (a.position || 0));
-          setContents(allContents);
+          setContents(sortItemsForExplorer(allItems));
           setError(null);
-          console.log(`[App:Arena] Complete: ${allContents.length} items for ${channelSlug}`);
+          console.log(`[App:Arena] Complete: ${allItems.length} items for ${channelSlug}`);
         }
-      } catch (err) {
-        if (isMounted) {
-          setError("Failed to load channel contents");
-          console.error(err);
+      } catch (fetchError) {
+        if (!isMounted || isAbortError(fetchError)) {
+          return;
         }
+
+        setError("Failed to load channel contents");
+        console.error(fetchError);
       } finally {
         if (isMounted) {
           setLoading(false);
@@ -386,63 +380,89 @@ export const ChannelExplorer: React.FC<ChannelExplorerProps> = ({
 
     fetchAllChannelContents();
 
-    // Cleanup function to abort any in-progress fetches when the component unmounts
     return () => {
       isMounted = false;
       abortController.abort();
-      console.log('[App:Arena] Aborting fetches (unmount)');
+      console.log("[App:Arena] Aborting fetches (unmount)");
     };
-  }, [channelSlug, username, itemsPerPage, items]);
+  }, [channelSlug, items, itemsPerPage]);
+
+  useEffect(() => {
+    if (!selectedItem || !isArenaChannel(selectedItem)) {
+      setSelectedChannelPreview(null);
+      return;
+    }
+
+    let isActive = true;
+
+    const loadChannelPreview = async () => {
+      try {
+        const preview = await getChannelPreview(selectedItem.slug, selectedItem);
+        if (isActive) {
+          setSelectedChannelPreview(preview);
+        }
+      } catch (previewError) {
+        if (isActive) {
+          console.warn("[ChannelExplorer] Failed to enrich channel preview:", previewError);
+          setSelectedChannelPreview(selectedItem);
+        }
+      }
+    };
+
+    loadChannelPreview();
+
+    return () => {
+      isActive = false;
+    };
+  }, [selectedItem]);
 
   const getIconType = (item: ContentItem): string => {
-    if (item.base_class === "Channel") return "other-channel";
-
-    const blockClass = (item as ArenaBlock).class;
-    if (blockClass === "Text") return "text";
-    if (blockClass === "Link") return "link";
-    if (blockClass === "Image") return "image";
-    if (blockClass === "Attachment") return "text";
-    if (blockClass === "Media") return "video";
-
-    return "text"; // Default to text icon for unknown/other block types
+    switch (item.kind) {
+      case "channel":
+        return "other-channel";
+      case "link":
+        return "link";
+      case "image":
+        return "image";
+      case "embed":
+        return "video";
+      case "attachment":
+      case "text":
+      default:
+        return "text";
+    }
   };
 
   const handleItemSingleClick = (itemId: number) => {
-    const item = contents.find(c => c.id === itemId);
+    const item = contents.find((contentItem) => contentItem.id === itemId);
     if (item) {
       setSelectedItem(item);
     }
   };
 
   const handleItemDoubleClick = (item: ContentItem) => {
-    if (item.base_class === "Channel") {
+    if (isArenaChannel(item)) {
       addWindow({
         title: item.title || "Channel",
-        content: <ChannelExplorer channelSlug={item.slug!} username={username} />,
+        content: <ChannelExplorer channelSlug={item.slug} username={username} />,
         width: 600,
         height: 500,
         iconType: "other-channel",
-        componentType: 'ChannelExplorer',
-        props: { channelSlug: item.slug!, username },
+        componentType: "ChannelExplorer",
+        props: { channelSlug: item.slug, username },
       });
-    } else {
-      addWindow({
-        title: getItemTitle(item),
-        content: <BlockViewer blockId={item.id} />,
-        width: 600,
-        height: 500,
-        iconType: getIconType(item),
-        componentType: 'BlockViewer',
-        props: { blockId: item.id },
-      });
+      return;
     }
-  };
 
-  const renderThumbnail = (image: any) => {
-    // Support both string and object URL formats
-    if (typeof image === 'string') return image;
-    if (image && typeof image === 'object' && 'url' in image) return image.url;
-    return '';
+    addWindow({
+      title: getItemTitle(item),
+      content: <BlockViewer blockId={item.id} initialConnection={item.connection} />,
+      width: 600,
+      height: 500,
+      iconType: getIconType(item),
+      componentType: "BlockViewer",
+      props: { blockId: item.id, initialConnection: item.connection as ArenaConnection | null },
+    });
   };
 
   const renderGridView = () => (
@@ -451,7 +471,6 @@ export const ChannelExplorer: React.FC<ChannelExplorerProps> = ({
       gridSize={gridSize}
       onSingleClick={handleItemSingleClick}
       onDoubleClick={handleItemDoubleClick}
-      renderThumbnail={renderThumbnail}
       getIconType={getIconType}
       isMobile={isMobile}
       selectedId={selectedItem?.id}
@@ -464,7 +483,6 @@ export const ChannelExplorer: React.FC<ChannelExplorerProps> = ({
       gridSize={gridSize}
       onSingleClick={handleItemSingleClick}
       onDoubleClick={handleItemDoubleClick}
-      renderThumbnail={renderThumbnail}
       getIconType={getIconType}
       isMobile={isMobile}
       selectedId={selectedItem?.id}
@@ -480,48 +498,61 @@ export const ChannelExplorer: React.FC<ChannelExplorerProps> = ({
       );
     }
 
-    if (selectedItem.base_class === "Channel") {
-      const formatDate = (dateString?: string) => {
-        if (!dateString) return "Unknown";
-        return new Date(dateString).toLocaleDateString(undefined, {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        });
-      };
+    if (isArenaChannel(selectedItem)) {
+      const previewItem = selectedChannelPreview ?? selectedItem;
 
       return (
         <div className="flex flex-col h-full p-4 overflow-y-auto">
-          <div className="text-xl font-bold mb-2">{selectedItem.title}</div>
+          <div className="text-xl font-bold mb-2">{previewItem.title}</div>
           <div className="text-sm text-muted-foreground mb-2">
-            by <a href={`https://www.are.na/${selectedItem.user?.slug}`} target="_blank" rel="noopener noreferrer" className="hover:underline text-primary">{selectedItem.user?.full_name || "Unknown"}</a>
+            by{" "}
+            {previewItem.owner ? (
+              <a
+                href={`https://www.are.na/${previewItem.owner.slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:underline text-primary"
+              >
+                {previewItem.owner.name}
+              </a>
+            ) : (
+              "Unknown"
+            )}
           </div>
           <div className="text-sm mb-4">
-            {selectedItem.length} blocks / {selectedItem.follower_count || 0} followers
+            {previewItem.counts.contents} items
+            {typeof previewItem.counts.followers === "number" ? ` / ${previewItem.counts.followers} followers` : ""}
           </div>
+
+          {previewItem.descriptionPlain && (
+            <div className="text-sm mb-4 text-muted-foreground">
+              {previewItem.descriptionPlain}
+            </div>
+          )}
 
           <div className="text-xs text-muted-foreground space-y-1 mb-6">
-            <div>Created: {formatDate(selectedItem.created_at)}</div>
-            <div>Updated: {formatDate(selectedItem.updated_at)}</div>
+            <div>Created: {formatDate(previewItem.createdAt)}</div>
+            <div>Updated: {formatDate(previewItem.updatedAt)}</div>
           </div>
 
-          <RetroButton
-            onClick={() => handleItemDoubleClick(selectedItem)}
-            className="w-full"
-          >
+          <RetroButton onClick={() => handleItemDoubleClick(selectedItem)} className="w-full">
             Open Channel
           </RetroButton>
         </div>
       );
     }
 
-    return <BlockViewer blockId={selectedItem.id} mode="embedded" />;
+    return <BlockViewer blockId={selectedItem.id} mode="embedded" initialBlock={selectedItem} />;
   };
 
   const handlePreviewToggle = () => {
-    if (previewMode === 'off') setPreviewMode('horizontal');
-    else if (previewMode === 'horizontal') setPreviewMode('vertical');
-    else setPreviewMode('off');
+    if (previewMode === "off") {
+      setPreviewMode("horizontal");
+    } else if (previewMode === "horizontal") {
+      setPreviewMode("vertical");
+    } else {
+      setPreviewMode("off");
+    }
   };
 
   return (
@@ -529,9 +560,9 @@ export const ChannelExplorer: React.FC<ChannelExplorerProps> = ({
       toolbar={
         <div className="flex items-center justify-between space-x-2 p-1 border-b border-border">
           <div className="flex items-center space-x-0">
-            <RetroButton size="sm" active={gridSize === 'S'} onClick={() => setGridSize('S')} title="Small Icons">S</RetroButton>
-            <RetroButton size="sm" active={gridSize === 'M'} onClick={() => setGridSize('M')} title="Medium Icons">M</RetroButton>
-            <RetroButton size="sm" active={gridSize === 'L'} onClick={() => setGridSize('L')} title="Large Icons">L</RetroButton>
+            <RetroButton size="sm" active={gridSize === "S"} onClick={() => setGridSize("S")} title="Small Icons">S</RetroButton>
+            <RetroButton size="sm" active={gridSize === "M"} onClick={() => setGridSize("M")} title="Medium Icons">M</RetroButton>
+            <RetroButton size="sm" active={gridSize === "L"} onClick={() => setGridSize("L")} title="Large Icons">L</RetroButton>
           </div>
           <div className="flex items-center space-x-0">
             <RetroButton size="sm" active={!isListView} onClick={() => setIsListView(false)}>Grid</RetroButton>
@@ -545,11 +576,7 @@ export const ChannelExplorer: React.FC<ChannelExplorerProps> = ({
             <span className="text-xs opacity-50">Total: {contents.length} items</span>
           </div>
           <div className="flex items-center space-x-0">
-            <RetroButton
-              size="sm"
-              active={previewMode !== 'off'}
-              onClick={handlePreviewToggle}
-            >
+            <RetroButton size="sm" active={previewMode !== "off"} onClick={handlePreviewToggle}>
               Preview
             </RetroButton>
           </div>
@@ -566,26 +593,24 @@ export const ChannelExplorer: React.FC<ChannelExplorerProps> = ({
             <div className="progress-bar" />
           </div>
         </StateMessage>
+      ) : previewMode !== "off" ? (
+        <ResizablePanelGroup direction={previewMode === "vertical" ? "vertical" : "horizontal"} className="h-full w-full">
+          <ResizablePanel defaultSize={50} minSize={20}>
+            <div ref={contentViewportRef} className="h-full overflow-y-auto">
+              {isListView ? renderListView() : renderGridView()}
+            </div>
+          </ResizablePanel>
+          <ResizableHandle withHandle />
+          <ResizablePanel defaultSize={50} minSize={30}>
+            <div className={`h-full bg-background ${previewMode === "vertical" ? "border-t" : "border-l"} border-border overflow-hidden`}>
+              {renderPreviewContent()}
+            </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
       ) : (
-        previewMode !== 'off' ? (
-          <ResizablePanelGroup direction={previewMode === 'vertical' ? 'vertical' : 'horizontal'} className="h-full w-full">
-            <ResizablePanel defaultSize={50} minSize={20}>
-              <div className="h-full overflow-y-auto">
-                {isListView ? renderListView() : renderGridView()}
-              </div>
-            </ResizablePanel>
-            <ResizableHandle withHandle />
-            <ResizablePanel defaultSize={50} minSize={30}>
-              <div className={`h-full bg-background ${previewMode === 'vertical' ? 'border-t' : 'border-l'} border-border overflow-hidden`}>
-                {renderPreviewContent()}
-              </div>
-            </ResizablePanel>
-          </ResizablePanelGroup>
-        ) : (
-          <div className="h-full overflow-y-auto">
-            {isListView ? renderListView() : renderGridView()}
-          </div>
-        )
+        <div ref={contentViewportRef} className="h-full overflow-y-auto">
+          {isListView ? renderListView() : renderGridView()}
+        </div>
       )}
     </ArenaWindowLayout>
   );
