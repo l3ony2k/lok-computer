@@ -4,6 +4,8 @@ import { RetroButton } from '@/components/ui/RetroButton';
 import { usePersistedState } from '@/hooks/useStorage';
 
 // Import local 88x31 button images
+import savyButton from '@/assets/buttons/savy.gif'
+import l3onButton from '@/assets/buttons/l3on.gif'
 import wwwButton from '@/assets/buttons/www.png';
 import lightdarkButton from '@/assets/buttons/lightdark.png';
 import imissxpButton from '@/assets/buttons/imissxp.gif';
@@ -23,11 +25,14 @@ const buttonSections = [
         id: 'cool-websites',
         title: 'Cool Websites',
         buttons: [
-            { url: "https://yvas.me", image: "https://yvas.me/_app/immutable/assets/savy_banner.dFhLlH1h.gif", alt: "yvas.me" },
+            { url: "https://l3on.site", image: l3onButton, alt: "my blog" },
+            { url: "https://yvas.me", image: savyButton, alt: "yvas.me" },
+            { url: "https://www.geedea.pro", image: "https://www.geedea.pro/88x31.png", alt: "极客死亡计划" },
+            { url: "https://v1sta.xyz/", image: "https://v1sta.xyz/wp-content/uploads/2026/02/88x31.png", alt: "景の域" },
             { url: "https://ro3or.com", image: "https://ro3or.com/button.gif", alt: "鹅玉" },
+            { url: "https://net7.blog/", image: "https://net7.blog/wp-content/uploads/2026/01/net7_88x31.png", alt: "网沏 Net7.Blog" },
             { url: "https://dimden.dev/", image: "https://dimden.dev/services/images/88x31.gif", alt: "dimden.dev" },
             { url: "https://sweetfish.site", image: "https://sweetfish.site/img/button3.png", alt: "sweetfish.site" },
-            { url: "https://mengru.space", image: "https://mengru.space/logo.jpg", alt: "mengru.space" },
         ],
     },
     {
@@ -44,6 +49,13 @@ const buttonSections = [
             { url: "https://guestbooks.meadow.cafe/guestbook/671", image: guestbookButton, alt: "Sign my Guestbook" },
             { url: "https://lok.atabook.org/", image: atabookButton, alt: "Sign my Atabook" },
             { url: "https://ublockorigin.com/", image: ublockButton, alt: "uBlock Origin Now!" },
+        ],
+    },
+    {
+        id: 'archive',
+        title: "Archive",
+        buttons: [
+            { url: "https://mengru.space", image: "https://mengru.space/logo.jpg", alt: "mengru.space" },
         ],
     },
 ];
