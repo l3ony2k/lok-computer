@@ -4,8 +4,9 @@ import { RetroButton } from '@/components/ui/RetroButton';
 import { usePersistedState } from '@/hooks/useStorage';
 
 // Import local 88x31 button images
-import savyButton from '@/assets/buttons/savy.gif'
 import l3onButton from '@/assets/buttons/l3on.gif'
+import savyButton from '@/assets/buttons/savy.gif'
+import ro3orButton from '@/assets/buttons/ro3or.gif'
 import wwwButton from '@/assets/buttons/www.png';
 import lightdarkButton from '@/assets/buttons/lightdark.png';
 import imissxpButton from '@/assets/buttons/imissxp.gif';
@@ -15,6 +16,7 @@ import ilikecomputerButton from '@/assets/buttons/i_like_computer.png';
 import guestbookButton from '@/assets/buttons/guestbook.gif';
 import ublockButton from '@/assets/buttons/ublock.png';
 import atabookButton from '@/assets/buttons/atabook.gif';
+import valerockButton from '@/assets/buttons/valerocks.avif';
 
 // ============================================
 // External 88x31 Buttons configuration
@@ -29,10 +31,12 @@ const buttonSections = [
             { url: "https://yvas.me", image: savyButton, alt: "yvas.me" },
             { url: "https://www.geedea.pro", image: "https://www.geedea.pro/88x31.png", alt: "极客死亡计划" },
             { url: "https://v1sta.xyz/", image: "https://v1sta.xyz/wp-content/uploads/2026/02/88x31.png", alt: "景の域" },
-            { url: "https://ro3or.com", image: "https://ro3or.com/button.gif", alt: "鹅玉" },
+            { url: "https://ro3or.com", image: ro3orButton, alt: "鹅玉" },
             { url: "https://net7.blog/", image: "https://net7.blog/wp-content/uploads/2026/01/net7_88x31.png", alt: "网沏 Net7.Blog" },
+            { url: "https://leehenry.top", image: "https://leehenry.top/88x31.gif", alt: "伏枥之间" },
             { url: "https://dimden.dev/", image: "https://dimden.dev/services/images/88x31.gif", alt: "dimden.dev" },
             { url: "https://sweetfish.site", image: "https://sweetfish.site/img/button3.png", alt: "sweetfish.site" },
+            { url: "https://vale.rocks", image: valerockButton, alt: "vale.rocks" },
         ],
     },
     {

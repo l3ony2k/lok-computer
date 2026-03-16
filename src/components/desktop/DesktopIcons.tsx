@@ -76,7 +76,7 @@ export const DesktopIcons: React.FC<DesktopIconsProps> = ({
           >
             <CustomIcon iconType={app.iconType} className="w-10 h-10" />
             <span
-              className="text-xs text-center break-words w-full text-neutral-200 font-bold select-none"
+              className="text-xs text-center w-full text-neutral-200 font-bold select-none"
               style={{ textShadow: "0px 0px 3px rgba(0, 0, 0, 0.8)" }}
             >
               {app.name}
