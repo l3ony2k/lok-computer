@@ -37,6 +37,7 @@ const buttonSections = [
             { url: "https://dimden.dev/", image: "https://dimden.dev/services/images/88x31.gif", alt: "dimden.dev" },
             { url: "https://sweetfish.site", image: "https://sweetfish.site/img/button3.png", alt: "sweetfish.site" },
             { url: "https://vale.rocks", image: valerockButton, alt: "vale.rocks" },
+            { url: "https://lucida.to", image: "https://lucida.to/buttons/88x31.gif", alt: "lucida.to" },
         ],
     },
     {
