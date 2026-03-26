@@ -30,8 +30,11 @@ const buttonSections = [
             { url: "https://l3on.site", image: l3onButton, alt: "my blog" },
             { url: "https://yvas.me", image: savyButton, alt: "yvas.me" },
             { url: "https://www.geedea.pro", image: "https://www.geedea.pro/88x31.png", alt: "极客死亡计划" },
+            { url: "https://eltr.ac", image: "https://www.eltr.ac/assets/88x31.webp", alt: "eltr.ac" },
             { url: "https://v1sta.xyz/", image: "https://v1sta.xyz/wp-content/uploads/2026/02/88x31.png", alt: "景の域" },
+            { url: "https://ink.v1sta.xyz", image: "https://ink.v1sta.xyz/wp-content/uploads/2026/03/88x31-ink.v1sta.png", alt: "景の印" },
             { url: "https://ro3or.com", image: ro3orButton, alt: "鹅玉" },
+            { url: "https://saki.net7.blog", image: "https://bear-images.sfo2.cdn.digitaloceanspaces.com/lok/image-1.webp", alt: "花島の咲 SAKI" },
             { url: "https://net7.blog/", image: "https://net7.blog/wp-content/uploads/2026/01/net7_88x31.png", alt: "网沏 Net7.Blog" },
             { url: "https://leehenry.top", image: "https://leehenry.top/88x31.gif", alt: "伏枥之间" },
             { url: "https://dimden.dev/", image: "https://dimden.dev/services/images/88x31.gif", alt: "dimden.dev" },
@@ -45,6 +48,8 @@ const buttonSections = [
         title: 'Other',
         buttons: [
             { url: "https://people.pledge.party", image: "https://people.pledge.party/badges/people_pledge_badge_party_black_white_88x31.png", alt: "People Pledge Party" },
+            { url: "#", image: "https://bear-images.sfo2.cdn.digitaloceanspaces.com/lok/ally.webp", alt: "ally" },
+            { url: "#", image: "https://bear-images.sfo2.cdn.digitaloceanspaces.com/lok/anti-fascism_button.gif", alt: "anti-fascism" },
             { url: "https://en.wikipedia.org/wiki/World_Wide_Web", image: wwwButton, alt: "World Wide Web" },
             { url: "#", image: lightdarkButton, alt: "Light/Dark Buttons" },
             { url: "https://win32.run/", image: imissxpButton, alt: "I miss XP" },
@@ -54,6 +59,7 @@ const buttonSections = [
             { url: "https://guestbooks.meadow.cafe/guestbook/671", image: guestbookButton, alt: "Sign my Guestbook" },
             { url: "https://lok.atabook.org/", image: atabookButton, alt: "Sign my Atabook" },
             { url: "https://ublockorigin.com/", image: ublockButton, alt: "uBlock Origin Now!" },
+            { url: "https://xn--sr8hvo.ws/", image: "https://v1sta.xyz/wp-content/uploads/2026/03/88x31-IndieWeb-Webring.png", alt: "IndieWeb Webring" },
         ],
     },
     {
