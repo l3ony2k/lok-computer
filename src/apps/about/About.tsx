@@ -1,20 +1,20 @@
-import { useState, useEffect } from 'react';
-import { WindowLayout } from '@/components/window/WindowLayout';
-import { RetroButton } from '@/components/ui/RetroButton';
-import { usePersistedState } from '@/hooks/useStorage';
+import { useState, useEffect } from "react";
+import { WindowLayout } from "@/components/window/WindowLayout";
+import { RetroButton } from "@/components/ui/RetroButton";
+import { usePersistedState } from "@/hooks/useStorage";
 
 // Import local 88x31 button images
-import omglolButton from '@/assets/buttons/omglol.png';
-import letterboxdButton from '@/assets/buttons/letterboxd.png';
-import blueskyButton from '@/assets/buttons/bluesky.png';
-import instagramButton from '@/assets/buttons/instagram.png';
-import mastodonButton from '@/assets/buttons/mastodon.png';
-import tumblrButton from '@/assets/buttons/tumblr.png';
-import telegramButton from '@/assets/buttons/telegram.gif'
-import twitterButton from '@/assets/buttons/twitter.gif'
-import mailButton from '@/assets/buttons/email.png'
-import l3onButton from '@/assets/buttons/l3on.gif'
-import codebergButton from '@/assets/buttons/codeberg.gif'
+import omglolButton from "@/assets/buttons/omglol.png";
+import letterboxdButton from "@/assets/buttons/letterboxd.png";
+import blueskyButton from "@/assets/buttons/bluesky.png";
+import instagramButton from "@/assets/buttons/instagram.png";
+import mastodonButton from "@/assets/buttons/mastodon.png";
+import tumblrButton from "@/assets/buttons/tumblr.png";
+import telegramButton from "@/assets/buttons/telegram.gif";
+import twitterButton from "@/assets/buttons/twitter.gif";
+import mailButton from "@/assets/buttons/email.png";
+import l3onButton from "@/assets/buttons/l3on.gif";
+import codebergButton from "@/assets/buttons/codeberg.gif";
 
 // ============================================
 // About This Section
@@ -26,38 +26,60 @@ const AboutThis = () => {
         className="mb-6 select-none"
         src="https://d2w9rnfcy7mm78.cloudfront.net/36349997/original_9ae0772fcf1074962bb42fc2b6a21dfd.jpg"
         alt="a computer within a computer, that's basically what lok.computer is"
-        onLoad={() => console.log('[App:About] Hero image loaded')}
-        onError={() => console.error('[About] Failed to load hero image')}
+        onLoad={() => console.log("[App:About] Hero image loaded")}
+        onError={() => console.error("[About] Failed to load hero image")}
       />
       <div className="select-text">
-        <div className="border-l-4 border-accent pl-4 italic mb-4">
-          A small OS in your browser, for curiosity and creation.
-        </div>
+        <div className="border-l-4 border-accent pl-4 italic mb-4">A small OS in your browser, for curiosity and creation.</div>
 
         <p className="mb-4">
-          <strong>lok.computer</strong> is yet another useless side project of <a href="https://leonw.ong/" className="underline text-blue-700 dark:text-blue-300">Leon</a>'s. It's a retro-inspired web desktop brings together modular mini apps like an are.na browser (yeh so orginal), weather (maybe?), social media (bsky and fediverse), and more (i don't know yet), within a playful, windowed environment.
+          <strong>lok.computer</strong> is yet another useless side project of Leon's. It's a retro-inspired web desktop brings together modular mini apps like an are.na browser (yeh so orginal),
+          weather (maybe?), social media (bsky and fediverse), and more (i don't know yet), within a playful, windowed environment.
         </p>
 
         <p className="mb-4">
-          Under the hood: React, TypeScript, Vite, and Tailwind CSS. Oh try <a href="https://bun.sh" className="underline text-blue-700 dark:text-blue-300">bun.sh</a>, it's amazing.
+          Under the hood: React, TypeScript, Vite, and Tailwind CSS. Oh try{" "}
+          <a href="https://bun.sh" className="underline text-blue-700 dark:text-blue-300">
+            bun.sh
+          </a>
+          , it's amazing.
         </p>
 
-        <p className="mb-4">
-          Made with Claude (3.7|4.0|4.5) Sonnet, Claude 4.5 Opus, Gemini (2.5|3.0) Pro, Cline, Kilo Code, Windsurf, Claude Code, Codex CLI, Opencode and Antigravity.
-        </p>
+        <p className="mb-4">Made with Claude (3.7|4.0|4.5) Sonnet, Claude 4.5 Opus, Gemini (2.5|3.0) Pro, Cline, Kilo Code, Windsurf, Claude Code, Codex CLI, Opencode and Antigravity.</p>
 
         <p>
-          thank you to: <a href="https://github.com/adryd325/oneko.js" className="underline text-blue-700 dark:text-blue-300">adryd325's oneko.js</a>, <a href="https://www.reddit.com/r/neocities/comments/1n1rkww/slowly_working_on_external_link_88x31_buttons/" className="underline text-blue-700 dark:text-blue-300">u/rosevarro</a>, <a href="https://sweetfish.site/" className="underline text-blue-700 dark:text-blue-300">sweetfish.site</a>, <a href="https://88x31.kate.pet/" className="underline text-blue-700 dark:text-blue-300">kate.pet's 88x31 buttons</a>, <a href="https://www.neatnik.net/typo" className="underline text-blue-700 dark:text-blue-300">neatnik's typo</a>, <a href="https://vale.rocks/portfolio/88x31-buttons-badges" className="underline text-blue-700 dark:text-blue-300">vale.rocks' 88x31 buttons</a>.
+          thank you to:{" "}
+          <a href="https://github.com/adryd325/oneko.js" className="underline text-blue-700 dark:text-blue-300">
+            adryd325's oneko.js
+          </a>
+          ,{" "}
+          <a href="https://www.reddit.com/r/neocities/comments/1n1rkww/slowly_working_on_external_link_88x31_buttons/" className="underline text-blue-700 dark:text-blue-300">
+            u/rosevarro
+          </a>
+          ,{" "}
+          <a href="https://sweetfish.site/" className="underline text-blue-700 dark:text-blue-300">
+            sweetfish.site
+          </a>
+          ,{" "}
+          <a href="https://88x31.kate.pet/" className="underline text-blue-700 dark:text-blue-300">
+            kate.pet's 88x31 buttons
+          </a>
+          ,{" "}
+          <a href="https://www.neatnik.net/typo" className="underline text-blue-700 dark:text-blue-300">
+            neatnik's typo
+          </a>
+          ,{" "}
+          <a href="https://vale.rocks/portfolio/88x31-buttons-badges" className="underline text-blue-700 dark:text-blue-300">
+            vale.rocks' 88x31 buttons
+          </a>
+          .
         </p>
       </div>
 
-      <p className="mt-4 text-xs opacity-50 select-none">
-        Version 1.6.2
-      </p>
+      <p className="mt-4 text-xs opacity-50 select-none">Version 1.6.2</p>
     </div>
   );
 };
-
 
 // ============================================
 // About Me Section
@@ -98,50 +120,35 @@ const socialLinks = {
 // 88x31 Link Button component with skeleton and no layout shift on hover
 const LinkButton88x31 = ({ link }: { link: { text: string; url: string; image?: string } }) => {
   return (
-    <a
-      href={link.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      title={link.text}
-      className="relative block cursor-default bg-secondary flex items-center justify-center"
-      style={{ width: 88, height: 31 }}
-    >
+    <a href={link.url} target="_blank" rel="noopener noreferrer" title={link.text} className="relative cursor-default bg-secondary flex items-center justify-center" style={{ width: 88, height: 31 }}>
       {link.image ? (
         <>
           <span className="absolute text-[8px] opacity-40">loading...</span>
-          <img
-            src={link.image}
-            alt={link.text}
-            width={88}
-            height={31}
-            className="relative hover:outline hover:outline-2 hover:outline-accent pixelated-image"
-          />
+          <img src={link.image} alt={link.text} width={88} height={31} className="relative hover:outline hover:outline-2 hover:outline-accent pixelated-image" />
         </>
       ) : (
         <div
           className="w-full h-full border border-border bg-secondary flex items-center justify-center overflow-hidden hover:outline hover:outline-2 hover:outline-accent"
           style={{ width: 88, height: 31 }}
         >
-          <div className="text-xs font-bold whitespace-nowrap animate-marquee-if-overflow">
-            {link.text}
-          </div>
+          <div className="text-xs font-bold whitespace-nowrap animate-marquee-if-overflow">{link.text}</div>
         </div>
       )}
     </a>
   );
 };
 
-
 const AboutMe = () => (
   <div className="select-text p-4 max-w-lg mx-auto">
     {/* Quote */}
-    <div className="border-l-2 border-current pl-4 italic my-4" style={{ fontFamily: "'Times New Roman', serif", fontSize: '18px' }}>
+    <div className="border-l-2 border-current pl-4 italic my-4" style={{ fontFamily: "'Times New Roman', serif", fontSize: "18px" }}>
       "Men must live and create. Live to the point of tears." – Albert Camus
     </div>
 
     {/* Bio */}
     <p className="mb-4">
-      Hello there, and welcome! I'm Leon / Lok, a curious soul who finds joy in exploring every corner of the web. I'm not a designer or developer, I just love creating and tinkering digital / physical things.
+      Hello there, and welcome! I'm Leon / Lok, a curious soul who finds joy in exploring every corner of the web. I'm not a designer or developer, I just love creating and tinkering digital /
+      physical things.
     </p>
 
     <p className="mb-4">
@@ -172,8 +179,6 @@ const AboutMe = () => (
     </div>
   </div>
 );
-
-
 
 // ============================================
 // Projects Section
@@ -224,28 +229,14 @@ const Projects = () => (
   <div className="select-text p-4 max-w-lg mx-auto">
     <div className="space-y-4">
       {projects.map((project) => (
-        <div
-          key={project.id}
-          className="border border-border transition-colors overflow-hidden"
-        >
-          {project.image && (
-            <img
-              src={project.image}
-              alt={project.title}
-              className="w-full select-none border-b border-border transition-colors"
-            />
-          )}
+        <div key={project.id} className="border border-border transition-colors overflow-hidden">
+          {project.image && <img src={project.image} alt={project.title} className="w-full select-none border-b border-border transition-colors" />}
           <div className="p-4">
             <h3 className="font-bold text-accent mb-2">{project.title}</h3>
             <p className="mb-3 opacity-80">{project.description}</p>
             <div className="flex gap-2 flex-wrap">
               {project.actions.map((action) => (
-                <RetroButton
-                  className="p-3"
-                  key={action.text}
-                  size="sm"
-                  onClick={() => window.open(action.url, '_blank', 'noopener,noreferrer')}
-                >
+                <RetroButton className="p-3" key={action.text} size="sm" onClick={() => window.open(action.url, "_blank", "noopener,noreferrer")}>
                   {action.text}
                 </RetroButton>
               ))}
@@ -260,7 +251,7 @@ const Projects = () => (
 // ============================================
 // Main About Component
 // ============================================
-const APP_STATE_KEY = 'app:about';
+const APP_STATE_KEY = "app:about";
 
 interface AboutProps {
   initialTab?: string;
@@ -268,7 +259,7 @@ interface AboutProps {
 }
 
 export const About: React.FC<AboutProps> = ({ initialTab, onPropsChange }) => {
-  const [activeTab, setActiveTab] = usePersistedState(APP_STATE_KEY, initialTab || 'about-this');
+  const [activeTab, setActiveTab] = usePersistedState(APP_STATE_KEY, initialTab || "about-this");
 
   // Deep link priority: override persisted state if initialTab is provided and differs
   useEffect(() => {
@@ -278,7 +269,7 @@ export const About: React.FC<AboutProps> = ({ initialTab, onPropsChange }) => {
   }, [initialTab]);
 
   const handleTabChange = (tab: string) => {
-    console.log('[App:About] Tab:', tab);
+    console.log("[App:About] Tab:", tab);
     setActiveTab(tab);
 
     // Sync to window props for share URL
@@ -291,25 +282,13 @@ export const About: React.FC<AboutProps> = ({ initialTab, onPropsChange }) => {
     <WindowLayout
       toolbar={
         <div className="flex border-b border-border sticky top-0 bg-background p-1 space-x-1">
-          <RetroButton
-            size="sm"
-            active={activeTab === 'about-this'}
-            onClick={() => handleTabChange('about-this')}
-          >
+          <RetroButton size="sm" active={activeTab === "about-this"} onClick={() => handleTabChange("about-this")}>
             About this
           </RetroButton>
-          <RetroButton
-            size="sm"
-            active={activeTab === 'about-me'}
-            onClick={() => handleTabChange('about-me')}
-          >
+          <RetroButton size="sm" active={activeTab === "about-me"} onClick={() => handleTabChange("about-me")}>
             About me
           </RetroButton>
-          <RetroButton
-            size="sm"
-            active={activeTab === 'projects'}
-            onClick={() => handleTabChange('projects')}
-          >
+          <RetroButton size="sm" active={activeTab === "projects"} onClick={() => handleTabChange("projects")}>
             Projects
           </RetroButton>
         </div>
@@ -317,9 +296,9 @@ export const About: React.FC<AboutProps> = ({ initialTab, onPropsChange }) => {
       hasPadding={false}
     >
       <div className="text-sm">
-        {activeTab === 'about-this' && <AboutThis />}
-        {activeTab === 'about-me' && <AboutMe />}
-        {activeTab === 'projects' && <Projects />}
+        {activeTab === "about-this" && <AboutThis />}
+        {activeTab === "about-me" && <AboutMe />}
+        {activeTab === "projects" && <Projects />}
       </div>
     </WindowLayout>
   );
