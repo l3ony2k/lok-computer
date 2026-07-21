@@ -9,16 +9,19 @@
  */
 
 import React, { ComponentType } from 'react';
+import { APP_LIST } from '@/config/apps';
+import { ARENA_WINDOW_DEFAULTS } from '@/config/arenaWindows';
 
-// Dynamic components only - not in APP_LIST because they're opened with custom props
-import { ChannelExplorer } from '@/apps/arena/channels/ChannelExplorer';
-import { BlockViewer } from '@/apps/arena/blocks/BlockViewer';
-import { ImageViewerApp } from '@/apps/imageviewer/ImageViewerApp';
+// Dynamic components only - not in APP_LIST because they're opened with custom props.
+// Imported from lazyApps so each one stays in its own code-split chunk.
+import { ChannelExplorer, BlockViewer, ImageViewerApp } from '@/config/lazyApps';
 
 /**
  * Config for each restorable component
  */
 export interface ComponentRestoreConfig {
+    // Registered components have heterogeneous prop shapes; the registry erases them.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     component: ComponentType<any>;
     defaultIcon: string;
     defaultWidth?: number;
@@ -33,14 +36,14 @@ const DYNAMIC_COMPONENTS: Record<string, ComponentRestoreConfig> = {
     'ChannelExplorer': {
         component: ChannelExplorer,
         defaultIcon: 'folder',
-        defaultWidth: 600,
-        defaultHeight: 500,
+        defaultWidth: ARENA_WINDOW_DEFAULTS.channelExplorer.width,
+        defaultHeight: ARENA_WINDOW_DEFAULTS.channelExplorer.height,
     },
     'BlockViewer': {
         component: BlockViewer,
         defaultIcon: 'block',
-        defaultWidth: 500,
-        defaultHeight: 600,
+        defaultWidth: ARENA_WINDOW_DEFAULTS.blockViewer.width,
+        defaultHeight: ARENA_WINDOW_DEFAULTS.blockViewer.height,
     },
     'ImageViewer': {
         component: ImageViewerApp,
@@ -55,16 +58,12 @@ let _registryCache: Record<string, ComponentRestoreConfig> | null = null;
 
 /**
  * Build the full component registry by combining APP_LIST entries with dynamic components.
- * Uses lazy initialization to avoid circular dependency issues.
+ * Uses lazy initialization so the registry is only assembled when restoration needs it.
  */
 async function buildRegistry(): Promise<Record<string, ComponentRestoreConfig>> {
     if (_registryCache) {
         return _registryCache;
     }
-
-    // Dynamic import to avoid circular dependency
-    // (apps.tsx imports components → components might import useWindowManager → useWindowManager imports this)
-    const { APP_LIST } = await import('@/config/apps');
 
     // Generate entries from APP_LIST
     const staticApps: Record<string, ComponentRestoreConfig> = {};

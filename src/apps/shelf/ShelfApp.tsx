@@ -4,11 +4,12 @@ import { WindowLayout } from '@/components/window/WindowLayout';
 import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/hover-card';
 import { RetroButton } from '@/components/ui/RetroButton';
 import { StateMessage } from '@/components/ui/StateMessage';
-import { useWindowManager } from '@/hooks/useWindowManager';
+import { useWindowActions } from '@/hooks/useWindowManager';
 import { ImageViewerApp } from '@/apps/imageviewer/ImageViewerApp';
 import { APP_CONFIG } from '@/config/constants';
 import { getCachedData, setCachedData, incrementRequestCount, CACHE_TTL } from '@/lib/storage';
 import { usePersistedState } from '@/hooks/useStorage';
+import { cacheDebugLog } from '@/lib/debug';
 
 type ShelfType = 'wishlist' | 'progress' | 'complete' | 'dropped';
 
@@ -97,7 +98,7 @@ interface ShelfContentProps {
 }
 
 const ShelfContent: React.FC<ShelfContentProps> = ({ type, page, onDataLoaded }) => {
-    const { addWindow } = useWindowManager();
+    const { addWindow } = useWindowActions();
 
     const { data, isLoading, isError, error, refetch } = useQuery({
         queryKey: ['neodbShelf', type, page],
@@ -107,7 +108,7 @@ const ShelfContent: React.FC<ShelfContentProps> = ({ type, page, onDataLoaded })
             // Check cache first
             const cached = await getCachedData<ShelfResponse>(cacheKey);
             if (cached) {
-                console.log(`[Cache] Hit: neodb:shelf:${type}:${page}`);
+                cacheDebugLog(`[Cache] Hit: neodb:shelf:${type}:${page}`);
                 onDataLoaded(cached.pages, cached.count);
                 return cached;
             }
@@ -321,7 +322,7 @@ export const ShelfApp: React.FC<ShelfAppProps> = ({ initialTab, initialPage, onP
     return (
         <WindowLayout
             toolbar={
-                <div className="flex border-b border-border sticky top-0 bg-background p-1 space-x-1">
+                <div className="app-toolbar-row app-tab-bar sticky top-0">
                     {SHELF_TABS.map((tab) => (
                         <RetroButton
                             key={tab.value}
@@ -335,7 +336,7 @@ export const ShelfApp: React.FC<ShelfAppProps> = ({ initialTab, initialPage, onP
                 </div>
             }
             footer={
-                <div className="flex items-center justify-between space-x-2 p-1 border-t border-border bg-background">
+                <div className="app-footer-row">
                     <div className="flex items-center space-x-2">
                         <span className="text-xs opacity-50">Total: {paginationInfo.count} items</span>
                     </div>

@@ -252,7 +252,7 @@ export const LinksApp = () => {
     return (
         <WindowLayout
             toolbar={
-                <div className="flex border-b border-border sticky top-0 bg-background p-1 space-x-1">
+                <div className="app-toolbar-row app-tab-bar sticky top-0">
                     <RetroButton
                         size="sm"
                         active={activeTab === 'buttons'}

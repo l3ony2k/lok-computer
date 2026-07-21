@@ -19,15 +19,28 @@ export interface CrtSettings {
   curvature: number; // 0-100 intensity
 }
 
+export interface DebugSettings {
+  verboseCacheLogging: boolean;
+}
+
+export interface OobeSettings {
+  completed: boolean;
+}
+
 export interface UserSettings {
   wallpaper?: string;
   oneko?: OnekoSettings;
   crt?: CrtSettings;
+  debug?: DebugSettings;
+  oobe?: OobeSettings;
 }
 
 // Default settings to use if nothing is stored
 const DEFAULT_SETTINGS: UserSettings = {
   wallpaper: '',
+  debug: {
+    verboseCacheLogging: false,
+  },
 };
 
 // Storage key for all user settings
@@ -115,6 +128,12 @@ export function UserSettingsProvider({ children }: { children: ReactNode }) {
 
     saveSettings();
   }, [settings, isLoading]);
+
+  useEffect(() => {
+    document.documentElement.dataset.verboseCacheLogging = String(
+      settings.debug?.verboseCacheLogging ?? false
+    );
+  }, [settings.debug?.verboseCacheLogging]);
 
   /**
    * Update a specific setting

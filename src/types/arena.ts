@@ -98,6 +98,7 @@ export interface ArenaBaseItem {
   source: ArenaSource | null;
   image: ArenaImage | null;
   connection: ArenaConnection | null;
+  commentCount: number;
   arenaUrl: string;
 }
 
@@ -120,5 +121,18 @@ export type ArenaChannelPreview = ArenaChannel;
 
 export interface ArenaChannelPage {
   items: ArenaItem[];
+  meta: ArenaPaginationMeta;
+}
+
+export interface ArenaComment {
+  id: number;
+  bodyHtml: string | null;
+  bodyPlain: string;
+  createdAt: string | null;
+  user: ArenaOwner | null;
+}
+
+export interface ArenaPagedResult<T> {
+  items: T[];
   meta: ArenaPaginationMeta;
 }

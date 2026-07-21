@@ -29,7 +29,7 @@ export const StateMessage: React.FC<StateMessageProps> = ({
         <div
             className={cn(
                 'flex items-center justify-center',
-                'text-muted-foreground text-sm',
+                'state-message text-sm',
                 'p-4 text-center',
                 minHeight,
                 className

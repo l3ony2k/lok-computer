@@ -14,13 +14,15 @@ export const RetroButton = React.forwardRef<HTMLButtonElement, RetroButtonProps>
                 ref={ref}
                 className={cn(
                     "retro-button flex items-center justify-center",
-                    size === 'sm' && "text-xs px-1 h-[18px]",
-                    size === 'md' && "px-2 py-1 text-sm",
+                    size === 'sm' && "text-sm",
+                    size === 'md' && "text-sm",
                     size === 'icon' && "p-1",
                     active && "bg-accent",
                     variant === 'primary' && "font-bold",
                     className
                 )}
+                data-active={active || undefined}
+                data-variant={variant}
                 {...props}
             />
         );

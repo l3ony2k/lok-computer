@@ -1,6 +1,5 @@
 import { ThemeProvider } from "next-themes";
-// import { Toaster } from "@/components/ui/toaster"; // Removed
-// import { Toaster as Sonner } from "@/components/ui/sonner"; // Removed
+import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
@@ -22,8 +21,7 @@ const App = () => (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          {/* <Toaster /> */}
-          {/* <Sonner position="top-center" /> */}
+          <Toaster position="top-center" />
           <BrowserRouter>
             <Routes>
               {/* All paths render Index - RouteInterpreter handles deep links */}

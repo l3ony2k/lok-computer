@@ -1,226 +1,129 @@
-import React, { useState, useEffect, useRef } from "react";
-import { RetroButton } from "@/components/ui/RetroButton";
-import { ArenaChannel } from "@/types/arena";
+import React, { useEffect, useRef, useState } from "react";
+import { ArenaChannel, ArenaItem } from "@/types/arena";
 import { getUserChannels } from "@/lib/api";
-import { useWindowManager } from "@/hooks/useWindowManager";
+import { useWindowActions } from "@/hooks/useWindowManager";
+import { ARENA_WINDOW_DEFAULTS } from "@/config/arenaWindows";
 import { ChannelExplorer } from "./ChannelExplorer";
-import { ArenaWindowLayout } from "../components/ArenaWindowLayout";
-import { useIsMobile } from '@/hooks/use-mobile';
-import { ContentItemGrid, ContentItemListView } from '../utils/contentItems';
-import { ContentItem, getGridConfiguration } from "../utils/contentItemHelpers";
-import { StateMessage } from '@/components/ui/StateMessage';
 import { getAppState, setAppState } from "@/lib/storage";
+import {
+  ArenaFileView,
+} from "../components/ArenaFileView";
+import {
+  ArenaFileViewState,
+  createArenaFileViewState,
+  normalizeArenaFileViewState,
+} from "../components/arenaFileViewState";
 
-// View state interface for ChannelBrowser
-interface BrowserViewState {
-  gridSize: 'S' | 'M' | 'L';
-  isListView: boolean;
-}
-
-const VIEW_STATE_KEY = 'app:arena-browser';
+const VIEW_STATE_KEY = "app:arena-browser";
 
 export const ChannelBrowser: React.FC<{ username?: string }> = ({ username = "lok" }) => {
   const [channels, setChannels] = useState<ArenaChannel[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [isListView, setIsListView] = useState(true);
-  const { addWindow } = useWindowManager();
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [gridSize, setGridSize] = useState<'S' | 'M' | 'L'>('S');
-  const isMobile = useIsMobile();
-  const isViewStateLoaded = useRef(false);
+  const [address, setAddress] = useState("");
+  const [selectedChannel, setSelectedChannel] = useState<ArenaChannel | null>(null);
+  const [fileState, setFileState] = useState<ArenaFileViewState>(() => createArenaFileViewState({
+    view: "list",
+    gridSize: "small",
+    listSize: "medium",
+  }));
+  const stateLoaded = useRef(false);
+  const { addWindow } = useWindowActions();
 
-  // Load saved view state on mount
   useEffect(() => {
-    const loadViewState = async () => {
+    const loadState = async () => {
       try {
-        const savedState = await getAppState<BrowserViewState>(VIEW_STATE_KEY);
-        if (savedState) {
-          setGridSize(savedState.gridSize);
-          setIsListView(savedState.isListView);
-        }
+        const saved = await getAppState<Partial<ArenaFileViewState> & { isListView?: boolean; gridSize?: "S" | "M" | "L" }>(VIEW_STATE_KEY);
+        setFileState((current) => normalizeArenaFileViewState(saved, current));
       } catch (error) {
-        console.error('[ChannelBrowser] Failed to load view state:', error);
+        console.error("[ChannelBrowser] Failed to load file view state", error);
       } finally {
-        isViewStateLoaded.current = true;
+        stateLoaded.current = true;
       }
     };
-    loadViewState();
+    loadState();
   }, []);
 
-  // Save view state when it changes
   useEffect(() => {
-    if (!isViewStateLoaded.current) return;
-
-    const saveViewState = async () => {
-      try {
-        await setAppState(VIEW_STATE_KEY, { gridSize, isListView });
-      } catch (error) {
-        console.error('[ChannelBrowser] Failed to save view state:', error);
-      }
-    };
-
-    const timeout = setTimeout(saveViewState, 300);
+    if (!stateLoaded.current) return;
+    const timeout = setTimeout(() => {
+      setAppState(VIEW_STATE_KEY, fileState).catch((error) => {
+        console.error("[ChannelBrowser] Failed to save file view state", error);
+      });
+    }, 300);
     return () => clearTimeout(timeout);
-  }, [gridSize, isListView]);
+  }, [fileState]);
 
   useEffect(() => {
+    let active = true;
     const fetchChannels = async () => {
       try {
         setLoading(true);
         setLoadError(null);
-
         const fetchedChannels = await getUserChannels(username);
-        setChannels(fetchedChannels);
+        if (active) setChannels(fetchedChannels);
       } catch (error) {
-        console.error("Error fetching user channels:", error);
-        setLoadError("Failed to load channels. Using featured channels instead.");
+        console.error("Error fetching user channels", error);
+        if (active) setLoadError("Failed to load channels");
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     };
-
     fetchChannels();
+    return () => { active = false; };
   }, [username]);
 
-  const handleChannelSingleClick = (channelId: number) => {
-    // No custom focus state needed, native focus handles it
-  };
-
-  const handleChannelDoubleClick = (channel: ArenaChannel) => {
+  const openChannel = (channel: ArenaChannel | { title: string; slug: string }) => {
     addWindow({
-      title: channel.title,
+      title: channel.title || channel.slug,
       content: <ChannelExplorer channelSlug={channel.slug} username={username} />,
-      width: 600,
-      height: 500,
-      iconType: 'folder',
-      componentType: 'ChannelExplorer',
+      width: ARENA_WINDOW_DEFAULTS.channelExplorer.width,
+      height: ARENA_WINDOW_DEFAULTS.channelExplorer.height,
+      iconType: "other-channel",
+      componentType: "ChannelExplorer",
       props: { channelSlug: channel.slug, username },
     });
   };
 
-  const handleGoToChannel = (slug: string) => {
-    if (!slug.trim()) return;
-    addWindow({
-      title: slug,
-      content: <ChannelExplorer channelSlug={slug} username={username} />,
-      width: 600,
-      height: 500,
-      iconType: 'other-channel',
-      componentType: 'ChannelExplorer',
-      props: { channelSlug: slug, username },
-    });
+  const goToAddress = () => {
+    const slug = address.trim();
+    if (!slug) return;
+    openChannel({ title: slug, slug });
   };
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter') {
-      handleGoToChannel(search);
-    }
-  };
-
-  const filteredChannels = channels.filter(
-    (channel) => channel.title.toLowerCase().includes(search.toLowerCase())
-  );
-
-  // Function to determine the icon type for a channel
-  const getIconType = (item: ContentItem): string => {
-    return 'folder';
-  };
-
-  const renderGridView = () => {
-    const { gridIconSizeClass, itemWidth, gridTemplateStyle } = getGridConfiguration(gridSize);
-
-    return (
-      <div className="folder-grid" style={gridTemplateStyle}>
-        {filteredChannels.length === 0 ? (
-          <div className="col-start-1 col-end-[-1] text-center p-4 opacity-50" style={{ gridColumn: '1 / -1' }}>
-            Not found, just hit Go or Enter
-          </div>
-        ) : (
-          filteredChannels.map((channel) => (
-            <ContentItemGrid
-              key={channel.id}
-              item={channel as ContentItem}
-              onSingleClick={() => handleChannelSingleClick(channel.id)}
-              onDoubleClick={() => handleChannelDoubleClick(channel)}
-              itemWidth={itemWidth}
-              iconSizeClass={gridIconSizeClass}
-              getIconType={getIconType}
-              isMobile={isMobile}
-            />
-          ))
-        )}
-      </div>
-    );
-  };
-
-  const renderListView = () => {
-    const { listIconSizeClass } = getGridConfiguration(gridSize);
-
-    return (
-      <div className="space-y-1 p-1">
-        {filteredChannels.length === 0 ? (
-          <StateMessage minHeight="h-24">
-            Not found, just hit Go or Enter
-          </StateMessage>
-        ) : (
-          filteredChannels.map((channel) => (
-            <ContentItemListView
-              key={channel.id}
-              item={channel as ContentItem}
-              onSingleClick={() => handleChannelSingleClick(channel.id)}
-              onDoubleClick={() => handleChannelDoubleClick(channel)}
-              iconSizeClass={listIconSizeClass}
-              getIconType={getIconType}
-              isMobile={isMobile}
-            />
-          ))
-        )}
-      </div>
-    );
+  const handleOpen = (item: ArenaItem) => {
+    if (item.kind === "channel") openChannel(item);
   };
 
   return (
-    <ArenaWindowLayout
-      toolbar={
-        <div className="flex items-center justify-between space-x-2 p-1 border-b border-border">
-          <div className="flex items-center space-x-0">
-            <RetroButton size="sm" active={gridSize === 'S'} onClick={() => setGridSize('S')} title="Small Icons">S</RetroButton>
-            <RetroButton size="sm" active={gridSize === 'M'} onClick={() => setGridSize('M')} title="Medium Icons">M</RetroButton>
-            <RetroButton size="sm" active={gridSize === 'L'} onClick={() => setGridSize('L')} title="Large Icons">L</RetroButton>
-          </div>
-          <div className="flex items-center flex-1 mx-2">
+    <ArenaFileView
+      items={channels}
+      state={fileState}
+      onStateChange={setFileState}
+      selectedId={selectedChannel?.id}
+      onSelect={(item) => item.kind === "channel" && setSelectedChannel(item)}
+      onOpen={handleOpen}
+      loading={loading}
+      loadingStatus={`loading channels for @${username}...`}
+      error={loadError}
+      emptyText="no matching channels"
+      addressBar={
+        <div className="arena-address-bar">
+          <div className="arena-address-group">
             <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Search titles or enter slug..."
-              className="search-input text-xs flex-1 h-[18px] border-r-0 focus:outline-none"
+              className="arena-toolbar-control"
+              value={address}
+              onChange={(event) => setAddress(event.target.value)}
+              onKeyDown={(event) => event.key === "Enter" && goToAddress()}
+              placeholder="channel slug"
+              autoCapitalize="off"
+              autoCorrect="off"
+              spellCheck={false}
             />
-            <RetroButton
-              size="sm"
-              onClick={() => handleGoToChannel(search)}
-              title="Go to channel slug"
-            >
-              Go
-            </RetroButton>
-          </div>
-          <div className="flex items-center space-x-0">
-            <RetroButton size="sm" active={!isListView} onClick={() => setIsListView(false)}>Grid</RetroButton>
-            <RetroButton size="sm" active={isListView} onClick={() => setIsListView(true)}>List</RetroButton>
+            <button type="button" className="arena-toolbar-control" onClick={goToAddress}>Go</button>
           </div>
         </div>
       }
-    >
-      {loadError && (
-        <div className="px-2 py-1 mb-2 bg-yellow-100 dark:bg-yellow-900 text-xs">{loadError}</div>
-      )}
-      {loading ? (
-        <StateMessage>Loading channels...</StateMessage>
-      ) : (
-        isListView ? renderListView() : renderGridView()
-      )}
-    </ArenaWindowLayout>
+    />
   );
 };

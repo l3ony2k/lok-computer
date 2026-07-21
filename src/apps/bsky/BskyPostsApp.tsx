@@ -3,10 +3,11 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { WindowLayout } from '@/components/window/WindowLayout';
 import { StateMessage } from '@/components/ui/StateMessage';
 import { RetroButton } from '@/components/ui/RetroButton';
-import { useWindowManager } from '@/hooks/useWindowManager';
+import { useWindowActions } from '@/hooks/useWindowManager';
 import { ImageViewerApp } from '@/apps/imageviewer/ImageViewerApp';
 import { APP_CONFIG } from '@/config/constants';
 import { getCachedData, setCachedData, incrementRequestCount, CACHE_TTL } from '@/lib/storage';
+import { cacheDebugLog } from '@/lib/debug';
 
 interface Facet {
   $type: string;
@@ -178,7 +179,7 @@ const RichText: React.FC<{ text: string; facets?: Facet[] }> = ({ text, facets }
 
 export const BskyPostsApp: React.FC = () => {
   const loadMoreRef = useRef<HTMLDivElement>(null);
-  const { addWindow } = useWindowManager();
+  const { addWindow } = useWindowActions();
 
   const fetchProfile = async () => {
     const cacheKey = 'bsky:profile';
@@ -186,7 +187,7 @@ export const BskyPostsApp: React.FC = () => {
     // Check cache first
     const cached = await getCachedData<Profile>(cacheKey);
     if (cached) {
-      console.log(`[Cache] Hit: bsky:profile`);
+      cacheDebugLog(`[Cache] Hit: bsky:profile`);
       return cached;
     }
 
@@ -216,7 +217,7 @@ export const BskyPostsApp: React.FC = () => {
     // Check cache first
     const cached = await getCachedData<FeedResponse>(cacheKey);
     if (cached) {
-      console.log(`[Cache] Hit: bsky:posts:${pageParam || 'initial'}`);
+      cacheDebugLog(`[Cache] Hit: bsky:posts:${pageParam || 'initial'}`);
       return cached;
     }
 

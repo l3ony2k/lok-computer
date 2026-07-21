@@ -1,3 +1,5 @@
+import { cacheDebugLog } from "@/lib/debug";
+
 /**
  * IndexedDB Storage Layer for lok.computer
  * 
@@ -42,23 +44,6 @@ export interface UsageStats {
     cacheMisses: number;
     requestsByApp: Record<string, number>;
     lastUpdated: number;
-}
-
-export interface WindowSessionData {
-    windows: Array<{
-        title: string;
-        iconType: string;
-        x?: number;
-        y?: number;
-        width?: number;
-        height?: number;
-        minimized?: boolean;
-        maximized?: boolean;
-        appName?: string;
-        props?: Record<string, unknown>;
-    }>;
-    lastZIndex: number;
-    savedAt: number;
 }
 
 // Database instance (singleton)
@@ -244,12 +229,11 @@ export const getCachedData = async <T>(key: string): Promise<T | null> => {
             // Clean up expired entry
             await deleteFromStore(STORES.API_CACHE, key);
             await incrementCacheMiss();
-            console.info(`[Storage] Cache expired for key "${key}"`);
+            cacheDebugLog(`[Storage] Cache expired for key "${key}"`);
             return null;
         }
 
         await incrementCacheHit();
-        console.info(`[Storage] Cache hit for key "${key}"`);
         return cached.data;
     } catch (error) {
         console.error(`[Storage] Failed to get cached data for key "${key}":`, error);
@@ -268,7 +252,7 @@ export const setCachedData = async <T>(key: string, data: T, ttlMs: number): Pro
             ttl: ttlMs,
         };
         await setInStore(STORES.API_CACHE, key, cacheEntry);
-        console.info(`[Storage] Cached data for key "${key}" (TTL: ${ttlMs / 1000}s)`);
+        cacheDebugLog(`[Storage] Cached data for key "${key}" (TTL: ${ttlMs / 1000}s)`);
     } catch (error) {
         console.error(`[Storage] Failed to cache data for key "${key}":`, error);
     }
@@ -280,7 +264,7 @@ export const setCachedData = async <T>(key: string, data: T, ttlMs: number): Pro
 export const clearCache = async (): Promise<void> => {
     try {
         await clearStore(STORES.API_CACHE);
-        console.info('[Storage] Cache cleared');
+        cacheDebugLog('[Storage] Cache cleared');
     } catch (error) {
         console.error('[Storage] Failed to clear cache:', error);
     }
@@ -316,7 +300,7 @@ export const clearExpiredCache = async (): Promise<number> => {
                     cursor.continue();
                 } else {
                     if (clearedCount > 0) {
-                        console.info(`[Storage] Cleared ${clearedCount} expired cache entries`);
+                        cacheDebugLog(`[Storage] Cleared ${clearedCount} expired cache entries`);
                     }
                     resolve(clearedCount);
                 }

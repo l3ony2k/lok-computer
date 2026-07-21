@@ -1,22 +1,27 @@
-import { useCallback, useState } from 'react';
+import { memo, Suspense, useCallback, useState } from 'react';
 import { Window } from '@/hooks/useWindowManager.ts';
-import { useWindowManager } from '@/hooks/useWindowManager.ts';
+import { useWindowActions } from '@/hooks/useWindowManager.ts';
 import { X, Minimize, Maximize } from 'lucide-react';
 import { CustomIcon } from './CustomIcon';
-import { Rnd, DraggableData, ResizableDelta, Position } from 'react-rnd';
+import { Rnd, RndDragCallback, RndResizeCallback } from 'react-rnd';
 import { cn } from '@/lib/utils';
 import { adjustWindowToViewport, type WindowDimensions, type ViewportDimensions, type AdjustedWindow } from '@/lib/utils';
 import { WINDOW_DEFAULTS } from '@/config/window';
 import { ContextMenu, type ContextMenuItem } from '@/components/menu/ContextMenu';
 import { generateShareUrl } from '@/config/routes';
+import { useWindowTransitions } from '@/hooks/useWindowTransitions';
 
 interface DraggableWindowProps {
   window: Window;
+  isActive: boolean;
+  isTransitioning: boolean;
   onResizeStop: (id: string, width: number, height: number) => void;
 }
 
-export const DraggableWindow = ({ window: windowProps, onResizeStop }: DraggableWindowProps) => {
-  const { closeWindow, minimizeWindow, maximizeWindow, restoreWindow, focusWindow, updateWindowPosition, activeWindow } = useWindowManager();
+export const DraggableWindow = memo(function DraggableWindow({ window: windowProps, isActive, isTransitioning, onResizeStop }: DraggableWindowProps) {
+  const { closeWindow, focusWindow, maximizeWindow, restoreWindow, updateWindowPosition } = useWindowActions();
+  const { minimizeWithTransition } = useWindowTransitions();
+  const [isInteracting, setIsInteracting] = useState(false);
 
   // Context menu state
   const [contextMenuOpen, setContextMenuOpen] = useState(false);
@@ -24,7 +29,7 @@ export const DraggableWindow = ({ window: windowProps, onResizeStop }: Draggable
 
   const handleMinimize = (e: React.MouseEvent | React.TouchEvent) => {
     e.stopPropagation();
-    minimizeWindow(windowProps.id);
+    minimizeWithTransition(windowProps);
   };
 
   const handleMaximizeRestore = (e: React.MouseEvent | React.TouchEvent) => {
@@ -64,7 +69,7 @@ export const DraggableWindow = ({ window: windowProps, onResizeStop }: Draggable
         type: 'item',
         label: 'Minimize',
         icon: 'minimize',
-        action: () => minimizeWindow(windowProps.id),
+        action: () => minimizeWithTransition(windowProps),
       },
       {
         type: 'item',
@@ -115,7 +120,8 @@ export const DraggableWindow = ({ window: windowProps, onResizeStop }: Draggable
     ];
   };
 
-  const handleDragStop = useCallback((_e: any, data: DraggableData) => {
+  const handleDragStop = useCallback<RndDragCallback>((_e, data) => {
+    setIsInteracting(false);
     if (!windowProps.maximized) {
       const parentElement = data.node.parentElement;
       if (parentElement) {
@@ -142,7 +148,8 @@ export const DraggableWindow = ({ window: windowProps, onResizeStop }: Draggable
     }
   }, [windowProps.id, windowProps.maximized, windowProps.width, windowProps.height, windowProps.minWidth, windowProps.minHeight, updateWindowPosition]);
 
-  const handleResizeStop = useCallback((_e: any, _direction: any, ref: HTMLElement, _delta: ResizableDelta, position: Position) => {
+  const handleResizeStop = useCallback<RndResizeCallback>((_e, _direction, ref, _delta, position) => {
+    setIsInteracting(false);
     const parentElement = ref.parentElement;
     if (parentElement) {
       const viewport: ViewportDimensions = {
@@ -176,19 +183,20 @@ export const DraggableWindow = ({ window: windowProps, onResizeStop }: Draggable
     const titleBar = targetElement.closest('.window-titlebar');
 
     // Only focus if click is outside titlebar and window isn't already active
-    if (!titleBar && windowProps.id !== activeWindow) {
+    if (!titleBar && !isActive) {
       focusWindow(windowProps.id);
     }
     // If click is on title bar, Rnd's drag handle logic will take over
     // focus will be handled by onDragStart below.
-  }, [focusWindow, windowProps.id, activeWindow]);
+  }, [focusWindow, windowProps.id, isActive]);
 
   // Generic handler to focus window on drag/resize start if not active
   const handleInteractionStartFocus = useCallback(() => {
-    if (windowProps.id !== activeWindow) {
+    setIsInteracting(true);
+    if (!isActive) {
       focusWindow(windowProps.id);
     }
-  }, [focusWindow, windowProps.id, activeWindow]);
+  }, [focusWindow, windowProps.id, isActive]);
 
   const calculatedWidth = typeof windowProps.width === 'number' ? windowProps.width : WINDOW_DEFAULTS.DEFAULT_WIDTH;
   const calculatedHeight = typeof windowProps.height === 'number' ? windowProps.height : WINDOW_DEFAULTS.DEFAULT_HEIGHT;
@@ -196,6 +204,13 @@ export const DraggableWindow = ({ window: windowProps, onResizeStop }: Draggable
   return (
     <>
       <Rnd
+        className={cn(
+          "draggable-window",
+          isInteracting && "is-interacting",
+          windowProps.maximized && "is-maximized",
+          windowProps.minimized && "is-minimized",
+          isTransitioning && "is-transitioning",
+        )}
         size={windowProps.maximized ?
           { width: '100%', height: '100%' } :
           { width: calculatedWidth, height: calculatedHeight }
@@ -209,11 +224,6 @@ export const DraggableWindow = ({ window: windowProps, onResizeStop }: Draggable
         bounds="parent"
         style={{
           zIndex: windowProps.zIndex,
-          ...(windowProps.minimized && {
-            visibility: 'hidden',
-            opacity: 0,
-            pointerEvents: 'none',
-          })
         }}
         onMouseDown={handleMouseDownFocus}
         onDragStart={handleInteractionStartFocus}
@@ -224,25 +234,27 @@ export const DraggableWindow = ({ window: windowProps, onResizeStop }: Draggable
         enableResizing={!windowProps.maximized}
         dragHandleClassName="window-titlebar"
       >
-        <div className={cn(
-          "flex flex-col w-full h-full border-2 border-border shadow-lg dark:shadow-[3px_3px_24px_rgb(0,0,0,0.3)] overflow-hidden bg-background"
-        )}>
+        <div data-window-surface-id={windowProps.id} className={cn("window-surface flex flex-col w-full h-full overflow-hidden")}>
           {/* Title bar - fixed height */}
           <div
             className="window-titlebar"
-            onDoubleClick={windowProps.maximized ? () => restoreWindow(windowProps.id) : () => maximizeWindow(windowProps.id)}
+            onDoubleClick={() => windowProps.maximized
+              ? restoreWindow(windowProps.id)
+              : maximizeWindow(windowProps.id)}
           >
             <button
               onClick={handleIconClick}
-              className="p-0.5 hover:bg-accent rounded-sm transition-colors cursor-default"
+              className="window-menu-button flex items-center justify-center"
               title="Window menu"
+              aria-haspopup="menu"
+              aria-expanded={contextMenuOpen}
             >
               <CustomIcon iconType={windowProps.iconType} className="w-4 h-4" />
             </button>
             <span className="flex-1 truncate">{windowProps.title}</span>
-            <div className="flex space-x-1">
+            <div className="flex gap-1">
               <button
-                className="retro-button p-1"
+                className="retro-button window-control"
                 onClick={handleMinimize}
                 onTouchEnd={handleMinimize}
                 title="Minimize"
@@ -251,7 +263,7 @@ export const DraggableWindow = ({ window: windowProps, onResizeStop }: Draggable
               </button>
               {windowProps.maximized ? (
                 <button
-                  className="retro-button p-1"
+                  className="retro-button window-control"
                   onClick={handleMaximizeRestore}
                   onTouchEnd={handleMaximizeRestore}
                   title="Restore"
@@ -262,7 +274,7 @@ export const DraggableWindow = ({ window: windowProps, onResizeStop }: Draggable
                 </button>
               ) : (
                 <button
-                  className="retro-button p-1"
+                  className="retro-button window-control"
                   onClick={handleMaximizeRestore}
                   onTouchEnd={handleMaximizeRestore}
                   title="Maximize"
@@ -271,7 +283,7 @@ export const DraggableWindow = ({ window: windowProps, onResizeStop }: Draggable
                 </button>
               )}
               <button
-                className="retro-button p-1"
+                className="retro-button window-control"
                 onClick={handleClose}
                 onTouchEnd={handleClose}
                 title="Close"
@@ -283,7 +295,15 @@ export const DraggableWindow = ({ window: windowProps, onResizeStop }: Draggable
 
           {/* Content area - with direct overflow styling */}
           <div className="window-content-area flex-1 overflow-auto" style={{ position: 'relative' }}>
-            {windowProps.content}
+            <Suspense
+              fallback={
+                <div className="flex h-full items-center justify-center font-mono text-xs text-muted-foreground">
+                  Loading...
+                </div>
+              }
+            >
+              {windowProps.content}
+            </Suspense>
           </div>
         </div>
       </Rnd>
@@ -297,4 +317,4 @@ export const DraggableWindow = ({ window: windowProps, onResizeStop }: Draggable
       />
     </>
   );
-};
+});

@@ -86,8 +86,8 @@ export const Calendar: React.FC<CalendarProps> = ({
       <div
         key={`day-${day}`}
         className={`h-7 w-7 flex items-center justify-center text-xs select-none ${isCurrentDay
-          ? 'bg-accent text-neutral-700 dark:text-neutral-100 font-bold'
-          : 'text-neutral-700 dark:text-neutral-100'
+          ? 'bg-accent text-foreground font-bold'
+          : 'text-foreground'
           }`}
       >
         {day}
@@ -119,7 +119,7 @@ export const Calendar: React.FC<CalendarProps> = ({
         transform={`rotate(${angle})`}
         stroke={`currentColor`}
         strokeWidth={isHourMark ? 1.5 : 0.5}
-        className="text-neutral-700 dark:text-neutral-100"
+        className="text-foreground"
         strokeLinecap="round"
       />
     );
@@ -130,7 +130,7 @@ export const Calendar: React.FC<CalendarProps> = ({
       className="fixed inset-0 z-[10000]"
       onClick={handleOutsideClick}
     >
-      <div className="absolute top-[35px] right-2 bg-retro-taskbar border border-border shadow-md p-3 select-none">
+      <div className="menu-surface absolute top-[43px] right-[10px] p-3 select-none" role="dialog" aria-label="Calendar and clock">
         {/* Analog Clock */}
         <div className="flex justify-center mb-3 select-none">
           <svg width="110" height="110" viewBox="0 0 110 110">
@@ -142,7 +142,7 @@ export const Calendar: React.FC<CalendarProps> = ({
               fill="none"
               stroke="currentColor"
               strokeWidth="1"
-              className="text-neutral-700 dark:text-neutral-100"
+              className="text-foreground"
             />
 
             {/* Minute marks */}
@@ -159,7 +159,7 @@ export const Calendar: React.FC<CalendarProps> = ({
               stroke="currentColor"
               strokeWidth="2.5"
               strokeLinecap="round"
-              className="text-neutral-700 dark:text-neutral-100"
+              className="text-foreground"
               transform={`rotate(${hourDegrees}, 55, 55)`}
             />
 
@@ -172,7 +172,7 @@ export const Calendar: React.FC<CalendarProps> = ({
               stroke="currentColor"
               strokeWidth="1.5"
               strokeLinecap="round"
-              className="text-neutral-700 dark:text-neutral-100"
+              className="text-foreground"
               transform={`rotate(${minuteDegrees}, 55, 55)`}
             />
 
@@ -195,12 +195,12 @@ export const Calendar: React.FC<CalendarProps> = ({
               cy="55"
               r="2"
               fill="currentColor"
-              className="text-neutral-700 dark:text-neutral-100"
+              className="text-foreground"
             />
           </svg>
         </div>
 
-        <div className="text-center text-sm mb-2 text-neutral-700 dark:text-neutral-100 select-none">
+        <div className="text-center text-sm mb-2 text-foreground select-none">
           {clockTime.getDate()} {monthNames[month]} {year}{' '}
           <a
             href="https://gwil.garden/internet-time/"
@@ -218,7 +218,7 @@ No time zones, same time worldwide!`}
         <div className="grid grid-cols-7 gap-1 text-center">
           {/* Day names row */}
           {dayNames.map(day => (
-            <div key={day} className="h-7 w-7 flex items-center justify-center text-xs font-bold text-neutral-700 dark:text-neutral-100 select-none">
+            <div key={day} className="h-7 w-7 flex items-center justify-center text-xs font-bold text-foreground select-none">
               {day}
             </div>
           ))}
@@ -229,4 +229,4 @@ No time zones, same time worldwide!`}
       </div>
     </div>
   );
-}; 
+};

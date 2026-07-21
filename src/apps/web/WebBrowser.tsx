@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, KeyboardEvent } from "react";
+import React, { useState, useRef, useEffect, useCallback, KeyboardEvent } from "react";
 import { WindowLayout } from "@/components/window/WindowLayout";
 import { RetroButton } from "@/components/ui/RetroButton";
 
@@ -85,23 +85,7 @@ export const WebBrowser: React.FC<{ initialUrl?: string }> = ({ initialUrl = "ht
     }
   };
 
-  useEffect(() => {
-    // Set up message listener for iframe navigation
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data && event.data.type === 'navigation') {
-        const newUrl = event.data.url;
-        handleIframeNavigation(newUrl);
-      }
-    };
-
-    window.addEventListener('message', handleMessage);
-
-    return () => {
-      window.removeEventListener('message', handleMessage);
-    };
-  }, []);
-
-  const handleIframeNavigation = (newUrl: string) => {
+  const handleIframeNavigation = useCallback((newUrl: string) => {
     if (!isNavigatingRef.current) {
       isNavigatingRef.current = true;
       setIsLoading(true);
@@ -116,7 +100,23 @@ export const WebBrowser: React.FC<{ initialUrl?: string }> = ({ initialUrl = "ht
 
       isNavigatingRef.current = false;
     }
-  };
+  }, [history, historyIndex]);
+
+  useEffect(() => {
+    // Set up message listener for iframe navigation
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data && event.data.type === 'navigation') {
+        const newUrl = event.data.url;
+        handleIframeNavigation(newUrl);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
+  }, [handleIframeNavigation]);
 
   useEffect(() => {
     setIframeSrc(initialUrl);
@@ -161,7 +161,9 @@ export const WebBrowser: React.FC<{ initialUrl?: string }> = ({ initialUrl = "ht
     if (iframeRef.current) {
       setIsLoading(true);
       try {
-        iframeRef.current.src = iframeRef.current.src;
+        // Re-setting src forces the iframe to reload, even cross-origin
+        const currentSrc = iframeRef.current.src;
+        iframeRef.current.src = currentSrc;
       } catch (e) {
         console.error("Error refreshing iframe:", e);
         setIsLoading(false);
@@ -210,10 +212,10 @@ export const WebBrowser: React.FC<{ initialUrl?: string }> = ({ initialUrl = "ht
   return (
     <WindowLayout
       toolbar={
-        <div className="flex flex-col">
+        <div className="app-toolbar-stack">
           {/* URL Bar */}
-          <div className="flex items-center justify-between space-x-2 p-1 border-b border-border">
-            <div className="flex items-center space-x-0">
+          <div className="app-toolbar-row browser-address-row">
+            <div className="app-control-group">
               <RetroButton
                 onClick={goBack}
                 disabled={historyIndex === 0}
@@ -241,19 +243,18 @@ export const WebBrowser: React.FC<{ initialUrl?: string }> = ({ initialUrl = "ht
                 <RefreshIcon className={isLoading ? "animate-spin" : ""} />
               </RetroButton>
             </div>
-            <div className="flex items-center flex-1 mx-2">
+            <div className="app-joined-control browser-address-group">
               <input
                 type="text"
                 value={currentUrlInput}
                 onChange={(e) => setCurrentUrlInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Enter URL..."
-                className="search-input text-xs flex-1 h-[18px] border-r-0 focus:outline-none"
+                className="search-input text-xs flex-1 focus:outline-none"
               />
               <RetroButton
                 onClick={handleGo}
                 size="sm"
-                className="h-[18px]"
                 title="Go to URL"
               >
                 Go
@@ -261,7 +262,7 @@ export const WebBrowser: React.FC<{ initialUrl?: string }> = ({ initialUrl = "ht
               <RetroButton
                 onClick={() => window.open(sanitizeUrl(currentUrlInput), '_blank', 'noopener,noreferrer')}
                 size="sm"
-                className="h-[18px] ml-1"
+                className="browser-external-button"
                 title="Open in new browser tab"
               >
                 ↗
@@ -269,7 +270,7 @@ export const WebBrowser: React.FC<{ initialUrl?: string }> = ({ initialUrl = "ht
             </div>
           </div>
           {/* Bookmark Bar */}
-          <div className="flex items-center gap-1 p-1 border-b border-border h-[26px] overflow-x-auto overflow-y-hidden">
+          <div className="app-toolbar-row browser-bookmark-bar">
             {BOOKMARKS.map((bookmark, index) => (
               <RetroButton
                 key={index}

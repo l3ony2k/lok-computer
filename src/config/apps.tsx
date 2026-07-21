@@ -1,24 +1,29 @@
 import React from 'react';
-import { ChannelBrowser } from '@/apps/arena/channels/ChannelBrowser';
-import { WebBrowser } from '@/apps/web/WebBrowser';
-import BskyPostsApp from '@/apps/bsky/BskyPostsApp';
-import FediApp from '@/apps/fedi/FediApp';
-import { WeatherApp } from '@/apps/weather/WeatherApp';
-import { About } from '@/apps/about/About';
-import { ConfigApp } from '@/apps/config/ConfigApp';
-import { ConsoleApp } from '@/apps/console/ConsoleApp';
-import { TalkToAI } from '@/apps/talk-to-ai/TalkToAI';
-import { GuestbookApp } from '@/apps/guestbook/GuestbookApp';
-import { ShelfApp } from '@/apps/shelf/ShelfApp';
-import { LinksApp } from '@/apps/links/LinksApp';
+import {
+  ChannelBrowser,
+  WebBrowser,
+  BskyPostsApp,
+  FediApp,
+  WeatherApp,
+  About,
+  ConfigApp,
+  ConsoleApp,
+  TalkToAI,
+  GuestbookApp,
+  ShelfApp,
+  LinksApp,
+} from '@/config/lazyApps';
+import { ARENA_WINDOW_DEFAULTS } from '@/config/arenaWindows';
 
 export interface AppConfig {
   name: string;
   iconType: string;
+  // Apps have heterogeneous prop shapes; the registry erases them.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   component: React.ComponentType<any>;
   defaultWidth: number;
   defaultHeight: number;
-  props?: Record<string, any>;
+  props?: Record<string, unknown>;
   singleInstance?: boolean; // If true, only one instance can be open at a time
 }
 
@@ -27,8 +32,8 @@ export const APP_LIST: AppConfig[] = [
     name: "Are.na",
     iconType: "arena",
     component: ChannelBrowser,
-    defaultWidth: 400,
-    defaultHeight: 500,
+    defaultWidth: ARENA_WINDOW_DEFAULTS.channelBrowser.width,
+    defaultHeight: ARENA_WINDOW_DEFAULTS.channelBrowser.height,
     props: { username: "lok" }
   },
   {
@@ -94,8 +99,8 @@ export const APP_LIST: AppConfig[] = [
     name: "Config",
     iconType: "config",
     component: ConfigApp,
-    defaultWidth: 400,
-    defaultHeight: 500,
+    defaultWidth: 650,
+    defaultHeight: 600,
     singleInstance: true
   },
   {

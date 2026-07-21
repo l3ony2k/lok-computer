@@ -125,7 +125,7 @@ export const PopupDialog: React.FC<PopupDialogProps> = ({
         <div
             ref={dialogRef}
             className={cn(
-                "flex flex-col border-2 border-border shadow-lg dark:shadow-[3px_3px_24px_rgb(0,0,0,0.3)] overflow-hidden bg-background",
+                "window-surface flex flex-col overflow-hidden",
                 intrusive ? "relative" : "fixed z-[2147483646]",
                 className
             )}
@@ -141,9 +141,9 @@ export const PopupDialog: React.FC<PopupDialogProps> = ({
             >
                 <CustomIcon iconType={iconType} className="mr-1 w-4 h-4" />
                 <span className="flex-1 truncate">{title}</span>
-                <div className="flex space-x-1">
+                <div className="flex gap-1">
                     <button
-                        className="retro-button p-1"
+                        className="retro-button window-control"
                         onClick={onClose}
                         title="Close"
                     >

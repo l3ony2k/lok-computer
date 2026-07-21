@@ -3,6 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f0f0f0" />
+    <script>window.__SYSTEM_VERSION__ = "%SYSTEM_VERSION%";</script>
     <title>lok.computer</title>
     <meta name="description" content="lok.computer is a browser-based mini desktop environment with modular apps including are.na browser, weather app, and more. Experience a retro desktop UI in your browser." />
     <meta name="author" content="Lok" />
@@ -60,7 +62,25 @@
   </head>
 
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <style>
+        #initial-boot-screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;background:#111;color:#d8d8d8;font:14px/1.5 ui-monospace,Menlo,Monaco,"Cascadia Mono","Segoe UI Mono",Consolas,monospace}
+        #initial-boot-screen>div{width:min(680px,100%)}
+        #initial-boot-screen strong{color:#fff}
+        #initial-boot-screen span{color:#61af75}
+        #initial-boot-cursor{display:inline-block;animation:initial-boot-blink .8s steps(1) infinite}
+        @keyframes initial-boot-blink{50%{opacity:0}}
+        @media(prefers-reduced-motion:reduce){#initial-boot-cursor{animation:none}}
+      </style>
+      <main id="initial-boot-screen" aria-label="System booting">
+        <div>
+          <strong>lok.computer</strong><br />
+          <span>[ OK ]</span> firmware initialized<br />
+          <span>[....]</span> loading lok kernel %SYSTEM_VERSION%<br />
+          root@lok:~# boot desktop <span id="initial-boot-cursor">_</span>
+        </div>
+      </main>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

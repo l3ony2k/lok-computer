@@ -3,10 +3,11 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { WindowLayout } from '@/components/window/WindowLayout';
 import { StateMessage } from '@/components/ui/StateMessage';
 import { RetroButton } from '@/components/ui/RetroButton';
-import { useWindowManager } from '@/hooks/useWindowManager';
+import { useWindowActions } from '@/hooks/useWindowManager';
 import { ImageViewerApp } from '@/apps/imageviewer/ImageViewerApp';
 import { APP_CONFIG } from '@/config/constants';
 import { getCachedData, setCachedData, incrementRequestCount, CACHE_TTL } from '@/lib/storage';
+import { cacheDebugLog } from '@/lib/debug';
 
 interface Account {
     id: string;
@@ -32,7 +33,7 @@ interface MediaAttachment {
     preview_url: string;
     remote_url: string | null;
     description: string | null;
-    meta: any;
+    meta: unknown;
 }
 
 interface Status {
@@ -54,7 +55,7 @@ const USERNAME = APP_CONFIG.FEDI_USERNAME;
 
 export const FediApp: React.FC = () => {
     const loadMoreRef = useRef<HTMLDivElement>(null);
-    const { addWindow } = useWindowManager();
+    const { addWindow } = useWindowActions();
 
     const fetchAccount = async () => {
         const cacheKey = `fedi:account:${USERNAME}`;
@@ -62,7 +63,7 @@ export const FediApp: React.FC = () => {
         // Check cache first
         const cached = await getCachedData<Account>(cacheKey);
         if (cached) {
-            console.log(`[Cache] Hit: fedi:account`);
+            cacheDebugLog(`[Cache] Hit: fedi:account`);
             return cached;
         }
 
@@ -101,7 +102,7 @@ export const FediApp: React.FC = () => {
         // Check cache first
         const cached = await getCachedData<{ statuses: Status[]; nextCursor?: string }>(cacheKey);
         if (cached) {
-            console.log(`[Cache] Hit: fedi:statuses:${pageParam || 'initial'}`);
+            cacheDebugLog(`[Cache] Hit: fedi:statuses:${pageParam || 'initial'}`);
             return cached;
         }
 

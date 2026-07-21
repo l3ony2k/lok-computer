@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef, ComponentType } from 'react';
-import { useWindowManager } from '@/hooks/useWindowManager';
+import { useWindowActions, useWindowState } from '@/hooks/useWindowManager';
 import { useTheme } from 'next-themes';
 import { APP_LIST } from '@/config/apps';
 import { WindowLayout } from '@/components/window/WindowLayout';
+import { rebootIntoKernelPanic, rebootSystem, requestSystemUpdateCheck, SYSTEM_VERSION } from '@/lib/system';
 
 interface LogEntry {
   id: number;
   timestamp: string;
-  message: any[];
+  message: unknown[];
   type: 'log' | 'error' | 'warn' | 'info';
   expanded?: boolean;
 }
@@ -21,7 +22,7 @@ interface Command {
 interface LogItemProps {
   log: LogEntry;
   getLogColor: (type: LogEntry['type']) => string;
-  formatMessage: (msgParts: any[]) => string;
+  formatMessage: (msgParts: unknown[]) => string;
 }
 
 // Highlight log prefixes with different colors
@@ -34,17 +35,17 @@ const highlightPrefix = (text: string): React.ReactNode => {
   const rest = text.slice(prefixMatch[0].length);
 
   // Determine prefix color based on category
-  let prefixClass = 'text-neutral-400';
+  let prefixClass = 'console-prefix-default';
   if (prefix.startsWith('[Cache]')) {
-    prefixClass = 'text-green-400';
+    prefixClass = 'console-prefix-cache';
   } else if (prefix.startsWith('[API:')) {
-    prefixClass = 'text-cyan-400';
+    prefixClass = 'console-prefix-api';
   } else if (prefix.startsWith('[App:')) {
-    prefixClass = 'text-yellow-400';
+    prefixClass = 'console-prefix-app';
   } else if (prefix.startsWith('[Session]')) {
-    prefixClass = 'text-purple-400';
+    prefixClass = 'console-prefix-session';
   } else if (prefix.startsWith('[Registry]')) {
-    prefixClass = 'text-pink-400';
+    prefixClass = 'console-prefix-registry';
   }
 
   return (
@@ -73,7 +74,7 @@ const LogItem: React.FC<LogItemProps> = ({ log, getLogColor, formatMessage }) =>
   return (
     <div className={`mb-1 ${getLogColor(log.type)}`}>
       <div className="flex items-start">
-        <span className="text-neutral-600 mr-2 select-none text-xs shrink-0">[{log.timestamp}]</span>
+        <span className="console-timestamp mr-2 select-none text-xs shrink-0">[{log.timestamp}]</span>
         <div className="flex-1 overflow-hidden min-w-0">
           <span className="break-all whitespace-pre-wrap">
             {highlightPrefix(firstLine)}{restLines}
@@ -81,7 +82,7 @@ const LogItem: React.FC<LogItemProps> = ({ log, getLogColor, formatMessage }) =>
           {isLong && (
             <button
               onClick={() => setIsExpanded(!isExpanded)}
-              className="block text-xs text-neutral-500 hover:text-neutral-300 mt-1 focus:outline-none underline decoration-dotted"
+              className="console-expand block text-xs mt-1 focus:outline-none underline decoration-dotted"
             >
               {isExpanded ? 'Show less' : `Show ${lines.length - 10} more lines...`}
             </button>
@@ -101,7 +102,8 @@ export const ConsoleApp: React.FC = () => {
   const [deletionProgress, setDeletionProgress] = useState(0);
   const consoleEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const { windows, addWindow, addOrFocusWindow, closeWindow } = useWindowManager();
+  const { windows } = useWindowState();
+  const { addWindow, addOrFocusWindow, closeWindow } = useWindowActions();
   const { theme, setTheme } = useTheme();
 
   // Add auto-focus effect
@@ -146,7 +148,7 @@ export const ConsoleApp: React.FC = () => {
           case 'list':
             console.info('Available apps:', APP_LIST.map(app => `\n- ${app.name}`).join(''));
             break;
-          case 'open':
+          case 'open': {
             if (!appName) {
               console.error('Usage: apps open <app name>');
               return;
@@ -180,7 +182,8 @@ export const ConsoleApp: React.FC = () => {
               console.error(`App "${appName}" not found`);
             }
             break;
-          case 'close':
+          }
+          case 'close': {
             if (!appName) {
               console.error('Usage: apps close <app name>');
               return;
@@ -193,6 +196,7 @@ export const ConsoleApp: React.FC = () => {
               console.error(`No open window found for "${appName}"`);
             }
             break;
+          }
           default:
             console.error('Usage: apps [list|open|close] [app]');
         }
@@ -217,11 +221,12 @@ export const ConsoleApp: React.FC = () => {
             setTheme(themeArg);
             console.info(`Theme set to: ${themeArg}`);
             break;
-          case 'toggle':
+          case 'toggle': {
             const newTheme = theme === 'dark' ? 'light' : 'dark';
             setTheme(newTheme);
             console.info(`Theme toggled to: ${newTheme}`);
             break;
+          }
           default:
             console.error('Usage: theme [get|set|toggle] [theme]');
         }
@@ -240,6 +245,21 @@ export const ConsoleApp: React.FC = () => {
         });
       }
     },
+    version: {
+      name: 'version',
+      description: 'Show the running system version',
+      action: () => console.info(`lok.computer v${SYSTEM_VERSION}`)
+    },
+    update: {
+      name: 'update',
+      description: 'Check for a system update',
+      action: () => requestSystemUpdateCheck()
+    },
+    reboot: {
+      name: 'reboot',
+      description: 'Hard reload and boot the system again',
+      action: () => void rebootSystem('console reboot command')
+    },
     'rm -rf /': {
       name: 'rm -rf /',
       description: 'Do not run this command',
@@ -253,7 +273,7 @@ export const ConsoleApp: React.FC = () => {
     const originalConsoleWarn = console.warn;
     const originalConsoleInfo = console.info;
 
-    const captureLog = (type: LogEntry['type'], ...args: any[]) => {
+    const captureLog = (type: LogEntry['type'], ...args: unknown[]) => {
       setLogs(prevLogs => [
         ...prevLogs,
         {
@@ -284,12 +304,12 @@ export const ConsoleApp: React.FC = () => {
     };
   }, []);
 
-  const formatMessage = (msgParts: any[]) => {
+  const formatMessage = (msgParts: unknown[]) => {
     return msgParts.map(part => {
       if (typeof part === 'object') {
         try {
           return JSON.stringify(part, null, 2);
-        } catch (e) {
+        } catch {
           return '[Unserializable Object]';
         }
       }
@@ -300,13 +320,13 @@ export const ConsoleApp: React.FC = () => {
   const getLogColor = (type: LogEntry['type']) => {
     switch (type) {
       case 'error':
-        return 'text-red-500';
+        return 'console-log-error';
       case 'warn':
-        return 'text-yellow-500';
+        return 'console-log-warn';
       case 'info':
-        return 'text-blue-400';
+        return 'console-log-info';
       default:
-        return 'text-neutral-300';
+        return 'console-log-default';
     }
   };
 
@@ -334,9 +354,9 @@ export const ConsoleApp: React.FC = () => {
     const interval = setInterval(() => {
       if (i >= criticalPaths.length) {
         clearInterval(interval);
-        console.error('SYSTEM CRITICAL FAILURE. REBOOTING...');
+        console.error('INIT PROCESS LOST. ROOT FILESYSTEM UNAVAILABLE.');
         setTimeout(() => {
-          window.location.reload();
+          void rebootIntoKernelPanic();
         }, 2000);
         return;
       }
@@ -357,13 +377,16 @@ export const ConsoleApp: React.FC = () => {
       setCommand('');
 
       const [cmdName, ...args] = trimmedCommand.split(' ');
-      const cmd = commands[cmdName.toLowerCase()] || commands[trimmedCommand.toLowerCase()]; // Check for full command string too (like "rm -rf /")
+      const isDangerousRemove = /^(sudo\s+)?rm\s+-(?=[a-z]*r)(?=[a-z]*f)[a-z]+\s+(--no-preserve-root\s+)?\/(\*)?$/i.test(trimmedCommand);
+      const cmd = isDangerousRemove
+        ? commands['rm -rf /']
+        : commands[cmdName.toLowerCase()] || commands[trimmedCommand.toLowerCase()];
 
       if (cmd) {
         try {
           cmd.action(args);
-        } catch (err: any) {
-          console.error(`Error executing command: ${err.message}`);
+        } catch (err) {
+          console.error(`Error executing command: ${err instanceof Error ? err.message : String(err)}`);
         }
       } else {
         console.error(`Command not found: ${cmdName}`);
@@ -393,10 +416,10 @@ export const ConsoleApp: React.FC = () => {
   return (
     <WindowLayout
       hasPadding={false}
-      className="bg-black font-mono text-sm"
+      className="console-layout font-mono text-sm"
       footer={
-        <div className="p-1 border-t border-border flex items-center bg-black">
-          <span className="text-neutral-500 mr-1">{'>'}</span>
+        <div className="app-footer-row console-command-row justify-start">
+          <span className="console-command-prompt mr-1">{'>'}</span>
           <input
             ref={inputRef}
             type="text"
@@ -404,7 +427,7 @@ export const ConsoleApp: React.FC = () => {
             onChange={(e) => setCommand(e.target.value)}
             onKeyDown={handleCommand}
             placeholder="Type 'help' for available commands"
-            className="bg-transparent flex-1 focus:outline-none text-neutral-300 placeholder-neutral-600"
+            className="console-command-input bg-transparent flex-1 focus:outline-none"
             disabled={isDeleting}
             autoFocus
           />

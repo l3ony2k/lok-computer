@@ -118,6 +118,8 @@ export interface RawChannel {
   created_at: string;
   updated_at: string;
   owner: RawOwner;
+  image?: RawImage | null;
+  comment_count?: number;
   counts: {
     blocks: number;
     channels: number;
@@ -308,8 +310,9 @@ export function normalizeChannel(rawChannel: RawChannel, followers?: number): Ar
     descriptionPlain: description.plain,
     owner: normalizeOwner(rawChannel.owner),
     source: null,
-    image: null,
+    image: normalizeImage(rawChannel.image),
     connection: normalizeConnection(rawChannel.connection),
+    commentCount: rawChannel.comment_count ?? 0,
     counts: normalizeCounts(rawChannel.counts, followers),
     arenaUrl: `https://www.are.na/channel/${rawChannel.slug}`,
   };
@@ -334,6 +337,7 @@ export function normalizeBlock(rawBlock: RawBlock): ArenaBlock {
     source: normalizeSource(rawBlock.source),
     image: normalizeImage(rawBlock.image),
     connection: normalizeConnection(rawBlock.connection),
+    commentCount: rawBlock.comment_count ?? 0,
     arenaUrl: `https://www.are.na/block/${rawBlock.id}`,
     textHtml: content.html,
     textPlain: content.plain,
@@ -343,9 +347,11 @@ export function normalizeBlock(rawBlock: RawBlock): ArenaBlock {
 }
 
 export function normalizeArenaItem(rawItem: RawArenaItem): ArenaItem {
+  // RawBlock.type is a plain string, so the union isn't discriminated —
+  // narrow manually based on the "Channel" marker.
   if (rawItem.type === "Channel") {
-    return normalizeChannel(rawItem);
+    return normalizeChannel(rawItem as RawChannel);
   }
 
-  return normalizeBlock(rawItem);
+  return normalizeBlock(rawItem as RawBlock);
 }

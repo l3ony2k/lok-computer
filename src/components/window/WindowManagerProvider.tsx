@@ -1,12 +1,18 @@
-import { WindowManagerContext, createWindowManagerContext } from '@/hooks/useWindowManager.ts';
+import {
+  WindowManagerActionsContext,
+  WindowManagerStateContext,
+  useWindowManagerController,
+} from '@/hooks/useWindowManager.ts';
 import { ReactNode } from 'react';
 
 export const WindowManagerProvider = ({ children }: { children: ReactNode }) => {
-  const windowManager = createWindowManagerContext();
+  const { state, actions } = useWindowManagerController();
 
   return (
-    <WindowManagerContext.Provider value={windowManager}>
-      {children}
-    </WindowManagerContext.Provider>
+    <WindowManagerActionsContext.Provider value={actions}>
+      <WindowManagerStateContext.Provider value={state}>
+        {children}
+      </WindowManagerStateContext.Provider>
+    </WindowManagerActionsContext.Provider>
   );
 };

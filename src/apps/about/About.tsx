@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { WindowLayout } from "@/components/window/WindowLayout";
 import { RetroButton } from "@/components/ui/RetroButton";
 import { usePersistedState } from "@/hooks/useStorage";
+import { SYSTEM_VERSION } from "@/lib/system";
 
 // Import local 88x31 button images
 import omglolButton from "@/assets/buttons/omglol.png";
@@ -75,8 +76,6 @@ const AboutThis = () => {
           .
         </p>
       </div>
-
-      <p className="mt-4 text-xs opacity-50 select-none">Version 1.6.2</p>
     </div>
   );
 };
@@ -261,11 +260,14 @@ interface AboutProps {
 export const About: React.FC<AboutProps> = ({ initialTab, onPropsChange }) => {
   const [activeTab, setActiveTab] = usePersistedState(APP_STATE_KEY, initialTab || "about-this");
 
-  // Deep link priority: override persisted state if initialTab is provided and differs
+  // Deep link priority: override persisted state if initialTab is provided and differs.
+  // Intentionally runs only when initialTab changes — including activeTab in the deps
+  // would reset the user's tab choice back to the deep-linked tab on every click.
   useEffect(() => {
     if (initialTab && initialTab !== activeTab) {
       setActiveTab(initialTab);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialTab]);
 
   const handleTabChange = (tab: string) => {
@@ -281,7 +283,7 @@ export const About: React.FC<AboutProps> = ({ initialTab, onPropsChange }) => {
   return (
     <WindowLayout
       toolbar={
-        <div className="flex border-b border-border sticky top-0 bg-background p-1 space-x-1">
+        <div className="app-toolbar-row app-tab-bar sticky top-0">
           <RetroButton size="sm" active={activeTab === "about-this"} onClick={() => handleTabChange("about-this")}>
             About this
           </RetroButton>
@@ -291,6 +293,12 @@ export const About: React.FC<AboutProps> = ({ initialTab, onPropsChange }) => {
           <RetroButton size="sm" active={activeTab === "projects"} onClick={() => handleTabChange("projects")}>
             Projects
           </RetroButton>
+        </div>
+      }
+      footer={
+        <div className="app-footer-row arena-file-footer">
+          <span>v{SYSTEM_VERSION}</span>
+          <span>lok</span>
         </div>
       }
       hasPadding={false}

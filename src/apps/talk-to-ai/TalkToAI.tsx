@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import { WindowLayout } from '@/components/window/WindowLayout';
 import { RetroButton } from '@/components/ui/RetroButton';
 import { APP_CONFIG } from '@/config/constants';
@@ -110,7 +109,6 @@ export const TalkToAI = () => {
     },
     onError: (error) => {
       console.error('Error getting AI response:', error);
-      toast.error('Failed to get AI response. Please try again.');
       setTimeout(() => {
         inputRef.current?.focus();
       }, 0);
@@ -142,7 +140,6 @@ export const TalkToAI = () => {
     const initialMessage = { id: Date.now().toString(), text: 'Hello user, how can I help you?', sender: 'ai' as const };
     setMessages([initialMessage]);
     setConfirmClear(false);
-    toast.success('Chat history cleared');
     // Focus back on input after clearing
     setTimeout(() => {
       inputRef.current?.focus();
@@ -160,12 +157,12 @@ export const TalkToAI = () => {
   return (
     <WindowLayout
       toolbar={
-        <div className="flex items-center justify-center p-1 border-b border-border">
+        <div className="app-toolbar-row justify-center">
           <span className="text-xs opacity-50">AI may go crazy. Use at your own risk.</span>
         </div>
       }
       footer={
-        <div className="flex items-center justify-between space-x-2 p-1 border-t border-border">
+        <div className="app-footer-row">
           <RetroButton
             type="button"
             onClick={handleClear}
@@ -177,7 +174,7 @@ export const TalkToAI = () => {
           >
             {confirmClear ? "Confirm?" : "Clear"}
           </RetroButton>
-          <form onSubmit={handleSubmit} className="flex items-center flex-1 mx-2">
+          <form onSubmit={handleSubmit} className="app-joined-control flex-1">
             <input
               ref={inputRef}
               type="text"
@@ -185,7 +182,7 @@ export const TalkToAI = () => {
               onChange={(e) => setInput(e.target.value)}
               placeholder={isLoading ? "Waiting for response..." : "Type a message..."}
               disabled={isLoading}
-              className="search-input text-xs flex-1 h-[18px] border-r-0 focus:outline-none"
+              className="search-input text-xs flex-1 focus:outline-none"
             />
             <RetroButton
               type="submit"

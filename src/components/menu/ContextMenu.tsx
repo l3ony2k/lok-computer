@@ -32,7 +32,7 @@ const MenuItem: React.FC<MenuItemProps> = ({ item, onClose }) => {
     const itemRef = useRef<HTMLDivElement>(null);
 
     if (item.type === 'divider') {
-        return <div className="border-t border-border my-1" />;
+        return <div className="border-t border-border" />;
     }
 
     const hasSubItems = item.subItems && item.subItems.length > 0;
@@ -66,8 +66,7 @@ const MenuItem: React.FC<MenuItemProps> = ({ item, onClose }) => {
             className="relative"
         >
             <button
-                className={`flex items-center w-full px-3 py-1.5 text-sm text-left transition-colors select-none
-          ${item.disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-accent cursor-default'}`}
+                className="menu-item-button flex items-center select-none"
                 disabled={item.disabled}
             >
                 {item.icon && (
@@ -78,7 +77,7 @@ const MenuItem: React.FC<MenuItemProps> = ({ item, onClose }) => {
             </button>
 
             {hasSubItems && isSubMenuOpen && (
-                <div className="absolute left-full top-0 bg-retro-taskbar border border-border shadow-md min-w-[160px] select-none">
+                <div className="menu-surface absolute left-[calc(100%+5px)] top-[-1px] min-w-[160px] select-none">
                     {item.subItems?.map((subItem, index) => (
                         <MenuItem key={subItem.label || `divider-${index}`} item={subItem} onClose={onClose} />
                     ))}
@@ -137,7 +136,8 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
     return (
         <div
             ref={menuRef}
-            className="fixed bg-retro-taskbar border border-border shadow-md min-w-[160px] select-none z-[10000]"
+            className="menu-surface fixed min-w-[160px] select-none z-[10000]"
+            role="menu"
             style={{
                 left: adjustedPosition.x,
                 top: adjustedPosition.y,

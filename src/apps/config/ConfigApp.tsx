@@ -1,110 +1,143 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
-import { Sun, Moon, Computer, Image, CheckCircle, X, Database, Trash2, RefreshCw, Cat, Monitor } from "lucide-react";
+import {
+  Bell,
+  Bug,
+  Cat,
+  CheckCircle,
+  Computer,
+  Copy,
+  Database,
+  Image,
+  Monitor,
+  Moon,
+  Palette,
+  Power,
+  RefreshCw,
+  ServerCog,
+  Sparkles,
+  Sun,
+  Trash2,
+  X,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { WindowLayout } from "@/components/window/WindowLayout";
 import { RetroButton } from "@/components/ui/RetroButton";
-import { clearCache, getUsageStats, resetUsageStats, type UsageStats } from "@/lib/storage";
 import { toast } from "sonner";
-import onekoDefault from '@/assets/oneko.gif';
-import onekoDark from '@/assets/oneko-dark.gif';
+import {
+  clearCache,
+  getUsageStats,
+  isStorageAvailable,
+  resetUsageStats,
+  type UsageStats,
+} from "@/lib/storage";
+import { rebootSystem, requestSystemUpdateCheck, SYSTEM_VERSION } from "@/lib/system";
+import onekoDefault from "@/assets/oneko.gif";
+import onekoDark from "@/assets/oneko-dark.gif";
 
-// Default wallpaper options
+type ConfigCategory = "style" | "effect" | "system" | "debug";
+
+const CONFIG_CATEGORIES: Array<{
+  id: ConfigCategory;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+}> = [
+  { id: "style", label: "Style", icon: Palette },
+  { id: "effect", label: "Effect", icon: Sparkles },
+  { id: "system", label: "System", icon: ServerCog },
+  { id: "debug", label: "Debug", icon: Bug },
+];
+
 const DEFAULT_WALLPAPERS = [
   {
     name: "by @1000bytes.bsky.social",
-    url: "https://d2w9rnfcy7mm78.cloudfront.net/36335972/original_8a4c77ea7ed077282b4653fad9183d57.jpg"
+    url: "https://d2w9rnfcy7mm78.cloudfront.net/36335972/original_8a4c77ea7ed077282b4653fad9183d57.jpg",
   },
   {
     name: "Ocean Waves",
-    url: "https://images.unsplash.com/photo-1484387436194-cf7cb70800ce?w=1280&auto=format&fit=crop"
+    url: "https://images.unsplash.com/photo-1484387436194-cf7cb70800ce?w=1280&auto=format&fit=crop",
   },
   {
     name: "Abstract Geometric",
-    url: "https://images.unsplash.com/photo-1605106702734-205df224ecce?w=1280&auto=format&fit=crop"
+    url: "https://images.unsplash.com/photo-1605106702734-205df224ecce?w=1280&auto=format&fit=crop",
   },
   {
     name: "Retro Computer",
-    url: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1280&auto=format&fit=crop"
-  }
+    url: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1280&auto=format&fit=crop",
+  },
 ];
+
+const ConfigSection = ({
+  title,
+  icon: Icon,
+  children,
+}: {
+  title: string;
+  icon: React.ComponentType<{ className?: string }>;
+  children: React.ReactNode;
+}) => (
+  <section className="config-section">
+    <h2 className="config-section-title">
+      <Icon className="h-4 w-4" />
+      {title}
+    </h2>
+    <div className="config-section-body">{children}</div>
+  </section>
+);
+
+const RangeSetting = ({
+  label,
+  value,
+  min = 0,
+  max = 100,
+  suffix = "%",
+  onChange,
+}: {
+  label: string;
+  value: number;
+  min?: number;
+  max?: number;
+  suffix?: string;
+  onChange: (value: number) => void;
+}) => (
+  <label className="config-range-setting">
+    <span>{label}: {value}{suffix}</span>
+    <input
+      type="range"
+      min={min}
+      max={max}
+      value={value}
+      onChange={(event) => onChange(Number.parseInt(event.target.value, 10))}
+    />
+  </label>
+);
 
 export const ConfigApp: React.FC = () => {
   const { theme, setTheme } = useTheme();
   const { settings, updateSetting } = useUserSettings();
+  const [activeCategory, setActiveCategory] = useState<ConfigCategory>("style");
   const [customWallpaperUrl, setCustomWallpaperUrl] = useState("");
   const [customError, setCustomError] = useState("");
   const [stats, setStats] = useState<UsageStats | null>(null);
   const [isClearing, setIsClearing] = useState(false);
   const [confirmClearCache, setConfirmClearCache] = useState(false);
   const [confirmResetStats, setConfirmResetStats] = useState(false);
+  const [debugOutlines, setDebugOutlines] = useState(() => (
+    document.documentElement.classList.contains("debug-layout-outlines")
+  ));
 
-  // Load usage stats on mount
+  const loadStats = async () => {
+    try {
+      setStats(await getUsageStats());
+    } catch (error) {
+      console.error("[ConfigApp] Failed to load stats:", error);
+    }
+  };
+
   useEffect(() => {
-    const loadStats = async () => {
-      try {
-        const data = await getUsageStats();
-        setStats(data);
-      } catch (error) {
-        console.error('[ConfigApp] Failed to load stats:', error);
-      }
-    };
-    loadStats();
+    void loadStats();
   }, []);
-
-  const handleClearCache = async () => {
-    if (!confirmClearCache) {
-      setConfirmClearCache(true);
-      return;
-    }
-    setIsClearing(true);
-    try {
-      await clearCache();
-      toast.success('Cache cleared successfully');
-      // Refresh stats
-      const data = await getUsageStats();
-      setStats(data);
-    } catch (error) {
-      console.error('[ConfigApp] Failed to clear cache:', error);
-      toast.error('Failed to clear cache');
-    } finally {
-      setIsClearing(false);
-      setConfirmClearCache(false);
-    }
-  };
-
-  const handleClearCacheBlur = () => {
-    setTimeout(() => {
-      setConfirmClearCache(false);
-    }, 150);
-  };
-
-  const handleResetStats = async () => {
-    if (!confirmResetStats) {
-      setConfirmResetStats(true);
-      return;
-    }
-    setIsClearing(true);
-    try {
-      await resetUsageStats();
-      const data = await getUsageStats();
-      setStats(data);
-      toast.success('Statistics reset');
-    } catch (error) {
-      console.error('[ConfigApp] Failed to reset stats:', error);
-      toast.error('Failed to reset statistics');
-    } finally {
-      setIsClearing(false);
-      setConfirmResetStats(false);
-    }
-  };
-
-  const handleResetStatsBlur = () => {
-    setTimeout(() => {
-      setConfirmResetStats(false);
-    }, 150);
-  };
 
   const handleCustomWallpaper = () => {
     if (!customWallpaperUrl) {
@@ -112,445 +145,364 @@ export const ConfigApp: React.FC = () => {
       return;
     }
 
-    // Basic URL validation
     try {
       new URL(customWallpaperUrl);
-      updateSetting('wallpaper', customWallpaperUrl);
+      updateSetting("wallpaper", customWallpaperUrl);
       setCustomWallpaperUrl("");
       setCustomError("");
-    } catch (e) {
+    } catch {
       setCustomError("Invalid URL format");
     }
   };
 
-  const setWallpaper = (url: string) => {
-    updateSetting('wallpaper', url);
+  const handleClearCache = async () => {
+    if (!confirmClearCache) {
+      setConfirmClearCache(true);
+      return;
+    }
+
+    setIsClearing(true);
+    try {
+      await clearCache();
+      await loadStats();
+      toast.success("API cache cleared.");
+    } catch (error) {
+      console.error("[ConfigApp] Failed to clear cache:", error);
+      toast.error("Failed to clear API cache.");
+    } finally {
+      setIsClearing(false);
+      setConfirmClearCache(false);
+    }
   };
 
-  const clearWallpaper = () => {
-    updateSetting('wallpaper', undefined);
+  const handleResetStats = async () => {
+    if (!confirmResetStats) {
+      setConfirmResetStats(true);
+      return;
+    }
+
+    setIsClearing(true);
+    try {
+      await resetUsageStats();
+      await loadStats();
+      toast.success("Usage statistics reset.");
+    } catch (error) {
+      console.error("[ConfigApp] Failed to reset stats:", error);
+      toast.error("Failed to reset usage statistics.");
+    } finally {
+      setIsClearing(false);
+      setConfirmResetStats(false);
+    }
+  };
+
+  const getDiagnostics = () => ({
+    version: SYSTEM_VERSION,
+    theme,
+    viewport: `${window.innerWidth}x${window.innerHeight}`,
+    online: navigator.onLine,
+    indexedDB: isStorageAvailable(),
+    openCacheStats: stats,
+    verboseCacheLogging: settings.debug?.verboseCacheLogging ?? false,
+    userAgent: navigator.userAgent,
+    timestamp: new Date().toISOString(),
+  });
+
+  const copyDiagnostics = async () => {
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(getDiagnostics(), null, 2));
+      toast.success("Diagnostics copied.");
+    } catch (error) {
+      console.error("[ConfigApp] Failed to copy diagnostics:", error);
+      toast.error("Could not copy diagnostics.");
+    }
+  };
+
+  const toggleDebugOutlines = () => {
+    const nextValue = !debugOutlines;
+    document.documentElement.classList.toggle("debug-layout-outlines", nextValue);
+    setDebugOutlines(nextValue);
+  };
+
+  const updateCrt = (update: Partial<NonNullable<typeof settings.crt>>) => {
+    updateSetting("crt", {
+      enabled: settings.crt?.enabled ?? false,
+      scanlines: settings.crt?.scanlines ?? 50,
+      flicker: settings.crt?.flicker ?? 10,
+      rgbOffset: settings.crt?.rgbOffset ?? 50,
+      curvature: settings.crt?.curvature ?? 20,
+      ...update,
+    });
+  };
+
+  const updateOneko = (update: Partial<NonNullable<typeof settings.oneko>>) => {
+    updateSetting("oneko", {
+      enabled: settings.oneko?.enabled ?? false,
+      hasBeenAsked: true,
+      speed: settings.oneko?.speed ?? 10,
+      variant: settings.oneko?.variant ?? "default",
+      ...update,
+    });
   };
 
   return (
-    <WindowLayout hasPadding={false}>
-      <div className="p-4 space-y-6 max-w-lg mx-auto">
-        {/* Theme Section */}
-        <div>
-          <h2 className="text-lg font-bold mb-3 flex items-center">
-            <Sun className="w-5 h-5 mr-2" />
-            Appearance
-          </h2>
-          <div className="grid grid-cols-3 gap-3">
+    <WindowLayout className="config-window-layout" hasPadding={false} isScrollable={false}>
+      <div className="config-layout">
+        <nav
+          className="config-sidebar"
+          aria-label="Configuration categories"
+          aria-orientation="vertical"
+          role="tablist"
+        >
+          {CONFIG_CATEGORIES.map(({ id, label, icon: Icon }) => (
             <RetroButton
-              active={theme === 'light'}
-              onClick={() => setTheme('light')}
-              className="flex flex-row items-center justify-center items-center p-3 h-18 gap-2"
+              key={id}
+              size="sm"
+              active={activeCategory === id}
+              className="config-category-button"
+              role="tab"
+              aria-selected={activeCategory === id}
+              onClick={() => setActiveCategory(id)}
             >
-              <Sun className="w-5 h-5" />
-              <span>Light</span>
+              <Icon className="h-4 w-4" />
+              <span>{label}</span>
             </RetroButton>
-            <RetroButton
-              active={theme === 'dark'}
-              onClick={() => setTheme('dark')}
-              className="flex flex-row items-center justify-center items-center p-3 h-18 gap-2"
-            >
-              <Moon className="w-5 h-5" />
-              <span>Dark</span>
-            </RetroButton>
-            <RetroButton
-              active={theme === 'system'}
-              onClick={() => setTheme('system')}
-              className="flex flex-row items-center justify-center items-center p-3 h-18 gap-2"
-            >
-              <Computer className="w-5 h-5" />
-              <span>System</span>
-            </RetroButton>
-          </div>
-        </div>
+          ))}
+        </nav>
 
-        {/* Wallpaper Section */}
-        <div>
-          <h2 className="text-lg font-bold mb-3 flex items-center">
-            <Image className="w-5 h-5 mr-2" />
-            Wallpaper
-          </h2>
-
-          {/* Current Wallpaper Preview */}
-          <div className="mb-4">
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="text-sm font-medium">Current Wallpaper</h3>
-              {settings.wallpaper && (
-                <RetroButton
-                  size="sm"
-                  onClick={clearWallpaper}
-                  className="text-xs h-6 px-2 text-destructive hover:text-destructive bg-transparent border-transparent hover:bg-muted"
-                >
-                  <X className="w-3 h-3 mr-1" />
-                  Remove
-                </RetroButton>
-              )}
-            </div>
-            <div className="aspect-video w-full bg-muted overflow-hidden border border-border relative">
-              {settings.wallpaper ? (
-                <div
-                  className="w-full h-full bg-center bg-cover"
-                  style={{ backgroundImage: `url("${settings.wallpaper}")` }}
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">
-                  Default Pattern
+        <div className="config-content scrollable-area">
+          {activeCategory === "style" && (
+            <div className="config-category-content">
+              <ConfigSection title="Appearance" icon={Sun}>
+                <div className="config-theme-grid">
+                  <RetroButton active={theme === "light"} onClick={() => setTheme("light")}>
+                    <Sun className="h-4 w-4" /> Light
+                  </RetroButton>
+                  <RetroButton active={theme === "dark"} onClick={() => setTheme("dark")}>
+                    <Moon className="h-4 w-4" /> Dark
+                  </RetroButton>
+                  <RetroButton active={theme === "system"} onClick={() => setTheme("system")}>
+                    <Computer className="h-4 w-4" /> Auto
+                  </RetroButton>
                 </div>
-              )}
-            </div>
-          </div>
+              </ConfigSection>
 
-          {/* Predefined wallpapers */}
-          <div className="mb-4">
-            <h3 className="text-sm font-medium mb-1">Preset Wallpapers</h3>
-            <div className="grid grid-cols-2 gap-2">
-              {DEFAULT_WALLPAPERS.map((wallpaper) => (
-                <button
-                  key={wallpaper.url}
-                  className={cn(
-                    "border border-border p-1 aspect-video overflow-hidden relative hover:opacity-90 transition-opacity",
-                    settings.wallpaper === wallpaper.url && "border-primary border-2"
+              <ConfigSection title="Wallpaper" icon={Image}>
+                <div className="config-setting-heading">
+                  <span>Current wallpaper</span>
+                  {settings.wallpaper && (
+                    <RetroButton size="sm" onClick={() => updateSetting("wallpaper", undefined)}>
+                      <X className="h-3 w-3" /> Remove
+                    </RetroButton>
                   )}
-                  onClick={() => setWallpaper(wallpaper.url)}
-                  title={wallpaper.name}
-                >
-                  <div
-                    className="w-full h-full bg-center bg-cover"
-                    style={{ backgroundImage: `url("${wallpaper.url}")` }}
-                  />
-                  {settings.wallpaper === wallpaper.url && (
-                    <CheckCircle className="w-4 h-4 absolute bottom-1 right-1 text-primary" />
+                </div>
+
+                <div className="config-wallpaper-preview">
+                  {settings.wallpaper ? (
+                    <div style={{ backgroundImage: `url("${settings.wallpaper}")` }} />
+                  ) : (
+                    <span>Default pattern</span>
                   )}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Custom wallpaper URL input */}
-          <div>
-            <h3 className="text-sm font-medium mb-1">Custom Wallpaper URL</h3>
-            <div className="flex space-x-2">
-              <input
-                type="text"
-                value={customWallpaperUrl}
-                onChange={(e) => {
-                  setCustomWallpaperUrl(e.target.value);
-                  if (customError) setCustomError("");
-                }}
-                placeholder="https://example.com/image.jpg"
-                className="flex-1 px-3 py-1 text-sm border border-border bg-background focus:outline-none focus:ring-1 focus:ring-primary"
-              />
-              <RetroButton
-                onClick={handleCustomWallpaper}
-                className="px-3"
-              >
-                Set
-              </RetroButton>
-            </div>
-            {customError && (
-              <p className="text-xs text-destructive mt-1">{customError}</p>
-            )}
-          </div>
-        </div>
-
-        {/* Oneko Cat Section */}
-        <div>
-          <h2 className="text-lg font-bold mb-3 flex items-center">
-            <Cat className="w-5 h-5 mr-2" />
-            Oneko Cat
-          </h2>
-
-          {/* Enable/Disable Toggle */}
-          <div className="mb-4">
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={settings.oneko?.enabled ?? false}
-                onChange={(e) => updateSetting('oneko', {
-                  ...settings.oneko,
-                  enabled: e.target.checked,
-                  hasBeenAsked: true,
-                  speed: settings.oneko?.speed ?? 10,
-                  variant: settings.oneko?.variant ?? 'default',
-                })}
-                className="w-4 h-4"
-              />
-              <span className="text-sm">Enable cat cursor follower</span>
-            </label>
-          </div>
-
-          {/* Speed Slider */}
-          <div className="mb-4">
-            <h3 className="text-sm font-medium mb-1">Speed: {settings.oneko?.speed ?? 10}</h3>
-            <input
-              type="range"
-              min="1"
-              max="20"
-              value={settings.oneko?.speed ?? 10}
-              onChange={(e) => updateSetting('oneko', {
-                ...settings.oneko,
-                enabled: settings.oneko?.enabled ?? false,
-                hasBeenAsked: settings.oneko?.hasBeenAsked ?? true,
-                speed: parseInt(e.target.value),
-                variant: settings.oneko?.variant ?? 'default',
-              })}
-              className="w-full"
-            />
-          </div>
-
-          {/* Variant Selector */}
-          <div className="mb-4">
-            <h3 className="text-sm font-medium mb-2">Cat Variant</h3>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                className={cn(
-                  "p-2 border border-border flex flex-col items-center gap-1",
-                  (settings.oneko?.variant ?? 'default') === 'default' && "border-primary border-2"
-                )}
-                onClick={() => updateSetting('oneko', {
-                  ...settings.oneko,
-                  enabled: settings.oneko?.enabled ?? false,
-                  hasBeenAsked: settings.oneko?.hasBeenAsked ?? true,
-                  speed: settings.oneko?.speed ?? 10,
-                  variant: 'default',
-                })}
-              >
-                <div
-                  className="w-8 h-8"
-                  style={{
-                    backgroundImage: `url(${onekoDefault})`,
-                    backgroundPosition: '-96px -96px', // Idle sprite position (-3 * 32, -3 * 32)
-                    imageRendering: 'pixelated',
-                  }}
-                />
-                <span className="text-xs">white</span>
-                {(settings.oneko?.variant ?? 'default') === 'default' && (
-                  <CheckCircle className="w-4 h-4 text-primary" />
-                )}
-              </button>
-              <button
-                className={cn(
-                  "p-2 border border-border flex flex-col items-center gap-1",
-                  settings.oneko?.variant === 'dark' && "border-primary border-2"
-                )}
-                onClick={() => updateSetting('oneko', {
-                  ...settings.oneko,
-                  enabled: settings.oneko?.enabled ?? false,
-                  hasBeenAsked: settings.oneko?.hasBeenAsked ?? true,
-                  speed: settings.oneko?.speed ?? 10,
-                  variant: 'dark',
-                })}
-              >
-                <div
-                  className="w-8 h-8"
-                  style={{
-                    backgroundImage: `url(${onekoDark})`,
-                    backgroundPosition: '-96px -96px', // Idle sprite position (-3 * 32, -3 * 32)
-                    imageRendering: 'pixelated',
-                  }}
-                />
-                <span className="text-xs">black</span>
-                {settings.oneko?.variant === 'dark' && (
-                  <CheckCircle className="w-4 h-4 text-primary" />
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* CRT Effect Section */}
-        <div>
-          <h2 className="text-lg font-bold mb-3 flex items-center">
-            <Monitor className="w-5 h-5 mr-2" />
-            CRT Effect
-          </h2>
-
-          {/* Enable/Disable Toggle */}
-          <div className="mb-4">
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={settings.crt?.enabled ?? false}
-                onChange={(e) => updateSetting('crt', {
-                  ...settings.crt,
-                  enabled: e.target.checked,
-                  scanlines: settings.crt?.scanlines ?? 50,
-                  flicker: settings.crt?.flicker ?? 10,
-                  rgbOffset: settings.crt?.rgbOffset ?? 50,
-                  curvature: settings.crt?.curvature ?? 20,
-                })}
-                className="w-4 h-4"
-              />
-              <span className="text-sm">Enable CRT monitor effect</span>
-            </label>
-          </div>
-
-          {/* Individual Effect Sliders */}
-          <div className="mb-4 space-y-4">
-            {/* Scanlines Slider */}
-            <div>
-              <h3 className="text-sm font-medium mb-1">Scanlines: {settings.crt?.scanlines ?? 0}%</h3>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={settings.crt?.scanlines ?? 0}
-                onChange={(e) => updateSetting('crt', {
-                  ...settings.crt,
-                  enabled: settings.crt?.enabled ?? false,
-                  scanlines: parseInt(e.target.value),
-                  flicker: settings.crt?.flicker ?? 10,
-                  rgbOffset: settings.crt?.rgbOffset ?? 50,
-                  curvature: settings.crt?.curvature ?? 20,
-                })}
-                className="w-full"
-              />
-            </div>
-
-            {/* Flicker Slider */}
-            <div>
-              <h3 className="text-sm font-medium mb-1">Flicker: {settings.crt?.flicker ?? 0}%</h3>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={settings.crt?.flicker ?? 0}
-                onChange={(e) => updateSetting('crt', {
-                  ...settings.crt,
-                  enabled: settings.crt?.enabled ?? false,
-                  scanlines: settings.crt?.scanlines ?? 50,
-                  flicker: parseInt(e.target.value),
-                  rgbOffset: settings.crt?.rgbOffset ?? 50,
-                  curvature: settings.crt?.curvature ?? 20,
-                })}
-                className="w-full"
-              />
-            </div>
-
-            {/* RGB Offset Slider */}
-            <div>
-              <h3 className="text-sm font-medium mb-1">RGB Offset: {settings.crt?.rgbOffset ?? 0}%</h3>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={settings.crt?.rgbOffset ?? 0}
-                onChange={(e) => updateSetting('crt', {
-                  ...settings.crt,
-                  enabled: settings.crt?.enabled ?? false,
-                  scanlines: settings.crt?.scanlines ?? 50,
-                  flicker: settings.crt?.flicker ?? 10,
-                  rgbOffset: parseInt(e.target.value),
-                  curvature: settings.crt?.curvature ?? 20,
-                })}
-                className="w-full"
-              />
-            </div>
-
-            {/* Curvature Slider */}
-            <div>
-              <h3 className="text-sm font-medium mb-1">Screen Curvature: {settings.crt?.curvature ?? 0}%</h3>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={settings.crt?.curvature ?? 0}
-                onChange={(e) => updateSetting('crt', {
-                  ...settings.crt,
-                  enabled: settings.crt?.enabled ?? false,
-                  scanlines: settings.crt?.scanlines ?? 50,
-                  flicker: settings.crt?.flicker ?? 10,
-                  rgbOffset: settings.crt?.rgbOffset ?? 50,
-                  curvature: parseInt(e.target.value),
-                })}
-                className="w-full"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Cache Management Section */}
-        <div>
-          <h2 className="text-lg font-bold mb-3 flex items-center">
-            <Database className="w-5 h-5 mr-2" />
-            Cache & Storage
-          </h2>
-
-          {/* Usage Statistics */}
-          {stats && (
-            <div className="mb-4 p-3 border border-border bg-muted/30 text-sm">
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <span className="text-muted-foreground">Total Requests:</span>
-                  <span className="ml-2 font-mono">{stats.totalRequests}</span>
                 </div>
-                <div>
-                  <span className="text-muted-foreground">Cache Hits:</span>
-                  <span className="ml-2 font-mono text-green-600">{stats.cacheHits}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Cache Misses:</span>
-                  <span className="ml-2 font-mono text-yellow-600">{stats.cacheMisses}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Hit Rate:</span>
-                  <span className="ml-2 font-mono">
-                    {stats.cacheHits + stats.cacheMisses > 0
-                      ? `${Math.round((stats.cacheHits / (stats.cacheHits + stats.cacheMisses)) * 100)}%`
-                      : 'N/A'}
-                  </span>
-                </div>
-              </div>
 
-              {Object.keys(stats.requestsByApp).length > 0 && (
-                <div className="mt-2 pt-2 border-t border-border">
-                  <span className="text-muted-foreground text-xs">Requests by App:</span>
-                  <div className="flex flex-wrap gap-2 mt-1">
-                    {Object.entries(stats.requestsByApp).map(([app, count]) => (
-                      <span key={app} className="text-xs bg-muted px-2 py-0.5">
-                        {app}: {count}
-                      </span>
-                    ))}
+                <div className="config-wallpaper-grid">
+                  {DEFAULT_WALLPAPERS.map((wallpaper) => (
+                    <button
+                      key={wallpaper.url}
+                      type="button"
+                      className="config-wallpaper-option"
+                      data-active={settings.wallpaper === wallpaper.url || undefined}
+                      onClick={() => updateSetting("wallpaper", wallpaper.url)}
+                      title={wallpaper.name}
+                    >
+                      <span style={{ backgroundImage: `url("${wallpaper.url}")` }} />
+                      {settings.wallpaper === wallpaper.url && <CheckCircle className="h-4 w-4" />}
+                    </button>
+                  ))}
+                </div>
+
+                <label className="config-input-label">
+                  <span>Custom wallpaper URL</span>
+                  <div className="app-joined-control">
+                    <input
+                      type="url"
+                      value={customWallpaperUrl}
+                      onChange={(event) => {
+                        setCustomWallpaperUrl(event.target.value);
+                        setCustomError("");
+                      }}
+                      placeholder="https://example.com/image.jpg"
+                      className="search-input"
+                    />
+                    <RetroButton onClick={handleCustomWallpaper}>Set</RetroButton>
                   </div>
-                </div>
-              )}
+                  {customError && <small className="config-error">{customError}</small>}
+                </label>
+              </ConfigSection>
             </div>
           )}
 
-          {/* Cache Actions */}
-          <div className="flex flex-wrap gap-2">
-            <RetroButton
-              onClick={handleClearCache}
-              onBlur={handleClearCacheBlur}
-              disabled={isClearing}
-              className={cn(
-                "flex items-center gap-1",
-                confirmClearCache && "bg-red-600 hover:bg-red-700 text-white"
-              )}
-            >
-              <Trash2 className="w-4 h-4" />
-              {confirmClearCache ? "Confirm?" : "Clear All Cache"}
-            </RetroButton>
-            <RetroButton
-              onClick={handleResetStats}
-              onBlur={handleResetStatsBlur}
-              disabled={isClearing}
-              className={cn(
-                "flex items-center gap-1",
-                confirmResetStats && "bg-red-600 hover:bg-red-700 text-white"
-              )}
-            >
-              <RefreshCw className={cn("w-4 h-4", isClearing && "animate-spin")} />
-              {confirmResetStats ? "Confirm?" : "Reset Stats"}
-            </RetroButton>
-          </div>
-          <p className="text-xs text-muted-foreground mt-2">
-            Clearing cache will force fresh data to be fetched from APIs.
-          </p>
+          {activeCategory === "effect" && (
+            <div className="config-category-content">
+              <ConfigSection title="Oneko" icon={Cat}>
+                <label className="config-checkbox-row">
+                  <input
+                    type="checkbox"
+                    checked={settings.oneko?.enabled ?? false}
+                    onChange={(event) => updateOneko({ enabled: event.target.checked })}
+                  />
+                  Enable cursor follower
+                </label>
+
+                <RangeSetting
+                  label="Speed"
+                  value={settings.oneko?.speed ?? 10}
+                  min={1}
+                  max={20}
+                  suffix=""
+                  onChange={(speed) => updateOneko({ speed })}
+                />
+
+                <div className="config-oneko-grid">
+                  {([
+                    { id: "default" as const, label: "White", image: onekoDefault },
+                    { id: "dark" as const, label: "Black", image: onekoDark },
+                  ]).map((variant) => (
+                    <button
+                      key={variant.id}
+                      type="button"
+                      className="config-oneko-option"
+                      data-active={(settings.oneko?.variant ?? "default") === variant.id || undefined}
+                      onClick={() => updateOneko({ variant: variant.id })}
+                    >
+                      <span
+                        style={{
+                          backgroundImage: `url(${variant.image})`,
+                          backgroundPosition: "-96px -96px",
+                        }}
+                      />
+                      {variant.label}
+                    </button>
+                  ))}
+                </div>
+              </ConfigSection>
+
+              <ConfigSection title="CRT" icon={Monitor}>
+                <label className="config-checkbox-row">
+                  <input
+                    type="checkbox"
+                    checked={settings.crt?.enabled ?? false}
+                    onChange={(event) => updateCrt({ enabled: event.target.checked })}
+                  />
+                  Enable CRT effect
+                </label>
+
+                <RangeSetting label="Scanlines" value={settings.crt?.scanlines ?? 0} onChange={(scanlines) => updateCrt({ scanlines })} />
+                <RangeSetting label="Flicker" value={settings.crt?.flicker ?? 0} onChange={(flicker) => updateCrt({ flicker })} />
+                <RangeSetting label="RGB offset" value={settings.crt?.rgbOffset ?? 0} onChange={(rgbOffset) => updateCrt({ rgbOffset })} />
+                <RangeSetting label="Curvature" value={settings.crt?.curvature ?? 0} onChange={(curvature) => updateCrt({ curvature })} />
+              </ConfigSection>
+            </div>
+          )}
+
+          {activeCategory === "system" && (
+            <div className="config-category-content">
+              <ConfigSection title="System" icon={ServerCog}>
+                <dl className="config-system-info">
+                  <div><dt>Version</dt><dd>v{SYSTEM_VERSION}</dd></div>
+                  <div><dt>Update channel</dt><dd>stable</dd></div>
+                  <div><dt>Connection</dt><dd>{navigator.onLine ? "online" : "offline"}</dd></div>
+                </dl>
+
+                <div className="config-action-stack">
+                  <RetroButton onClick={requestSystemUpdateCheck}>
+                    <RefreshCw className="h-4 w-4" /> Check for updates
+                  </RetroButton>
+                  <RetroButton onClick={() => void rebootSystem("manual system reboot from Config")}>
+                    <Power className="h-4 w-4" /> Reboot system
+                  </RetroButton>
+                </div>
+                <p className="config-help-text">
+                  Reboot clears browser Cache Storage, unregisters service workers, and reloads the latest system code through the boot screen.
+                </p>
+              </ConfigSection>
+            </div>
+          )}
+
+          {activeCategory === "debug" && (
+            <div className="config-category-content">
+              <ConfigSection title="Debug tools" icon={Bug}>
+                <label className="config-checkbox-row">
+                  <input
+                    type="checkbox"
+                    checked={settings.debug?.verboseCacheLogging ?? false}
+                    onChange={(event) => updateSetting("debug", {
+                      verboseCacheLogging: event.target.checked,
+                    })}
+                  />
+                  Verbose cache logging
+                </label>
+                <div className="config-debug-actions">
+                  <RetroButton onClick={() => toast("Test notification", { description: "Toast rendering is working." })}>
+                    <Bell className="h-4 w-4" /> Test notification
+                  </RetroButton>
+                  <RetroButton onClick={() => void copyDiagnostics()}>
+                    <Copy className="h-4 w-4" /> Copy diagnostics
+                  </RetroButton>
+                  <RetroButton onClick={() => console.info("[Debug] Diagnostics", getDiagnostics())}>
+                    <Bug className="h-4 w-4" /> Log diagnostics
+                  </RetroButton>
+                  <RetroButton active={debugOutlines} onClick={toggleDebugOutlines}>
+                    <Monitor className="h-4 w-4" /> Layout outlines
+                  </RetroButton>
+                </div>
+              </ConfigSection>
+
+              <ConfigSection title="Cache and usage" icon={Database}>
+                {stats && (
+                  <dl className="config-stats-grid">
+                    <div><dt>Requests</dt><dd>{stats.totalRequests}</dd></div>
+                    <div><dt>Cache hits</dt><dd>{stats.cacheHits}</dd></div>
+                    <div><dt>Cache misses</dt><dd>{stats.cacheMisses}</dd></div>
+                    <div>
+                      <dt>Hit rate</dt>
+                      <dd>
+                        {stats.cacheHits + stats.cacheMisses > 0
+                          ? `${Math.round((stats.cacheHits / (stats.cacheHits + stats.cacheMisses)) * 100)}%`
+                          : "N/A"}
+                      </dd>
+                    </div>
+                  </dl>
+                )}
+
+                {stats && Object.keys(stats.requestsByApp).length > 0 && (
+                  <div className="config-request-list">
+                    {Object.entries(stats.requestsByApp).map(([app, count]) => (
+                      <span key={app}>{app}: {count}</span>
+                    ))}
+                  </div>
+                )}
+
+                <div className="config-debug-actions">
+                  <RetroButton
+                    disabled={isClearing}
+                    onClick={() => void handleClearCache()}
+                    onBlur={() => setTimeout(() => setConfirmClearCache(false), 150)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    {confirmClearCache ? "Confirm clear" : "Clear API cache"}
+                  </RetroButton>
+                  <RetroButton
+                    disabled={isClearing}
+                    onClick={() => void handleResetStats()}
+                    onBlur={() => setTimeout(() => setConfirmResetStats(false), 150)}
+                  >
+                    <RefreshCw className={cn("h-4 w-4", isClearing && "animate-spin")} />
+                    {confirmResetStats ? "Confirm reset" : "Reset statistics"}
+                  </RetroButton>
+                </div>
+              </ConfigSection>
+            </div>
+          )}
         </div>
       </div>
     </WindowLayout>

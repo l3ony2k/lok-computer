@@ -24,18 +24,18 @@ export const WindowLayout = ({
     hasPadding = true
 }: WindowLayoutProps) => {
     return (
-        <div className={cn("flex flex-col h-full select-none", className)}>
-            {toolbar}
+        <div className={cn("app-window-layout flex flex-col h-full min-h-0 select-none", className)}>
+            {toolbar && <div className="window-toolbar">{toolbar}</div>}
 
             <div className={cn(
-                "window-content-area flex-1",
+                "window-content-area flex-1 min-h-0",
                 isScrollable && "overflow-auto scrollable-area",
                 hasPadding && "p-2"
             )}>
                 {children}
             </div>
 
-            {footer}
+            {footer && <div className="window-footer">{footer}</div>}
         </div>
     );
 };

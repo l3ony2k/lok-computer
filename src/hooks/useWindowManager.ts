@@ -1,22 +1,15 @@
-import { createContext, useContext, useState, useEffect, useRef } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { ReactNode } from "react";
 import { WINDOW_DEFAULTS } from "@/config/window";
-import { getAppState, setAppState } from "@/lib/storage";
+import { getAppState, setAppState, deleteAppState } from "@/lib/storage";
 // Note: componentRegistry is imported dynamically to avoid circular dependency
-// (componentRegistry imports apps → apps import useWindowManager)
+// (componentRegistry imports apps → apps import the window hooks)
 
 // Storage keys
-const WINDOW_POSITIONS_KEY = 'windowPositions';
 const WINDOW_SESSION_KEY = 'windowSession';
-
-interface SavedWindowPositions {
-  [windowId: string]: {
-    x?: number;
-    y?: number;
-    width?: number;
-    height?: number;
-  };
-}
+// Legacy store of per-window-id positions; ids are never reused so entries
+// could never be read back — cleaned up on startup.
+const LEGACY_WINDOW_POSITIONS_KEY = 'windowPositions';
 
 // Serializable window data for session persistence
 export interface SerializableWindowData {
@@ -59,74 +52,85 @@ export interface Window {
   props?: Record<string, unknown>; // Store original props for serialization
 }
 
-export interface WindowManagerContextType {
+// Input for opening a window: everything caller-controlled, ids/z-index are assigned internally.
+export type WindowInput = Omit<Window, "id" | "zIndex">;
+
+export interface WindowManagerStateContextType {
   windows: Window[];
-  addWindow: (window: Omit<Window, "id" | "zIndex" | "minWidth" | "minHeight"> & { iconType?: string; width?: number; height?: number; x?: number; y?: number; minWidth?: number; minHeight?: number; componentType?: string; props?: Record<string, unknown>; }) => string;
-  addOrFocusWindow: (window: Omit<Window, "id" | "zIndex" | "minWidth" | "minHeight"> & { iconType?: string; width?: number; height?: number; x?: number; y?: number; minWidth?: number; minHeight?: number; singleInstance?: boolean; componentType?: string; props?: Record<string, unknown>; }) => string;
+  activeWindow: string | null;
+  isSessionRestored: boolean;
+}
+
+export interface WindowManagerActionsContextType {
+  addWindow: (window: WindowInput) => string;
+  addOrFocusWindow: (window: WindowInput & { singleInstance?: boolean }) => string;
   closeWindow: (id: string) => void;
   minimizeWindow: (id: string) => void;
   maximizeWindow: (id: string) => void;
   restoreWindow: (id: string) => void;
   focusWindow: (id: string) => void;
-  activeWindow: string | null;
   updateWindowPosition: (id: string, x: number, y: number) => void;
   updateWindowDimensions: (id: string, width: number, height: number) => void;
   updateWindowProps: (id: string, props: Record<string, unknown>) => void;
-  isSessionRestored: boolean;
 }
 
-export const WindowManagerContext = createContext<WindowManagerContextType>({
-  windows: [],
-  addWindow: () => "",
-  addOrFocusWindow: () => "",
-  closeWindow: () => { },
-  minimizeWindow: () => { },
-  maximizeWindow: () => { },
-  restoreWindow: () => { },
-  focusWindow: () => { },
-  activeWindow: null,
-  updateWindowPosition: () => { },
-  updateWindowDimensions: () => { },
-  updateWindowProps: () => { },
-  isSessionRestored: false,
-});
+export interface WindowManagerController {
+  state: WindowManagerStateContextType;
+  actions: WindowManagerActionsContextType;
+}
 
-export const useWindowManager = () => useContext(WindowManagerContext);
+export const WindowManagerStateContext = createContext<WindowManagerStateContextType | undefined>(undefined);
+export const WindowManagerActionsContext = createContext<WindowManagerActionsContextType | undefined>(undefined);
 
-export const createWindowManagerContext = () => {
+export const useWindowState = () => {
+  const context = useContext(WindowManagerStateContext);
+  if (!context) throw new Error("useWindowState must be used within WindowManagerProvider");
+  return context;
+};
+
+export const useWindowActions = () => {
+  const context = useContext(WindowManagerActionsContext);
+  if (!context) throw new Error("useWindowActions must be used within WindowManagerProvider");
+  return context;
+};
+
+// Monotonic suffix so windows opened within the same millisecond still get unique ids.
+let windowIdCounter = 0;
+
+export const useWindowManagerController = (): WindowManagerController => {
   const [windows, setWindows] = useState<Window[]>([]);
   const [lastZIndex, setLastZIndex] = useState(1000);
   const [activeWindow, setActiveWindow] = useState<string | null>(null);
-  const [savedPositions, setSavedPositions] = useState<SavedWindowPositions>({});
   const [isSessionRestored, setIsSessionRestored] = useState(false);
   const isInitialLoad = useRef(true);
   const sessionSaveTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const windowsRef = useRef<Window[]>(windows);
+  const activeWindowRef = useRef<string | null>(activeWindow);
+  windowsRef.current = windows;
+  activeWindowRef.current = activeWindow;
+  // Source of truth for z-index allocation. State updates are async, so several
+  // windows opened/focused in the same tick would otherwise all read the same
+  // lastZIndex and end up stacked at identical z-indexes.
+  const zIndexRef = useRef(1000);
 
-  // Load saved positions and restore window session from IndexedDB on mount
+  const nextZIndex = useCallback(() => {
+    zIndexRef.current += 1;
+    setLastZIndex(zIndexRef.current);
+    return zIndexRef.current;
+  }, []);
+
+  // Restore window session from IndexedDB on mount
   useEffect(() => {
     let mounted = true;
 
     const loadAndRestoreSession = async () => {
       try {
-        // Load saved positions first
-        const storedPositions = await getAppState<SavedWindowPositions>(WINDOW_POSITIONS_KEY);
-
-        if (mounted && storedPositions) {
-          setSavedPositions(storedPositions);
-        } else if (mounted) {
-          // Migrate from localStorage if exists
-          try {
-            const legacyData = localStorage.getItem('windowPositions');
-            if (legacyData) {
-              const parsed = JSON.parse(legacyData);
-              setSavedPositions(parsed);
-              await setAppState(WINDOW_POSITIONS_KEY, parsed);
-              localStorage.removeItem('windowPositions');
-              console.info('[WindowManager] Migrated positions from localStorage to IndexedDB');
-            }
-          } catch (e) {
-            console.warn('[WindowManager] Failed to migrate from localStorage:', e);
-          }
+        // Clean up the legacy write-only positions store (see LEGACY_WINDOW_POSITIONS_KEY)
+        deleteAppState(LEGACY_WINDOW_POSITIONS_KEY);
+        try {
+          localStorage.removeItem(LEGACY_WINDOW_POSITIONS_KEY);
+        } catch {
+          // localStorage unavailable — nothing to clean up
         }
 
         // Load and restore window session
@@ -191,6 +195,7 @@ export const createWindowManagerContext = () => {
 
           if (restoredWindows.length > 0) {
             setWindows(restoredWindows);
+            zIndexRef.current = maxZIndex;
             setLastZIndex(maxZIndex);
 
             // Set the highest z-index window as active
@@ -218,23 +223,6 @@ export const createWindowManagerContext = () => {
       mounted = false;
     };
   }, []);
-
-  // Save positions to IndexedDB whenever they change (skip initial load)
-  useEffect(() => {
-    if (isInitialLoad.current) {
-      return;
-    }
-
-    const savePositions = async () => {
-      try {
-        await setAppState(WINDOW_POSITIONS_KEY, savedPositions);
-      } catch (error) {
-        console.error('[WindowManager] Failed to save window positions:', error);
-      }
-    };
-
-    savePositions();
-  }, [savedPositions]);
 
   // Save window session to IndexedDB whenever windows change (debounced)
   useEffect(() => {
@@ -288,132 +276,8 @@ export const createWindowManagerContext = () => {
     };
   }, [windows, lastZIndex, isSessionRestored]);
 
-  const addWindow = (window: Omit<Window, "id" | "zIndex" | "minWidth" | "minHeight"> & { iconType?: string; width?: number; height?: number; x?: number; y?: number; minWidth?: number; minHeight?: number; }) => {
-    const id = `window-${Date.now()}`;
-    const newZIndex = lastZIndex + 1;
-    setLastZIndex(newZIndex);
-
-    const savedPosition = savedPositions[id] || {};
-
-    // Initial dimensions and position (could be refined with viewport logic later)
-    const initialX = window.x ?? savedPosition.x ?? Math.random() * 100;
-    const initialY = window.y ?? savedPosition.y ?? Math.random() * 100;
-    const initialWidth = window.width ?? savedPosition.width ?? WINDOW_DEFAULTS.DEFAULT_WIDTH;
-    const initialHeight = window.height ?? savedPosition.height ?? WINDOW_DEFAULTS.DEFAULT_HEIGHT;
-    const minWidth = window.minWidth ?? WINDOW_DEFAULTS.MIN_WIDTH;
-    const minHeight = window.minHeight ?? WINDOW_DEFAULTS.MIN_HEIGHT;
-
-    setWindows((prev) => [
-      ...prev,
-      {
-        ...window,
-        id,
-        zIndex: newZIndex,
-        minimized: false,
-        maximized: false,
-        wasMaximized: false,
-        x: initialX,
-        y: initialY,
-        width: initialWidth,
-        height: initialHeight,
-        minWidth: minWidth,
-        minHeight: minHeight,
-      },
-    ]);
-
-    setActiveWindow(id);
-    return id;
-  };
-
-  const addOrFocusWindow = (window: Omit<Window, "id" | "zIndex" | "minWidth" | "minHeight"> & { iconType?: string; width?: number; height?: number; x?: number; y?: number; minWidth?: number; minHeight?: number; singleInstance?: boolean; }) => {
-    // If singleInstance is true, check if a window with the same title already exists
-    if (window.singleInstance) {
-      const existingWindow = windows.find(w => w.title === window.title);
-      if (existingWindow) {
-        // Focus the existing window and bring it to front
-        focusWindow(existingWindow.id);
-        return existingWindow.id;
-      }
-    }
-
-    // If no existing window found or singleInstance is false, create a new window
-    const { singleInstance, ...windowProps } = window; // Remove singleInstance from props
-    return addWindow(windowProps);
-  };
-
-  const updateWindowPosition = (id: string, x: number, y: number) => {
-    // Update the main windows state first
-    setWindows(prevWindows =>
-      prevWindows.map(w =>
-        w.id === id ? { ...w, x, y } : w
-      )
-    );
-    // Then update the saved positions for persistence
-    setSavedPositions(prevSaved => ({
-      ...prevSaved,
-      [id]: { ...(prevSaved[id] || {}), x, y } // Ensure other saved props like width/height aren't lost if they exist
-    }));
-  };
-
-  const closeWindow = (id: string) => {
-    setWindows((prev) => prev.filter((w) => w.id !== id));
-    if (activeWindow === id) {
-      const remainingWindows = windows.filter((w) => w.id !== id);
-      if (remainingWindows.length > 0) {
-        const highestWindow = remainingWindows.reduce((prev, current) =>
-          prev.zIndex > current.zIndex ? prev : current
-        );
-        setActiveWindow(highestWindow.id);
-      } else {
-        setActiveWindow(null);
-      }
-    }
-  };
-
-  const minimizeWindow = (id: string) => {
-    setWindows((prev) =>
-      prev.map((w) =>
-        w.id === id ? {
-          ...w,
-          minimized: true,
-          wasMaximized: w.maximized,
-          maximized: false
-        } : w
-      )
-    );
-
-    const visibleWindows = windows.filter(w => !w.minimized && w.id !== id);
-    if (visibleWindows.length > 0) {
-      const highestWindow = visibleWindows.reduce((prev, current) =>
-        prev.zIndex > current.zIndex ? prev : current
-      );
-      setActiveWindow(highestWindow.id);
-    } else {
-      setActiveWindow(null);
-    }
-  };
-
-  const maximizeWindow = (id: string) => {
-    setWindows((prev) =>
-      prev.map((w) =>
-        w.id === id ? { ...w, maximized: true, minimized: false } : w
-      )
-    );
-    focusWindow(id);
-  };
-
-  const restoreWindow = (id: string) => {
-    setWindows((prev) =>
-      prev.map((w) =>
-        w.id === id ? { ...w, maximized: false, minimized: false } : w
-      )
-    );
-    focusWindow(id);
-  };
-
-  const focusWindow = (id: string) => {
-    const newZIndex = lastZIndex + 1;
-    setLastZIndex(newZIndex);
+  const focusWindow = useCallback((id: string) => {
+    const newZIndex = nextZIndex();
 
     setWindows((prev) =>
       prev.map((w) => (
@@ -430,31 +294,145 @@ export const createWindowManagerContext = () => {
     );
 
     setActiveWindow(id);
-  };
+  }, [nextZIndex]);
 
-  const updateWindowDimensions = (id: string, width: number, height: number) => {
+  const addWindow = useCallback((window: WindowInput) => {
+    windowIdCounter += 1;
+    const id = `window-${Date.now()}-${windowIdCounter}`;
+    const newZIndex = nextZIndex();
+
+    setWindows((prev) => [
+      ...prev,
+      {
+        ...window,
+        id,
+        zIndex: newZIndex,
+        minimized: false,
+        maximized: false,
+        wasMaximized: false,
+        x: window.x ?? Math.random() * 100,
+        y: window.y ?? Math.random() * 100,
+        width: window.width ?? WINDOW_DEFAULTS.DEFAULT_WIDTH,
+        height: window.height ?? WINDOW_DEFAULTS.DEFAULT_HEIGHT,
+        minWidth: window.minWidth ?? WINDOW_DEFAULTS.MIN_WIDTH,
+        minHeight: window.minHeight ?? WINDOW_DEFAULTS.MIN_HEIGHT,
+      },
+    ]);
+
+    setActiveWindow(id);
+    return id;
+  }, [nextZIndex]);
+
+  const addOrFocusWindow = useCallback((window: WindowInput & { singleInstance?: boolean }) => {
+    // If singleInstance is true, check if a window with the same title already exists
+    if (window.singleInstance) {
+      const existingWindow = windowsRef.current.find(w => w.title === window.title);
+      if (existingWindow) {
+        // Focus the existing window and bring it to front
+        focusWindow(existingWindow.id);
+        return existingWindow.id;
+      }
+    }
+
+    // If no existing window found or singleInstance is false, create a new window
+    const { singleInstance, ...windowProps } = window; // Remove singleInstance from props
+    void singleInstance;
+    return addWindow(windowProps);
+  }, [focusWindow, addWindow]);
+
+  const closeWindow = useCallback((id: string) => {
+    setWindows((previousWindows) => {
+      const remainingWindows = previousWindows.filter((window) => window.id !== id);
+
+      if (activeWindowRef.current === id) {
+        if (remainingWindows.length > 0) {
+          const highestWindow = remainingWindows.reduce((previous, current) =>
+            previous.zIndex > current.zIndex ? previous : current
+          );
+          setActiveWindow(highestWindow.id);
+        } else {
+          setActiveWindow(null);
+        }
+      }
+
+      return remainingWindows;
+    });
+  }, []);
+
+  const minimizeWindow = useCallback((id: string) => {
+    setWindows((previousWindows) => {
+      const nextWindows = previousWindows.map((window) =>
+        window.id === id ? {
+          ...window,
+          minimized: true,
+          wasMaximized: window.maximized,
+          maximized: false
+        } : window
+      );
+
+      const visibleWindows = nextWindows.filter((window) => !window.minimized);
+      if (visibleWindows.length > 0) {
+        const highestWindow = visibleWindows.reduce((previous, current) =>
+          previous.zIndex > current.zIndex ? previous : current
+        );
+        setActiveWindow(highestWindow.id);
+      } else {
+        setActiveWindow(null);
+      }
+
+      return nextWindows;
+    });
+  }, []);
+
+  const maximizeWindow = useCallback((id: string) => {
+    setWindows((prev) =>
+      prev.map((w) =>
+        w.id === id ? { ...w, maximized: true, minimized: false } : w
+      )
+    );
+    focusWindow(id);
+  }, [focusWindow]);
+
+  const restoreWindow = useCallback((id: string) => {
+    setWindows((prev) =>
+      prev.map((w) =>
+        w.id === id ? { ...w, maximized: false, minimized: false } : w
+      )
+    );
+    focusWindow(id);
+  }, [focusWindow]);
+
+  const updateWindowPosition = useCallback((id: string, x: number, y: number) => {
+    setWindows(prevWindows =>
+      prevWindows.map(w =>
+        w.id === id ? { ...w, x, y } : w
+      )
+    );
+  }, []);
+
+  const updateWindowDimensions = useCallback((id: string, width: number, height: number) => {
     setWindows((prev) =>
       prev.map((w) =>
         w.id === id ? { ...w, width, height } : w
       )
     );
-    // Also update saved positions dimensions
-    setSavedPositions(prevSaved => ({
-      ...prevSaved,
-      [id]: { ...(prevSaved[id] || {}), width, height } // Save dimensions too
-    }));
-  };
+  }, []);
 
-  const updateWindowProps = (id: string, props: Record<string, unknown>) => {
+  const updateWindowProps = useCallback((id: string, props: Record<string, unknown>) => {
     setWindows((prev) =>
       prev.map((w) =>
         w.id === id ? { ...w, props: { ...w.props, ...props } } : w
       )
     );
-  };
+  }, []);
 
-  return {
+  const state = useMemo<WindowManagerStateContextType>(() => ({
     windows,
+    activeWindow,
+    isSessionRestored,
+  }), [windows, activeWindow, isSessionRestored]);
+
+  const actions = useMemo<WindowManagerActionsContextType>(() => ({
     addWindow,
     addOrFocusWindow,
     closeWindow,
@@ -462,10 +440,21 @@ export const createWindowManagerContext = () => {
     maximizeWindow,
     restoreWindow,
     focusWindow,
-    activeWindow,
     updateWindowPosition,
     updateWindowDimensions,
     updateWindowProps,
-    isSessionRestored,
-  };
+  }), [
+    addWindow,
+    addOrFocusWindow,
+    closeWindow,
+    minimizeWindow,
+    maximizeWindow,
+    restoreWindow,
+    focusWindow,
+    updateWindowPosition,
+    updateWindowDimensions,
+    updateWindowProps,
+  ]);
+
+  return useMemo(() => ({ state, actions }), [state, actions]);
 };

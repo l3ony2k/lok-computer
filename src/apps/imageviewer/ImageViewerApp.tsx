@@ -159,16 +159,16 @@ export const ImageViewerApp: React.FC<ImageViewerAppProps> = ({
       hasPadding={false}
       isScrollable={false}
       toolbar={
-        <div className="p-1 border-b border-border flex items-center justify-between select-none bg-background">
+        <div className="app-toolbar-row justify-between">
           {/* Zoom controls group - no gaps */}
-          <div className="flex items-center space-x-0">
+          <div className="app-control-group">
             <RetroButton size="sm" onClick={handleZoomOut} title="Zoom Out">
               −
             </RetroButton>
             <RetroButton size="sm" onClick={handleZoomIn} title="Zoom In">
               +
             </RetroButton>
-            <span className="text-xs px-2 min-w-[50px] text-center border border-border h-[18px] flex items-center justify-center">
+            <span className="app-readout min-w-[50px]">
               {Math.round(scale * 100)}%
             </span>
             <RetroButton size="sm" onClick={handleReset} title="Reset to 100% (actual size)">
@@ -176,7 +176,7 @@ export const ImageViewerApp: React.FC<ImageViewerAppProps> = ({
             </RetroButton>
           </div>
           {/* Fit controls group - aligned right */}
-          <div className="flex items-center space-x-0">
+          <div className="app-control-group">
             <RetroButton size="sm" onClick={handleFitWidth} title="Fit Width to Window">
               ↔ W
             </RetroButton>
@@ -187,7 +187,7 @@ export const ImageViewerApp: React.FC<ImageViewerAppProps> = ({
         </div>
       }
       footer={
-        <div className="p-1 border-t border-border text-xs text-muted-foreground flex items-center gap-2 select-none bg-background">
+        <div className="app-footer-row text-xs text-muted-foreground gap-2">
           {naturalSize ? (
             <>
               <span>{naturalSize.width} × {naturalSize.height}</span>

@@ -1,41 +1,45 @@
 // src/core/Desktop.tsx
-import { useEffect, useRef } from "react";
-import { useWindowManager } from "@/components/WindowManager";
-import { ChannelExplorer } from "@/apps/arena/channels/ChannelExplorer";
-import { About } from "@/apps/about/About";
-import { toast } from "sonner";
-import { FEATURED_CHANNELS } from "@/config/channels";
+import { useCallback, useEffect, useRef } from "react";
+import { useWindowActions, useWindowState } from "@/hooks/useWindowManager";
 import { WindowContainer, Taskbar } from "@/components/WindowManager";
 import { DesktopIcons } from "@/components/desktop/DesktopIcons";
 import { TopBar } from "./TopBar";
-import { ConfigApp } from "@/apps/config/ConfigApp";
 import { useUserSettings } from "@/hooks/useUserSettings";
-import { useTheme } from "next-themes";
 import { adjustWindowToViewport, type WindowDimensions, type ViewportDimensions } from "@/lib/utils";
 import { WINDOW_DEFAULTS } from "@/config/window";
 import { APP_LIST } from "@/config/apps";
 import { Oneko } from "@/components/oneko/Oneko";
-import { PopupDialog, PopupDialogButtons } from "@/components/ui/PopupDialog";
-import { RetroButton } from "@/components/ui/RetroButton";
 import { CrtFilter } from "@/components/effects/CrtFilter";
+import { OutOfBoxExperience, type OobeSelection } from "@/components/system/OutOfBoxExperience";
 
 export const Desktop = () => {
-    const { addWindow, addOrFocusWindow, windows, updateWindowPosition, updateWindowDimensions } = useWindowManager();
-    const { theme, setTheme } = useTheme();
+    const { windows } = useWindowState();
+    const { addWindow, addOrFocusWindow, updateWindowPosition, updateWindowDimensions } = useWindowActions();
     const { settings, updateSetting, isLoading } = useUserSettings();
 
-    // Only show oneko prompt after settings have loaded and user hasn't been asked
-    const showOnekoPrompt = !isLoading && !settings.oneko?.hasBeenAsked;
+    // The legacy prompt flag migrates existing users past the new first-run flow.
+    const showOobe = !isLoading && !settings.oobe?.completed && !settings.oneko?.hasBeenAsked;
 
-    const handleOnekoResponse = (enabled: boolean) => {
+    const completeOobe = useCallback(({ onekoEnabled, crtEnabled }: OobeSelection) => {
         updateSetting('oneko', {
-            enabled,
+            enabled: onekoEnabled,
             hasBeenAsked: true,
-            speed: 10,
-            variant: 'default',
+            speed: settings.oneko?.speed ?? 10,
+            variant: settings.oneko?.variant ?? 'default',
         });
-    };
+        updateSetting('crt', {
+            enabled: crtEnabled,
+            scanlines: settings.crt?.scanlines ?? 50,
+            flicker: settings.crt?.flicker ?? 10,
+            rgbOffset: settings.crt?.rgbOffset ?? 50,
+            curvature: settings.crt?.curvature ?? 20,
+        });
+        updateSetting('oobe', { completed: true });
+    }, [settings.crt, settings.oneko, updateSetting]);
     const desktopContainerRef = useRef<HTMLDivElement>(null);
+    const windowsRef = useRef(windows);
+    windowsRef.current = windows;
+    const windowIdentity = windows.map((window) => window.id).join('|');
 
     // Apply the wallpaper as a CSS variable if it exists
     useEffect(() => {
@@ -83,127 +87,67 @@ export const Desktop = () => {
         }
     }, [settings.crt]);
 
-    // Global resize handler
-    useEffect(() => {
-        const handleResize = () => {
-            if (desktopContainerRef.current && windows) {
-                const viewport: ViewportDimensions = {
-                    width: desktopContainerRef.current.clientWidth,
-                    height: desktopContainerRef.current.clientHeight,
-                };
+    const fitWindowsToViewport = useCallback(() => {
+        if (!desktopContainerRef.current) return;
 
-                windows.forEach(win => {
-                    if (!win.maximized && win.width && win.height && typeof win.x === 'number' && typeof win.y === 'number') {
-                        const currentWindowData: WindowDimensions = {
-                            x: win.x,
-                            y: win.y,
-                            width: win.width,
-                            height: win.height,
-                            minWidth: win.minWidth ?? WINDOW_DEFAULTS.MIN_WIDTH,
-                            minHeight: win.minHeight ?? WINDOW_DEFAULTS.MIN_HEIGHT,
-                        };
+        const viewport: ViewportDimensions = {
+            width: desktopContainerRef.current.clientWidth,
+            height: desktopContainerRef.current.clientHeight,
+        };
 
-                        const adjusted = adjustWindowToViewport(currentWindowData, viewport);
+        windowsRef.current.forEach((window) => {
+            if (window.maximized || !window.width || !window.height || typeof window.x !== 'number' || typeof window.y !== 'number') return;
 
-                        if (adjusted.changed) {
-                            if (win.x !== adjusted.x || win.y !== adjusted.y) {
-                                updateWindowPosition(win.id, adjusted.x, adjusted.y);
-                            }
-                            if (win.width !== adjusted.width || win.height !== adjusted.height) {
-                                updateWindowDimensions(win.id, adjusted.width, adjusted.height);
-                            }
-                        }
-                    }
-                });
+            const currentWindowData: WindowDimensions = {
+                x: window.x,
+                y: window.y,
+                width: window.width,
+                height: window.height,
+                minWidth: window.minWidth ?? WINDOW_DEFAULTS.MIN_WIDTH,
+                minHeight: window.minHeight ?? WINDOW_DEFAULTS.MIN_HEIGHT,
+            };
+            const adjusted = adjustWindowToViewport(currentWindowData, viewport);
+
+            if (window.x !== adjusted.x || window.y !== adjusted.y) {
+                updateWindowPosition(window.id, adjusted.x, adjusted.y);
             }
-        };
+            if (window.width !== adjusted.width || window.height !== adjusted.height) {
+                updateWindowDimensions(window.id, adjusted.width, adjusted.height);
+            }
+        });
+    }, [updateWindowDimensions, updateWindowPosition]);
 
-        window.addEventListener('resize', handleResize);
-        handleResize();
+    useEffect(() => {
+        window.addEventListener('resize', fitWindowsToViewport);
+        return () => window.removeEventListener('resize', fitWindowsToViewport);
+    }, [fitWindowsToViewport]);
 
-        return () => {
-            window.removeEventListener('resize', handleResize);
-        };
-    }, [windows, updateWindowPosition, updateWindowDimensions]);
+    useEffect(() => {
+        fitWindowsToViewport();
+    }, [fitWindowsToViewport, windowIdentity]);
 
-    const handleOpenAbout = () => {
-        const app = APP_LIST.find(app => app.name === "About");
-        if (app?.singleInstance) {
-            addOrFocusWindow({
-                title: "About",
-                content: <About />,
-                width: app?.defaultWidth ?? WINDOW_DEFAULTS.DEFAULT_WIDTH,
-                height: app?.defaultHeight ?? WINDOW_DEFAULTS.DEFAULT_HEIGHT,
-                iconType: 'about',
-                minWidth: WINDOW_DEFAULTS.MIN_WIDTH,
-                minHeight: WINDOW_DEFAULTS.MIN_HEIGHT,
-                singleInstance: true,
-                componentType: "About",
-            });
-        } else {
-            addWindow({
-                title: "About",
-                content: <About />,
-                width: app?.defaultWidth ?? WINDOW_DEFAULTS.DEFAULT_WIDTH,
-                height: app?.defaultHeight ?? WINDOW_DEFAULTS.DEFAULT_HEIGHT,
-                iconType: 'about',
-                minWidth: WINDOW_DEFAULTS.MIN_WIDTH,
-                minHeight: WINDOW_DEFAULTS.MIN_HEIGHT,
-                componentType: "About",
-            });
-        }
-    };
+    // Open an app from APP_LIST by name, respecting its singleInstance flag.
+    const openApp = useCallback((name: string, position?: { x: number; y: number }) => {
+        const app = APP_LIST.find(a => a.name === name);
+        if (!app) return;
 
-    const handleOpenFeaturedChannel = (slug: string, title: string) => {
-        const app = APP_LIST.find(app => app.name === "Are.na Browser");
-        addWindow({
-            title: title,
-            content: <ChannelExplorer channelSlug={slug} username="lok" />,
-            width: app?.defaultWidth ?? WINDOW_DEFAULTS.DEFAULT_WIDTH,
-            height: app?.defaultHeight ?? WINDOW_DEFAULTS.DEFAULT_HEIGHT,
-            iconType: 'folder',
+        addOrFocusWindow({
+            title: app.name,
+            content: <app.component {...(app.props || {})} />,
+            width: app.defaultWidth ?? WINDOW_DEFAULTS.DEFAULT_WIDTH,
+            height: app.defaultHeight ?? WINDOW_DEFAULTS.DEFAULT_HEIGHT,
+            iconType: app.iconType,
             minWidth: WINDOW_DEFAULTS.MIN_WIDTH,
             minHeight: WINDOW_DEFAULTS.MIN_HEIGHT,
-            componentType: 'ChannelExplorer',
-            props: { channelSlug: slug, username: 'lok' },
+            singleInstance: app.singleInstance,
+            componentType: app.name,
+            props: app.props,
+            ...position,
         });
-    };
+    }, [addOrFocusWindow]);
 
-    const handleOpenSearchWindow = () => {
-        toast.info("Search functionality coming soon!");
-    };
-
-    const handleOpenSettingsWindow = () => {
-        const app = APP_LIST.find(app => app.name === "Config");
-        if (app?.singleInstance) {
-            addOrFocusWindow({
-                title: 'Config',
-                iconType: 'config',
-                content: <ConfigApp />,
-                width: app?.defaultWidth ?? WINDOW_DEFAULTS.DEFAULT_WIDTH,
-                height: app?.defaultHeight ?? WINDOW_DEFAULTS.DEFAULT_HEIGHT,
-                x: 150,
-                y: 100,
-                minWidth: WINDOW_DEFAULTS.MIN_WIDTH,
-                minHeight: WINDOW_DEFAULTS.MIN_HEIGHT,
-                singleInstance: true,
-                componentType: "Config",
-            });
-        } else {
-            addWindow({
-                title: 'Config',
-                iconType: 'config',
-                content: <ConfigApp />,
-                width: app?.defaultWidth ?? WINDOW_DEFAULTS.DEFAULT_WIDTH,
-                height: app?.defaultHeight ?? WINDOW_DEFAULTS.DEFAULT_HEIGHT,
-                x: 150,
-                y: 100,
-                minWidth: WINDOW_DEFAULTS.MIN_WIDTH,
-                minHeight: WINDOW_DEFAULTS.MIN_HEIGHT,
-                componentType: "Config",
-            });
-        }
-    };
+    const handleOpenAbout = useCallback(() => openApp("About"), [openApp]);
+    const handleOpenSettingsWindow = useCallback(() => openApp("Config", { x: 150, y: 100 }), [openApp]);
 
     return (
         <div className="h-screen w-screen flex flex-col">
@@ -229,25 +173,12 @@ export const Desktop = () => {
                 <CrtFilter rgbOffset={settings.crt.rgbOffset ?? 0} />
             )}
 
-            {/* Oneko first-time prompt (non-intrusive, draggable) */}
-            <PopupDialog
-                title="Oneko"
-                iconType="config"
-                isOpen={showOnekoPrompt}
-                onClose={() => handleOnekoResponse(false)}
-                width={300}
-                intrusive={false}
-            >
-                <p>Do you want a cat chasing your cursor?</p>
-                <PopupDialogButtons>
-                    <RetroButton onClick={() => handleOnekoResponse(true)}>
-                        Yes
-                    </RetroButton>
-                    <RetroButton onClick={() => handleOnekoResponse(false)}>
-                        No
-                    </RetroButton>
-                </PopupDialogButtons>
-            </PopupDialog>
+            <OutOfBoxExperience
+                isOpen={showOobe}
+                initialOnekoEnabled={settings.oneko?.enabled}
+                initialCrtEnabled={settings.crt?.enabled}
+                onComplete={completeOobe}
+            />
         </div>
     );
 };

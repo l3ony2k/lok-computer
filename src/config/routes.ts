@@ -6,6 +6,7 @@
  */
 
 import { WINDOW_DEFAULTS } from './window';
+import { ARENA_WINDOW_DEFAULTS } from './arenaWindows';
 
 export interface RouteConfig {
     /** URL path pattern, e.g., 'explorer/:channelSlug' */
@@ -65,8 +66,8 @@ export const ROUTES: RouteConfig[] = [
         },
         getTitle: (props) => String(props.channelSlug || 'Channel'),
         iconType: 'folder',
-        defaultWidth: 600,
-        defaultHeight: 500,
+        defaultWidth: ARENA_WINDOW_DEFAULTS.channelExplorer.width,
+        defaultHeight: ARENA_WINDOW_DEFAULTS.channelExplorer.height,
     },
 
     // Are.na Block Viewer
@@ -82,8 +83,8 @@ export const ROUTES: RouteConfig[] = [
         },
         getTitle: (props) => `Block #${props.blockId}`,
         iconType: 'block',
-        defaultWidth: 500,
-        defaultHeight: 600,
+        defaultWidth: ARENA_WINDOW_DEFAULTS.blockViewer.width,
+        defaultHeight: ARENA_WINDOW_DEFAULTS.blockViewer.height,
     },
 
     // Image Viewer (URL encoded in query param)
@@ -129,8 +130,8 @@ export const ROUTES: RouteConfig[] = [
         getTitle: () => 'Config',
         iconType: 'config',
         singleInstance: true,
-        defaultWidth: 400,
-        defaultHeight: 500,
+        defaultWidth: 650,
+        defaultHeight: 600,
     },
 
     {
@@ -140,8 +141,8 @@ export const ROUTES: RouteConfig[] = [
         generateUrl: () => '/arena',
         getTitle: () => 'Are.na',
         iconType: 'arena',
-        defaultWidth: 400,
-        defaultHeight: 500,
+        defaultWidth: ARENA_WINDOW_DEFAULTS.channelBrowser.width,
+        defaultHeight: ARENA_WINDOW_DEFAULTS.channelBrowser.height,
     },
 
     {

@@ -1,4 +1,6 @@
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
+import tailwindcssTypography from "@tailwindcss/typography";
 
 export default {
   darkMode: ["class"],
@@ -98,11 +100,11 @@ export default {
         "window-open": "window-open 0.2s ease-out",
       },
       boxShadow: {
-        "retro-window": "2px 2px 0px 1px rgba(0, 0, 0, 0.3)",
-        "retro-button": "1px 1px 0px rgba(0, 0, 0, 0.3)",
+        "retro-window": "3px 3px 5px rgba(0, 0, 0, 0.3)",
+        "retro-button": "none",
         "retro-inset": "inset 1px 1px 1px rgba(0, 0, 0, 0.2)",
       },
     },
   },
-  plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
+  plugins: [tailwindcssAnimate, tailwindcssTypography],
 } satisfies Config;

@@ -3,11 +3,14 @@ import {
   ArenaChannel,
   ArenaChannelPage,
   ArenaChannelPreview,
+  ArenaComment,
   ArenaItem,
+  ArenaPagedResult,
 } from "@/types/arena";
 import { toast } from "sonner";
 import { DEFAULT_USERNAME, FEATURED_CHANNELS, USE_STATIC_CHANNELS } from "@/config/channels";
 import { CACHE_TTL, getCachedData, incrementRequestCount, setCachedData } from "@/lib/storage";
+import { cacheDebugLog } from "@/lib/debug";
 import {
   RawArenaItem,
   RawArenaListResponse,
@@ -31,6 +34,16 @@ interface RequestOptions {
   ttlMs?: number;
 }
 
+interface RawComment {
+  id: number;
+  body?: {
+    html?: string | null;
+    plain?: string | null;
+  } | null;
+  created_at?: string | null;
+  user?: RawOwner | null;
+}
+
 function buildArenaUrl(path: string, params?: Record<string, string | number | undefined>): string {
   const searchParams = new URLSearchParams();
 
@@ -52,7 +65,7 @@ async function fetchArenaJson<T>(path: string, params?: Record<string, string | 
   if (options?.cacheKey) {
     const cached = await getCachedData<T>(options.cacheKey);
     if (cached) {
-      console.log(`[Cache] Hit: ${options.cacheKey}`);
+      cacheDebugLog(`[Cache] Hit: ${options.cacheKey}`);
       return cached;
     }
   }
@@ -243,6 +256,81 @@ export async function getBlock(
     toast.error(`Failed to load block: ${blockId}`);
     throw error;
   }
+}
+
+export async function getBlockConnections(
+  blockId: number | string,
+  page: number = 1,
+  perPage: number = 24
+): Promise<ArenaPagedResult<ArenaChannel>> {
+  const response = await fetchArenaJson<RawArenaListResponse<RawArenaItem>>(
+    `/blocks/${blockId}/connections`,
+    { page, per: perPage, sort: "created_at_desc" },
+    {
+      cacheKey: `${ARENA_CACHE_PREFIX}:block:${blockId}:connections:${page}:${perPage}`,
+      ttlMs: CACHE_TTL.ARENA_CHANNEL,
+    }
+  );
+
+  return {
+    items: response.data.map(normalizeArenaItem).filter(isArenaChannel),
+    meta: normalizePaginationMeta(response.meta),
+  };
+}
+
+export async function getChannelConnections(
+  channelSlug: string,
+  page: number = 1,
+  perPage: number = 24
+): Promise<ArenaPagedResult<ArenaChannel>> {
+  const response = await fetchArenaJson<RawArenaListResponse<RawArenaItem>>(
+    `/channels/${channelSlug}/connections`,
+    { page, per: perPage, sort: "created_at_desc" },
+    {
+      cacheKey: `${ARENA_CACHE_PREFIX}:channel:${channelSlug}:connections:${page}:${perPage}`,
+      ttlMs: CACHE_TTL.ARENA_CHANNEL,
+    }
+  );
+
+  return {
+    items: response.data.map(normalizeArenaItem).filter(isArenaChannel),
+    meta: normalizePaginationMeta(response.meta),
+  };
+}
+
+export async function getBlockComments(
+  blockId: number | string,
+  page: number = 1,
+  perPage: number = 24
+): Promise<ArenaPagedResult<ArenaComment>> {
+  const response = await fetchArenaJson<RawArenaListResponse<RawComment>>(
+    `/blocks/${blockId}/comments`,
+    { page, per: perPage },
+    {
+      cacheKey: `${ARENA_CACHE_PREFIX}:block:${blockId}:comments:${page}:${perPage}`,
+      ttlMs: CACHE_TTL.ARENA_BLOCK,
+    }
+  );
+
+  return {
+    items: response.data.map((comment) => ({
+      id: comment.id,
+      bodyHtml: comment.body?.html ?? null,
+      bodyPlain: comment.body?.plain ?? "",
+      createdAt: comment.created_at ?? null,
+      user: comment.user
+        ? {
+            id: comment.user.id,
+            type: comment.user.type,
+            name: comment.user.name,
+            slug: comment.user.slug,
+            avatar: comment.user.avatar ?? null,
+            initials: comment.user.initials,
+          }
+        : null,
+    })),
+    meta: normalizePaginationMeta(response.meta),
+  };
 }
 
 async function getChannelFollowersCount(channelSlug: string): Promise<number | undefined> {
