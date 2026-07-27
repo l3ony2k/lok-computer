@@ -30,14 +30,27 @@ interface MenuItemProps {
 const MenuItem: React.FC<MenuItemProps> = ({ item, onClose }) => {
     const [isSubMenuOpen, setIsSubMenuOpen] = useState(false);
     const itemRef = useRef<HTMLDivElement>(null);
+    const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const hasSubItems = item.subItems && item.subItems.length > 0;
+
+    useEffect(() => () => {
+        if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+    }, []);
 
     if (item.type === 'divider') {
         return <div className="border-t border-border" />;
     }
 
-    const hasSubItems = item.subItems && item.subItems.length > 0;
+    const cancelSubMenuClose = () => {
+        if (closeTimeoutRef.current) {
+            clearTimeout(closeTimeoutRef.current);
+            closeTimeoutRef.current = null;
+        }
+    };
 
     const handleMouseEnter = () => {
+        cancelSubMenuClose();
         if (hasSubItems) {
             setIsSubMenuOpen(true);
         }
@@ -45,7 +58,10 @@ const MenuItem: React.FC<MenuItemProps> = ({ item, onClose }) => {
 
     const handleMouseLeave = () => {
         if (hasSubItems) {
-            setIsSubMenuOpen(false);
+            closeTimeoutRef.current = setTimeout(() => {
+                setIsSubMenuOpen(false);
+                closeTimeoutRef.current = null;
+            }, 320);
         }
     };
 
@@ -63,7 +79,7 @@ const MenuItem: React.FC<MenuItemProps> = ({ item, onClose }) => {
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
             onClick={handleClick}
-            className="relative"
+            className={`menu-item-shell relative ${hasSubItems ? 'has-submenu' : ''}`}
         >
             <button
                 className="menu-item-button flex items-center select-none"
@@ -77,7 +93,10 @@ const MenuItem: React.FC<MenuItemProps> = ({ item, onClose }) => {
             </button>
 
             {hasSubItems && isSubMenuOpen && (
-                <div className="menu-surface absolute left-[calc(100%+5px)] top-[-1px] min-w-[160px] select-none">
+                <div
+                    className="menu-surface context-submenu absolute left-[calc(100%+5px)] top-[-1px] min-w-[160px] select-none"
+                    onMouseEnter={cancelSubMenuClose}
+                >
                     {item.subItems?.map((subItem, index) => (
                         <MenuItem key={subItem.label || `divider-${index}`} item={subItem} onClose={onClose} />
                     ))}

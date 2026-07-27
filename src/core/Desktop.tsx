@@ -7,35 +7,31 @@ import { TopBar } from "./TopBar";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { adjustWindowToViewport, type WindowDimensions, type ViewportDimensions } from "@/lib/utils";
 import { WINDOW_DEFAULTS } from "@/config/window";
-import { APP_LIST } from "@/config/apps";
 import { Oneko } from "@/components/oneko/Oneko";
 import { CrtFilter } from "@/components/effects/CrtFilter";
 import { OutOfBoxExperience, type OobeSelection } from "@/components/system/OutOfBoxExperience";
 
 export const Desktop = () => {
     const { windows } = useWindowState();
-    const { addWindow, addOrFocusWindow, updateWindowPosition, updateWindowDimensions } = useWindowActions();
+    const { updateWindowPosition, updateWindowDimensions } = useWindowActions();
     const { settings, updateSetting, isLoading } = useUserSettings();
 
     // The legacy prompt flag migrates existing users past the new first-run flow.
     const showOobe = !isLoading && !settings.oobe?.completed && !settings.oneko?.hasBeenAsked;
 
-    const completeOobe = useCallback(({ onekoEnabled, crtEnabled }: OobeSelection) => {
+    const previewOobe = useCallback(({ oneko, crt }: OobeSelection) => {
         updateSetting('oneko', {
-            enabled: onekoEnabled,
-            hasBeenAsked: true,
-            speed: settings.oneko?.speed ?? 10,
-            variant: settings.oneko?.variant ?? 'default',
+            ...oneko,
+            hasBeenAsked: false,
         });
-        updateSetting('crt', {
-            enabled: crtEnabled,
-            scanlines: settings.crt?.scanlines ?? 50,
-            flicker: settings.crt?.flicker ?? 10,
-            rgbOffset: settings.crt?.rgbOffset ?? 50,
-            curvature: settings.crt?.curvature ?? 20,
-        });
+        updateSetting('crt', crt);
+    }, [updateSetting]);
+
+    const completeOobe = useCallback(({ oneko, crt }: OobeSelection) => {
+        updateSetting('oneko', { ...oneko, hasBeenAsked: true });
+        updateSetting('crt', crt);
         updateSetting('oobe', { completed: true });
-    }, [settings.crt, settings.oneko, updateSetting]);
+    }, [updateSetting]);
     const desktopContainerRef = useRef<HTMLDivElement>(null);
     const windowsRef = useRef(windows);
     windowsRef.current = windows;
@@ -126,41 +122,13 @@ export const Desktop = () => {
         fitWindowsToViewport();
     }, [fitWindowsToViewport, windowIdentity]);
 
-    // Open an app from APP_LIST by name, respecting its singleInstance flag.
-    const openApp = useCallback((name: string, position?: { x: number; y: number }) => {
-        const app = APP_LIST.find(a => a.name === name);
-        if (!app) return;
-
-        addOrFocusWindow({
-            title: app.name,
-            content: <app.component {...(app.props || {})} />,
-            width: app.defaultWidth ?? WINDOW_DEFAULTS.DEFAULT_WIDTH,
-            height: app.defaultHeight ?? WINDOW_DEFAULTS.DEFAULT_HEIGHT,
-            iconType: app.iconType,
-            minWidth: WINDOW_DEFAULTS.MIN_WIDTH,
-            minHeight: WINDOW_DEFAULTS.MIN_HEIGHT,
-            singleInstance: app.singleInstance,
-            componentType: app.name,
-            props: app.props,
-            ...position,
-        });
-    }, [addOrFocusWindow]);
-
-    const handleOpenAbout = useCallback(() => openApp("About"), [openApp]);
-    const handleOpenSettingsWindow = useCallback(() => openApp("Config", { x: 150, y: 100 }), [openApp]);
-
     return (
         <div className="h-screen w-screen flex flex-col">
             <TopBar />
 
             <div ref={desktopContainerRef} className={`desktop-container relative overflow-hidden ${settings.wallpaper ? 'has-wallpaper' : ''}`}>
                 <WindowContainer />
-                <DesktopIcons
-                    addWindow={addWindow}
-                    addOrFocusWindow={addOrFocusWindow}
-                    handleOpenAbout={handleOpenAbout}
-                    handleOpenSettingsWindow={handleOpenSettingsWindow}
-                />
+                <DesktopIcons />
             </div>
 
             <Taskbar />
@@ -175,8 +143,9 @@ export const Desktop = () => {
 
             <OutOfBoxExperience
                 isOpen={showOobe}
-                initialOnekoEnabled={settings.oneko?.enabled}
-                initialCrtEnabled={settings.crt?.enabled}
+                initialOneko={settings.oneko}
+                initialCrt={settings.crt}
+                onPreview={previewOobe}
                 onComplete={completeOobe}
             />
         </div>

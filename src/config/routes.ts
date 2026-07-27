@@ -5,13 +5,10 @@
  * Used by RouteInterpreter to open windows from URLs.
  */
 
-import { WINDOW_DEFAULTS } from './window';
-import { ARENA_WINDOW_DEFAULTS } from './arenaWindows';
-
 export interface RouteConfig {
     /** URL path pattern, e.g., 'explorer/:channelSlug' */
     pattern: string;
-    /** Component type key from componentRegistry */
+    /** Application identity from the authoritative catalog */
     componentType: string;
     /** Extract props from URL params and query string */
     extractProps: (params: Record<string, string>, query: URLSearchParams) => Record<string, unknown>;
@@ -19,13 +16,6 @@ export interface RouteConfig {
     generateUrl?: (props: Record<string, unknown>) => string | null;
     /** Generate window title from props */
     getTitle: (props: Record<string, unknown>) => string;
-    /** Window icon type */
-    iconType: string;
-    /** If true, focuses existing window instead of creating duplicate */
-    singleInstance?: boolean;
-    /** Default window dimensions */
-    defaultWidth?: number;
-    defaultHeight?: number;
 }
 
 /**
@@ -65,9 +55,6 @@ export const ROUTES: RouteConfig[] = [
             return url;
         },
         getTitle: (props) => String(props.channelSlug || 'Channel'),
-        iconType: 'folder',
-        defaultWidth: ARENA_WINDOW_DEFAULTS.channelExplorer.width,
-        defaultHeight: ARENA_WINDOW_DEFAULTS.channelExplorer.height,
     },
 
     // Are.na Block Viewer
@@ -82,9 +69,6 @@ export const ROUTES: RouteConfig[] = [
             return `/block/${encodeURIComponent(String(props.blockId))}`;
         },
         getTitle: (props) => `Block #${props.blockId}`,
-        iconType: 'block',
-        defaultWidth: ARENA_WINDOW_DEFAULTS.blockViewer.width,
-        defaultHeight: ARENA_WINDOW_DEFAULTS.blockViewer.height,
     },
 
     // Image Viewer (URL encoded in query param)
@@ -99,9 +83,6 @@ export const ROUTES: RouteConfig[] = [
             return `/image?url=${encodeURIComponent(String(props.imageUrl))}`;
         },
         getTitle: () => 'Image',
-        iconType: 'image',
-        defaultWidth: 600,
-        defaultHeight: 500,
     },
 
     // Static apps (single instance, no dynamic props)
@@ -116,10 +97,6 @@ export const ROUTES: RouteConfig[] = [
             return '/about';
         },
         getTitle: () => 'About',
-        iconType: 'about',
-        singleInstance: true,
-        defaultWidth: 500,
-        defaultHeight: 600,
     },
 
     {
@@ -128,10 +105,6 @@ export const ROUTES: RouteConfig[] = [
         extractProps: () => ({}),
         generateUrl: () => '/config',
         getTitle: () => 'Config',
-        iconType: 'config',
-        singleInstance: true,
-        defaultWidth: 650,
-        defaultHeight: 600,
     },
 
     {
@@ -140,9 +113,6 @@ export const ROUTES: RouteConfig[] = [
         extractProps: () => ({ username: 'lok' }),
         generateUrl: () => '/arena',
         getTitle: () => 'Are.na',
-        iconType: 'arena',
-        defaultWidth: ARENA_WINDOW_DEFAULTS.channelBrowser.width,
-        defaultHeight: ARENA_WINDOW_DEFAULTS.channelBrowser.height,
     },
 
     {
@@ -169,10 +139,6 @@ export const ROUTES: RouteConfig[] = [
             return url;
         },
         getTitle: () => 'Shelf',
-        iconType: 'shelf',
-        singleInstance: true,
-        defaultWidth: 500,
-        defaultHeight: 700,
     },
 
     {
@@ -181,10 +147,6 @@ export const ROUTES: RouteConfig[] = [
         extractProps: () => ({}),
         generateUrl: () => '/guestbook',
         getTitle: () => 'Guestbook',
-        iconType: 'mail',
-        singleInstance: true,
-        defaultWidth: 500,
-        defaultHeight: 600,
     },
 
     {
@@ -193,10 +155,6 @@ export const ROUTES: RouteConfig[] = [
         extractProps: () => ({}),
         generateUrl: () => '/ai',
         getTitle: () => 'AI Talk',
-        iconType: 'mailbox',
-        singleInstance: true,
-        defaultWidth: 400,
-        defaultHeight: 600,
     },
 
     {
@@ -205,9 +163,6 @@ export const ROUTES: RouteConfig[] = [
         extractProps: () => ({}),
         generateUrl: () => '/weather',
         getTitle: () => 'Weather',
-        iconType: 'weather',
-        defaultWidth: 860,
-        defaultHeight: 525,
     },
 
     {
@@ -216,9 +171,6 @@ export const ROUTES: RouteConfig[] = [
         extractProps: () => ({}),
         generateUrl: () => '/bsky',
         getTitle: () => 'Bsky',
-        iconType: 'bsky',
-        defaultWidth: 450,
-        defaultHeight: 700,
     },
 
     {
@@ -227,9 +179,6 @@ export const ROUTES: RouteConfig[] = [
         extractProps: () => ({}),
         generateUrl: () => '/fedi',
         getTitle: () => 'Fedi',
-        iconType: 'fedi',
-        defaultWidth: 450,
-        defaultHeight: 700,
     },
 
     {
@@ -238,10 +187,6 @@ export const ROUTES: RouteConfig[] = [
         extractProps: () => ({}),
         generateUrl: () => '/links',
         getTitle: () => 'Links',
-        iconType: 'webpage',
-        singleInstance: true,
-        defaultWidth: 500,
-        defaultHeight: 600,
     },
 
     {
@@ -250,9 +195,6 @@ export const ROUTES: RouteConfig[] = [
         extractProps: () => ({}),
         generateUrl: () => '/console',
         getTitle: () => 'Console',
-        iconType: 'console',
-        defaultWidth: 700,
-        defaultHeight: 400,
     },
 
     {
@@ -266,9 +208,6 @@ export const ROUTES: RouteConfig[] = [
             return '/web';
         },
         getTitle: () => 'Web',
-        iconType: 'globe',
-        defaultWidth: 800,
-        defaultHeight: 600,
     },
 ];
 

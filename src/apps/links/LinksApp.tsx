@@ -241,7 +241,10 @@ const APP_STATE_KEY = 'app:links';
 
 export const LinksApp = () => {
     // Using usePersistedState hook instead of manual load/save useEffects
-    const [activeTab, setActiveTab] = usePersistedState(APP_STATE_KEY, 'buttons');
+    const [activeTab, setActiveTab] = usePersistedState({
+        key: APP_STATE_KEY,
+        defaultValue: 'buttons',
+    });
 
     const handleTabChange = (tab: string) => {
         console.log('[App:Links] Tab:', tab);

@@ -38,6 +38,9 @@ bun dev
 # Build for production
 bun run build
 
+# Run architecture invariants
+bun test
+
 # Preview production build
 bun preview
 ```
@@ -63,20 +66,22 @@ lok-computer/
 
 ## Key Concepts
 
-### 1. Apps
-Self-contained components that run in windows. Each app is registered in `config/apps.tsx`.
+### 1. Applications
+Restorable programs that run in windows. The authoritative catalog in `config/apps.tsx` owns identity, lazy loader, defaults, and single-instance behavior.
 
-### 2. Windows
-Managed by `useWindowManager` hook. Windows can be dragged, resized, minimized, maximized. State persists across sessions via IndexedDB.
+### 2. Application launch
+`useApplicationLauncher` turns Application identity and domain props into a live, restorable window.
 
-### 3. Component Registry
-Maps component type names to actual React components. Used for session restoration and URL deep linking.
+### 3. Windows
+`useWindowState` reads window state and `useWindowActions` commands existing windows. The Window session persists through IndexedDB.
 
-### 4. Storage Layer
+### 4. Storage
 IndexedDB-based storage for:
 - Window sessions (`windowSession`)
 - App state (`app:*`)
 - API cache with TTL
+
+`usePersistedState` owns view-state persistence and `cachedRequest` owns the persistent remote-read lifecycle.
 
 ### 5. Cloudflare Worker
 API proxy that handles:

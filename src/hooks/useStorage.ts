@@ -6,8 +6,6 @@ import {
     initStorage,
     getAppState,
     setAppState,
-    getCachedData,
-    setCachedData,
     getUsageStats,
     clearCache,
     clearExpiredCache,
@@ -50,32 +48,66 @@ export const useStorageInit = () => {
  * @param defaultValue - Default value if nothing is stored
  * @returns [value, setValue, isLoading]
  */
-export const usePersistedState = <T>(
-    key: string,
-    defaultValue: T
-): [T, (value: T | ((prev: T) => T)) => void, boolean] => {
+export interface PersistedStateOptions<T> {
+    key: string;
+    defaultValue: T;
+    enabled?: boolean;
+    debounceMs?: number;
+    normalize?: (stored: unknown, defaultValue: T) => T;
+    onChange?: (value: T) => void;
+}
+
+export const usePersistedState = <T>({
+    key,
+    defaultValue,
+    enabled = true,
+    debounceMs = 0,
+    normalize,
+    onChange,
+}: PersistedStateOptions<T>): [T, (value: T | ((prev: T) => T)) => void, boolean] => {
     const [value, setValue] = useState<T>(defaultValue);
     const [isLoading, setIsLoading] = useState(true);
-    const isInitialLoad = useRef(true);
+    const hydratedKey = useRef<string | null>(null);
+    const skipNextSave = useRef(false);
+    const defaultValueRef = useRef(defaultValue);
+    const normalizeRef = useRef(normalize);
+    const onChangeRef = useRef(onChange);
+    defaultValueRef.current = defaultValue;
+    normalizeRef.current = normalize;
+    onChangeRef.current = onChange;
 
     // Load initial value from storage
     useEffect(() => {
-        let mounted = true;
+        let active = true;
+        hydratedKey.current = null;
+        setIsLoading(true);
+
+        if (!enabled) {
+            skipNextSave.current = true;
+            setValue(defaultValueRef.current);
+            setIsLoading(false);
+            return () => { active = false; };
+        }
 
         const loadValue = async () => {
             try {
-                const stored = await getAppState<T>(key);
+                const stored = await getAppState<unknown>(key);
                 // Only set value if stored is truthy (not null, undefined, or empty string)
                 // This prevents corrupted/empty values from overriding valid defaults
-                if (mounted && stored !== null && stored !== undefined && stored !== '') {
-                    setValue(stored);
+                if (active) {
+                    const fallback = defaultValueRef.current;
+                    const nextValue = stored !== null && stored !== undefined && stored !== ''
+                        ? normalizeRef.current?.(stored, fallback) ?? stored as T
+                        : fallback;
+                    skipNextSave.current = true;
+                    setValue(nextValue);
                 }
             } catch (error) {
                 console.error(`[Storage] Failed to load persisted state for "${key}":`, error);
             } finally {
-                if (mounted) {
+                if (active) {
+                    hydratedKey.current = key;
                     setIsLoading(false);
-                    isInitialLoad.current = false;
                 }
             }
         };
@@ -83,26 +115,33 @@ export const usePersistedState = <T>(
         loadValue();
 
         return () => {
-            mounted = false;
+            active = false;
         };
-    }, [key]);
+    }, [enabled, key]);
 
     // Save to storage when value changes (skip initial load)
     useEffect(() => {
-        if (isInitialLoad.current || isLoading) {
+        if (!enabled || hydratedKey.current !== key || isLoading) {
             return;
         }
 
-        const saveValue = async () => {
+        if (skipNextSave.current) {
+            skipNextSave.current = false;
+            onChangeRef.current?.(value);
+            return;
+        }
+
+        onChangeRef.current?.(value);
+        const timeout = setTimeout(async () => {
             try {
                 await setAppState(key, value);
             } catch (error) {
                 console.error(`[Storage] Failed to save persisted state for "${key}":`, error);
             }
-        };
+        }, debounceMs);
 
-        saveValue();
-    }, [key, value, isLoading]);
+        return () => clearTimeout(timeout);
+    }, [enabled, key, value, isLoading, debounceMs]);
 
     const updateValue = useCallback((newValue: T | ((prev: T) => T)) => {
         setValue((prev) => {
@@ -114,76 +153,6 @@ export const usePersistedState = <T>(
     }, []);
 
     return [value, updateValue, isLoading];
-};
-
-/**
- * Hook for cached API data with automatic expiration
- */
-export const useCachedQuery = <T>(
-    cacheKey: string,
-    fetchFn: () => Promise<T>,
-    ttlMs: number,
-    options?: {
-        enabled?: boolean;
-        onSuccess?: (data: T) => void;
-        onError?: (error: Error) => void;
-    }
-) => {
-    const [data, setData] = useState<T | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<Error | null>(null);
-    const [isCacheHit, setIsCacheHit] = useState(false);
-
-    const enabled = options?.enabled ?? true;
-
-    const refetch = useCallback(async (skipCache = false) => {
-        if (!enabled) return;
-
-        setIsLoading(true);
-        setError(null);
-
-        try {
-            // Check cache first (unless skipping)
-            if (!skipCache) {
-                const cached = await getCachedData<T>(cacheKey);
-                if (cached !== null) {
-                    setData(cached);
-                    setIsCacheHit(true);
-                    setIsLoading(false);
-                    options?.onSuccess?.(cached);
-                    return;
-                }
-            }
-
-            // Fetch fresh data
-            setIsCacheHit(false);
-            const freshData = await fetchFn();
-
-            // Store in cache
-            await setCachedData(cacheKey, freshData, ttlMs);
-
-            setData(freshData);
-            options?.onSuccess?.(freshData);
-        } catch (err) {
-            const error = err instanceof Error ? err : new Error(String(err));
-            setError(error);
-            options?.onError?.(error);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [cacheKey, fetchFn, ttlMs, enabled, options]);
-
-    useEffect(() => {
-        refetch();
-    }, [cacheKey, enabled]); // eslint-disable-line react-hooks/exhaustive-deps
-
-    return {
-        data,
-        isLoading,
-        error,
-        isCacheHit,
-        refetch: () => refetch(true), // Force refetch skips cache
-    };
 };
 
 /**

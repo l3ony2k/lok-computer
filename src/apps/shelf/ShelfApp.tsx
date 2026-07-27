@@ -4,12 +4,11 @@ import { WindowLayout } from '@/components/window/WindowLayout';
 import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/hover-card';
 import { RetroButton } from '@/components/ui/RetroButton';
 import { StateMessage } from '@/components/ui/StateMessage';
-import { useWindowActions } from '@/hooks/useWindowManager';
-import { ImageViewerApp } from '@/apps/imageviewer/ImageViewerApp';
+import { useApplicationLauncher } from '@/hooks/useApplicationLauncher';
 import { APP_CONFIG } from '@/config/constants';
-import { getCachedData, setCachedData, incrementRequestCount, CACHE_TTL } from '@/lib/storage';
+import { CACHE_TTL } from '@/lib/storage';
 import { usePersistedState } from '@/hooks/useStorage';
-import { cacheDebugLog } from '@/lib/debug';
+import { cachedRequest } from '@/lib/cachedRequest';
 
 type ShelfType = 'wishlist' | 'progress' | 'complete' | 'dropped';
 
@@ -94,41 +93,37 @@ const getExternalLinks = (item: ShelfItem['item']) => {
 interface ShelfContentProps {
     type: ShelfType;
     page: number;
-    onDataLoaded: (pages: number, count: number) => void;
+    onDataLoaded: (type: ShelfType, pages: number, count: number) => void;
 }
 
 const ShelfContent: React.FC<ShelfContentProps> = ({ type, page, onDataLoaded }) => {
-    const { addWindow } = useWindowActions();
+    const openApplication = useApplicationLauncher();
 
     const { data, isLoading, isError, error, refetch } = useQuery({
         queryKey: ['neodbShelf', type, page],
         queryFn: async () => {
             const cacheKey = `neodb:shelf:${type}:${page}`;
-
-            // Check cache first
-            const cached = await getCachedData<ShelfResponse>(cacheKey);
-            if (cached) {
-                cacheDebugLog(`[Cache] Hit: neodb:shelf:${type}:${page}`);
-                onDataLoaded(cached.pages, cached.count);
-                return cached;
-            }
-
-            // Fetch fresh data
-            console.log(`[API:Shelf] GET ${type} page ${page}`);
-            await incrementRequestCount('shelf');
-            const response = await fetch(`${APP_CONFIG.NEODB_SHELF_ENDPOINT}?type=${type}&page=${page}&page_size=${PAGE_SIZE}`);
-            if (!response.ok) throw new Error('Failed to fetch shelf');
-            const result = await response.json() as ShelfResponse;
-
-            // Store in cache
-            await setCachedData(cacheKey, result, CACHE_TTL.NEODB_SHELF);
-            console.log(`[App:Shelf] Loaded ${result.data.length} ${type} items`);
-
-            onDataLoaded(result.pages, result.count);
-            return result;
+            return cachedRequest({
+                cacheKey,
+                ttlMs: CACHE_TTL.NEODB_SHELF,
+                source: 'shelf',
+                debugLabel: cacheKey,
+                load: async () => {
+                    console.log(`[API:Shelf] GET ${type} page ${page}`);
+                    const response = await fetch(`${APP_CONFIG.NEODB_SHELF_ENDPOINT}?type=${type}&page=${page}&page_size=${PAGE_SIZE}`);
+                    if (!response.ok) throw new Error('Failed to fetch shelf');
+                    const result = await response.json() as ShelfResponse;
+                    console.log(`[App:Shelf] Loaded ${result.data.length} ${type} items`);
+                    return result;
+                },
+            });
         },
         staleTime: CACHE_TTL.NEODB_SHELF,
     });
+
+    React.useEffect(() => {
+        if (data) onDataLoaded(type, data.pages, data.count);
+    }, [data, onDataLoaded, type]);
 
     const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString();
 
@@ -167,13 +162,10 @@ const ShelfContent: React.FC<ShelfContentProps> = ({ type, page, onDataLoaded })
                             style={{ width: '80px' }}
                             onClick={() => {
                                 if (shelfItem.item.cover_image_url) {
-                                    addWindow({
+                                    openApplication('ImageViewer', {
                                         title: shelfItem.item.display_title,
-                                        content: <ImageViewerApp imageUrl={shelfItem.item.cover_image_url} />,
                                         width: 600,
                                         height: 800,
-                                        iconType: 'image',
-                                        componentType: 'ImageViewer',
                                         props: { imageUrl: shelfItem.item.cover_image_url },
                                     });
                                 }
@@ -276,12 +268,17 @@ interface ShelfAppProps {
 
 export const ShelfApp: React.FC<ShelfAppProps> = ({ initialTab, initialPage, onPropsChange }) => {
     // Using usePersistedState hook instead of manual load/save useEffects
-    const [persistedState, setPersistedState] = usePersistedState<ShelfAppState>(APP_STATE_KEY, DEFAULT_STATE);
-    const [paginationInfo, setPaginationInfo] = useState<{ pages: number; count: number }>({ pages: 1, count: 0 });
+    const [persistedState, setPersistedState] = usePersistedState<ShelfAppState>({
+        key: APP_STATE_KEY,
+        defaultValue: DEFAULT_STATE,
+        debounceMs: 150,
+    });
+    const [paginationByTab, setPaginationByTab] = useState<Partial<Record<ShelfType, { pages: number; count: number }>>>({});
 
     // Extract values for convenience
     const activeTab = persistedState.activeTab;
     const page = persistedState.page;
+    const paginationInfo = paginationByTab[activeTab] ?? { pages: 1, count: 0 };
 
     // Deep link priority: if initial props are provided and differ from state, override state on mount
     React.useEffect(() => {
@@ -297,7 +294,6 @@ export const ShelfApp: React.FC<ShelfAppProps> = ({ initialTab, initialPage, onP
     // Reset page when tab changes
     const handleTabChange = (tab: ShelfType) => {
         setPersistedState({ activeTab: tab, page: 1 });
-        setPaginationInfo({ pages: 1, count: 0 });
         // Sync to window props for share URL
         if (onPropsChange) {
             onPropsChange({ initialTab: tab, initialPage: 1 });
@@ -315,9 +311,13 @@ export const ShelfApp: React.FC<ShelfAppProps> = ({ initialTab, initialPage, onP
         });
     };
 
-    const handleDataLoaded = (pages: number, count: number) => {
-        setPaginationInfo({ pages, count });
-    };
+    const handleDataLoaded = React.useCallback((type: ShelfType, pages: number, count: number) => {
+        setPaginationByTab((current) => {
+            const existing = current[type];
+            if (existing?.pages === pages && existing.count === count) return current;
+            return { ...current, [type]: { pages, count } };
+        });
+    }, []);
 
     return (
         <WindowLayout

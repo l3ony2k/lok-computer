@@ -1,10 +1,8 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ArenaChannel, ArenaItem } from "@/types/arena";
 import { getUserChannels } from "@/lib/api";
-import { useWindowActions } from "@/hooks/useWindowManager";
-import { ARENA_WINDOW_DEFAULTS } from "@/config/arenaWindows";
-import { ChannelExplorer } from "./ChannelExplorer";
-import { getAppState, setAppState } from "@/lib/storage";
+import { useApplicationLauncher } from "@/hooks/useApplicationLauncher";
+import { usePersistedState } from "@/hooks/useStorage";
 import {
   ArenaFileView,
 } from "../components/ArenaFileView";
@@ -15,6 +13,11 @@ import {
 } from "../components/arenaFileViewState";
 
 const VIEW_STATE_KEY = "app:arena-browser";
+const DEFAULT_FILE_STATE = createArenaFileViewState({
+  view: "list",
+  gridSize: "small",
+  listSize: "medium",
+});
 
 export const ChannelBrowser: React.FC<{ username?: string }> = ({ username = "lok" }) => {
   const [channels, setChannels] = useState<ArenaChannel[]>([]);
@@ -22,37 +25,16 @@ export const ChannelBrowser: React.FC<{ username?: string }> = ({ username = "lo
   const [loadError, setLoadError] = useState<string | null>(null);
   const [address, setAddress] = useState("");
   const [selectedChannel, setSelectedChannel] = useState<ArenaChannel | null>(null);
-  const [fileState, setFileState] = useState<ArenaFileViewState>(() => createArenaFileViewState({
-    view: "list",
-    gridSize: "small",
-    listSize: "medium",
-  }));
-  const stateLoaded = useRef(false);
-  const { addWindow } = useWindowActions();
-
-  useEffect(() => {
-    const loadState = async () => {
-      try {
-        const saved = await getAppState<Partial<ArenaFileViewState> & { isListView?: boolean; gridSize?: "S" | "M" | "L" }>(VIEW_STATE_KEY);
-        setFileState((current) => normalizeArenaFileViewState(saved, current));
-      } catch (error) {
-        console.error("[ChannelBrowser] Failed to load file view state", error);
-      } finally {
-        stateLoaded.current = true;
-      }
-    };
-    loadState();
-  }, []);
-
-  useEffect(() => {
-    if (!stateLoaded.current) return;
-    const timeout = setTimeout(() => {
-      setAppState(VIEW_STATE_KEY, fileState).catch((error) => {
-        console.error("[ChannelBrowser] Failed to save file view state", error);
-      });
-    }, 300);
-    return () => clearTimeout(timeout);
-  }, [fileState]);
+  const [fileState, setFileState] = usePersistedState<ArenaFileViewState>({
+    key: VIEW_STATE_KEY,
+    defaultValue: DEFAULT_FILE_STATE,
+    debounceMs: 300,
+    normalize: (stored) => normalizeArenaFileViewState(
+      stored as Partial<ArenaFileViewState> & { isListView?: boolean; gridSize?: "S" | "M" | "L" },
+      DEFAULT_FILE_STATE,
+    ),
+  });
+  const openApplication = useApplicationLauncher();
 
   useEffect(() => {
     let active = true;
@@ -74,13 +56,9 @@ export const ChannelBrowser: React.FC<{ username?: string }> = ({ username = "lo
   }, [username]);
 
   const openChannel = (channel: ArenaChannel | { title: string; slug: string }) => {
-    addWindow({
+    openApplication('ChannelExplorer', {
       title: channel.title || channel.slug,
-      content: <ChannelExplorer channelSlug={channel.slug} username={username} />,
-      width: ARENA_WINDOW_DEFAULTS.channelExplorer.width,
-      height: ARENA_WINDOW_DEFAULTS.channelExplorer.height,
       iconType: "other-channel",
-      componentType: "ChannelExplorer",
       props: { channelSlug: channel.slug, username },
     });
   };

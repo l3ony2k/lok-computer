@@ -6,6 +6,7 @@
 bun dev          # Vite development server on http://localhost:8080
 bun run build    # Production build
 bun run lint     # ESLint
+bun test         # Architecture and behavior tests
 ```
 
 Use the `@/` alias for `src/`. Do not start another dev server when port 8080 is already serving the project.
@@ -17,7 +18,7 @@ Use the `@/` alias for `src/`. Do not start another dev server when port 8080 is
 - Keep corners square; do not add `rounded-*` styles.
 - Reuse the shared CSS variables and `RetroButton`/window chrome patterns in `src/index.css`.
 - Keep app modules lazy through `src/config/lazyApps.tsx`. Do not statically import app modules outside `src/apps/`.
-- Run both `bun run build` and `bun run lint` after implementation.
+- Run `bun test`, `bun run build`, and `bun run lint` after implementation.
 
 ## Architecture
 
@@ -37,10 +38,11 @@ When adding a window action, keep its callback stable. Read current state throug
 ### Applications
 
 1. Add the app component under `src/apps/<name>/`.
-2. Add its loader to `src/config/lazyApps.tsx` and `src/config/preloadApps.ts`.
-3. Add its launch configuration to `src/config/apps.tsx`.
-4. Add deep-link configuration to `src/config/routes.ts` when needed.
-5. Add dynamic, prop-driven windows to `DYNAMIC_COMPONENTS` in `src/config/componentRegistry.tsx`.
+2. Add its loader and lazy export to `src/config/lazyApps.tsx`.
+3. Add its complete definition to the authoritative catalog in `src/config/apps.tsx`, including the same loader.
+4. Add deep-link configuration to `src/config/routes.ts` when needed; routes contain URL knowledge only.
+
+Use `useApplicationLauncher` for every app launch, including nested dynamic windows. Do not construct window content or restoration metadata at call sites. Dynamic, prop-driven windows use the same catalog as desktop apps.
 
 App chunks remain code-split but are warmed during `SystemStartup`, along with bundled local assets. Window content still retains a Suspense fallback.
 
@@ -48,12 +50,15 @@ App chunks remain code-split but are warmed during `SystemStartup`, along with b
 
 - Shared file rendering lives in `src/apps/arena/components/ArenaFileView.tsx`.
 - Shared preview/detail rendering lives in `ArenaDetailPanel.tsx`.
-- Use `ARENA_WINDOW_DEFAULTS` from `src/config/arenaWindows.ts` for all Are.na-family launches, routes, and restoration defaults.
-- Are.na API responses use the shared IndexedDB TTL cache.
+- Use `ARENA_WINDOW_DEFAULTS` from `src/config/arenaWindows.ts` in the Application catalog for Are.na-family defaults.
+- `useArenaChannelBrowsing` owns remote/in-memory paging, ordering, cancellation, dedupe, and selection restoration.
+- Are.na responses use the shared `cachedRequest` lifecycle.
 
 ### Storage And Debugging
 
 `src/lib/storage.ts` owns the `appState`, `apiCache`, and `usageStats` IndexedDB stores. Verbose cache messages are disabled by default and controlled through Config > Debug.
+
+Use `usePersistedState` for persisted view state and `cachedRequest` for remote reads. Do not reproduce cache lookup, request accounting, fetch, and cache write in app modules.
 
 ### Version And Updates
 

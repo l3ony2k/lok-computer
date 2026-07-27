@@ -1,235 +1,124 @@
-# Creating New Apps
+# Creating Applications
 
-This guide walks you through creating a new app for lok.computer.
+## 1. Add the app module
 
-## Quick Start
-
-1. Create app folder in `src/apps/your-app/`
-2. Create main component `YourApp.tsx`
-3. Register in `src/config/apps.tsx`
-4. Add route in `src/config/routes.ts` (for deep linking)
-
----
-
-## Step 1: Create the App Component
-
-Create `src/apps/your-app/YourApp.tsx`:
+Create `src/apps/<name>/<Name>App.tsx`. Use `WindowLayout` and the shared retro chrome patterns.
 
 ```tsx
 import { WindowLayout } from '@/components/window/WindowLayout';
 
-interface YourAppProps {
-  // Optional props for session restoration
-  initialTab?: string;
-}
-
-export const YourApp = ({ initialTab = 'home' }: YourAppProps) => {
-  return (
-    <WindowLayout
-      toolbar={<div className="p-1 border-b">Toolbar goes here</div>}
-      footer={<div className="p-1 border-t text-xs">Footer</div>}
-    >
-      <div className="p-4">
-        Your app content here
-      </div>
-    </WindowLayout>
-  );
-};
+export const NotesApp = ({ initialNote }: { initialNote?: string }) => (
+  <WindowLayout>{initialNote ?? 'New note'}</WindowLayout>
+);
 ```
 
-### WindowLayout Props
+App modules may import other modules under `src/apps/`. Code outside `src/apps/` must never import an app module statically.
 
-| Prop | Type | Description |
-|------|------|-------------|
-| `toolbar` | `ReactNode` | Top toolbar area |
-| `footer` | `ReactNode` | Bottom status bar |
-| `hasPadding` | `boolean` | Add padding to content (default: true) |
-| `children` | `ReactNode` | Main content |
+## 2. Add the lazy loader
 
----
-
-## Step 2: Register the App
-
-Add to `src/config/apps.tsx`:
+Add one entry to `APP_MODULE_LOADERS` in `src/config/lazyApps.tsx`, then export its lazy view from the same file.
 
 ```tsx
-import { YourApp } from '@/apps/your-app/YourApp';
+Notes: () => import('@/apps/notes/NotesApp'),
 
-export const APP_LIST: AppConfig[] = [
-  // ... existing apps
-  {
-    name: "Your App",           // Display name
-    iconType: "your-icon",      // Icon identifier (see CustomIcon.tsx)
-    component: YourApp,         // React component
-    defaultWidth: 500,          // Initial window width
-    defaultHeight: 400,         // Initial window height
-    props: {},                  // Default props
-    singleInstance: true,       // Only allow one window
-  },
-];
+export const NotesApp = lazy(() =>
+  APP_MODULE_LOADERS.Notes().then((module) => ({ default: module.NotesApp }))
+);
 ```
 
-### App Config Fields
+Startup warming consumes the loader from the Application catalog; do not add a second preload import.
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `name` | `string` | ✅ | Display name and identifier |
-| `iconType` | `string` | ✅ | Icon key for CustomIcon |
-| `component` | `React.ComponentType` | ✅ | The app component |
-| `defaultWidth` | `number` | ✅ | Initial window width |
-| `defaultHeight` | `number` | ✅ | Initial window height |
-| `props` | `Record<string, any>` | ❌ | Default props |
-| `singleInstance` | `boolean` | ❌ | Prevent duplicate windows |
+## 3. Register the Application
 
----
-
-## Step 3: Add an Icon
-
-Edit `src/components/window/CustomIcon.tsx`:
+Add one definition to `APPLICATIONS` in `src/config/apps.tsx`.
 
 ```tsx
-const ICON_MAP: Record<string, string | { light: string; dark: string }> = {
-  // ... existing icons
-  "your-icon": "/icons/your-icon.png",
-  // Or with dark mode variant:
-  "your-icon": {
-    light: "/icons/your-icon-light.png",
-    dark: "/icons/your-icon-dark.png"
-  },
-};
+Notes: {
+  componentType: 'Notes',
+  name: 'Notes',
+  iconType: 'note',
+  component: NotesApp,
+  loader: APP_MODULE_LOADERS.Notes,
+  defaultWidth: 520,
+  defaultHeight: 460,
+  defaultProps: { initialNote: '' },
+  singleInstance: true,
+  showOnDesktop: true,
+},
 ```
 
-Add icon files to `public/icons/`.
+Dynamic, prop-driven Applications use the same catalog. There is no separate restoration registry.
 
----
+## 4. Add a deep link when needed
 
-## Step 4: Add URL Deep Link (Optional)
-
-Add to `src/config/routes.ts`:
+Routes own only URL-specific knowledge. Window defaults and single-instance behavior come from the catalog.
 
 ```tsx
-export const ROUTES: RouteConfig[] = [
-  // ... existing routes
-  {
-    pattern: 'your-app',
-    componentType: 'Your App',  // Must match name in apps.tsx
-    extractProps: (params, query) => ({
-      initialTab: query.get('tab') || undefined,
-    }),
-    getTitle: () => 'Your App',
-    iconType: 'your-icon',
-    singleInstance: true,
-    defaultWidth: 500,
-    defaultHeight: 400,
-  },
-];
-```
-
-Now users can visit `/your-app` or `/your-app?tab=settings`.
-
----
-
-## Step 5: Add State Persistence (Optional)
-
-Use `usePersistedState` to save state across sessions:
-
-```tsx
-import { usePersistedState } from '@/hooks/useStorage';
-
-export const YourApp = () => {
-  const [activeTab, setActiveTab] = usePersistedState('app:your-app:tab', 'home');
-  
-  // activeTab persists in IndexedDB
-};
-```
-
-Or use `getAppState`/`setAppState` for more complex state:
-
-```tsx
-import { getAppState, setAppState } from '@/lib/storage';
-
-useEffect(() => {
-  getAppState<YourState>('app:your-app:state').then(saved => {
-    if (saved) setState(saved);
-  });
-}, []);
-
-useEffect(() => {
-  setAppState('app:your-app:state', state);
-}, [state]);
-```
-
----
-
-## Common Patterns
-
-### Tabbed Interface
-
-```tsx
-import { RetroButton } from '@/components/ui/RetroButton';
-import { usePersistedState } from '@/hooks/useStorage';
-
-export const TabbedApp = () => {
-  const [activeTab, setActiveTab] = usePersistedState('app:myapp', 'tab1');
-
-  return (
-    <WindowLayout
-      toolbar={
-        <div className="flex p-1 space-x-1 border-b">
-          <RetroButton active={activeTab === 'tab1'} onClick={() => setActiveTab('tab1')}>
-            Tab 1
-          </RetroButton>
-          <RetroButton active={activeTab === 'tab2'} onClick={() => setActiveTab('tab2')}>
-            Tab 2
-          </RetroButton>
-        </div>
-      }
-    >
-      {activeTab === 'tab1' && <Tab1Content />}
-      {activeTab === 'tab2' && <Tab2Content />}
-    </WindowLayout>
-  );
-};
-```
-
-### Loading State
-
-```tsx
-import { StateMessage } from '@/components/ui/StateMessage';
-
-if (loading) {
-  return <StateMessage>Loading...</StateMessage>;
+{
+  pattern: 'notes',
+  componentType: 'Notes',
+  extractProps: (_, query) => ({ initialNote: query.get('note') || undefined }),
+  generateUrl: (props) => props.initialNote
+    ? `/notes?note=${encodeURIComponent(String(props.initialNote))}`
+    : '/notes',
+  getTitle: () => 'Notes',
 }
 ```
 
-### Opening Child Windows
+## Launching another Application
+
+Use the Application launch interface. Do not construct React content or restoration metadata at the call site.
 
 ```tsx
-import { useWindowManager } from '@/hooks/useWindowManager';
+import { useApplicationLauncher } from '@/hooks/useApplicationLauncher';
 
-const { addWindow } = useWindowManager();
+const openApplication = useApplicationLauncher();
 
-const handleOpenDetail = (itemId: number) => {
-  addWindow({
-    title: `Item ${itemId}`,
-    content: <DetailViewer itemId={itemId} />,
-    width: 400,
-    height: 300,
-    iconType: 'detail',
-    componentType: 'DetailViewer',  // For session restoration
-    props: { itemId },              // Serializable props
-  });
-};
+openApplication('ImageViewer', {
+  title: 'Cover',
+  props: { imageUrl },
+});
 ```
 
----
+## Persisting view state
+
+```tsx
+const [view, setView, loading] = usePersistedState({
+  key: 'app:notes:view',
+  defaultValue: { mode: 'list' },
+  debounceMs: 150,
+  normalize: (stored, fallback) => isValidView(stored) ? stored : fallback,
+});
+```
+
+The persisted-state module protects the initial value, handles key changes, and writes after the configured debounce.
+
+## Cached remote reads
+
+Use `cachedRequest` inside the source adapter. React views should not sequence cache, metrics, fetch, and write themselves.
+
+```tsx
+const result = await cachedRequest({
+  cacheKey: `notes:${id}`,
+  ttlMs: CACHE_TTL.NOTES,
+  source: 'notes',
+  load: async () => {
+    const response = await fetch(`/api/notes/${id}`);
+    if (!response.ok) throw new Error('Failed to load note');
+    return response.json() as Promise<Note>;
+  },
+});
+```
 
 ## Checklist
 
-- [ ] Created component in `src/apps/your-app/`
-- [ ] Used `WindowLayout` for consistent structure
-- [ ] Registered in `src/config/apps.tsx`
-- [ ] Added icon to `CustomIcon.tsx` and `public/icons/`
-- [ ] Added route in `src/config/routes.ts` (if deep linking needed)
-- [ ] Used `usePersistedState` for state that should persist
-- [ ] Set `componentType` and `props` when creating child windows
+- [ ] app module added under `src/apps/`
+- [ ] loader and lazy view added in `lazyApps.tsx`
+- [ ] complete definition added to the Application catalog
+- [ ] icon supported by `CustomIcon`
+- [ ] optional route contains URL knowledge only
+- [ ] nested launches use `useApplicationLauncher`
+- [ ] persisted state uses `usePersistedState`
+- [ ] remote reads use `cachedRequest`
+- [ ] `bun run lint` passes
+- [ ] `bun run build` passes

@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef, ComponentType } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useWindowActions, useWindowState } from '@/hooks/useWindowManager';
+import { useApplicationLauncher } from '@/hooks/useApplicationLauncher';
 import { useTheme } from 'next-themes';
 import { APP_LIST } from '@/config/apps';
 import { WindowLayout } from '@/components/window/WindowLayout';
@@ -103,7 +104,8 @@ export const ConsoleApp: React.FC = () => {
   const consoleEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { windows } = useWindowState();
-  const { addWindow, addOrFocusWindow, closeWindow } = useWindowActions();
+  const { closeWindow } = useWindowActions();
+  const openApplication = useApplicationLauncher();
   const { theme, setTheme } = useTheme();
 
   // Add auto-focus effect
@@ -155,28 +157,7 @@ export const ConsoleApp: React.FC = () => {
             }
             const appToOpen = APP_LIST.find(app => app.name.toLowerCase() === appName.toLowerCase());
             if (appToOpen) {
-              if (appToOpen.singleInstance) {
-                addOrFocusWindow({
-                  title: appToOpen.name,
-                  content: React.createElement(appToOpen.component as ComponentType),
-                  iconType: appToOpen.iconType,
-                  width: appToOpen.defaultWidth || 600,
-                  height: appToOpen.defaultHeight || 400,
-                  minWidth: 300,
-                  minHeight: 200,
-                  singleInstance: true
-                });
-              } else {
-                addWindow({
-                  title: appToOpen.name,
-                  content: React.createElement(appToOpen.component as ComponentType),
-                  iconType: appToOpen.iconType,
-                  width: appToOpen.defaultWidth || 600,
-                  height: appToOpen.defaultHeight || 400,
-                  minWidth: 300,
-                  minHeight: 200
-                });
-              }
+              openApplication(appToOpen.componentType);
               console.info(`Opened ${appToOpen.name}`);
             } else {
               console.error(`App "${appName}" not found`);

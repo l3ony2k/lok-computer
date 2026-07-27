@@ -150,7 +150,7 @@ if (url.pathname === '/api/your-endpoint') {
 
 2. Add environment variable to `wrangler.toml` (dev) or secrets (prod)
 
-3. Create client API function in `src/lib/api.ts` or app component
+3. Create a source adapter in `src/lib/api.ts` or the owning app module
 
 ---
 
@@ -175,15 +175,19 @@ export const CACHE_TTL = {
 ### Usage
 
 ```typescript
-import { getCachedData, setCachedData, CACHE_TTL } from '@/lib/storage';
+import { cachedRequest } from '@/lib/cachedRequest';
+import { CACHE_TTL } from '@/lib/storage';
 
-// Check cache
-const cached = await getCachedData<YourType>(cacheKey);
-if (cached) return cached;
-
-// Fetch and cache
-const data = await fetch(...);
-await setCachedData(cacheKey, data, CACHE_TTL.YOUR_TTL);
+const data = await cachedRequest({
+  cacheKey,
+  ttlMs: CACHE_TTL.YOUR_TTL,
+  source: 'your-source',
+  load: async () => {
+    const response = await fetch(...);
+    if (!response.ok) throw new Error('Request failed');
+    return response.json() as Promise<YourType>;
+  },
+});
 ```
 
 ---
@@ -194,7 +198,7 @@ Are.na API is public and called directly:
 
 ```typescript
 // src/lib/api.ts
-const API_BASE_URL = "https://api.are.na/v2";
+const API_BASE_URL = "https://api.are.na/v3";
 
 await fetch(`${API_BASE_URL}/channels/${channelSlug}`);
 ```

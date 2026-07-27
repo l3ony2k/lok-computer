@@ -7,9 +7,9 @@
 
 import { useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useWindowActions, useWindowState } from '@/hooks/useWindowManager';
+import { useWindowState } from '@/hooks/useWindowManager';
+import { useApplicationLauncher } from '@/hooks/useApplicationLauncher';
 import { matchRoute, parseWindowSpec, ROUTES } from '@/config/routes';
-import { WINDOW_DEFAULTS } from '@/config/window';
 
 interface RouteInterpreterProps {
     /** Called when route interpretation is complete */
@@ -20,7 +20,7 @@ export const RouteInterpreter = ({ onComplete }: RouteInterpreterProps) => {
     const location = useLocation();
     const navigate = useNavigate();
     const { isSessionRestored } = useWindowState();
-    const { addWindow, addOrFocusWindow } = useWindowActions();
+    const openApplication = useApplicationLauncher();
     const hasProcessed = useRef(false);
 
     useEffect(() => {
@@ -38,42 +38,15 @@ export const RouteInterpreter = ({ onComplete }: RouteInterpreterProps) => {
             params: Record<string, string>,
             query: URLSearchParams
         ) => {
-            const { getComponentConfigAsync, createComponentElementAsync } = await import('@/config/componentRegistry');
             const props = route.extractProps(params, query);
             const title = route.getTitle(props);
 
-            // Get component config for defaults
-            const config = await getComponentConfigAsync(route.componentType);
-            if (!config) {
-                console.error(`[RouteInterpreter] Unknown component type: ${route.componentType}`);
-                return;
-            }
-
-            // Create the component element
-            const content = await createComponentElementAsync(route.componentType, props);
-            if (!content) {
-                console.error(`[RouteInterpreter] Failed to create component: ${route.componentType}`);
-                return;
-            }
-
-            const windowConfig = {
+            const windowId = openApplication(route.componentType, {
                 title,
-                content,
-                iconType: route.iconType,
-                width: route.defaultWidth ?? config.defaultWidth ?? WINDOW_DEFAULTS.DEFAULT_WIDTH,
-                height: route.defaultHeight ?? config.defaultHeight ?? WINDOW_DEFAULTS.DEFAULT_HEIGHT,
-                minWidth: WINDOW_DEFAULTS.MIN_WIDTH,
-                minHeight: WINDOW_DEFAULTS.MIN_HEIGHT,
-                componentType: route.componentType,
                 props,
-                singleInstance: route.singleInstance,
-            };
+            });
 
-            if (route.singleInstance) {
-                addOrFocusWindow(windowConfig);
-            } else {
-                addWindow(windowConfig);
-            }
+            if (!windowId) return;
 
             console.info(`[RouteInterpreter] Opened window: ${title} (${route.componentType})`);
         };
@@ -133,7 +106,7 @@ export const RouteInterpreter = ({ onComplete }: RouteInterpreterProps) => {
         };
 
         processRoute();
-    }, [isSessionRestored, location.pathname, location.search, navigate, onComplete, addWindow, addOrFocusWindow]);
+    }, [isSessionRestored, location.pathname, location.search, navigate, onComplete, openApplication]);
 
     // This component doesn't render anything
     return null;

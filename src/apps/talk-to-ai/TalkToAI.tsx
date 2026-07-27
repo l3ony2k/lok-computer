@@ -28,7 +28,11 @@ const MOCK_RESPONSES = [
 
 export const TalkToAI = () => {
   // Using usePersistedState hook instead of manual load/save useEffects
-  const [messages, setMessages] = usePersistedState<Message[]>(APP_STATE_KEY, INITIAL_MESSAGES);
+  const [messages, setMessages] = usePersistedState<Message[]>({
+    key: APP_STATE_KEY,
+    defaultValue: INITIAL_MESSAGES,
+    debounceMs: 150,
+  });
   const [input, setInput] = useState('');
   const [confirmClear, setConfirmClear] = useState(false);
   const [latestAiMessageId, setLatestAiMessageId] = useState<string | null>(null);

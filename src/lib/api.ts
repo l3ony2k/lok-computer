@@ -9,8 +9,8 @@ import {
 } from "@/types/arena";
 import { toast } from "sonner";
 import { DEFAULT_USERNAME, FEATURED_CHANNELS, USE_STATIC_CHANNELS } from "@/config/channels";
-import { CACHE_TTL, getCachedData, incrementRequestCount, setCachedData } from "@/lib/storage";
-import { cacheDebugLog } from "@/lib/debug";
+import { CACHE_TTL } from "@/lib/storage";
+import { cachedRequest } from "@/lib/cachedRequest";
 import {
   RawArenaItem,
   RawArenaListResponse,
@@ -61,32 +61,22 @@ function buildArenaUrl(path: string, params?: Record<string, string | number | u
 
 async function fetchArenaJson<T>(path: string, params?: Record<string, string | number | undefined>, options?: RequestOptions): Promise<T> {
   const url = buildArenaUrl(path, params);
+  const load = async () => {
+    const response = await fetch(url, { signal: options?.signal });
+    if (!response.ok) throw new Error(`Are.na request failed (${response.status})`);
+    return response.json() as Promise<T>;
+  };
 
-  if (options?.cacheKey) {
-    const cached = await getCachedData<T>(options.cacheKey);
-    if (cached) {
-      cacheDebugLog(`[Cache] Hit: ${options.cacheKey}`);
-      return cached;
-    }
+  if (!options?.cacheKey || !options.ttlMs) {
+    return load();
   }
 
-  await incrementRequestCount("arena");
-
-  const response = await fetch(url, {
-    signal: options?.signal,
+  return cachedRequest({
+    cacheKey: options.cacheKey,
+    ttlMs: options.ttlMs,
+    source: 'arena',
+    load,
   });
-
-  if (!response.ok) {
-    throw new Error(`Are.na request failed (${response.status})`);
-  }
-
-  const data = (await response.json()) as T;
-
-  if (options?.cacheKey && options.ttlMs) {
-    await setCachedData(options.cacheKey, data, options.ttlMs);
-  }
-
-  return data;
 }
 
 function createStaticOwner(username: string): RawOwner {

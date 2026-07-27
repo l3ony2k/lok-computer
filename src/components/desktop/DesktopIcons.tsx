@@ -1,15 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { CustomIcon } from '@/components/window/CustomIcon';
-import type { WindowManagerActionsContextType } from '@/hooks/useWindowManager';
+import { useApplicationLauncher } from '@/hooks/useApplicationLauncher';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { APP_LIST, type AppConfig } from '@/config/apps';
-
-interface DesktopIconsProps {
-  addWindow: WindowManagerActionsContextType['addWindow'];
-  addOrFocusWindow: WindowManagerActionsContextType['addOrFocusWindow'];
-  handleOpenAbout: () => void;
-  handleOpenSettingsWindow: () => void;
-}
 
 interface DesktopIconProps {
   app: AppConfig;
@@ -68,13 +61,9 @@ const DesktopIcon: React.FC<DesktopIconProps> = ({ app, onOpen, isSelected, onSe
   );
 };
 
-export const DesktopIcons: React.FC<DesktopIconsProps> = React.memo(({
-  addWindow,
-  addOrFocusWindow,
-  handleOpenAbout,
-  handleOpenSettingsWindow
-}) => {
+export const DesktopIcons: React.FC = React.memo(() => {
   const isMobile = useIsMobile();
+  const openApplication = useApplicationLauncher();
   const [selectedApp, setSelectedApp] = useState<string | null>(null);
 
   useEffect(() => {
@@ -92,38 +81,8 @@ export const DesktopIcons: React.FC<DesktopIconsProps> = React.memo(({
     return () => document.removeEventListener('pointerdown', dismissSelection);
   }, []);
 
-  const getActionForApp = (app: AppConfig) => {
-    switch (app.name) {
-      case "About":
-        return handleOpenAbout;
-      case "Config":
-        return handleOpenSettingsWindow;
-      default:
-        return () => {
-          if (app.singleInstance) {
-            addOrFocusWindow({
-              title: app.name,
-              content: <app.component {...(app.props || {})} />,
-              width: app.defaultWidth,
-              height: app.defaultHeight,
-              iconType: app.iconType,
-              singleInstance: true,
-              componentType: app.name,
-              props: app.props,
-            });
-          } else {
-            addWindow({
-              title: app.name,
-              content: <app.component {...(app.props || {})} />,
-              width: app.defaultWidth,
-              height: app.defaultHeight,
-              iconType: app.iconType,
-              componentType: app.name,
-              props: app.props,
-            });
-          }
-        };
-    }
+  const getActionForApp = (app: AppConfig) => () => {
+    openApplication(app.componentType);
   };
 
   return (

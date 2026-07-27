@@ -1,11 +1,12 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { WindowLayout } from '@/components/window/WindowLayout';
 import { StateMessage } from '@/components/ui/StateMessage';
 import { RetroButton } from '@/components/ui/RetroButton';
 import { APP_CONFIG } from '@/config/constants';
-import { getCachedData, setCachedData, incrementRequestCount, getAppState, setAppState, CACHE_TTL } from '@/lib/storage';
-import { cacheDebugLog } from '@/lib/debug';
+import { CACHE_TTL } from '@/lib/storage';
+import { cachedRequest } from '@/lib/cachedRequest';
+import { usePersistedState } from '@/hooks/useStorage';
 
 const APP_STATE_KEY = 'app:weather';
 interface WeatherAppState {
@@ -113,88 +114,45 @@ const normalizeWeatherResponse = (responseText: string, contentType: string | nu
 
 export const WeatherApp: React.FC = () => {
   const [searchInput, setSearchInput] = useState<string>('');
-  const [query, setQuery] = useState<string>('');
-  const isInitialLoad = useRef(true);
+  const [weatherState, setWeatherState, stateLoading] = usePersistedState<WeatherAppState>({
+    key: APP_STATE_KEY,
+    defaultValue: { lastQuery: '' },
+    debounceMs: 150,
+    normalize: (stored, fallback) => {
+      if (!stored || typeof stored !== 'object') return fallback;
+      const lastQuery = (stored as Partial<WeatherAppState>).lastQuery;
+      return { lastQuery: typeof lastQuery === 'string' ? lastQuery : fallback.lastQuery };
+    },
+  });
+  const query = weatherState.lastQuery;
 
-  // Load persisted state on mount
   useEffect(() => {
-    let mounted = true;
-
-    const loadState = async () => {
-      try {
-        const saved = await getAppState<WeatherAppState>(APP_STATE_KEY);
-        if (mounted && saved && saved.lastQuery) {
-          setQuery(saved.lastQuery);
-          setSearchInput(saved.lastQuery);
-        }
-      } catch (error) {
-        console.error('[WeatherApp] Failed to load state:', error);
-      } finally {
-        if (mounted) {
-          isInitialLoad.current = false;
-        }
-      }
-    };
-
-    loadState();
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  // Save state when query changes
-  useEffect(() => {
-    if (isInitialLoad.current) return;
-
-    const saveState = async () => {
-      try {
-        await setAppState<WeatherAppState>(APP_STATE_KEY, { lastQuery: query });
-      } catch (error) {
-        console.error('[WeatherApp] Failed to save state:', error);
-      }
-    };
-
-    saveState();
-  }, [query]);
+    if (!stateLoading) setSearchInput(query);
+  }, [query, stateLoading]);
 
   const fetchWeather = async (location: string) => {
-    const cacheKey = `weather:text-v3:${location || 'auto'}`;
-
-    // Check cache first
-    const cached = await getCachedData<string>(cacheKey);
-    if (cached) {
-      cacheDebugLog(`[Cache] Hit: weather:${location || 'auto'}`);
-      return cached;
-    }
-
-    console.log(`[API:Weather] GET ${location || 'auto'}`);
-    await incrementRequestCount('weather');
-
-    const url = location
-      ? `${APP_CONFIG.WEATHER_API_URL}/${encodeURIComponent(location)}?2dFq`
-      : `${APP_CONFIG.WEATHER_API_URL}/?2dFq`;
-
-    console.log('[API:Weather] Request:', url);
-    const response = await fetch(url, {
-      headers: { Accept: 'text/plain' },
+    const cacheKey = `weather:text-v4:${location || 'auto'}`;
+    return cachedRequest({
+      cacheKey,
+      ttlMs: CACHE_TTL.WEATHER,
+      source: 'weather',
+      debugLabel: `weather:${location || 'auto'}`,
+      load: async () => {
+        console.log(`[API:Weather] GET ${location || 'auto'}`);
+        const url = location
+          ? `${APP_CONFIG.WEATHER_API_URL}/${encodeURIComponent(location)}?2dFqA`
+          : `${APP_CONFIG.WEATHER_API_URL}/?2dFqA`;
+        console.log('[API:Weather] Request:', url);
+        const response = await fetch(url, { headers: { Accept: 'text/plain' } });
+        if (!response.ok) throw new Error(`Weather data not available (${response.status})`);
+        const responseText = await response.text();
+        return normalizeWeatherResponse(responseText, response.headers.get('content-type'));
+      },
     });
-
-    if (!response.ok) {
-      throw new Error(`Weather data not available (${response.status})`);
-    }
-
-    const responseText = await response.text();
-    const weatherText = normalizeWeatherResponse(responseText, response.headers.get('content-type'));
-
-    // Store in cache
-    await setCachedData(cacheKey, weatherText, CACHE_TTL.WEATHER);
-
-    return weatherText;
   };
 
   const { data: weatherData, isLoading, error } = useQuery({
-    queryKey: ['weather', 'text-v3', query],
+    queryKey: ['weather', 'text-v4', query],
     queryFn: () => fetchWeather(query),
     staleTime: CACHE_TTL.WEATHER,
     retry: 1,
@@ -206,10 +164,10 @@ export const WeatherApp: React.FC = () => {
     const trimmedQuery = searchInput.trim();
     if (trimmedQuery) {
       console.log('[App:Weather] Search:', trimmedQuery);
-      setQuery(trimmedQuery);
+      setWeatherState({ lastQuery: trimmedQuery });
     } else {
       console.warn('[Weather] Empty search query, fetching default location');
-      setQuery('');
+      setWeatherState({ lastQuery: '' });
     }
   };
 

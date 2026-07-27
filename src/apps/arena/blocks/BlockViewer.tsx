@@ -1,10 +1,7 @@
 import { ArenaBlock, ArenaChannel, ArenaConnection } from "@/types/arena";
 import { ArenaDetailPanel } from "../components/ArenaDetailPanel";
 import { ArenaWindowLayout } from "../components/ArenaWindowLayout";
-import { useWindowActions } from "@/hooks/useWindowManager";
-import { ARENA_WINDOW_DEFAULTS } from "@/config/arenaWindows";
-import { ImageViewerApp } from "@/apps/imageviewer/ImageViewerApp";
-import { ChannelExplorer } from "@/config/lazyApps";
+import { useApplicationLauncher } from "@/hooks/useApplicationLauncher";
 
 interface BlockViewerProps {
   blockId: number | string;
@@ -19,28 +16,19 @@ export const BlockViewer = ({
   initialBlock,
   initialConnection,
 }: BlockViewerProps) => {
-  const { addWindow } = useWindowActions();
+  const openApplication = useApplicationLauncher();
 
   const openImage = (imageUrl: string, title: string) => {
-    addWindow({
+    openApplication('ImageViewer', {
       title,
-      content: <ImageViewerApp imageUrl={imageUrl} />,
-      width: 800,
-      height: 600,
-      iconType: "image",
-      componentType: "ImageViewer",
       props: { imageUrl },
     });
   };
 
   const openChannel = (channel: ArenaChannel) => {
-    addWindow({
+    openApplication('ChannelExplorer', {
       title: channel.title || "Channel",
-      content: <ChannelExplorer channelSlug={channel.slug} username={channel.owner?.slug || "lok"} />,
-      width: ARENA_WINDOW_DEFAULTS.channelExplorer.width,
-      height: ARENA_WINDOW_DEFAULTS.channelExplorer.height,
       iconType: "other-channel",
-      componentType: "ChannelExplorer",
       props: { channelSlug: channel.slug, username: channel.owner?.slug || "lok" },
     });
   };

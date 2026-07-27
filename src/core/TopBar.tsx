@@ -1,12 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { AppMenu, AppMenuItem } from '@/components/menu/AppMenu';
-import { useWindowActions } from '@/hooks/useWindowManager';
+import { useApplicationLauncher } from '@/hooks/useApplicationLauncher';
 import { APP_LIST } from '@/config/apps';
 import { getUserChannels } from '@/lib/api';
 import { ArenaChannel } from '@/types/arena';
-import { ChannelExplorer, WebBrowser } from '@/config/lazyApps';
 import { Calendar } from '@/components/calendar/Calendar';
-import { ARENA_WINDOW_DEFAULTS } from '@/config/arenaWindows';
 
 interface LinkAppItem {
   title: string;
@@ -21,7 +19,7 @@ export const TopBar: React.FC = React.memo(() => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isAppMenuOpen, setIsAppMenuOpen] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  const { addWindow, addOrFocusWindow } = useWindowActions();
+  const openApplication = useApplicationLauncher();
   const [arenaChannels, setArenaChannels] = useState<ArenaChannel[]>([]);
 
   useEffect(() => {
@@ -46,31 +44,7 @@ export const TopBar: React.FC = React.memo(() => {
     const baseItem: AppMenuItem = {
       name: app.name,
       iconType: app.iconType,
-      action: () => {
-        if (app.singleInstance) {
-          addOrFocusWindow({
-            title: app.name,
-            content: <app.component {...(app.props || {})} />,
-            width: app.defaultWidth,
-            height: app.defaultHeight,
-            iconType: app.iconType,
-            singleInstance: true,
-            componentType: app.name,
-            props: app.props,
-          });
-          return;
-        }
-
-        addWindow({
-          title: app.name,
-          content: <app.component {...(app.props || {})} />,
-          width: app.defaultWidth,
-          height: app.defaultHeight,
-          iconType: app.iconType,
-          componentType: app.name,
-          props: app.props,
-        });
-      },
+      action: () => openApplication(app.componentType),
       subItems: [],
     };
 
@@ -79,13 +53,9 @@ export const TopBar: React.FC = React.memo(() => {
       baseItem.subItems = arenaChannels.map((channel) => ({
         name: channel.title,
         iconType: 'folder',
-        action: () => addWindow({
+        action: () => openApplication('ChannelExplorer', {
           title: channel.title,
-          content: <ChannelExplorer channelSlug={channel.slug} username={username} />,
-          width: ARENA_WINDOW_DEFAULTS.channelExplorer.width,
-          height: ARENA_WINDOW_DEFAULTS.channelExplorer.height,
           iconType: 'folder',
-          componentType: 'ChannelExplorer',
           props: { channelSlug: channel.slug, username },
         }),
       }));
@@ -95,13 +65,9 @@ export const TopBar: React.FC = React.memo(() => {
       baseItem.subItems = (app.props.items as LinkAppItem[]).map((item) => ({
         name: item.title,
         iconType: 'link',
-        action: () => addWindow({
+        action: () => openApplication('Web', {
           title: item.title,
-          content: <WebBrowser initialUrl={item.source.url} />,
-          width: 800,
-          height: 600,
           iconType: 'link',
-          componentType: 'Web',
           props: { initialUrl: item.source.url },
         }),
       }));
@@ -109,7 +75,7 @@ export const TopBar: React.FC = React.memo(() => {
 
     if (baseItem.subItems.length > 0) baseItem.action = undefined;
     return baseItem;
-  }), [addOrFocusWindow, addWindow, arenaChannels]);
+  }), [arenaChannels, openApplication]);
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });

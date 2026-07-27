@@ -1,166 +1,81 @@
-# URL Routing & Deep Links
+# URL Routing and Deep Links
 
-Users can open apps directly via URL.
+React Router is an interpreter. It matches a URL, launches one or more Applications after session restoration, then replaces the URL with `/`.
 
-## URL Schema
+## URL forms
 
-| Pattern | Example | Opens |
-|---------|---------|-------|
-| `/<app>` | `/about` | About app |
-| `/<app>/<param>` | `/explorer/ephemeral-visual` | Channel Explorer |
-| `/<app>?query` | `/about?tab=projects` | About with tab |
-| `/open?w=a,b` | `/open?w=about,config` | Multiple windows |
+| Form | Example |
+|---|---|
+| static Application | `/about` |
+| parametric Application | `/explorer/ephemeral-visual` |
+| query state | `/about?tab=projects` |
+| multiple Applications | `/open?w=about,config,explorer/ephemeral-visual` |
 
----
+## Route responsibility
 
-## Supported Routes
+`src/config/routes.ts` owns only:
 
-| URL | Component | Props |
-|-----|-----------|-------|
-| `/about` | About | `initialTab` |
-| `/config` | Config | - |
-| `/arena` | Are.na | `username` |
-| `/shelf` | Shelf | `initialTab`, `initialPage` |
-| `/guestbook` | Guestbook | - |
-| `/ai` | AI Talk | - |
-| `/weather` | Weather | - |
-| `/bsky` | Bsky | - |
-| `/fedi` | Fedi | - |
-| `/links` | Links | - |
-| `/console` | Console | - |
-| `/web` | Web | `initialUrl` |
-| `/explorer/:channelSlug` | ChannelExplorer | `channelSlug`, `view`, `size`, `preview`, `block` |
-| `/block/:blockId` | BlockViewer | `blockId` |
-| `/image` | ImageViewer | `url` |
+- path matching
+- URL parameter extraction
+- URL generation
+- contextual window title
 
----
+Icon, dimensions, lazy view, default props, and single-instance behavior come from the Application catalog.
 
-## Query Parameters
-
-### Channel Explorer
-```
-/explorer/ephemeral-visual?view=list&size=L&preview=horizontal
-```
-
-| Param | Values | Description |
-|-------|--------|-------------|
-| `view` | `list`, `grid` | View mode |
-| `size` | `S`, `M`, `L` | Icon size |
-| `preview` | `off`, `horizontal`, `vertical` | Preview panel |
-| `block` | `number` | Selected block ID |
-
-### Tabbed Apps
-```
-/about?tab=projects
-/shelf?tab=movie&page=2
-```
-
-| Param | Values | Description |
-|-------|--------|-------------|
-| `tab` | string | Active tab ID |
-| `page` | number | Page number (Shelf only) |
-
-### Web Browser
-```
-/web?url=https://example.com
-```
-
----
-
-## Multi-Window URLs
-
-Open multiple windows at once:
-
-```
-/open?w=about,config,explorer/ephemeral-visual
-```
-
-Each window spec can include query params:
-```
-/open?w=about?tab=projects,shelf?tab=movie
-```
-
----
-
-## Implementation
-
-### Route Configuration
-Defined in `src/config/routes.ts`:
-
-```typescript
-export const ROUTES: RouteConfig[] = [
-  {
-    pattern: 'explorer/:channelSlug',
-    componentType: 'ChannelExplorer',
-    extractProps: (params, query) => ({
-      channelSlug: params.channelSlug,
-      initialGridSize: query.get('size'),
-      initialIsListView: query.get('view') === 'list',
-      initialPreviewMode: query.get('preview'),
-      initialSelectedBlockId: query.get('block'),
-    }),
-    generateUrl: (props) => {
-      // Logic to reconstruct URL with query params
-    },
-    iconType: 'folder',
-    // ...
-  },
-];
-```
-
-### RouteInterpreter
-Located at `src/components/RouteInterpreter.tsx`.
-
-Behavior:
-1. Waits for `isSessionRestored` (cached windows load first)
-2. Parses URL path and query params
-3. Matches against routes
-4. Calls `addOrFocusWindow()` for each match
-5. Navigates to `/` (cleans URL)
-
----
-
-## Adding New Routes
-
-1. Edit `src/config/routes.ts`:
-
-```typescript
+```ts
 {
-  pattern: 'your-app',
-  componentType: 'Your App',  // Must match name in apps.tsx
+  pattern: 'explorer/:channelSlug',
+  componentType: 'ChannelExplorer',
   extractProps: (params, query) => ({
-    someParam: query.get('param'),
+    channelSlug: params.channelSlug,
+    initialGridSize: query.get('size'),
+    initialIsListView: query.get('view') === 'list',
+    initialPreviewMode: query.get('preview'),
+    initialSelectedBlockId: query.get('block')
+      ? Number(query.get('block'))
+      : undefined,
   }),
-  getTitle: () => 'Your App',
-  iconType: 'your-icon',
-  singleInstance: true,
+  generateUrl: (props) => {
+    // Reconstruct the shareable URL.
+  },
+  getTitle: (props) => String(props.channelSlug || 'Channel'),
 }
 ```
 
-2. If parametric route:
+## Route interpreter
 
-```typescript
-{
-  pattern: 'your-app/:itemId',
-  extractProps: (params) => ({
-    itemId: params.itemId,
-  }),
-  getTitle: (props) => `Item ${props.itemId}`,
-}
-```
+`RouteInterpreter`:
 
----
+1. waits for `isSessionRestored`
+2. parses the single or multi-window URL
+3. matches route definitions
+4. calls `useApplicationLauncher`
+5. replaces the URL with `/`
 
-## Behavior
+Deep-linked windows append to the restored Window session.
 
-### Session Preservation
-URL windows open **on top of** cached windows. Existing session is not cleared.
+## Supported routes
 
-### Single Instance
-Apps marked `singleInstance: true` will focus existing window instead of creating duplicate.
+| URL | Application props |
+|---|---|
+| `/about` | `initialTab` |
+| `/config` | none |
+| `/arena` | `username` |
+| `/shelf` | `initialTab`, `initialPage` |
+| `/guestbook` | none |
+| `/ai` | none |
+| `/weather` | none |
+| `/bsky` | none |
+| `/fedi` | none |
+| `/links` | none |
+| `/console` | none |
+| `/web` | `initialUrl` |
+| `/explorer/:channelSlug` | view, size, preview, selected block |
+| `/block/:blockId` | `blockId` |
+| `/image?url=...` | `imageUrl` |
 
-### URL Cleanup
-After processing, URL resets to `/`. This:
-- Keeps URL clean
-- Prevents re-opening on refresh
-- Maintains shareable link on first load
+## Adding a route
+
+1. Ensure the Application exists in `APPLICATIONS`.
+2. Add route-specific parsing and generation to `ROUTES`.
+3. Do not repeat catalog metadata in the route.

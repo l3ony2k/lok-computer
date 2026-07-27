@@ -258,7 +258,10 @@ interface AboutProps {
 }
 
 export const About: React.FC<AboutProps> = ({ initialTab, onPropsChange }) => {
-  const [activeTab, setActiveTab] = usePersistedState(APP_STATE_KEY, initialTab || "about-this");
+  const [activeTab, setActiveTab] = usePersistedState({
+    key: APP_STATE_KEY,
+    defaultValue: initialTab || "about-this",
+  });
 
   // Deep link priority: override persisted state if initialTab is provided and differs.
   // Intentionally runs only when initialTab changes — including activeTab in the deps

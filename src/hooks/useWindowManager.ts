@@ -1,9 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { ReactNode } from "react";
 import { WINDOW_DEFAULTS } from "@/config/window";
+import { createApplicationElement, getApplicationDefinition } from "@/config/apps";
 import { getAppState, setAppState, deleteAppState } from "@/lib/storage";
-// Note: componentRegistry is imported dynamically to avoid circular dependency
-// (componentRegistry imports apps → apps import the window hooks)
 
 // Storage keys
 const WINDOW_SESSION_KEY = 'windowSession';
@@ -62,8 +61,6 @@ export interface WindowManagerStateContextType {
 }
 
 export interface WindowManagerActionsContextType {
-  addWindow: (window: WindowInput) => string;
-  addOrFocusWindow: (window: WindowInput & { singleInstance?: boolean }) => string;
   closeWindow: (id: string) => void;
   minimizeWindow: (id: string) => void;
   maximizeWindow: (id: string) => void;
@@ -74,13 +71,19 @@ export interface WindowManagerActionsContextType {
   updateWindowProps: (id: string, props: Record<string, unknown>) => void;
 }
 
+export interface WindowManagerLaunchContextType {
+  addOrFocusWindow: (window: WindowInput & { singleInstance?: boolean }) => string;
+}
+
 export interface WindowManagerController {
   state: WindowManagerStateContextType;
   actions: WindowManagerActionsContextType;
+  launchActions: WindowManagerLaunchContextType;
 }
 
 export const WindowManagerStateContext = createContext<WindowManagerStateContextType | undefined>(undefined);
 export const WindowManagerActionsContext = createContext<WindowManagerActionsContextType | undefined>(undefined);
+export const WindowManagerLaunchContext = createContext<WindowManagerLaunchContextType | undefined>(undefined);
 
 export const useWindowState = () => {
   const context = useContext(WindowManagerStateContext);
@@ -91,6 +94,12 @@ export const useWindowState = () => {
 export const useWindowActions = () => {
   const context = useContext(WindowManagerActionsContext);
   if (!context) throw new Error("useWindowActions must be used within WindowManagerProvider");
+  return context;
+};
+
+export const useWindowLaunchActions = () => {
+  const context = useContext(WindowManagerLaunchContext);
+  if (!context) throw new Error("useWindowLaunchActions must be used within WindowManagerProvider");
   return context;
 };
 
@@ -139,16 +148,13 @@ export const useWindowManagerController = (): WindowManagerController => {
         if (mounted && session && session.windows.length > 0) {
           console.info(`[Session] Restoring ${session.windows.length} windows`);
 
-          // Dynamic import to avoid circular dependency + use async versions
-          const { getComponentConfigAsync, createComponentElementAsync } = await import("@/config/componentRegistry");
-
           const restoredWindows: Window[] = [];
           let maxZIndex = session.lastZIndex || 1000;
 
           for (const savedWindow of session.windows) {
-            const componentConfig = await getComponentConfigAsync(savedWindow.componentType);
+            const application = getApplicationDefinition(savedWindow.componentType);
 
-            if (componentConfig) {
+            if (application) {
               // Create a callback for this window to update its props
               const windowId = savedWindow.id;
               const onPropsChange = (newProps: Record<string, unknown>) => {
@@ -158,7 +164,7 @@ export const useWindowManagerController = (): WindowManagerController => {
               };
 
               // Create the window content from component registry with the callback
-              const content = await createComponentElementAsync(
+              const content = createApplicationElement(
                 savedWindow.componentType,
                 savedWindow.props,
                 onPropsChange
@@ -170,11 +176,11 @@ export const useWindowManagerController = (): WindowManagerController => {
                   title: savedWindow.title,
                   content,
                   componentType: savedWindow.componentType,
-                  iconType: savedWindow.iconType || componentConfig.defaultIcon,
+                  iconType: savedWindow.iconType || application.iconType,
                   x: savedWindow.x,
                   y: savedWindow.y,
-                  width: savedWindow.width || componentConfig.defaultWidth,
-                  height: savedWindow.height || componentConfig.defaultHeight,
+                  width: savedWindow.width || application.defaultWidth,
+                  height: savedWindow.height || application.defaultHeight,
                   minimized: savedWindow.minimized || false,
                   maximized: savedWindow.maximized || false,
                   wasMaximized: false,
@@ -433,8 +439,6 @@ export const useWindowManagerController = (): WindowManagerController => {
   }), [windows, activeWindow, isSessionRestored]);
 
   const actions = useMemo<WindowManagerActionsContextType>(() => ({
-    addWindow,
-    addOrFocusWindow,
     closeWindow,
     minimizeWindow,
     maximizeWindow,
@@ -444,8 +448,6 @@ export const useWindowManagerController = (): WindowManagerController => {
     updateWindowDimensions,
     updateWindowProps,
   }), [
-    addWindow,
-    addOrFocusWindow,
     closeWindow,
     minimizeWindow,
     maximizeWindow,
@@ -456,5 +458,9 @@ export const useWindowManagerController = (): WindowManagerController => {
     updateWindowProps,
   ]);
 
-  return useMemo(() => ({ state, actions }), [state, actions]);
+  const launchActions = useMemo<WindowManagerLaunchContextType>(() => ({
+    addOrFocusWindow,
+  }), [addOrFocusWindow]);
+
+  return useMemo(() => ({ state, actions, launchActions }), [state, actions, launchActions]);
 };

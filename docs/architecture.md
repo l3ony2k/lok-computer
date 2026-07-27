@@ -1,197 +1,92 @@
 # Architecture
 
-## System Overview
+lok.computer is a single-page React desktop. React Router interprets a deep link, launches Applications, then returns the browser URL to `/`.
 
-lok.computer is a single-page application (SPA) that simulates a desktop environment in the browser.
+## Deep modules
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                      Browser                             │
-│  ┌───────────────────────────────────────────────────┐  │
-│  │                    React App                       │  │
-│  │  ┌─────────────────────────────────────────────┐  │  │
-│  │  │              WindowManager                   │  │  │
-│  │  │  ┌─────────┐ ┌─────────┐ ┌─────────┐       │  │  │
-│  │  │  │ Window  │ │ Window  │ │ Window  │       │  │  │
-│  │  │  │ (App)   │ │ (App)   │ │ (App)   │       │  │  │
-│  │  │  └─────────┘ └─────────┘ └─────────┘       │  │  │
-│  │  └─────────────────────────────────────────────┘  │  │
-│  │  ┌─────────────────────────────────────────────┐  │  │
-│  │  │              IndexedDB (Storage)             │  │  │
-│  │  └─────────────────────────────────────────────┘  │  │
-│  └───────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────┘
-                           │
-                           ▼
-            ┌──────────────────────────┐
-            │   Cloudflare Worker      │
-            │   (API Proxy)            │
-            └──────────────────────────┘
-                           │
-           ┌───────────────┼───────────────┐
-           ▼               ▼               ▼
-      ┌─────────┐    ┌─────────┐    ┌─────────┐
-      │ Are.na  │    │ Bluesky │    │  Fedi   │
-      │   API   │    │   API   │    │   API   │
-      └─────────┘    └─────────┘    └─────────┘
+```text
+Route / Desktop / Top bar / Console / nested Application
+                         │
+                         ▼
+               Application launch module
+                         │
+              ┌──────────┴──────────┐
+              ▼                     ▼
+       Application catalog      Window manager
+       identity + loader        live state + session
+       defaults + props         geometry + stacking
 ```
 
-## Folder Structure
+### Application catalog
 
-### `/src/apps/`
-Each app has its own folder containing the main component and any related files.
+`src/config/apps.tsx` is authoritative for every restorable Application:
 
-```
-apps/
-├── about/           # About page with tabs
-├── arena/           # Are.na integration
-│   ├── blocks/      # Block viewer
-│   ├── channels/    # Channel explorer, browser
-│   ├── components/  # Shared Arena components
-│   └── utils/       # Content item utilities
-├── bsky/            # Bluesky posts
-├── config/          # Settings/configuration
-├── console/         # Developer console
-├── fedi/            # Fediverse posts
-├── guestbook/       # Guestbook app
-├── imageviewer/     # Image viewer
-├── links/           # Links page
-├── shelf/           # NeoDB shelf (media tracking)
-├── talk-to-ai/      # AI chat
-├── weather/         # Weather app
-└── web/             # Web browser iframe
-```
+- stable `componentType`
+- lazy module loader
+- lazy React view
+- title and icon defaults
+- window dimensions
+- default props
+- single-instance behavior
+- desktop visibility
 
-### `/src/components/`
-Shared components used across apps.
+`APP_LIST` is derived from the catalog. Session restoration reads the catalog directly. Startup warming derives its loader set from the same definitions, so launch and preload metadata cannot drift.
 
-```
-components/
-├── RouteInterpreter.tsx  # URL deep linking
-├── WindowManager.tsx     # Re-exports
-├── calendar/             # Calendar widget
-├── desktop/              # Desktop icons
-├── effects/              # CRT filter
-├── menu/                 # Start menu
-├── oneko/                # Cat companion
-├── ui/                   # Buttons, dialogs, etc.
-└── window/               # Window components
-    ├── CustomIcon.tsx
-    ├── DraggableWindow.tsx
-    ├── WindowContainer.tsx
-    ├── WindowLayout.tsx
-    └── WindowManagerProvider.tsx
-```
+`src/config/lazyApps.tsx` remains the only place that imports app chunks. App modules stay code-split and retain the Suspense fallback in window chrome.
 
-### `/src/config/`
-Configuration and registries.
+### Application launch
 
-| File | Purpose |
-|------|---------|
-| `apps.tsx` | App list with metadata |
-| `channels.ts` | Featured Are.na channels |
-| `componentRegistry.tsx` | Component type → React component mapping |
-| `routes.ts` | URL → component mappings for deep links |
-| `window.ts` | Window defaults (size, constraints) |
-| `constants.ts` | Global constants |
+`src/hooks/useApplicationLauncher.tsx` is the interface used by app code. Callers provide Application identity plus domain props and optional contextual chrome. The implementation creates the lazy view, applies catalog defaults, records restoration identity, and enforces single-instance behavior.
 
-### `/src/hooks/`
-Custom React hooks.
+Low-level window construction lives behind a provider-internal launch context. `useWindowActions` contains only commands for existing windows.
 
-| Hook | Purpose |
-|------|---------|
-| `useWindowManager.ts` | Window state management |
-| `useUserSettings.ts` | User preferences |
-| `useStorage.ts` | IndexedDB persistence |
-| `useDoubleClick.ts` | Double-click detection |
-| `use-mobile.tsx` | Mobile device detection |
+### Window manager
 
-### `/src/lib/`
-Utility libraries.
+`src/hooks/useWindowManager.ts` owns live window state, stable commands, z-index allocation, and Window session persistence. `WindowManagerProvider` supplies separate state, command, and internal launch contexts.
 
-| File | Purpose |
-|------|---------|
-| `api.ts` | Are.na API calls with caching |
-| `storage.ts` | IndexedDB operations |
-| `utils.ts` | Window adjustment utilities |
+Session restoration reconstructs Application views from the catalog and injects `onPropsChange`, allowing current view state to update serializable window props.
 
-### `/src/core/`
-Core desktop components.
+### Cached requests
 
-| File | Purpose |
-|------|---------|
-| `Desktop.tsx` | Main desktop layout, effects |
-| `TopBar.tsx` | Menu bar at top |
-| `Taskbar.tsx` | Window list at bottom |
+`src/lib/cachedRequest.ts` owns the persistent request lifecycle:
 
-## Data Flow
+1. read IndexedDB TTL cache
+2. emit optional cache debug output
+3. count a remote request on miss
+4. call the source loader
+5. persist the result
 
-### Window Creation
-```
-User clicks icon
-       │
-       ▼
-DesktopIcons.tsx
-       │
-       ▼
-addWindow() / addOrFocusWindow()
-       │
-       ▼
-useWindowManager (state update)
-       │
-       ▼
-WindowContainer renders DraggableWindow
-       │
-       ▼
-Session saved to IndexedDB (debounced)
-```
+Are.na, Bsky, Fedi, Shelf, and Weather retain only source-specific URL, status, and decoding knowledge.
 
-### Session Restoration
-```
-Page load
-       │
-       ▼
-useWindowManager effect runs
-       │
-       ▼
-Load from IndexedDB (windowSession)
-       │
-       ▼
-For each saved window:
-  - getComponentConfigAsync()
-  - createComponentElementAsync()
-       │
-       ▼
-setWindows() with restored windows
-       │
-       ▼
-RouteInterpreter runs (after isSessionRestored)
-       │
-       ▼
-If URL has deep link → open additional window
-```
+### Persisted view state
 
-### API Request Flow
-```
-App needs data
-       │
-       ▼
-Check IndexedDB cache
-       │
-       ├── Cache hit → Return data
-       │
-       └── Cache miss
-              │
-              ▼
-       Fetch from API
-              │
-              ├── Are.na → Direct (public API)
-              │
-              └── Bsky/Fedi/NeoDB → Via Cloudflare Worker
-                     │
-                     ▼
-              Worker adds auth headers
-                     │
-                     ▼
-              Response cached in IndexedDB
-```
+`usePersistedState` owns initial-load suppression, dynamic keys, optional disabling, normalization/migration, debounced writes, and optional synchronization. Storage remains internal to the implementation.
+
+### Social feed
+
+`src/apps/social/SocialFeedApp.tsx` is shared by two real adapters:
+
+- `BskyPostsApp.tsx`
+- `FediApp.tsx`
+
+The shared module owns profile/feed query coordination, infinite paging, loading/error/terminal states, profile and post chrome, and media launch. Each adapter maps its remote source into the Social feed domain.
+
+### Are.na channel browsing
+
+`useArenaChannelBrowsing` owns ordering, pagination, cancellation, dedupe, loading state, and selection restoration. It supports two adapters: remote Are.na pages and supplied in-memory items. `ChannelExplorer` coordinates rendering, persisted view state, deep-link synchronization, and Are.na navigation.
+
+## Folder map
+
+| Area | Responsibility |
+|---|---|
+| `src/apps/` | Application implementations and domain adapters |
+| `src/config/apps.tsx` | authoritative Application catalog |
+| `src/config/lazyApps.tsx` | lazy chunk loaders and views |
+| `src/config/routes.ts` | route-specific parsing and URL generation |
+| `src/hooks/useApplicationLauncher.tsx` | Application launch interface |
+| `src/hooks/useWindowManager.ts` | live windows and Window session |
+| `src/hooks/useStorage.ts` | persisted view state |
+| `src/lib/cachedRequest.ts` | persistent remote-read lifecycle |
+| `src/lib/storage.ts` | IndexedDB stores and primitives |
+
+Domain terms are defined in [`CONTEXT.md`](../CONTEXT.md).
