@@ -125,11 +125,11 @@ export const SocialFeedApp = ({ adapter }: { adapter: SocialFeedAdapter }) => {
   const feedError = feedQuery.error instanceof Error ? feedQuery.error.message : 'Unknown error';
 
   return (
-    <WindowLayout hasPadding={false} isScrollable={false} className="social-feed-window">
-      <div ref={layoutRef} className="social-feed-layout">
-        <aside className="social-profile-pane">
+    <WindowLayout hasPadding={false} isScrollable={false} className="lok-reader-window">
+      <div ref={layoutRef} className="lok-reader-layout">
+        <aside className="lok-reader-identity-pane">
           {profile ? (
-            <div className="social-profile-pane-inner relative">
+            <div className="lok-reader-identity-inner relative">
               <div className="h-32 bg-secondary overflow-hidden">
                 {profile.banner && <img src={profile.banner} alt="Profile banner" className="w-full h-full object-cover" />}
               </div>
@@ -171,14 +171,14 @@ export const SocialFeedApp = ({ adapter }: { adapter: SocialFeedAdapter }) => {
           ) : <StateMessage>Loading profile...</StateMessage>}
         </aside>
 
-        <section ref={postsPaneRef} className="social-posts-pane">
-          <div className="social-posts-inner">
+        <section ref={postsPaneRef} className="lok-reader-entries-pane">
+          <div className="lok-reader-entries-inner">
             {feedQuery.isLoading ? <StateMessage>Loading posts...</StateMessage> : feedQuery.isError ? (
               <div className="text-red-500 p-4 text-center"><p className="text-sm">Error loading posts: {feedError}</p><RetroButton className="mt-2" onClick={() => void feedQuery.refetch()}>Retry</RetroButton></div>
             ) : (
-              <div className="social-post-list">
+              <div className="lok-reader-entry-list">
                 {feedQuery.data?.pages.flatMap((page) => page.posts).map((post) => (
-                  <article key={post.id} className="social-post p-3">
+                  <article key={post.id} className="lok-reader-entry p-3">
                     {post.contextLabel && <div className="flex items-center gap-2 mb-1 ml-12 text-xs text-muted-foreground"><span>↻</span><span>{post.contextLabel}</span></div>}
                     <div className="flex items-start gap-3">
                       {post.author.avatar
@@ -192,12 +192,12 @@ export const SocialFeedApp = ({ adapter }: { adapter: SocialFeedAdapter }) => {
                         </div>
                         {post.body}
                         {post.media && post.media.length > 0 && (
-                          <div className="social-media-strip" aria-label="Post images">
+                          <div className="lok-reader-media-strip" aria-label="Post images">
                             {post.media.map((media) => (
                               <button
                                 key={media.id}
                                 type="button"
-                                className="social-media-item"
+                                className="lok-reader-media-item"
                                 style={{ aspectRatio: media.aspectRatio ?? '1 / 1' }}
                                 onClick={(event) => {
                                   event.stopPropagation();
