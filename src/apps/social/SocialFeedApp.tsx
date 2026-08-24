@@ -71,6 +71,7 @@ export const SocialFeedApp = ({ adapter }: { adapter: SocialFeedAdapter }) => {
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const wasIntersectingRef = useRef(false);
   const fetchInFlightRef = useRef(false);
+  const observedSentinelRef = useRef<HTMLDivElement | null>(null);
   const openApplication = useApplicationLauncher();
   const profileQuery = useQuery({
     queryKey: ['social-profile', adapter.id],
@@ -99,8 +100,13 @@ export const SocialFeedApp = ({ adapter }: { adapter: SocialFeedAdapter }) => {
     const root = postsPane && postsPane.scrollHeight > postsPane.clientHeight
       ? postsPane
       : layoutRef.current;
-    wasIntersectingRef.current = false;
-    fetchInFlightRef.current = false;
+    // Query state changes recreate this observer. Keep the transition guard
+    // across those updates or a still-visible footer will load every page.
+    if (observedSentinelRef.current !== sentinel) {
+      observedSentinelRef.current = sentinel;
+      wasIntersectingRef.current = false;
+      fetchInFlightRef.current = false;
+    }
     const observer = new IntersectionObserver(([entry]) => {
       const shouldLoad = entry.isIntersecting && !wasIntersectingRef.current;
       wasIntersectingRef.current = entry.isIntersecting;

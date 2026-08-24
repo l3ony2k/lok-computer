@@ -35,6 +35,16 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    // The API Worker owns upstream credentials. Proxy API calls during local
+    // development so browser requests use the same authenticated service as
+    // the deployed site instead of falling through to Vite's SPA fallback.
+    proxy: {
+      "/api": {
+        target: "https://lok.computer",
+        changeOrigin: true,
+        secure: true,
+      },
+    },
   },
   plugins: [
     react(),
