@@ -26,15 +26,55 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type',
 };
 
+const discoveryLinks = [
+  '</llms.txt>; rel="alternate"; type="text/markdown"',
+  '</openapi.json>; rel="service-desc"; type="application/vnd.oai.openapi+json"',
+  '</developers>; rel="help"',
+].join(', ');
+
 // Function to create a JSON response with CORS headers
 function makeJsonResponse(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status: status,
     headers: {
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/json; charset=utf-8',
+      'Link': discoveryLinks,
+      'Vary': 'Accept, Accept-Encoding',
+      'X-Content-Type-Options': 'nosniff',
       ...corsHeaders,
     }
   });
+}
+
+function makeMethodNotAllowedResponse(allow) {
+  const response = makeJsonResponse({ error: 'Method not allowed' }, 405);
+  response.headers.set('Allow', allow);
+  return response;
+}
+
+function makeNotFoundResponse(request) {
+  if ((request.headers.get('Accept') || '').toLowerCase().includes('text/markdown')) {
+    return new Response([
+      '# 404: API resource not found',
+      '',
+      'The requested lok.computer API resource does not exist.',
+      '',
+      '- [OpenAPI specification](/openapi.json)',
+      '- [Developer resources](/developers)',
+      '',
+    ].join('\n'), {
+      status: 404,
+      headers: {
+        'Content-Type': 'text/markdown; charset=utf-8',
+        'Link': discoveryLinks,
+        'Vary': 'Accept, Accept-Encoding',
+        'X-Content-Type-Options': 'nosniff',
+        ...corsHeaders,
+      },
+    });
+  }
+
+  return makeJsonResponse({ error: 'Not Found' }, 404);
 }
 
 export default {
@@ -46,11 +86,37 @@ export default {
       return new Response(null, { headers: corsHeaders });
     }
 
+    // Credential-free discovery endpoints for agents and integration checks.
+    if (url.pathname === '/api' || url.pathname === '/api/') {
+      if (request.method !== 'GET' && request.method !== 'HEAD') {
+        return makeMethodNotAllowedResponse('GET, HEAD');
+      }
+
+      return makeJsonResponse({
+        name: 'lok.computer public API',
+        description: 'Public REST endpoints used by the lok.computer browser desktop.',
+        documentation: 'https://lok.computer/developers',
+        openapi: 'https://lok.computer/openapi.json',
+        status: 'https://lok.computer/api/status',
+      });
+    }
+
+    if (url.pathname === '/api/status') {
+      if (request.method !== 'GET' && request.method !== 'HEAD') {
+        return makeMethodNotAllowedResponse('GET, HEAD');
+      }
+
+      return makeJsonResponse({
+        service: 'lok.computer public API',
+        status: 'ok',
+      });
+    }
+
     // Route for AI chat
     if (url.pathname === '/api/chat') {
       try {
         if (request.method !== 'POST') {
-          return makeJsonResponse({ error: 'Method not allowed' }, 405);
+          return makeMethodNotAllowedResponse('POST');
         }
 
         const { messages } = await request.json();
@@ -95,6 +161,10 @@ export default {
     // Route for Bluesky feed
     if (url.pathname === '/api/bsky/feed') {
       try {
+        if (request.method !== 'GET' && request.method !== 'HEAD') {
+          return makeMethodNotAllowedResponse('GET, HEAD');
+        }
+
         const bskyHandle = env.BSKY_HANDLE;
         const appPassword = env.BSKY_APP_PASSWORD;
 
@@ -143,6 +213,10 @@ export default {
     // Route for Fedi/GoToSocial account lookup
     if (url.pathname === '/api/fedi/account') {
       try {
+        if (request.method !== 'GET' && request.method !== 'HEAD') {
+          return makeMethodNotAllowedResponse('GET, HEAD');
+        }
+
         const fediInstance = env.FEDI_INSTANCE;
         const fediToken = env.FEDI_ACCESS_TOKEN;
 
@@ -180,6 +254,10 @@ export default {
     // Route for Fedi/GoToSocial statuses proxy
     if (url.pathname.startsWith('/api/fedi/statuses')) {
       try {
+        if (request.method !== 'GET' && request.method !== 'HEAD') {
+          return makeMethodNotAllowedResponse('GET, HEAD');
+        }
+
         const fediInstance = env.FEDI_INSTANCE;
         const fediToken = env.FEDI_ACCESS_TOKEN;
 
@@ -237,6 +315,10 @@ export default {
     // Route for NeoDB shelf
     if (url.pathname === '/api/neodb/shelf') {
       try {
+        if (request.method !== 'GET' && request.method !== 'HEAD') {
+          return makeMethodNotAllowedResponse('GET, HEAD');
+        }
+
         const neodbToken = env.NEODB_ACCESS_TOKEN;
 
         if (!neodbToken) {
@@ -277,6 +359,6 @@ export default {
       }
     }
 
-    return makeJsonResponse({ error: 'Not Found' }, 404);
+    return makeNotFoundResponse(request);
   },
 };

@@ -10,6 +10,9 @@
     <meta name="author" content="Lok" />
     <meta name="keywords" content="lok computer, desktop environment, browser desktop, are.na browser, web desktop, virtual desktop, retro desktop ui, personal projects, retro ui, retro design, retro web design, retro web ui, retro web desktop, retro web app, retro web application, retro web app design, retro web app ui, retro web app desktop, retro web app desktop design, retro web app desktop ui, web ui, web design, web app, web application, web app design, web app ui, web app desktop, web app desktop design, web app desktop ui" />
     <link rel="canonical" href="https://lok.computer" />
+    <link rel="alternate" type="text/markdown" href="/llms.txt" title="lok.computer agent index" />
+    <link rel="service-desc" type="application/vnd.oai.openapi+json" href="/openapi.json" title="lok.computer OpenAPI specification" />
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml" title="lok.computer sitemap" />
     <link rel="me" href="https://social.lol/@lok" />
     <link rel="me" href="https://rex.cat/@lok" />
     <link rel="me" href="https://github.com/l3ony2k" />
@@ -81,6 +84,33 @@
         </div>
       </main>
     </div>
+    <noscript id="agent-static-content">
+      <style>
+        #initial-boot-screen{display:none!important}
+        #agent-document{max-width:760px;margin:0 auto;padding:32px 20px;color:#222;background:#f0f0f0;font:16px/1.6 system-ui,sans-serif}
+        #agent-document h1,#agent-document h2{letter-spacing:0}
+        #agent-document a{color:#0645ad}
+      </style>
+      <main id="agent-document">
+        <h1>lok.computer</h1>
+        <p>lok.computer is Lok's browser-based personal desktop: a public, read-only way to explore projects, links, social posts, media shelves, weather, and curated Are.na channels.</p>
+        <section>
+          <h2>What this site is</h2>
+          <p>The site presents a modular desktop interface in the browser. Its applications include an Are.na channel explorer, Bluesky and fediverse readers, a NeoDB shelf, weather, personal links, a small web viewer, and information about the project. Most content is public and exploratory. Window positions and preferences are stored in the visitor's browser so a session can be restored without creating a lok.computer account.</p>
+          <p>The interactive desktop requires JavaScript, but this response includes a complete text description and machine-readable discovery links so crawlers and agents do not need to execute the application bundle. Deep links open a named desktop application after JavaScript starts. Unknown paths deliberately return HTTP 404 rather than the desktop shell.</p>
+          <ul>
+            <li><a href="/llms.txt">Agent index (llms.txt)</a></li>
+            <li><a href="/developers">Developer documentation</a></li>
+            <li><a href="/openapi.json">OpenAPI 3.1 specification</a></li>
+            <li><a href="/sitemap.xml">XML sitemap</a></li>
+          </ul>
+        </section>
+        <section>
+          <h2>When to use lok.computer</h2>
+          <p>Use lok.computer when a task calls for public information about Lok, Lok's curated links and media, public social posts, or the public API that supports this desktop. Prefer the OpenAPI description for structured API calls and llms.txt for navigation. Do not use the site as a general search engine, a source of private information, or a write-capable social API: the documented integration surface is read-only except for the public AI chat endpoint.</p>
+        </section>
+      </main>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

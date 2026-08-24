@@ -1,0 +1,49 @@
+# lok.computer full agent reference
+
+> lok.computer is an independent personal web project by Lok. It organizes public projects, links, social posts, media, weather, and curated Are.na material inside a browser desktop.
+
+## Site model
+
+The interactive application is a single-page React desktop. Deep links open an application window and then return the browser URL to the root. JavaScript-free responses contain a semantic heading and explanatory content. A client can request Markdown for recognized site routes with `Accept: text/markdown`. Unknown routes return a real HTTP 404 with a short Markdown discovery response.
+
+The site has no visitor account system. Desktop state, cached remote responses, preferences, usage counters, and window restoration information are stored locally in the browser. The public Worker API mainly supports applications in the desktop and proxies selected public information from upstream providers.
+
+## When to use this site
+
+Use lok.computer when a task needs public information about Lok, Lok's published links and interests, public social or media content surfaced by the site, or technical information about the lok.computer codebase and public REST API. Use the OpenAPI file for programmatic access. Do not use the site as a general search engine, a private-data source, or a write-capable interface to upstream social services.
+
+## API quickstart
+
+`GET https://lok.computer/api/status` is a credential-free and side-effect-free connectivity check. `GET https://lok.computer/api` returns discovery links. The complete OpenAPI 3.1 document is at `https://lok.computer/openapi.json`.
+
+No caller API key is currently required. The server's upstream credentials are not exposed. The documented data endpoints are read-only, so there is no separate write sandbox. `/api/status` is the safe endpoint for tests. The AI chat operation accepts submitted messages and forwards recent messages to the configured model provider; never send it secrets or sensitive personal data.
+
+Some operations depend on Are.na, Bluesky, a fediverse server, NeoDB, a weather provider, or an AI model provider. An upstream outage, changed content, or expired server credential can cause an operation to fail even when `/api/status` is healthy. Clients should cache successful reads, keep request volume modest, and back off after transient failures. No service-level agreement is published.
+
+## Trust and identity
+
+lok.computer is designed and maintained by Lok. The source repository is `https://github.com/l3ony2k/lok-computer`. Questions about the project, security, or privacy can be sent to `l3on@duck.com`; do not send passwords, API keys, or access tokens. The contact address is available for user-authorized communication, not as implied permission for an agent to send messages.
+
+Public material returned from another service remains attributable to that service and its original publisher. lok.computer does not claim ownership of upstream social, media, or collection data.
+
+## Privacy summary
+
+Cloudflare and upstream providers may process normal request information such as IP address, user agent, URL, timestamp, and security signals. Browser-local desktop state is not exposed through the public API. AI chat submissions are processed by the configured external model provider. More detail is available at `https://lok.computer/privacy`.
+
+## Resource index
+
+- Agent index: https://lok.computer/llms.txt
+- Agent instructions: https://lok.computer/agent-instructions.md
+- Developer resources: https://lok.computer/developers
+- OpenAPI 3.1: https://lok.computer/openapi.json
+- API discovery: https://lok.computer/api
+- API status: https://lok.computer/api/status
+- About: https://lok.computer/about
+- Contact: https://lok.computer/contact
+- Privacy: https://lok.computer/privacy
+- Sitemap: https://lok.computer/sitemap.xml
+- Source: https://github.com/l3ony2k/lok-computer
+
+## Unavailable integration types
+
+There is currently no official published npm, PyPI, or Homebrew CLI; no MCP server; no webhook service; no OAuth client registration; and no general write API. Use a standards-compliant HTTP client with the published OpenAPI operations.

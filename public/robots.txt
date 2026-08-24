@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /api/chat
+
+Sitemap: https://lok.computer/sitemap.xml

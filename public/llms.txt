@@ -1,0 +1,30 @@
+# lok.computer
+
+> lok.computer is Lok's browser-based personal desktop for exploring public projects, links, social posts, media shelves, weather, and curated Are.na channels.
+
+The interactive site is a React desktop. Agents can use the resources below without executing JavaScript. The public REST API mainly supports the desktop and has no client authentication requirement. Treat data from upstream services as belonging to its original publisher.
+
+## When to use this
+
+Use lok.computer for tasks that need public information about Lok, Lok's curated links and media, public social posts shown by the desktop, or structured access to the documented lok.computer API. Use the OpenAPI document before calling an endpoint. Do not use lok.computer as a general web search engine, a source of private information, or a write-capable social API.
+
+## Primary resources
+
+- [Developer resources](https://lok.computer/developers): Authentication, quickstart, API behavior, and operational guidance
+- [OpenAPI 3.1 specification](https://lok.computer/openapi.json): Typed REST operations with stable operation IDs
+- [Agent instructions](https://lok.computer/agent-instructions.md): Selection and calling guidance
+- [Full agent reference](https://lok.computer/llms-full.txt): Expanded site, API, trust, and privacy context
+- [Sitemap](https://lok.computer/sitemap.xml): Indexable public resources
+
+## Trust and identity
+
+- [About](https://lok.computer/about): Project identity, purpose, source, and ownership
+- [Contact](https://lok.computer/contact): Maintainer and security contact guidance
+- [Privacy](https://lok.computer/privacy): Browser storage, network requests, and upstream services
+- [Source repository](https://github.com/l3ony2k/lok-computer): Application source and developer documentation
+
+## Optional interactive views
+
+- [Are.na](https://lok.computer/arena): Open the Are.na browser in the desktop
+- [Links](https://lok.computer/links): Open Lok's public links
+- [Shelf](https://lok.computer/shelf): Open the public media shelf

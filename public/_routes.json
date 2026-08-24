@@ -1,11 +1,11 @@
 {
-    "version": 1,
-    "include": ["/api/*"],
-    "exclude": [],
-    "services": [
-      {
-        "service": "lok-computer-worker",
-        "path": "/api/*"
-      }
-    ]
-  }
+  "version": 1,
+  "include": ["/*"],
+  "exclude": ["/api/*", "/assets/*"],
+  "services": [
+    {
+      "service": "lok-computer-worker",
+      "path": "/api/*"
+    }
+  ]
+}
