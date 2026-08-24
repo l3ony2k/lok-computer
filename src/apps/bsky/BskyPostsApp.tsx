@@ -3,6 +3,7 @@ import { APP_CONFIG } from '@/config/constants';
 import { CACHE_TTL } from '@/lib/storage';
 import { cachedRequest } from '@/lib/cachedRequest';
 import { SocialFeedAdapter, SocialFeedApp } from '@/apps/social/SocialFeedApp';
+import { getNextCursor } from '@/apps/social/pagination';
 
 interface Facet {
   $type: string;
@@ -137,7 +138,7 @@ const adapter: SocialFeedAdapter = {
     });
 
     return {
-      nextCursor: page.cursor,
+      nextCursor: getNextCursor(cursor, page.cursor),
       posts: page.feed.map(({ post, reason }) => ({
         id: `${post.uri}-${reason?.indexedAt || post.record.createdAt}`,
         contextLabel: reason ? `Reposted by ${reason.by.displayName || reason.by.handle}` : undefined,

@@ -66,7 +66,11 @@ const formatTime = (dateString: string) => {
  * remain behind one interface.
  */
 export const SocialFeedApp = ({ adapter }: { adapter: SocialFeedAdapter }) => {
+  const layoutRef = useRef<HTMLDivElement>(null);
+  const postsPaneRef = useRef<HTMLElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const wasIntersectingRef = useRef(false);
+  const fetchInFlightRef = useRef(false);
   const openApplication = useApplicationLauncher();
   const profileQuery = useQuery({
     queryKey: ['social-profile', adapter.id],
@@ -88,11 +92,25 @@ export const SocialFeedApp = ({ adapter }: { adapter: SocialFeedAdapter }) => {
   useEffect(() => {
     const sentinel = loadMoreRef.current;
     if (!sentinel || !('IntersectionObserver' in window)) return;
+    // Observe the actual scrolling pane and require a false -> true
+    // transition. A restored window can start with its footer visible; without
+    // this guard it can drain every page immediately on refresh.
+    const postsPane = postsPaneRef.current;
+    const root = postsPane && postsPane.scrollHeight > postsPane.clientHeight
+      ? postsPane
+      : layoutRef.current;
+    wasIntersectingRef.current = false;
+    fetchInFlightRef.current = false;
     const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
-        void fetchNextPage();
+      const shouldLoad = entry.isIntersecting && !wasIntersectingRef.current;
+      wasIntersectingRef.current = entry.isIntersecting;
+      if (shouldLoad && hasNextPage && !isFetchingNextPage && !fetchInFlightRef.current) {
+        fetchInFlightRef.current = true;
+        void fetchNextPage().finally(() => {
+          fetchInFlightRef.current = false;
+        });
       }
-    }, { threshold: 0.5 });
+    }, { root, rootMargin: '120px 0px', threshold: 0.5 });
     observer.observe(sentinel);
     return () => observer.disconnect();
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
@@ -102,7 +120,7 @@ export const SocialFeedApp = ({ adapter }: { adapter: SocialFeedAdapter }) => {
 
   return (
     <WindowLayout hasPadding={false} isScrollable={false} className="social-feed-window">
-      <div className="social-feed-layout">
+      <div ref={layoutRef} className="social-feed-layout">
         <aside className="social-profile-pane">
           {profile ? (
             <div className="social-profile-pane-inner relative">
@@ -147,7 +165,7 @@ export const SocialFeedApp = ({ adapter }: { adapter: SocialFeedAdapter }) => {
           ) : <StateMessage>Loading profile...</StateMessage>}
         </aside>
 
-        <section className="social-posts-pane">
+        <section ref={postsPaneRef} className="social-posts-pane">
           <div className="social-posts-inner">
             {feedQuery.isLoading ? <StateMessage>Loading posts...</StateMessage> : feedQuery.isError ? (
               <div className="text-red-500 p-4 text-center"><p className="text-sm">Error loading posts: {feedError}</p><RetroButton className="mt-2" onClick={() => void feedQuery.refetch()}>Retry</RetroButton></div>

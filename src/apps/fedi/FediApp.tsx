@@ -3,6 +3,7 @@ import { APP_CONFIG } from '@/config/constants';
 import { CACHE_TTL } from '@/lib/storage';
 import { cachedRequest } from '@/lib/cachedRequest';
 import { SocialFeedAdapter, SocialFeedApp } from '@/apps/social/SocialFeedApp';
+import { getNextCursor } from '@/apps/social/pagination';
 
 interface Account {
   id: string;
@@ -111,7 +112,7 @@ const adapter: SocialFeedAdapter = {
         const statuses = await response.json() as Status[];
         return {
           statuses,
-          nextCursor: statuses.length > 0 ? statuses[statuses.length - 1].id : undefined,
+          nextCursor: getNextCursor(cursor, statuses.length > 0 ? statuses[statuses.length - 1].id : undefined),
         };
       },
     });

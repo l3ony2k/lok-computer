@@ -53,7 +53,7 @@ describe("machine-readable agent resources", () => {
   test("llms.txt includes selection guidance and all primary resources", async () => {
     const llms = await Bun.file("public/llms.txt").text();
 
-    expect(llms).toStartWith("# lok.computer\n");
+    expect(llms.replaceAll("\r\n", "\n")).toStartWith("# lok.computer\n");
     expect(llms).toContain("## When to use this");
     expect(llms).toContain("https://lok.computer/developers");
     expect(llms).toContain("https://lok.computer/openapi.json");
