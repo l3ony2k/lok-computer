@@ -71,6 +71,8 @@ Are.na, Bsky, Fedi, Shelf, and Weather retain only source-specific URL, status, 
 
 The shared module owns profile/feed query coordination, infinite paging, loading/error/terminal states, profile and post chrome, and media launch. Each adapter maps its remote source into the Social feed domain.
 
+The shared layout uses project-specific `lok-reader-*` CSS hooks. Keep these hooks neutral: generic names such as `social-feed`, `social-post`, and `social-media` can be mistaken for cosmetic-filter targets by Brave Shields in aggressive mode. In that failure mode, requests complete and posts briefly render before injected filter CSS hides them. This is a presentation-layer concern; API routes, query keys, and cache keys should retain their domain names.
+
 ### Are.na channel browsing
 
 `useArenaChannelBrowsing` owns ordering, pagination, cancellation, dedupe, loading state, and selection restoration. It supports two adapters: remote Are.na pages and supplied in-memory items. `ChannelExplorer` coordinates rendering, persisted view state, deep-link synchronization, and Are.na navigation.

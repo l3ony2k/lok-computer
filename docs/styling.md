@@ -283,6 +283,14 @@ className="hidden md:block"  // Hidden on mobile
 className="w-full md:w-1/2"  // Full width mobile, half on desktop
 ```
 
+### Browser-Filter-Safe Hooks
+
+For first-party UI that resembles a social feed or advertisement, use project-specific CSS hooks based on the component's visual role. Prefer names such as `lok-reader-entry` over generic hooks such as `social-post`, `social-feed`, or `social-media`.
+
+Brave Shields in aggressive mode can apply cosmetic filter selectors after the initial paint. The characteristic symptom is content that flashes briefly and then disappears even though the API returned valid JSON and the elements remain in the DOM. Compare aggressive Shields with **Adblock only** or Shields disabled, then inspect computed styles before investigating the API, cache, or Cloudflare Worker.
+
+When renaming a hook, update its JSX class and every CSS reference, including container-query and responsive selectors. Do not rename API paths, query keys, or cache keys as part of a cosmetic-filter workaround.
+
 ---
 
 ## Window Styling
