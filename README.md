@@ -102,6 +102,15 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 
 ## Development Log
 
+### Session: 3.0.1 — four more themes, pixel icons, question-first Ask AI (2026-10-08)
+
+*   Added the System (system.css), TUI (TuiCss), 386 (BOOTSTRA.386), and CS 1.6 (cs16.css) themes. `data-chrome` now selects the classic component layer independently of `data-layout`, so System, TUI, and 386 keep a top menu bar with classic windows and controls. Bitmap-font skins render UI text at their native 16px, and their caption buttons, checkboxes, and scroll arrows are pixel-exact SVGs (the DOS ones rendered from the VGA font).
+*   Authentic default desktops: Bliss for XP (from the 600 dpi scan, cropped to the XP framing), Harmony for 7, the 50% gray pattern for System, `░` cells for TUI, and the CS 1.6 menu art. Wallpapers are decoded before a theme switch so they never pop in.
+*   Toasts use each theme's typeface and window frame.
+*   Every app icon was redrawn as pixel art from `scripts/pixel-icons.mjs`.
+*   Ask AI is question-first: the planner picks the question type, asks for missing material, or refuses, and the answer view shows the best answer with certainty, notes, and Jev's raw request and response. Fixed the double scrollbar after a theme switch.
+*   About credits every theme library, font, and wallpaper; Config shows each library's license.
+
 ### Session: Themes, Media player, and Ask AI on Jev (2026-10-08)
 
 *   Replaced `next-themes` with an in-house theme engine (`src/lib/theme.ts`, `src/hooks/useTheme.tsx`). The preference is applied before first paint, classic themes load lazily, and `?theme=98` on any URL shares a theme.

@@ -224,13 +224,23 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/h
 
 ### Themes
 
-The desktop has four themes. `lok` is the native monospace system with light and dark modes; `98`, `xp`, and `7` recreate classic desktops after [98.css](https://github.com/jdan/98.css), [XP.css](https://github.com/botoxparty/XP.css), and [7.css](https://github.com/khang-nd/7.css) (MIT, licenses in `src/themes/*/LICENSE`).
+The desktop has eight themes. `lok` is the native monospace system with light and dark modes. The rest recreate other systems after open-source CSS libraries (licenses in `src/themes/*/LICENSE`):
+
+| Theme | Source | Layout | Desktop |
+|-------|--------|--------|---------|
+| `98` | [98.css](https://github.com/jdan/98.css) | classic taskbar | teal |
+| `xp` | [XP.css](https://github.com/botoxparty/XP.css) | classic taskbar | Bliss |
+| `7` | [7.css](https://github.com/khang-nd/7.css) | classic taskbar | Harmony |
+| `system` | [system.css](https://github.com/sakofchit/system.css) | menu bar | 50% gray pattern |
+| `tui` | [TuiCss](https://github.com/vinibiavatti1/TuiCss) | menu bar and status line | `░` cells |
+| `386` | [BOOTSTRA.386](https://github.com/kristopolous/BOOTSTRA.386) | menu bar and status line | DOS blue |
+| `cs16` | [cs16.css](https://github.com/ekmas/cs16.css) | classic taskbar | CS 1.6 menu art |
 
 ```tsx
 import { useTheme } from '@/hooks/useTheme';
 
 const { theme, appearance, colorScheme, setTheme, setAppearance, prefetchTheme } = useTheme();
-await setTheme('98');        // loads the stylesheet, then swaps atomically
+await setTheme('98');        // loads stylesheet, fonts, and wallpaper, then swaps atomically
 setAppearance('dark');       // light | dark | system; only lok has two schemes
 ```
 
@@ -238,14 +248,18 @@ How it fits together:
 
 | Layer | File | Role |
 |-------|------|------|
-| Registry and engine | `src/lib/theme.ts` | Theme metadata, preference parsing, lazy style loading, root attributes |
-| Pre-paint | `index.html` inline script | Sets `data-theme`, `data-layout`, `.dark`, and `color-scheme` before React |
+| Registry and engine | `src/lib/theme.ts` | Theme metadata, preference parsing, lazy loading of styles, fonts, and wallpaper, root attributes |
+| Pre-paint | `index.html` inline script | Sets `data-theme`, `data-layout`, `data-chrome`, `.dark`, and `color-scheme` before React |
 | Provider | `src/hooks/useTheme.tsx` | State, OS scheme tracking, cross-tab sync |
 | Base tokens | `src/index.css` `:root` / `.dark` | lok values for every token |
-| Classic structure | `src/themes/classic.css` | Bevels, title bars, taskbar, menus, fields, and controls drawn from `--c-*` component tokens |
-| Theme skins | `src/themes/{98,xp,7}/theme.css` | Token values, caption glyphs, scrollbars, fonts, start button |
+| Classic components | `src/themes/classic.css` | Bevels, title bars, menu bar, taskbar, menus, fields, and controls drawn from `--c-*` component tokens |
+| Theme skins | `src/themes/<id>/theme.css` | Token values, caption glyphs, scrollbars, fonts, wallpaper |
 
-Scoping: classic rules use `html[data-layout="classic"]:not(#_)` and theme rules `html[data-theme="98"][data-layout]:not(#_)`. The never-matching id gives them id-level specificity, so they override base component rules without `!important`, and a theme skin always beats the shared classic layer regardless of stylesheet order.
+Two root attributes describe a theme. `data-layout` is the desktop arrangement: `lok` keeps the top bar (system menu, frontmost window name, clock) and a bottom task strip; `classic` merges start menu, tasks, and tray into one taskbar. `data-chrome` picks the component layer: `classic` loads `classic.css` under either layout, which is how System, TUI, and 386 pair classic controls with a top menu bar.
+
+Scoping: classic rules use `html[data-chrome="classic"]:not(#_)` and theme rules `html[data-theme="98"][data-layout]:not(#_)`. The never-matching id gives them id-level specificity, so they override base component rules without `!important`, and a theme skin always beats the shared classic layer regardless of stylesheet order. Keep classic rules to one attribute so skins keep winning.
+
+Bitmap fonts (Chicago, Geneva, Perfect DOS VGA 437, ArialPixel) sit on a 16px grid and blur at any other size, so the System, TUI, 386, and CS 1.6 skins set every UI element to 16px. Their glyphs (caption buttons, checkboxes, scroll arrows) are pixel-exact SVGs in `src/themes/<id>/icons/`; the DOS ones are rendered from the VGA font itself.
 
 Theme-level tokens every surface should use:
 
@@ -260,9 +274,11 @@ Theme-level tokens every surface should use:
 --media-stage-bg, --media-stage-fg, --media-accent
 ```
 
-Window chrome exposes stable hooks for skins: `.window-surface[data-active]`, `.window-titlebar`, `.window-title`, `.window-controls`, and `.window-control[data-window-control="minimize|maximize|restore|close"]`. In classic layouts the taskbar renders `.start-button`, `.taskbar-tasks`, `.taskbar-tray`, and `.taskbar-clock`; the system menu becomes `.app-menu-panel[data-placement="bottom"]` with an `.app-menu-banner`.
+Window chrome exposes stable hooks for skins: `.window-surface[data-active]`, `.window-titlebar`, `.window-title`, `.window-controls`, and `.window-control[data-window-control="minimize|maximize|restore|close"]`. Skins can set `.window-controls { display: contents }` and reorder controls with `order` (System and TUI put close on the left). The lok-layout top bar renders `.app-header`, `.system-menu-button`, and `.app-header-active`; classic layouts render `.start-button`, `.taskbar-tasks`, `.taskbar-tray`, and `.taskbar-clock`, and the system menu becomes `.app-menu-panel[data-placement="bottom"]` with an `.app-menu-banner`.
 
-The "no rounded corners" rule applies to lok and to Tailwind classes. The XP and 7 skins keep their source systems' curves inside theme CSS.
+Toasts use the theme face and window frame; classic skins can set `--c-toast-width`, `--c-toast-padding`, and `--c-toast-title-weight`.
+
+The "no rounded corners" rule applies to lok and to Tailwind classes. Skins keep their source systems' shapes inside theme CSS.
 
 ## Tailwind Classes
 

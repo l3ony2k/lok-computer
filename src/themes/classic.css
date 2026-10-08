@@ -1,8 +1,9 @@
 /*
- * Classic desktop structure shared by the 98, XP, and 7 themes.
+ * Classic component layer shared by every theme with `chrome: 'classic'`
+ * (98, XP, 7, System, TUI, 386, CS 1.6), under either desktop layout.
  *
  * Loaded on demand alongside a classic theme (see src/lib/theme.ts). Every
- * rule is scoped to `html[data-layout="classic"]:not(#_)`; the never-matching
+ * rule is scoped to `html[data-chrome="classic"]:not(#_)`; the never-matching
  * id gives the layer id-level specificity so it overrides base component
  * styles without !important. Theme files add `[data-theme]` to the same scope,
  * which always outranks this file regardless of stylesheet order.
@@ -10,7 +11,7 @@
  * This file draws shapes from component tokens (--c-*) that each theme sets.
  */
 
-html[data-layout="classic"]:not(#_) {
+html[data-chrome="classic"]:not(#_) {
     --ask-ai-bar: var(--selection-bg);
     --c-font-size: 11px;
     --c-text-xs: 11px;
@@ -36,27 +37,27 @@ html[data-layout="classic"]:not(#_) {
 
 /* ---------- Type ---------- */
 
-html[data-layout="classic"]:not(#_) body {
+html[data-chrome="classic"]:not(#_) body {
     font-size: var(--c-font-size);
     line-height: 1.35;
 }
 
-html[data-layout="classic"]:not(#_) .text-xs {
+html[data-chrome="classic"]:not(#_) .text-xs {
     font-size: var(--c-text-xs);
     line-height: 1.35;
 }
 
-html[data-layout="classic"]:not(#_) .text-sm {
+html[data-chrome="classic"]:not(#_) .text-sm {
     font-size: var(--c-text-sm);
     line-height: 1.4;
 }
 
-html[data-layout="classic"]:not(#_) .text-base {
+html[data-chrome="classic"]:not(#_) .text-base {
     font-size: var(--c-text-base);
 }
 
 /* The lok type ramp (10-14px) collapses to the system size, as classic UIs used one point size. */
-html[data-layout="classic"]:not(#_) :where(
+html[data-chrome="classic"]:not(#_) :where(
     .app-readout, .arena-address-label, .arena-detail-action, .arena-detail-comment,
     .arena-detail-comment-header span, .arena-detail-connection, .arena-detail-connection > span:last-child,
     .arena-detail-load-more, .arena-detail-meta, .arena-file-card-medium .arena-file-grid-preview,
@@ -79,70 +80,70 @@ html[data-layout="classic"]:not(#_) :where(
 }
 
 /* Classic systems show the arrow on controls; only hyperlinks use the hand. */
-html[data-layout="classic"]:not(#_) :where(button, select, summary, label, [role="button"], [role="menuitem"], [role="tab"], input[type="checkbox"], input[type="radio"], input[type="range"]) {
+html[data-chrome="classic"]:not(#_) :where(button, select, summary, label, [role="button"], [role="menuitem"], [role="tab"], input[type="checkbox"], input[type="radio"], input[type="range"]) {
     cursor: default;
 }
 
-html[data-layout="classic"]:not(#_) :where(button, a, input, textarea, select, [tabindex]):focus-visible {
+html[data-chrome="classic"]:not(#_) :where(button, a, input, textarea, select, [tabindex]):focus-visible {
     outline: var(--c-focus-outline);
     outline-offset: var(--c-focus-offset);
 }
 
-html[data-layout="classic"]:not(#_) ::placeholder {
+html[data-chrome="classic"]:not(#_) ::placeholder {
     color: var(--c-placeholder, #808080);
 }
 
 /* Native scrollbars replace the thin lok bars. WebKit draws themed parts;
    Firefox, which lacks the pseudo-elements, gets matching colors. */
-html[data-layout="classic"]:not(#_) *,
-html[data-layout="classic"]:not(#_) .window-content-area,
-html[data-layout="classic"]:not(#_) .scrollable-area {
+html[data-chrome="classic"]:not(#_) *,
+html[data-chrome="classic"]:not(#_) .window-content-area,
+html[data-chrome="classic"]:not(#_) .scrollable-area {
     scrollbar-width: auto;
     scrollbar-color: auto;
 }
 
 @supports not selector(::-webkit-scrollbar) {
-    html[data-layout="classic"]:not(#_) * {
+    html[data-chrome="classic"]:not(#_) * {
         scrollbar-color: var(--c-scrollbar-thumb, #c0c0c0) var(--c-scrollbar-track, #dfdfdf);
     }
 }
 
-html[data-layout="classic"]:not(#_) ::-webkit-scrollbar {
+html[data-chrome="classic"]:not(#_) ::-webkit-scrollbar {
     width: 16px;
     height: 16px;
 }
 
-html[data-layout="classic"]:not(#_) ::-webkit-scrollbar-thumb {
+html[data-chrome="classic"]:not(#_) ::-webkit-scrollbar-thumb {
     border-radius: 0;
 }
 
 /* ---------- Desktop ---------- */
 
-html[data-layout="classic"]:not(#_) .desktop-icon-label {
+html[data-chrome="classic"]:not(#_) .desktop-icon-label {
     padding: 1px 3px;
     font-weight: 400;
     font-size: var(--c-font-size);
     text-shadow: var(--c-desktop-label-shadow, none);
 }
 
-html[data-layout="classic"]:not(#_) .desktop-icon-image img {
+html[data-chrome="classic"]:not(#_) .desktop-icon-image img {
     filter: none;
 }
 
-html[data-layout="classic"]:not(#_) .desktop-icon-button[data-selected="true"] .desktop-icon-image,
-html[data-layout="classic"]:not(#_) .desktop-icon-button:focus-visible .desktop-icon-image {
+html[data-chrome="classic"]:not(#_) .desktop-icon-button[data-selected="true"] .desktop-icon-image,
+html[data-chrome="classic"]:not(#_) .desktop-icon-button:focus-visible .desktop-icon-image {
     border-color: transparent;
     background: transparent;
     box-shadow: none;
 }
 
-html[data-layout="classic"]:not(#_) .desktop-icon-button[data-selected="true"] .desktop-icon-image img,
-html[data-layout="classic"]:not(#_) .desktop-icon-button:focus-visible .desktop-icon-image img {
+html[data-chrome="classic"]:not(#_) .desktop-icon-button[data-selected="true"] .desktop-icon-image img,
+html[data-chrome="classic"]:not(#_) .desktop-icon-button:focus-visible .desktop-icon-image img {
     filter: var(--c-desktop-icon-selected-filter, none);
 }
 
-html[data-layout="classic"]:not(#_) .desktop-icon-button[data-selected="true"] .desktop-icon-label,
-html[data-layout="classic"]:not(#_) .desktop-icon-button:focus-visible .desktop-icon-label {
+html[data-chrome="classic"]:not(#_) .desktop-icon-button[data-selected="true"] .desktop-icon-label,
+html[data-chrome="classic"]:not(#_) .desktop-icon-button:focus-visible .desktop-icon-label {
     color: var(--c-hl-fg);
     background: var(--c-desktop-label-selected-bg, var(--c-hl-bg));
     border: var(--c-desktop-label-selected-border, 1px dotted transparent);
@@ -153,7 +154,7 @@ html[data-layout="classic"]:not(#_) .desktop-icon-button:focus-visible .desktop-
 
 /* ---------- Windows ---------- */
 
-html[data-layout="classic"]:not(#_) .window-surface {
+html[data-chrome="classic"]:not(#_) .window-surface {
     padding: var(--c-window-padding);
     color: var(--text-color);
     background: var(--c-window-bg);
@@ -162,11 +163,11 @@ html[data-layout="classic"]:not(#_) .window-surface {
     box-shadow: var(--c-window-shadow);
 }
 
-html[data-layout="classic"]:not(#_) .draggable-window.is-maximized .window-surface {
+html[data-chrome="classic"]:not(#_) .draggable-window.is-maximized .window-surface {
     border-radius: 0;
 }
 
-html[data-layout="classic"]:not(#_) .window-titlebar {
+html[data-chrome="classic"]:not(#_) .window-titlebar {
     height: var(--c-title-height);
     min-height: var(--c-title-height);
     flex: 0 0 auto;
@@ -182,23 +183,23 @@ html[data-layout="classic"]:not(#_) .window-titlebar {
     text-shadow: var(--c-title-text-shadow, none);
 }
 
-html[data-layout="classic"]:not(#_) .draggable-window.is-maximized .window-titlebar {
+html[data-chrome="classic"]:not(#_) .draggable-window.is-maximized .window-titlebar {
     border-radius: 0;
 }
 
-html[data-layout="classic"]:not(#_) .window-surface[data-window-surface-id]:not([data-active]) .window-titlebar {
+html[data-chrome="classic"]:not(#_) .window-surface[data-window-surface-id]:not([data-active]) .window-titlebar {
     color: var(--c-title-fg-inactive);
     background: var(--c-title-bg-inactive);
     text-shadow: var(--c-title-text-shadow-inactive, none);
 }
 
-html[data-layout="classic"]:not(#_) .window-title {
+html[data-chrome="classic"]:not(#_) .window-title {
     letter-spacing: 0;
 }
 
-html[data-layout="classic"]:not(#_) .window-menu-button,
-html[data-layout="classic"]:not(#_) .window-menu-button:hover,
-html[data-layout="classic"]:not(#_) .window-menu-button[aria-expanded="true"] {
+html[data-chrome="classic"]:not(#_) .window-menu-button,
+html[data-chrome="classic"]:not(#_) .window-menu-button:hover,
+html[data-chrome="classic"]:not(#_) .window-menu-button[aria-expanded="true"] {
     width: 16px;
     height: 16px;
     flex: 0 0 auto;
@@ -208,12 +209,12 @@ html[data-layout="classic"]:not(#_) .window-menu-button[aria-expanded="true"] {
     box-shadow: none;
 }
 
-html[data-layout="classic"]:not(#_) .window-controls {
+html[data-chrome="classic"]:not(#_) .window-controls {
     align-self: center;
     gap: var(--c-controls-gap);
 }
 
-html[data-layout="classic"]:not(#_) .window-control {
+html[data-chrome="classic"]:not(#_) .window-control {
     min-width: 0;
     padding: 0;
     color: transparent;
@@ -222,22 +223,22 @@ html[data-layout="classic"]:not(#_) .window-control {
 }
 
 /* Theme stylesheets draw caption glyphs; the lok icons stay in the DOM for a11y. */
-html[data-layout="classic"]:not(#_) .window-control > svg {
+html[data-chrome="classic"]:not(#_) .window-control > svg {
     display: none;
 }
 
-html[data-layout="classic"]:not(#_) .window-surface > .window-content-area,
-html[data-layout="classic"]:not(#_) .window-surface > .flex-1 {
+html[data-chrome="classic"]:not(#_) .window-surface > .window-content-area,
+html[data-chrome="classic"]:not(#_) .window-surface > .flex-1 {
     margin-top: var(--c-client-gap);
     background: var(--c-client-bg, var(--detail-bg));
     border: var(--c-client-border);
 }
 
-html[data-layout="classic"]:not(#_) .window-content {
+html[data-chrome="classic"]:not(#_) .window-content {
     border-top: 0;
 }
 
-html[data-layout="classic"]:not(#_) .window-transition-ghost {
+html[data-chrome="classic"]:not(#_) .window-transition-ghost {
     padding: var(--c-window-padding);
     background: var(--c-window-bg);
     border: var(--c-window-border);
@@ -245,7 +246,7 @@ html[data-layout="classic"]:not(#_) .window-transition-ghost {
     box-shadow: var(--c-window-shadow);
 }
 
-html[data-layout="classic"]:not(#_) .window-transition-ghost-titlebar {
+html[data-chrome="classic"]:not(#_) .window-transition-ghost-titlebar {
     min-height: var(--c-title-height);
     padding: var(--c-title-padding);
     color: var(--c-title-fg);
@@ -259,7 +260,7 @@ html[data-layout="classic"]:not(#_) .window-transition-ghost-titlebar {
 
 /* ---------- Raised controls ---------- */
 
-html[data-layout="classic"]:not(#_) :where(
+html[data-chrome="classic"]:not(#_) :where(
     .retro-button,
     button.arena-toolbar-control,
     .arena-detail-action,
@@ -283,12 +284,12 @@ html[data-layout="classic"]:not(#_) :where(
     text-decoration: none;
 }
 
-html[data-layout="classic"]:not(#_) :where(.retro-button, button.arena-toolbar-control) {
+html[data-chrome="classic"]:not(#_) :where(.retro-button, button.arena-toolbar-control) {
     height: var(--c-control-height);
     padding: 0 8px;
 }
 
-html[data-layout="classic"]:not(#_) :where(
+html[data-chrome="classic"]:not(#_) :where(
     .retro-button,
     button.arena-toolbar-control,
     .arena-detail-action,
@@ -305,7 +306,7 @@ html[data-layout="classic"]:not(#_) :where(
     box-shadow: var(--c-btn-shadow-hover);
 }
 
-html[data-layout="classic"]:not(#_) :where(
+html[data-chrome="classic"]:not(#_) :where(
     .retro-button,
     button.arena-toolbar-control,
     .arena-detail-action,
@@ -321,7 +322,7 @@ html[data-layout="classic"]:not(#_) :where(
     box-shadow: var(--c-btn-shadow-active);
 }
 
-html[data-layout="classic"]:not(#_) :where(
+html[data-chrome="classic"]:not(#_) :where(
     .retro-button,
     button.arena-toolbar-control,
     .oobe-segmented button,
@@ -336,7 +337,7 @@ html[data-layout="classic"]:not(#_) :where(
     box-shadow: var(--c-btn-shadow-on);
 }
 
-html[data-layout="classic"]:not(#_) :where(.retro-button[data-variant="primary"], .arena-detail-action-primary) {
+html[data-chrome="classic"]:not(#_) :where(.retro-button[data-variant="primary"], .arena-detail-action-primary) {
     color: var(--c-btn-fg);
     background: var(--c-btn-bg);
     border: var(--c-btn-border-default, var(--c-btn-border));
@@ -344,7 +345,7 @@ html[data-layout="classic"]:not(#_) :where(.retro-button[data-variant="primary"]
     font-weight: 700;
 }
 
-html[data-layout="classic"]:not(#_) :where(.retro-button, button.arena-toolbar-control, .oobe-segmented button, .oobe-choice):disabled {
+html[data-chrome="classic"]:not(#_) :where(.retro-button, button.arena-toolbar-control, .oobe-segmented button, .oobe-choice):disabled {
     color: var(--c-btn-fg-disabled);
     background: var(--c-btn-bg-disabled, var(--c-btn-bg));
     border: var(--c-btn-border-disabled, var(--c-btn-border));
@@ -353,18 +354,18 @@ html[data-layout="classic"]:not(#_) :where(.retro-button, button.arena-toolbar-c
     opacity: var(--c-btn-disabled-opacity);
 }
 
-html[data-layout="classic"]:not(#_) :where(.retro-button, button.arena-toolbar-control):disabled svg {
+html[data-chrome="classic"]:not(#_) :where(.retro-button, button.arena-toolbar-control):disabled svg {
     opacity: 0.45;
 }
 
 /* Joined controls keep each control's own frame. */
-html[data-layout="classic"]:not(#_) :where(.app-control-group, .app-joined-control, .arena-file-button-group, .arena-address-group) > * + * {
+html[data-chrome="classic"]:not(#_) :where(.app-control-group, .app-joined-control, .arena-file-button-group, .arena-address-group) > * + * {
     margin-left: var(--c-joined-gap, 0px);
 }
 
 /* ---------- Fields ---------- */
 
-html[data-layout="classic"]:not(#_) :where(
+html[data-chrome="classic"]:not(#_) :where(
     .search-input,
     input.arena-toolbar-control,
     select.arena-toolbar-control,
@@ -380,16 +381,16 @@ html[data-layout="classic"]:not(#_) :where(
     font-size: var(--c-font-size);
 }
 
-html[data-layout="classic"]:not(#_) :where(.search-input, input.arena-toolbar-control, select.arena-toolbar-control):not(textarea) {
+html[data-chrome="classic"]:not(#_) :where(.search-input, input.arena-toolbar-control, select.arena-toolbar-control):not(textarea) {
     height: var(--c-field-height, 21px);
     min-height: var(--c-field-height, 21px);
 }
 
-html[data-layout="classic"]:not(#_) :where(.search-input, input.arena-toolbar-control):disabled {
+html[data-chrome="classic"]:not(#_) :where(.search-input, input.arena-toolbar-control):disabled {
     background-color: var(--c-field-bg-disabled, var(--c-face));
 }
 
-html[data-layout="classic"]:not(#_) select.arena-toolbar-control {
+html[data-chrome="classic"]:not(#_) select.arena-toolbar-control {
     appearance: none;
     -webkit-appearance: none;
     padding-right: 22px;
@@ -399,14 +400,14 @@ html[data-layout="classic"]:not(#_) select.arena-toolbar-control {
     background-size: var(--c-select-arrow-size, auto);
 }
 
-html[data-layout="classic"]:not(#_) .app-joined-control > .search-input + .retro-button,
-html[data-layout="classic"]:not(#_) .arena-address-group > .arena-toolbar-control + .arena-toolbar-control {
+html[data-chrome="classic"]:not(#_) .app-joined-control > .search-input + .retro-button,
+html[data-chrome="classic"]:not(#_) .arena-address-group > .arena-toolbar-control + .arena-toolbar-control {
     margin-left: var(--c-joined-gap, 0px);
 }
 
 /* Checkboxes, radios, and sliders are drawn from tokens and theme images. */
-html[data-layout="classic"]:not(#_) input[type="checkbox"],
-html[data-layout="classic"]:not(#_) input[type="radio"] {
+html[data-chrome="classic"]:not(#_) input[type="checkbox"],
+html[data-chrome="classic"]:not(#_) input[type="radio"] {
     appearance: none;
     -webkit-appearance: none;
     width: 13px;
@@ -421,36 +422,36 @@ html[data-layout="classic"]:not(#_) input[type="radio"] {
     box-shadow: var(--c-check-shadow);
 }
 
-html[data-layout="classic"]:not(#_) input[type="radio"] {
+html[data-chrome="classic"]:not(#_) input[type="radio"] {
     border-radius: 50%;
 }
 
-html[data-layout="classic"]:not(#_) input[type="checkbox"]:checked {
+html[data-chrome="classic"]:not(#_) input[type="checkbox"]:checked {
     background-image: var(--c-check-mark);
 }
 
-html[data-layout="classic"]:not(#_) input[type="radio"]:checked {
+html[data-chrome="classic"]:not(#_) input[type="radio"]:checked {
     background-image: var(--c-radio-dot);
 }
 
-html[data-layout="classic"]:not(#_) input[type="checkbox"]:hover:not(:disabled),
-html[data-layout="classic"]:not(#_) input[type="radio"]:hover:not(:disabled) {
+html[data-chrome="classic"]:not(#_) input[type="checkbox"]:hover:not(:disabled),
+html[data-chrome="classic"]:not(#_) input[type="radio"]:hover:not(:disabled) {
     box-shadow: var(--c-check-shadow-hover, var(--c-check-shadow));
 }
 
-html[data-layout="classic"]:not(#_) input[type="checkbox"]:disabled,
-html[data-layout="classic"]:not(#_) input[type="radio"]:disabled {
+html[data-chrome="classic"]:not(#_) input[type="checkbox"]:disabled,
+html[data-chrome="classic"]:not(#_) input[type="radio"]:disabled {
     background-color: var(--c-check-bg-disabled, var(--c-face));
 }
 
-html[data-layout="classic"]:not(#_) input[type="range"] {
+html[data-chrome="classic"]:not(#_) input[type="range"] {
     appearance: none;
     -webkit-appearance: none;
     height: 21px;
     background: transparent;
 }
 
-html[data-layout="classic"]:not(#_) input[type="range"]::-webkit-slider-runnable-track {
+html[data-chrome="classic"]:not(#_) input[type="range"]::-webkit-slider-runnable-track {
     height: var(--c-track-height, 2px);
     background: var(--c-track-bg);
     border: 0;
@@ -458,7 +459,7 @@ html[data-layout="classic"]:not(#_) input[type="range"]::-webkit-slider-runnable
     box-shadow: var(--c-track-shadow);
 }
 
-html[data-layout="classic"]:not(#_) input[type="range"]::-moz-range-track {
+html[data-chrome="classic"]:not(#_) input[type="range"]::-moz-range-track {
     height: var(--c-track-height, 2px);
     background: var(--c-track-bg);
     border: 0;
@@ -466,7 +467,7 @@ html[data-layout="classic"]:not(#_) input[type="range"]::-moz-range-track {
     box-shadow: var(--c-track-shadow);
 }
 
-html[data-layout="classic"]:not(#_) input[type="range"]::-webkit-slider-thumb {
+html[data-chrome="classic"]:not(#_) input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
     width: var(--c-thumb-width, 11px);
     height: var(--c-thumb-height, 21px);
@@ -477,7 +478,7 @@ html[data-layout="classic"]:not(#_) input[type="range"]::-webkit-slider-thumb {
     box-shadow: none;
 }
 
-html[data-layout="classic"]:not(#_) input[type="range"]::-moz-range-thumb {
+html[data-chrome="classic"]:not(#_) input[type="range"]::-moz-range-thumb {
     width: var(--c-thumb-width, 11px);
     height: var(--c-thumb-height, 21px);
     background: var(--c-thumb-image) center / contain no-repeat;
@@ -486,45 +487,45 @@ html[data-layout="classic"]:not(#_) input[type="range"]::-moz-range-thumb {
     box-shadow: none;
 }
 
-html[data-layout="classic"]:not(#_) input[type="range"]:hover:not(:disabled)::-webkit-slider-thumb {
+html[data-chrome="classic"]:not(#_) input[type="range"]:hover:not(:disabled)::-webkit-slider-thumb {
     background-image: var(--c-thumb-image-hover, var(--c-thumb-image));
 }
 
 /* ---------- App chrome ---------- */
 
-html[data-layout="classic"]:not(#_) .window-toolbar {
+html[data-chrome="classic"]:not(#_) .window-toolbar {
     background: var(--c-toolbar-bg, var(--c-face));
 }
 
-html[data-layout="classic"]:not(#_) .window-footer {
+html[data-chrome="classic"]:not(#_) .window-footer {
     background: var(--c-face);
 }
 
-html[data-layout="classic"]:not(#_) .window-toolbar {
+html[data-chrome="classic"]:not(#_) .window-toolbar {
     border-bottom: var(--c-toolbar-border);
     box-shadow: var(--c-toolbar-shadow, none);
 }
 
-html[data-layout="classic"]:not(#_) .window-footer {
+html[data-chrome="classic"]:not(#_) .window-footer {
     border-top: 0;
     padding: var(--c-status-padding, 2px);
 }
 
-html[data-layout="classic"]:not(#_) :where(.app-toolbar-row, .arena-address-bar, .arena-file-toolbar) {
+html[data-chrome="classic"]:not(#_) :where(.app-toolbar-row, .arena-address-bar, .arena-file-toolbar) {
     background: var(--c-toolbar-bg, var(--c-face));
 }
 
-html[data-layout="classic"]:not(#_) :where(.app-toolbar-row, .arena-address-bar) {
+html[data-chrome="classic"]:not(#_) :where(.app-toolbar-row, .arena-address-bar) {
     border-bottom: var(--c-toolbar-border);
     box-shadow: var(--c-toolbar-shadow, none);
 }
 
-html[data-layout="classic"]:not(#_) .app-toolbar-stack > .app-toolbar-row:last-child {
+html[data-chrome="classic"]:not(#_) .app-toolbar-stack > .app-toolbar-row:last-child {
     border-bottom: 0;
     box-shadow: none;
 }
 
-html[data-layout="classic"]:not(#_) :where(.app-footer-row, .arena-file-footer) {
+html[data-chrome="classic"]:not(#_) :where(.app-footer-row, .arena-file-footer) {
     min-height: 24px;
     padding: 2px 6px;
     color: var(--text-color);
@@ -535,7 +536,7 @@ html[data-layout="classic"]:not(#_) :where(.app-footer-row, .arena-file-footer) 
     font-size: var(--c-font-size);
 }
 
-html[data-layout="classic"]:not(#_) .app-readout {
+html[data-chrome="classic"]:not(#_) .app-readout {
     color: var(--text-color);
     background: var(--c-readout-bg, var(--c-field-bg));
     border: var(--c-readout-border, var(--c-field-border));
@@ -545,7 +546,7 @@ html[data-layout="classic"]:not(#_) .app-readout {
 }
 
 /* Tabs */
-html[data-layout="classic"]:not(#_) .app-tab-bar {
+html[data-chrome="classic"]:not(#_) .app-tab-bar {
     gap: 0;
     padding: 4px 4px 0;
     background: var(--c-face);
@@ -553,7 +554,7 @@ html[data-layout="classic"]:not(#_) .app-tab-bar {
     box-shadow: var(--c-tab-panel-shadow, none);
 }
 
-html[data-layout="classic"]:not(#_) .app-tab-bar .retro-button {
+html[data-chrome="classic"]:not(#_) .app-tab-bar .retro-button {
     height: 20px;
     min-height: 20px;
     margin: 2px -1px 0 0;
@@ -566,12 +567,12 @@ html[data-layout="classic"]:not(#_) .app-tab-bar .retro-button {
     box-shadow: var(--c-tab-shadow);
 }
 
-html[data-layout="classic"]:not(#_) .app-tab-bar .retro-button:hover:not(:disabled) {
+html[data-chrome="classic"]:not(#_) .app-tab-bar .retro-button:hover:not(:disabled) {
     background: var(--c-tab-bg-hover, var(--c-tab-bg));
     box-shadow: var(--c-tab-shadow-hover, var(--c-tab-shadow));
 }
 
-html[data-layout="classic"]:not(#_) .app-tab-bar .retro-button[data-active="true"] {
+html[data-chrome="classic"]:not(#_) .app-tab-bar .retro-button[data-active="true"] {
     z-index: 1;
     height: 23px;
     min-height: 23px;
@@ -583,7 +584,7 @@ html[data-layout="classic"]:not(#_) .app-tab-bar .retro-button[data-active="true
 }
 
 /* Config sidebar reads as a selection list rather than a stack of buttons. */
-html[data-layout="classic"]:not(#_) .config-sidebar {
+html[data-chrome="classic"]:not(#_) .config-sidebar {
     align-items: stretch;
     gap: 1px;
     padding: 6px;
@@ -594,9 +595,9 @@ html[data-layout="classic"]:not(#_) .config-sidebar {
     border-radius: var(--c-field-radius);
 }
 
-html[data-layout="classic"]:not(#_) .config-sidebar .config-category-button,
-html[data-layout="classic"]:not(#_) .config-sidebar .config-category-button:hover:not(:disabled),
-html[data-layout="classic"]:not(#_) .config-sidebar .config-category-button:active:not(:disabled) {
+html[data-chrome="classic"]:not(#_) .config-sidebar .config-category-button,
+html[data-chrome="classic"]:not(#_) .config-sidebar .config-category-button:hover:not(:disabled),
+html[data-chrome="classic"]:not(#_) .config-sidebar .config-category-button:active:not(:disabled) {
     width: 100%;
     height: 24px;
     min-height: 24px;
@@ -609,12 +610,12 @@ html[data-layout="classic"]:not(#_) .config-sidebar .config-category-button:acti
     box-shadow: none;
 }
 
-html[data-layout="classic"]:not(#_) .config-sidebar .config-category-button:hover:not(:disabled) {
+html[data-chrome="classic"]:not(#_) .config-sidebar .config-category-button:hover:not(:disabled) {
     background: var(--c-hover-bg, transparent);
     border: var(--c-hover-border, 1px solid transparent);
 }
 
-html[data-layout="classic"]:not(#_) .config-sidebar .config-category-button[data-active="true"] {
+html[data-chrome="classic"]:not(#_) .config-sidebar .config-category-button[data-active="true"] {
     width: 100%;
     margin: 0;
     color: var(--c-hl-fg);
@@ -622,17 +623,17 @@ html[data-layout="classic"]:not(#_) .config-sidebar .config-category-button[data
     border: var(--c-hl-border);
 }
 
-html[data-layout="classic"]:not(#_) .config-layout {
+html[data-chrome="classic"]:not(#_) .config-layout {
     grid-template-columns: 124px minmax(0, 1fr);
     background: var(--c-face);
 }
 
-html[data-layout="classic"]:not(#_) .config-content {
+html[data-chrome="classic"]:not(#_) .config-content {
     background: var(--c-face);
 }
 
 /* Group boxes: section titles become legends sitting on an etched frame. */
-html[data-layout="classic"]:not(#_) .config-section {
+html[data-chrome="classic"]:not(#_) .config-section {
     position: relative;
     margin: 10px 0 14px;
     padding-top: 6px;
@@ -642,7 +643,7 @@ html[data-layout="classic"]:not(#_) .config-section {
     box-shadow: var(--c-group-shadow, none);
 }
 
-html[data-layout="classic"]:not(#_) .config-section-title {
+html[data-chrome="classic"]:not(#_) .config-section-title {
     position: absolute;
     top: -8px;
     left: 8px;
@@ -656,42 +657,42 @@ html[data-layout="classic"]:not(#_) .config-section-title {
     font-weight: 400;
 }
 
-html[data-layout="classic"]:not(#_) .config-section-body {
+html[data-chrome="classic"]:not(#_) .config-section-body {
     padding: 12px 10px 10px;
 }
 
-html[data-layout="classic"]:not(#_) :where(.config-system-info, .config-stats-grid) {
+html[data-chrome="classic"]:not(#_) :where(.config-system-info, .config-stats-grid) {
     background: transparent;
     border: 0;
     gap: 4px;
 }
 
-html[data-layout="classic"]:not(#_) :where(.config-system-info, .config-stats-grid) > div {
+html[data-chrome="classic"]:not(#_) :where(.config-system-info, .config-stats-grid) > div {
     background: var(--c-field-bg);
     border: var(--c-field-border);
     border-radius: var(--c-field-radius);
     box-shadow: var(--c-field-shadow);
 }
 
-html[data-layout="classic"]:not(#_) :where(.config-wallpaper-preview, .config-wallpaper-option, .theme-swatch) {
+html[data-chrome="classic"]:not(#_) :where(.config-wallpaper-preview, .config-wallpaper-option, .theme-swatch) {
     border: var(--c-field-border);
     border-radius: var(--c-field-radius);
     box-shadow: var(--c-field-shadow);
 }
 
-html[data-layout="classic"]:not(#_) .config-request-list span {
+html[data-chrome="classic"]:not(#_) .config-request-list span {
     background: var(--c-face);
     border: var(--c-field-border);
     border-radius: var(--c-field-radius);
 }
 
 /* Lists, tables, and selection */
-html[data-layout="classic"]:not(#_) .arena-file-table th,
-html[data-layout="classic"]:not(#_) .arena-file-table th.arena-file-thumbnail-cell {
+html[data-chrome="classic"]:not(#_) .arena-file-table th,
+html[data-chrome="classic"]:not(#_) .arena-file-table th.arena-file-thumbnail-cell {
     background: var(--c-face);
 }
 
-html[data-layout="classic"]:not(#_) .arena-file-table th button {
+html[data-chrome="classic"]:not(#_) .arena-file-table th button {
     height: 20px;
     background: var(--c-header-bg, var(--c-btn-bg));
     border: var(--c-header-border, 0);
@@ -699,56 +700,56 @@ html[data-layout="classic"]:not(#_) .arena-file-table th button {
     font-size: var(--c-font-size);
 }
 
-html[data-layout="classic"]:not(#_) .arena-file-table th button:hover,
-html[data-layout="classic"]:not(#_) .arena-file-table th button[data-active="true"] {
+html[data-chrome="classic"]:not(#_) .arena-file-table th button:hover,
+html[data-chrome="classic"]:not(#_) .arena-file-table th button[data-active="true"] {
     background: var(--c-header-bg-hover, var(--c-header-bg, var(--c-btn-bg)));
 }
 
-html[data-layout="classic"]:not(#_) .arena-file-table th button:active {
+html[data-chrome="classic"]:not(#_) .arena-file-table th button:active {
     box-shadow: var(--c-header-shadow-active, var(--c-btn-shadow-active));
 }
 
-html[data-layout="classic"]:not(#_) .arena-file-table tbody tr:hover td {
+html[data-chrome="classic"]:not(#_) .arena-file-table tbody tr:hover td {
     background: var(--c-hover-bg, var(--block-bg));
 }
 
-html[data-layout="classic"]:not(#_) .arena-file-table tbody tr[data-selected="true"] td {
+html[data-chrome="classic"]:not(#_) .arena-file-table tbody tr[data-selected="true"] td {
     color: var(--c-hl-fg);
     background: var(--c-hl-bg);
 }
 
-html[data-layout="classic"]:not(#_) .arena-file-card[data-selected="true"] {
+html[data-chrome="classic"]:not(#_) .arena-file-card[data-selected="true"] {
     outline: var(--c-focus-outline);
     outline-offset: -3px;
 }
 
-html[data-layout="classic"]:not(#_) .arena-file-card[data-selected="true"] .arena-file-card-text {
+html[data-chrome="classic"]:not(#_) .arena-file-card[data-selected="true"] .arena-file-card-text {
     color: var(--c-hl-fg);
     background: var(--c-hl-bg);
 }
 
-html[data-layout="classic"]:not(#_) .arena-file-card[data-selected="true"] .arena-file-item-title {
+html[data-chrome="classic"]:not(#_) .arena-file-card[data-selected="true"] .arena-file-item-title {
     color: inherit;
 }
 
-html[data-layout="classic"]:not(#_) .arena-file-list-scroller,
-html[data-layout="classic"]:not(#_) .arena-file-contents {
+html[data-chrome="classic"]:not(#_) .arena-file-list-scroller,
+html[data-chrome="classic"]:not(#_) .arena-file-contents {
     background: var(--block-bg);
 }
 
-html[data-layout="classic"]:not(#_) .arena-detail-header {
+html[data-chrome="classic"]:not(#_) .arena-detail-header {
     border-bottom: var(--c-toolbar-border);
     background: var(--c-face);
 }
 
-html[data-layout="classic"]:not(#_) .resizable-divider {
+html[data-chrome="classic"]:not(#_) .resizable-divider {
     background: var(--c-face);
     box-shadow: var(--c-splitter-shadow, none);
 }
 
 /* ---------- Menus ---------- */
 
-html[data-layout="classic"]:not(#_) .menu-surface {
+html[data-chrome="classic"]:not(#_) .menu-surface {
     padding: var(--c-menu-padding);
     color: var(--text-color);
     background: var(--c-menu-bg);
@@ -757,7 +758,7 @@ html[data-layout="classic"]:not(#_) .menu-surface {
     box-shadow: var(--c-menu-shadow);
 }
 
-html[data-layout="classic"]:not(#_) .menu-item-button {
+html[data-chrome="classic"]:not(#_) .menu-item-button {
     min-height: 22px;
     padding: 3px 20px 3px 6px;
     color: var(--text-color);
@@ -766,34 +767,101 @@ html[data-layout="classic"]:not(#_) .menu-item-button {
     font-size: var(--c-font-size);
 }
 
-html[data-layout="classic"]:not(#_) .menu-item-button:hover:not(:disabled),
-html[data-layout="classic"]:not(#_) .menu-item-shell.has-submenu:hover > .menu-item-button {
+html[data-chrome="classic"]:not(#_) .menu-item-button:hover:not(:disabled),
+html[data-chrome="classic"]:not(#_) .menu-item-shell.has-submenu:hover > .menu-item-button {
     color: var(--c-hl-fg);
     background: var(--c-hl-bg);
     border: var(--c-hl-border);
 }
 
-html[data-layout="classic"]:not(#_) .menu-item-button:disabled {
+html[data-chrome="classic"]:not(#_) .menu-item-button:disabled {
     color: var(--c-btn-fg-disabled);
     text-shadow: var(--c-btn-text-shadow-disabled);
     opacity: 1;
 }
 
-html[data-layout="classic"]:not(#_) .menu-surface > .border-t {
+html[data-chrome="classic"]:not(#_) .menu-surface > .border-t {
     margin: 3px 2px;
     border-top: var(--c-menu-divider);
     border-bottom: var(--c-menu-divider-light, 0);
 }
 
-html[data-layout="classic"]:not(#_) .calendar-panel .bg-accent {
+html[data-chrome="classic"]:not(#_) .calendar-panel .bg-accent {
     color: var(--c-hl-fg);
     background: var(--c-hl-bg);
     border-radius: var(--c-hl-radius);
 }
 
+/* ---------- Menu bar (lok layout only renders .app-header) ---------- */
+
+html[data-chrome="classic"]:not(#_) .app-header {
+    height: var(--c-menubar-height, 22px);
+    min-height: var(--c-menubar-height, 22px);
+    padding: var(--c-menubar-padding, 0 4px);
+    gap: 0;
+    color: var(--c-menubar-fg, var(--text-color));
+    background: var(--c-menubar-bg, var(--c-face));
+    border-bottom: var(--c-menubar-border, 1px solid #000000);
+    box-shadow: var(--c-menubar-shadow, none);
+    font-family: var(--c-menubar-font, var(--font-ui));
+    font-size: var(--c-menubar-size, var(--c-font-size));
+}
+
+html[data-chrome="classic"]:not(#_) .app-header-start {
+    height: 100%;
+}
+
+html[data-chrome="classic"]:not(#_) .app-header-button,
+html[data-chrome="classic"]:not(#_) .app-header-active {
+    height: 100%;
+    padding: var(--c-menubar-item-padding, 0 9px);
+    color: inherit;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    font: inherit;
+    font-weight: var(--c-menubar-weight, 400);
+    letter-spacing: 0;
+}
+
+html[data-chrome="classic"]:not(#_) .app-header-active {
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    font-weight: var(--c-menubar-active-weight, 700);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+html[data-chrome="classic"]:not(#_) .app-header-button > span + span {
+    margin-left: 1ch;
+}
+
+html[data-chrome="classic"]:not(#_) .app-header-button:hover,
+html[data-chrome="classic"]:not(#_) .app-header-button[aria-expanded="true"] {
+    color: var(--c-menubar-hl-fg, var(--c-hl-fg));
+    background: var(--c-menubar-hl-bg, var(--c-hl-bg));
+    border: 0;
+}
+
+html[data-chrome="classic"]:not(#_) .app-header + .desktop-container {
+    border-top: 0;
+}
+
+/* Pull-down menus hang from the bar itself. */
+html[data-chrome="classic"]:not(#_) .app-menu-panel[data-placement="top"] {
+    top: var(--c-menubar-height, 22px);
+    left: var(--c-menubar-menu-left, 0px);
+}
+
+html[data-chrome="classic"]:not(#_) .calendar-panel[data-placement="top"] {
+    top: var(--c-menubar-height, 22px);
+    right: 0;
+}
+
 /* ---------- Taskbar ---------- */
 
-html[data-layout="classic"]:not(#_) .taskbar {
+html[data-chrome="classic"]:not(#_) .taskbar {
     gap: 4px;
     padding: var(--c-taskbar-padding, 2px 2px 2px 2px);
     color: var(--c-taskbar-fg, var(--text-color));
@@ -802,12 +870,12 @@ html[data-layout="classic"]:not(#_) .taskbar {
     box-shadow: var(--c-taskbar-shadow, none);
 }
 
-html[data-layout="classic"]:not(#_) .taskbar-tasks {
+html[data-chrome="classic"]:not(#_) .taskbar-tasks {
     gap: var(--c-task-gap, 3px);
     padding: 0 2px;
 }
 
-html[data-layout="classic"]:not(#_) .taskbar-button {
+html[data-chrome="classic"]:not(#_) .taskbar-button {
     width: 160px;
     height: var(--c-task-height, 22px);
     padding: 0 6px;
@@ -820,12 +888,12 @@ html[data-layout="classic"]:not(#_) .taskbar-button {
     font-size: var(--c-font-size);
 }
 
-html[data-layout="classic"]:not(#_) .taskbar-button:hover {
+html[data-chrome="classic"]:not(#_) .taskbar-button:hover {
     background: var(--c-task-bg-hover, var(--c-task-bg));
     box-shadow: var(--c-task-shadow-hover, var(--c-task-shadow));
 }
 
-html[data-layout="classic"]:not(#_) .taskbar-button[aria-pressed="true"] {
+html[data-chrome="classic"]:not(#_) .taskbar-button[aria-pressed="true"] {
     color: var(--c-task-fg-on, var(--c-task-fg));
     background: var(--c-task-bg-on);
     border: var(--c-task-border-on, var(--c-task-border));
@@ -833,11 +901,11 @@ html[data-layout="classic"]:not(#_) .taskbar-button[aria-pressed="true"] {
     font-weight: var(--c-task-weight-on, 400);
 }
 
-html[data-layout="classic"]:not(#_) .taskbar-button > span {
+html[data-chrome="classic"]:not(#_) .taskbar-button > span {
     max-width: none;
 }
 
-html[data-layout="classic"]:not(#_) .taskbar-tray {
+html[data-chrome="classic"]:not(#_) .taskbar-tray {
     height: var(--c-tray-height, 22px);
     padding: 0 8px;
     color: var(--c-tray-fg, var(--text-color));
@@ -846,9 +914,9 @@ html[data-layout="classic"]:not(#_) .taskbar-tray {
     box-shadow: var(--c-tray-shadow, none);
 }
 
-html[data-layout="classic"]:not(#_) .taskbar-clock,
-html[data-layout="classic"]:not(#_) .taskbar-clock:hover,
-html[data-layout="classic"]:not(#_) .taskbar-clock[aria-expanded="true"] {
+html[data-chrome="classic"]:not(#_) .taskbar-clock,
+html[data-chrome="classic"]:not(#_) .taskbar-clock:hover,
+html[data-chrome="classic"]:not(#_) .taskbar-clock[aria-expanded="true"] {
     height: 100%;
     padding: 0 2px;
     color: inherit;
@@ -857,11 +925,11 @@ html[data-layout="classic"]:not(#_) .taskbar-clock[aria-expanded="true"] {
     font-size: var(--c-font-size);
 }
 
-html[data-layout="classic"]:not(#_) .app-menu-panel[data-placement="bottom"] {
+html[data-chrome="classic"]:not(#_) .app-menu-panel[data-placement="bottom"] {
     min-width: 0;
 }
 
-html[data-layout="classic"]:not(#_) .taskbar-clock-date {
+html[data-chrome="classic"]:not(#_) .taskbar-clock-date {
     display: var(--c-tray-date-display, none);
 }
 
@@ -872,8 +940,13 @@ html[data-layout="classic"]:not(#_) .app-menu-banner {
 
 /* ---------- Dialogs, toasts, setup ---------- */
 
-html[data-layout="classic"]:not(#_) [data-sonner-toast] {
-    padding: var(--c-window-padding) !important;
+/* Sonner sets --width inline; wide-type themes need a wider toaster. */
+html[data-chrome="classic"]:not(#_) [data-sonner-toaster] {
+    --width: var(--c-toast-width, 356px) !important;
+}
+
+html[data-chrome="classic"]:not(#_) [data-sonner-toast] {
+    padding: var(--c-toast-padding, 10px 12px) !important;
     color: var(--text-color) !important;
     background: var(--c-face) !important;
     border: var(--c-window-border) !important;
@@ -882,36 +955,54 @@ html[data-layout="classic"]:not(#_) [data-sonner-toast] {
     font-size: var(--c-font-size) !important;
 }
 
-html[data-layout="classic"]:not(#_) .oobe-overlay {
+html[data-chrome="classic"]:not(#_) [data-sonner-toast] [data-title] {
+    font-weight: var(--c-toast-title-weight, 700);
+}
+
+/* The base toast button rule is !important; classic buttons keep their own frame. */
+html[data-chrome="classic"]:not(#_) [data-sonner-toast] [data-button] {
+    min-height: var(--c-control-height) !important;
+    color: var(--c-btn-fg) !important;
+    background: var(--c-btn-bg) !important;
+    border: var(--c-btn-border) !important;
+    border-radius: var(--c-btn-radius) !important;
+    box-shadow: var(--c-btn-shadow) !important;
+}
+
+html[data-chrome="classic"]:not(#_) [data-sonner-toast] [data-button]:hover {
+    background: var(--c-btn-bg-hover) !important;
+}
+
+html[data-chrome="classic"]:not(#_) .oobe-overlay {
     background: var(--c-modal-backdrop, rgba(0, 0, 0, 0.25));
 }
 
-html[data-layout="classic"]:not(#_) .oobe-steps {
+html[data-chrome="classic"]:not(#_) .oobe-steps {
     background: var(--c-face);
     border-right: var(--c-toolbar-border);
 }
 
-html[data-layout="classic"]:not(#_) .oobe-content {
+html[data-chrome="classic"]:not(#_) .oobe-content {
     background: var(--c-face);
 }
 
-html[data-layout="classic"]:not(#_) .oobe-footer {
+html[data-chrome="classic"]:not(#_) .oobe-footer {
     background: var(--c-face);
     border-top: var(--c-toolbar-border);
 }
 
-html[data-layout="classic"]:not(#_) .oobe-step[data-active="true"] {
+html[data-chrome="classic"]:not(#_) .oobe-step[data-active="true"] {
     color: var(--c-hl-fg);
     background: var(--c-hl-bg);
     border: var(--c-hl-border);
     border-radius: var(--c-hl-radius);
 }
 
-html[data-layout="classic"]:not(#_) .oobe-page h1 {
+html[data-chrome="classic"]:not(#_) .oobe-page h1 {
     font-size: 16px;
 }
 
-html[data-layout="classic"]:not(#_) :where(.oobe-live-preview:not(.oobe-crt-preview), .oobe-summary, .oobe-page-icon) {
+html[data-chrome="classic"]:not(#_) :where(.oobe-live-preview:not(.oobe-crt-preview), .oobe-summary, .oobe-page-icon) {
     background: var(--c-field-bg);
     border: var(--c-field-border);
     border-radius: var(--c-field-radius);
@@ -920,51 +1011,51 @@ html[data-layout="classic"]:not(#_) :where(.oobe-live-preview:not(.oobe-crt-prev
 
 /* ---------- Content surfaces ---------- */
 
-html[data-layout="classic"]:not(#_) :where(.lok-reader-identity-pane, .guestbook-composer-pane) {
+html[data-chrome="classic"]:not(#_) :where(.lok-reader-identity-pane, .guestbook-composer-pane) {
     background: var(--c-face);
 }
 
-html[data-layout="classic"]:not(#_) .lok-reader-entry-list > .lok-reader-entry {
+html[data-chrome="classic"]:not(#_) .lok-reader-entry-list > .lok-reader-entry {
     background: var(--block-bg);
 }
 
-html[data-layout="classic"]:not(#_) .weather-output {
+html[data-chrome="classic"]:not(#_) .weather-output {
     font-family: var(--font-code);
 }
 
 /* ---------- Media Player ---------- */
 
-html[data-layout="classic"]:not(#_) .media-player-playlist {
+html[data-chrome="classic"]:not(#_) .media-player-playlist {
     background: var(--c-list-bg, var(--block-bg));
     border-color: var(--c-splitter-border, var(--internal-border));
 }
 
-html[data-layout="classic"]:not(#_) .media-player-playlist-header {
+html[data-chrome="classic"]:not(#_) .media-player-playlist-header {
     color: var(--text-color);
     background: var(--c-toolbar-bg, var(--c-face));
     border-bottom: var(--c-toolbar-border);
     font-size: var(--c-font-size);
 }
 
-html[data-layout="classic"]:not(#_) .media-player-track {
+html[data-chrome="classic"]:not(#_) .media-player-track {
     min-height: 30px;
     border-bottom-color: transparent;
     border-radius: var(--c-hl-radius);
     font-size: var(--c-font-size);
 }
 
-html[data-layout="classic"]:not(#_) .media-player-track:hover {
+html[data-chrome="classic"]:not(#_) .media-player-track:hover {
     background: var(--c-hover-bg, transparent);
 }
 
-html[data-layout="classic"]:not(#_) .media-player-track[data-selected] {
+html[data-chrome="classic"]:not(#_) .media-player-track[data-selected] {
     color: var(--c-hl-fg);
     background: var(--c-hl-bg);
     outline: var(--c-focus-outline);
     outline-offset: -1px;
 }
 
-html[data-layout="classic"]:not(#_) .media-player-track-remove:hover {
+html[data-chrome="classic"]:not(#_) .media-player-track-remove:hover {
     color: var(--c-btn-fg);
     background: var(--c-btn-bg);
     border: var(--c-btn-border);
@@ -972,35 +1063,40 @@ html[data-layout="classic"]:not(#_) .media-player-track-remove:hover {
     box-shadow: var(--c-btn-shadow);
 }
 
-html[data-layout="classic"]:not(#_) .media-player-time {
+html[data-chrome="classic"]:not(#_) .media-player-time {
     min-width: 54px;
 }
 
 /* ---------- Ask AI ---------- */
 
-html[data-layout="classic"]:not(#_) :where(.ask-ai-request, .ask-ai-property, .ask-ai-json, .ask-ai-intro) {
+html[data-chrome="classic"]:not(#_) :where(.ask-ai-request, .ask-ai-property, .ask-ai-json, .ask-ai-intro) {
     border-radius: var(--c-field-radius);
 }
 
-html[data-layout="classic"]:not(#_) .ask-ai-request {
+html[data-chrome="classic"]:not(#_) .ask-ai-request {
     background: var(--c-face);
     border: var(--c-group-border);
 }
 
-html[data-layout="classic"]:not(#_) .ask-ai-property {
+html[data-chrome="classic"]:not(#_) .ask-ai-property {
     border: var(--c-field-border);
     box-shadow: var(--c-field-shadow);
 }
 
-html[data-layout="classic"]:not(#_) .ask-ai-json header {
+/* Example and suggested questions can wrap; their buttons grow with the text. */
+html[data-chrome="classic"]:not(#_) :where(.ask-ai-examples, .ask-ai-suggestion) .retro-button {
+    height: auto;
+    min-height: var(--c-control-height);
+    padding-top: 2px;
+    padding-bottom: 2px;
+    white-space: normal;
+    text-align: left;
+}
+
+html[data-chrome="classic"]:not(#_) .ask-ai-json > summary {
     background: var(--c-toolbar-bg, var(--c-face));
 }
 
-html[data-layout="classic"]:not(#_) .ask-ai-content-input {
-    border-radius: 0;
-    box-shadow: none;
-}
-
-html[data-layout="classic"]:not(#_) .media-player-track-text {
+html[data-chrome="classic"]:not(#_) .media-player-track-text {
     padding-left: 1px;
 }

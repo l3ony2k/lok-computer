@@ -26,6 +26,12 @@ import mediaIcon from '../../assets/icons/media.png';
 interface CustomIconProps {
   iconType?: string; // e.g., 'folder', 'image', 'text'
   className?: string;
+  /**
+   * Icons are 32px pixel art stored at 8× (scripts/pixel-icons.mjs). Smooth
+   * scaling is exact at 32px and keeps detail at 16px; set this only when the
+   * icon is drawn larger than 32px, so the upscale stays crisp.
+   */
+  pixelated?: boolean;
 }
 
 // 2. Map icon types to the imported icon variables
@@ -53,7 +59,7 @@ const iconMap: { [key: string]: string } = { // The value is now the imported UR
   // Add other mappings corresponding to your imports
 };
 
-export const CustomIcon: React.FC<CustomIconProps> = ({ iconType, className }) => {
+export const CustomIcon: React.FC<CustomIconProps> = ({ iconType, className, pixelated = false }) => {
   // 3. Get the correct imported URL from the map
   const iconSrc = iconType ? iconMap[iconType] : null;
 
@@ -68,6 +74,7 @@ export const CustomIcon: React.FC<CustomIconProps> = ({ iconType, className }) =
       src={iconSrc}
       alt={`${iconType || 'icon'}`}
       className={`inline-block object-contain ${className || ''}`}
+      style={pixelated ? { imageRendering: 'pixelated' } : undefined}
       // Prevent dragging the icon itself, which can interfere with window dragging
       draggable="false"
       // Improve rendering performance for small, static images

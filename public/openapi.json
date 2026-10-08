@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "lok.computer Public API",
-    "version": "2.0.10",
+    "version": "3.0.1",
     "description": "Public REST endpoints used by the lok.computer browser desktop. Most operations read public data through an upstream provider. No caller API key is currently required. Upstream-dependent operations can fail independently of the credential-free status endpoint.",
     "contact": {
       "name": "Lok",
@@ -134,7 +134,7 @@
       "post": {
         "operationId": "planJevQuestions",
         "summary": "Plan typed Jev questions for a request",
-        "description": "Uses the server-configured fast language model to compile a natural-language request, and optional content, into typed Jev questions (noul, choice, score) without calling Jev. Use it to preview or edit a plan before submitting it to askJev. Do not send secrets or sensitive personal data.",
+        "description": "Reads a question with the server-configured fast language model, without calling Jev. The reply's `kind` is `plan` (typed Jev questions: a primary question that answers the person plus up to four supporting questions), `needs_input` (fields to ask the person for, then plan again with `inputs`), or `refuse` (Jev cannot judge it, with a suggested rephrasing). Do not send secrets or sensitive personal data.",
         "tags": ["AI"],
         "requestBody": {
           "required": true,
@@ -149,7 +149,7 @@
         },
         "responses": {
           "200": {
-            "description": "A validated plan ready for askJev.",
+            "description": "A plan, a request for more input, or a refusal.",
             "content": {
               "application/json": {
                 "schema": {
@@ -165,7 +165,7 @@
             "$ref": "#/components/responses/MethodNotAllowed"
           },
           "422": {
-            "description": "The planner found nothing to judge (code `refused`) or could not produce a valid plan (code `invalid_plan`).",
+            "description": "The planner could not produce a valid plan (code `invalid_plan`).",
             "content": {
               "application/json": {
                 "schema": {
@@ -204,7 +204,7 @@
       "post": {
         "operationId": "askJev",
         "summary": "Answer a request with Jev and return the requested properties",
-        "description": "Plans typed questions with the server-configured fast language model (or uses a supplied plan), evaluates them with TypeSafe's Jev decision model, and returns `result`, a JSON object keyed by the requested properties, plus per-property probabilities and confidence. Supplying `plan` skips the planner. Do not send secrets or sensitive personal data.",
+        "description": "Plans a question with the server-configured fast language model (or uses a supplied plan), evaluates it with TypeSafe's Jev decision model, and returns `best` (the answer in plain words with its probability, confidence, and certainty), per-question evidence, notes on close calls and option-order consistency, and the raw Jev request and response. When the planner needs more input or refuses, that reply is returned without calling Jev. Do not send secrets or sensitive personal data.",
         "tags": ["AI"],
         "requestBody": {
           "required": true,
@@ -219,11 +219,15 @@
         },
         "responses": {
           "200": {
-            "description": "Typed answers formed into the requested properties.",
+            "description": "The best answer with analytics, or a needs_input or refuse reply.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/JevAnswer"
+                  "oneOf": [
+                    { "$ref": "#/components/schemas/JevAnswer" },
+                    { "$ref": "#/components/schemas/JevNeedsInput" },
+                    { "$ref": "#/components/schemas/JevRefusal" }
+                  ]
                 }
               }
             }
@@ -235,7 +239,7 @@
             "$ref": "#/components/responses/MethodNotAllowed"
           },
           "422": {
-            "description": "The request or plan was rejected: nothing to judge, an invalid plan, or questions Jev refused.",
+            "description": "The plan was invalid (code `invalid_plan`) or Jev rejected the questions.",
             "content": {
               "application/json": {
                 "schema": {
@@ -875,20 +879,33 @@
           },
           "code": {
             "type": "string",
-            "description": "Machine-readable reason when available, e.g. refused or invalid_plan."
+            "description": "Machine-readable reason when available, e.g. invalid_plan."
           }
         }
       },
       "JevPlanRequest": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["prompt"],
         "properties": {
-          "prompt": {
+          "question": {
             "type": "string",
             "minLength": 1,
             "maxLength": 2000,
-            "description": "The properties you want back, in plain language, e.g. \"Is it urgent and which team owns it?\""
+            "description": "A question in plain language. Paste any text it is about into the question, e.g. \"Is this review positive? …\""
+          },
+          "prompt": {
+            "type": "string",
+            "maxLength": 2000,
+            "deprecated": true,
+            "description": "Older name for `question`."
+          },
+          "inputs": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "maxLength": 8000
+            },
+            "description": "Answers to the fields of a previous `needs_input` reply, keyed by field key."
           },
           "state": {
             "description": "Content to judge: text, or JSON with descriptive field names.",
@@ -904,19 +921,38 @@
                 "type": "array"
               }
             ]
+          },
+          "answerAnyway": {
+            "type": "boolean",
+            "description": "Plan from what is available instead of asking for more input."
           }
-        }
+        },
+        "description": "Send `question` (or the older `prompt`)."
       },
       "JevAskRequest": {
         "type": "object",
         "additionalProperties": false,
-        "description": "Provide `prompt` (and optional `state`) to plan automatically, or `plan` to evaluate a plan as written.",
+        "description": "A question to plan and answer, or a plan to evaluate as written.",
         "properties": {
-          "prompt": {
+          "question": {
             "type": "string",
             "minLength": 1,
             "maxLength": 2000,
-            "description": "The properties you want back, in plain language."
+            "description": "A question in plain language. Paste any text it is about into the question, e.g. \"Is this review positive? …\""
+          },
+          "prompt": {
+            "type": "string",
+            "maxLength": 2000,
+            "deprecated": true,
+            "description": "Older name for `question`."
+          },
+          "inputs": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "maxLength": 8000
+            },
+            "description": "Answers to the fields of a previous `needs_input` reply, keyed by field key."
           },
           "state": {
             "description": "Content to judge: text, or JSON with descriptive field names.",
@@ -932,6 +968,10 @@
                 "type": "array"
               }
             ]
+          },
+          "answerAnyway": {
+            "type": "boolean",
+            "description": "Plan from what is available instead of asking for more input."
           },
           "plan": {
             "$ref": "#/components/schemas/JevPlan"
@@ -944,33 +984,13 @@
         "properties": {
           "type": {
             "type": "string",
-            "enum": ["noul", "choice", "score"],
-            "description": "noul is yes/no, choice picks one option, score places the state on ordered levels."
+            "enum": ["noul", "choice", "score"]
           },
           "instructions": {
-            "description": "The complete question sent to Jev.",
-            "oneOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "object"
-              },
-              {
-                "type": "array"
-              }
-            ]
+            "description": "The complete question; a string, or an object or array holding the question and data it refers to."
           },
           "criteria": {
-            "description": "Noul: {true, false} descriptions. Choice: option key to description (2-24 options). Score: ordered level descriptions (2-10).",
-            "oneOf": [
-              {
-                "type": "object"
-              },
-              {
-                "type": "array"
-              }
-            ]
+            "description": "noul: {true, false} descriptions; choice: option key to description (or null); score: ordered level descriptions, lowest first."
           }
         }
       },
@@ -980,7 +1000,11 @@
         "properties": {
           "summary": {
             "type": "string",
-            "description": "One sentence describing what will be judged."
+            "description": "What Jev will judge, in one sentence."
+          },
+          "rationale": {
+            "type": ["string", "null"],
+            "description": "Why the primary question has its type."
           },
           "state": {
             "description": "Content to judge: text, or JSON with descriptive field names.",
@@ -997,21 +1021,69 @@
               }
             ]
           },
+          "primary": {
+            "type": "string",
+            "description": "Key of the question that answers the person directly. Defaults to the first question."
+          },
+          "labels": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Short titles by question key."
+          },
           "questions": {
             "type": "object",
-            "description": "One to eight questions keyed by snake_case property name.",
+            "maxProperties": 8,
             "additionalProperties": {
               "$ref": "#/components/schemas/JevQuestion"
             }
           }
         }
       },
-      "JevPlanResponse": {
+      "JevInputField": {
         "type": "object",
-        "required": ["plan", "timing"],
+        "required": ["key", "label", "placeholder", "multiline", "required"],
         "properties": {
-          "plan": {
-            "$ref": "#/components/schemas/JevPlan"
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "placeholder": {
+            "type": "string"
+          },
+          "multiline": {
+            "type": "boolean"
+          },
+          "required": {
+            "type": "boolean"
+          }
+        }
+      },
+      "JevNeedsInput": {
+        "type": "object",
+        "required": ["kind", "message", "fields", "optional"],
+        "description": "The question is about material the person has not given. Ask for the fields, then plan again with `inputs`.",
+        "properties": {
+          "kind": {
+            "const": "needs_input"
+          },
+          "message": {
+            "type": "string"
+          },
+          "fields": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 3,
+            "items": {
+              "$ref": "#/components/schemas/JevInputField"
+            }
+          },
+          "optional": {
+            "type": "boolean",
+            "description": "Every field is optional; `answerAnyway` is reasonable."
           },
           "planner": {
             "type": ["object", "null"],
@@ -1025,87 +1097,29 @@
             "type": "object",
             "properties": {
               "plannerMs": {
+                "type": ["integer", "null"]
+              },
+              "jevMs": {
                 "type": "integer"
               }
             }
           }
         }
       },
-      "JevProperty": {
+      "JevRefusal": {
         "type": "object",
-        "required": ["type", "question", "value"],
+        "required": ["kind", "message"],
+        "description": "Jev cannot judge the question, e.g. a request to write text or do arithmetic.",
         "properties": {
-          "type": {
-            "type": "string",
-            "enum": ["noul", "choice", "score"]
+          "kind": {
+            "const": "refuse"
           },
-          "question": {
+          "message": {
             "type": "string"
           },
-          "value": {
-            "description": "Boolean for noul (probability >= 0.5), option key for choice, number for score.",
-            "oneOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "string"
-              },
-              {
-                "type": "number"
-              }
-            ]
-          },
-          "probability": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 1,
-            "description": "Noul only: probability that the answer is yes."
-          },
-          "confidence": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 1,
-            "description": "Choice and score: how peaked the distribution is."
-          },
-          "probabilities": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "number"
-            }
-          },
-          "options": {
-            "type": "object",
-            "description": "Choice only: option descriptions."
-          },
-          "level": {
-            "type": "integer",
-            "description": "Score only: nearest level index."
-          },
-          "label": {
-            "type": "string",
-            "description": "Score only: nearest level description."
-          },
-          "max": {
-            "type": "integer",
-            "description": "Score only: highest level index."
-          },
-          "scale": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "Score only: level descriptions."
-          }
-        }
-      },
-      "JevAnswer": {
-        "type": "object",
-        "required": ["model", "plan", "result", "properties"],
-        "properties": {
-          "model": {
-            "type": "string",
-            "description": "Versioned Jev model that answered, e.g. jev-1.13.0."
+          "suggestion": {
+            "type": ["string", "null"],
+            "description": "A rephrased question Jev could answer."
           },
           "planner": {
             "type": ["object", "null"],
@@ -1115,31 +1129,225 @@
               }
             }
           },
-          "plan": {
-            "$ref": "#/components/schemas/JevPlan"
+          "timing": {
+            "type": "object",
+            "properties": {
+              "plannerMs": {
+                "type": ["integer", "null"]
+              },
+              "jevMs": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "JevPlanResponse": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": ["kind", "plan"],
+            "properties": {
+              "kind": {
+                "const": "plan"
+              },
+              "plan": {
+                "$ref": "#/components/schemas/JevPlan"
+              },
+              "planner": {
+                "type": ["object", "null"],
+                "properties": {
+                  "model": {
+                    "type": "string"
+                  }
+                }
+              },
+              "timing": {
+                "type": "object",
+                "properties": {
+                  "plannerMs": {
+                    "type": ["integer", "null"]
+                  },
+                  "jevMs": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "$ref": "#/components/schemas/JevNeedsInput"
+          },
+          {
+            "$ref": "#/components/schemas/JevRefusal"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "kind"
+        }
+      },
+      "JevProperty": {
+        "type": "object",
+        "required": ["type", "title", "question", "primary", "value", "confidence"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["noul", "choice", "score"]
+          },
+          "title": {
+            "type": "string"
+          },
+          "question": {
+            "type": "string"
+          },
+          "primary": {
+            "type": "boolean",
+            "description": "This question answers the person directly."
+          },
+          "value": {
+            "description": "noul: boolean; choice: option key; score: position between levels (0 to max)."
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "How decisive the distribution is; for noul, |2p − 1|."
+          },
+          "probability": {
+            "type": "number",
+            "description": "noul only: probability of yes."
+          },
+          "probabilities": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            },
+            "description": "choice: by option, highest first; score: by level index."
+          },
+          "options": {
+            "type": "object",
+            "description": "choice only: option descriptions."
+          },
+          "orderCheck": {
+            "type": "object",
+            "description": "Primary choice only: answers with options as listed and reversed.",
+            "properties": {
+              "consistent": {
+                "type": "boolean"
+              },
+              "listed": {
+                "type": "object"
+              },
+              "reversed": {
+                "type": "object"
+              }
+            }
+          },
+          "level": {
+            "type": "integer"
+          },
+          "levelText": {
+            "type": "string"
+          },
+          "max": {
+            "type": "integer"
+          },
+          "scale": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "JevAnswer": {
+        "type": "object",
+        "required": ["kind", "model", "plan", "best", "result", "properties", "notes", "jev"],
+        "properties": {
+          "kind": {
+            "const": "answer"
+          },
+          "model": {
+            "type": "string",
+            "description": "Versioned Jev model that answered, e.g. jev-1.13.0."
+          },
+          "best": {
+            "type": ["object", "null"],
+            "description": "The primary question's answer in plain words.",
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "question": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": ["noul", "choice", "score"]
+              },
+              "value": {},
+              "answer": {
+                "type": "string",
+                "description": "e.g. \"Yes\", \"Dwarf planet\", or a score level."
+              },
+              "detail": {
+                "type": ["string", "null"],
+                "description": "What the chosen option or yes/no means."
+              },
+              "probability": {
+                "type": "number"
+              },
+              "confidence": {
+                "type": "number"
+              },
+              "certainty": {
+                "type": "string",
+                "enum": ["high", "medium", "low"]
+              }
+            }
           },
           "result": {
             "type": "object",
-            "description": "The requested properties as plain JSON values.",
-            "additionalProperties": {
-              "oneOf": [
-                {
-                  "type": "boolean"
-                },
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "number"
-                }
-              ]
-            }
+            "description": "Plain values keyed by question, for code."
           },
           "properties": {
             "type": "object",
             "additionalProperties": {
               "$ref": "#/components/schemas/JevProperty"
             }
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "tone": {
+                  "type": "string",
+                  "enum": ["ok", "info", "warn"]
+                },
+                "text": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "jev": {
+            "type": "object",
+            "description": "The exact request sent to Jev and its raw response.",
+            "properties": {
+              "request": {
+                "type": "object"
+              },
+              "response": {
+                "type": "object"
+              }
+            }
+          },
+          "plan": {
+            "$ref": "#/components/schemas/JevPlan"
           },
           "usage": {
             "type": ["object", "null"],
@@ -1149,6 +1357,14 @@
               },
               "output_tokens": {
                 "type": "integer"
+              }
+            }
+          },
+          "planner": {
+            "type": ["object", "null"],
+            "properties": {
+              "model": {
+                "type": "string"
               }
             }
           },

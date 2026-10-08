@@ -21,9 +21,10 @@ describe('theme registry', () => {
     for (const id of THEME_IDS) {
       const theme = THEMES[id];
       expect(theme.id).toBe(id);
-      if (theme.layout === 'classic') {
+      if (theme.chrome === 'classic') {
         expect(theme.loadStyles).toBeDefined();
         expect(theme.credit?.url).toStartWith('https://github.com/');
+        expect(theme.credit?.license).toMatch(/^(MIT|Apache-2\.0)$/);
       } else {
         expect(theme.loadStyles).toBeUndefined();
       }
@@ -65,9 +66,11 @@ describe('pre-paint script', () => {
     expect(script).toContain(`"${THEME_STORAGE_KEY}"`);
     expect(script).toContain(`get("${THEME_QUERY_PARAM}")`);
 
-    const layouts = JSON.parse(script.match(/var themes = (\{[^}]*\});/)?.[1] ?? '{}');
+    const layouts = JSON.parse(script.match(/var layouts = (\{[^}]*\});/)?.[1] ?? '{}');
+    const chromes = JSON.parse(script.match(/var chromes = (\{[^}]*\});/)?.[1] ?? '{}');
     const darkCapable = JSON.parse(script.match(/var darkCapable = (\{[^}]*\});/)?.[1] ?? '{}');
     expect(layouts).toEqual(Object.fromEntries(THEME_IDS.map((id) => [id, THEMES[id].layout])));
+    expect(chromes).toEqual(Object.fromEntries(THEME_IDS.map((id) => [id, THEMES[id].chrome])));
     expect(Object.keys(darkCapable).sort()).toEqual(THEME_IDS.filter(supportsAppearance).sort());
   });
 });

@@ -99,7 +99,7 @@ export const OutOfBoxExperience = ({
           <main className="oobe-content">
             {step === 0 && (
               <section className="oobe-page">
-                <div className="oobe-page-icon"><CustomIcon iconType="config" className="h-12 w-12" /></div>
+                <div className="oobe-page-icon"><CustomIcon iconType="config" className="h-12 w-12" pixelated /></div>
                 <div>
                   <h1>Welcome to lok.computer</h1>
                   <p>Choose the desktop defaults for this browser.</p>

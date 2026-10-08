@@ -90,17 +90,17 @@ export const SystemMenuButton: React.FC<{ placement: MenuPlacement }> = React.me
         onClick={() => setIsOpen((open) => !open)}
         className={isStart
           ? 'start-button flex items-center justify-center select-none'
-          : 'app-header-button font-bold tracking-tight flex items-center justify-center select-none'}
+          : 'app-header-button system-menu-button font-bold tracking-tight flex items-center justify-center select-none'}
         aria-haspopup="menu"
         aria-expanded={isOpen}
-        aria-label={isStart ? 'Start menu' : undefined}
+        aria-label={isStart ? 'Start menu' : definition.menuLabel ? 'lok.computer menu' : undefined}
       >
         {isStart ? (
           <>
             <CustomIcon iconType="about" className="start-button-icon" />
             {definition.startLabel && <span className="start-button-label">{definition.startLabel}</span>}
           </>
-        ) : 'lok.computer'}
+        ) : (definition.menuLabel ?? 'lok.computer')}
       </button>
 
       <AppMenu

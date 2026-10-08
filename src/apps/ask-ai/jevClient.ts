@@ -1,9 +1,10 @@
 /**
  * Client for the Ask AI Worker endpoints (see jev.js at the repository root).
  *
- * `planJev` asks the fast planner LLM to compile a request into typed Jev
- * questions; `runJev` sends a plan to Jev and returns the formed properties.
- * Two calls let the UI show the plan while Jev is still answering.
+ * `planJev` sends a question to the planner, which replies with a plan, a
+ * request for more input, or a refusal. `answerJev` sends a plan to Jev and
+ * returns the best answer with per-question evidence. Two calls let the UI
+ * show the plan while Jev is still answering.
  */
 
 export type JevQuestionType = 'noul' | 'choice' | 'score';
@@ -17,55 +18,120 @@ export interface JevQuestion {
 
 export interface JevPlan {
   summary: string;
+  /** One line on why the primary question has its type. */
+  rationale: string | null;
   state: JevState;
+  /** Key of the question that answers the person directly; always first. */
+  primary: string;
+  labels: Record<string, string>;
   questions: Record<string, JevQuestion>;
 }
 
+export interface InputField {
+  key: string;
+  label: string;
+  placeholder: string;
+  multiline: boolean;
+  required: boolean;
+}
+
+export interface InputRequest {
+  message: string;
+  fields: InputField[];
+  /** Every field is optional, so the planner can answer without them. */
+  optional: boolean;
+}
+
+export interface Refusal {
+  message: string;
+  suggestion: string | null;
+}
+
+interface PlannerMeta {
+  planner: { model: string } | null;
+  timing: { plannerMs: number };
+}
+
+export type JevPlanResponse =
+  | ({ kind: 'plan'; plan: JevPlan } & PlannerMeta)
+  | ({ kind: 'needs_input' } & InputRequest & PlannerMeta)
+  | ({ kind: 'refuse' } & Refusal & PlannerMeta);
+
 interface BaseProperty {
+  title: string;
   question: string;
+  primary: boolean;
+  /** 0-1; for yes/no questions this is |2p - 1|. */
+  confidence: number;
 }
 
 export interface NoulProperty extends BaseProperty {
   type: 'noul';
   value: boolean;
   probability: number;
+  criteria: { true?: string; false?: string } | null;
 }
 
 export interface ChoiceProperty extends BaseProperty {
   type: 'choice';
   value: string;
-  confidence: number;
   probabilities: Record<string, number>;
   options: Record<string, string | null>;
+  /** The primary choice is also asked with its options reversed. */
+  orderCheck?: {
+    consistent: boolean;
+    listed: { choice: string; probability: number };
+    reversed: { choice: string; probability: number };
+  };
 }
 
 export interface ScoreProperty extends BaseProperty {
   type: 'score';
   value: number;
   level: number;
-  label: string;
+  levelText: string;
   max: number;
-  confidence: number;
   probabilities: Record<string, number>;
   scale: string[];
 }
 
 export type JevProperty = NoulProperty | ChoiceProperty | ScoreProperty;
 
+export type Certainty = 'high' | 'medium' | 'low';
+
+export interface BestAnswer {
+  key: string;
+  title: string;
+  question: string;
+  type: JevQuestionType;
+  value: boolean | string | number;
+  /** The answer in plain words: "Yes", "Dwarf planet", or a score level. */
+  answer: string;
+  /** What the chosen option or yes/no means, when the plan described it. */
+  detail: string | null;
+  probability: number;
+  confidence: number;
+  certainty: Certainty;
+}
+
+export interface AnswerNote {
+  tone: 'ok' | 'info' | 'warn';
+  text: string;
+}
+
 export interface JevAnswer {
+  kind: 'answer';
   model: string;
   planner: { model: string } | null;
   plan: JevPlan;
+  best: BestAnswer | null;
   result: Record<string, boolean | string | number>;
   properties: Record<string, JevProperty>;
+  notes: AnswerNote[];
+  /** The exact request sent to Jev and its raw response. */
+  jev: { request: Record<string, unknown>; response: Record<string, unknown> };
   usage: { input_tokens: number; output_tokens: number } | null;
   timing: { plannerMs: number | null; jevMs: number };
-}
-
-export interface JevPlanResponse {
-  plan: JevPlan;
-  planner: { model: string } | null;
-  timing: { plannerMs: number };
 }
 
 export const JEV_ENDPOINTS = {
@@ -104,22 +170,16 @@ const post = async <T>(url: string, body: unknown, signal?: AbortSignal): Promis
   return data;
 };
 
-/** Content typed as JSON is sent as structured state; anything else is text. */
-export const parseStateInput = (input: string): JevState | undefined => {
-  const text = input.trim();
-  if (!text) return undefined;
-  if (/^[[{]/.test(text)) {
-    try {
-      return JSON.parse(text) as JevState;
-    } catch {
-      return text;
-    }
-  }
-  return text;
-};
+export interface PlanRequest {
+  question: string;
+  /** Answers to a previous `needs_input` reply, keyed by field key. */
+  inputs?: Record<string, string>;
+  /** Plan from what is available instead of asking for more. */
+  answerAnyway?: boolean;
+}
 
-export const planJev = (prompt: string, state: JevState | undefined, signal?: AbortSignal) => (
-  post<JevPlanResponse>(JEV_ENDPOINTS.plan, { prompt, ...(state === undefined ? {} : { state }) }, signal)
+export const planJev = (request: PlanRequest, signal?: AbortSignal) => (
+  post<JevPlanResponse>(JEV_ENDPOINTS.plan, request, signal)
 );
 
 export const answerJev = (plan: JevPlan, signal?: AbortSignal) => (

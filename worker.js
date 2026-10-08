@@ -144,7 +144,7 @@ export default {
       });
     }
 
-    // Ask AI: plan typed questions with a fast LLM, without calling Jev.
+    // Ask AI: decide how Jev should answer a question (plan, ask for input, or refuse), without calling Jev.
     if (url.pathname === '/api/jev/plan') {
       if (request.method !== 'POST') {
         return makeMethodNotAllowedResponse('POST');
@@ -153,9 +153,10 @@ export default {
         await checkJevRateLimit(request, env);
         const started = Date.now();
         const body = await readJsonBody(request);
-        const { plan, plannerModel } = await planQuestions(body ?? {}, env);
+        // `kind` is "plan", "needs_input" (ask the person for more), or "refuse".
+        const { plannerModel, ...outcome } = await planQuestions(body ?? {}, env);
         return makeJsonResponse({
-          plan,
+          ...outcome,
           planner: plannerModel ? { model: plannerModel } : null,
           timing: { plannerMs: Date.now() - started },
         });
@@ -164,7 +165,7 @@ export default {
       }
     }
 
-    // Ask AI: answer a prompt (or a supplied plan) with Jev and form the requested properties.
+    // Ask AI: answer a question (or a supplied plan) with Jev: best answer plus per-question evidence.
     if (url.pathname === '/api/jev') {
       if (request.method !== 'POST') {
         return makeMethodNotAllowedResponse('POST');

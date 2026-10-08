@@ -62,20 +62,14 @@
     gap: 6px;
 }
 
-.ask-ai-examples-inline {
-    align-items: center;
-    opacity: 0.85;
-}
-
-.ask-ai-examples-inline > span {
-    color: color-mix(in srgb, var(--text-color) 62%, transparent);
-    font-size: 11px;
-}
-
-.ask-ai-examples-inline .retro-button {
-    height: 22px;
-    min-height: 22px;
-    font-size: 11px;
+/* Long example questions wrap; the button grows with them. */
+.ask-ai-examples .retro-button {
+    height: auto;
+    min-height: var(--control-height);
+    padding-top: 3px;
+    padding-bottom: 3px;
+    white-space: normal;
+    text-align: left;
 }
 
 .ask-ai-run {
@@ -127,10 +121,9 @@
 }
 
 .ask-ai-content pre {
-    max-height: 140px;
     margin: 4px 0 0;
     padding: 6px;
-    overflow: auto;
+    overflow-wrap: anywhere;
     background: var(--block-bg);
     border: 1px solid var(--internal-border);
     font-family: var(--font-code);
@@ -209,19 +202,18 @@
 .ask-ai-property header {
     min-width: 0;
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 6px;
+    gap: 4px 6px;
 }
 
-.ask-ai-property code {
-    min-width: 0;
-    flex: 1 1 auto;
-    overflow: hidden;
-    font-family: var(--font-code);
+.ask-ai-property-title {
+    min-width: 10ch;
+    flex: 1 1 0;
     font-size: 12px;
     font-weight: 700;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
 }
 
 .ask-ai-type,
@@ -255,13 +247,189 @@
     overflow-wrap: anywhere;
 }
 
-.ask-ai-value span {
+.ask-ai-value strong {
+    font-size: 16px;
+}
+
+.ask-ai-property[data-type="score"] .ask-ai-value strong {
+    font-size: 13px;
+    line-height: 1.3;
+}
+
+.ask-ai-score-readout {
+    font-family: var(--font-code);
+    font-size: 10px;
+    opacity: 0.65;
+}
+
+/* Best answer: the primary question, stated plainly. */
+.ask-ai-best {
+    gap: 8px;
+    padding: 10px 12px;
+    border-left: 4px solid var(--ask-ai-bar, var(--text-color));
+}
+
+.ask-ai-best[data-certainty="low"] {
+    border-left-style: dashed;
+}
+
+.ask-ai-best-answer {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.ask-ai-best-answer strong {
+    font-size: 24px;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+}
+
+.ask-ai-best-answer span {
+    color: color-mix(in srgb, var(--text-color) 72%, transparent);
     font-size: 12px;
+    line-height: 1.4;
+}
+
+.ask-ai-best-stats {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+    font-size: 11px;
+}
+
+.ask-ai-best-probability {
+    min-width: min(100%, 200px);
+    flex: 1 1 200px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+    font-variant-numeric: tabular-nums;
+}
+
+.ask-ai-certainty {
+    padding: 1px 6px;
+    border: 1px solid var(--internal-border);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.ask-ai-certainty[data-certainty="low"] {
+    color: var(--vis-private-color);
+    border-color: color-mix(in srgb, var(--vis-private-color) 45%, transparent);
+}
+
+.ask-ai-notes {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.ask-ai-notes li {
+    color: color-mix(in srgb, var(--text-color) 72%, transparent);
+}
+
+.ask-ai-notes li::before {
+    content: "· ";
+    font-family: var(--font-code);
+}
+
+.ask-ai-notes li[data-tone="warn"]::before {
+    content: "! ";
+    color: var(--vis-private-color);
+    font-weight: 700;
+}
+
+.ask-ai-notes li[data-tone="ok"]::before {
+    content: "✓ ";
+    color: var(--vis-public-color);
+}
+
+.ask-ai-analytics > summary {
+    width: fit-content;
+    cursor: default;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
     opacity: 0.75;
 }
 
-.ask-ai-property[data-type="noul"] .ask-ai-value strong {
+.ask-ai-analytics-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.ask-ai-rationale {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin: 0;
+    color: color-mix(in srgb, var(--text-color) 72%, transparent);
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.ask-ai-followup,
+.ask-ai-refusal {
+    gap: 8px;
+    border-style: solid;
+}
+
+.ask-ai-followup > p,
+.ask-ai-refusal > p {
+    color: var(--text-color);
+}
+
+.ask-ai-field {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    font-size: 11px;
+}
+
+.ask-ai-field small {
+    opacity: 0.65;
+}
+
+.ask-ai-field textarea {
+    height: auto;
+    min-height: 88px;
+    padding: 6px 7px;
+    font-size: 12px;
+    line-height: 1.4;
+    resize: vertical;
+    user-select: text;
+}
+
+/* A suggested question: a wrapping, left-aligned text button. Classic skins
+   fix button heights at (1,1,1) specificity, hence the :not(#_) bump. */
+.ask-ai-suggestion.retro-button:not(#_) {
+    height: auto;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: 5px 8px;
+    font-size: 12px;
+    line-height: 1.35;
+    text-align: left;
+    white-space: normal;
+}
+
+.ask-ai-suggestion > span {
+    font-size: 10px;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
+    opacity: 0.65;
 }
 
 .ask-ai-meter {
@@ -416,11 +584,13 @@
     border: 1px solid var(--internal-border);
 }
 
-.ask-ai-json header {
+.ask-ai-json > summary {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 8px;
     padding: 3px 4px 3px 8px;
+    cursor: default;
     color: var(--text-color);
     background: var(--header-bg);
     border-bottom: 1px solid var(--internal-border);
@@ -428,18 +598,35 @@
     font-size: 11px;
 }
 
-.ask-ai-json header .retro-button,
+.ask-ai-json > summary::-webkit-details-marker {
+    display: none;
+}
+
+.ask-ai-json > summary > span::before {
+    content: "▸ ";
+}
+
+.ask-ai-json[open] > summary > span::before {
+    content: "▾ ";
+}
+
+.ask-ai-json:not([open]) > summary {
+    border-bottom: 0;
+}
+
+.ask-ai-json > summary .retro-button,
 .ask-ai-meta-actions .retro-button {
     height: 22px;
     min-height: 22px;
     font-size: 11px;
 }
 
+/* Collapsed by default, so blocks wrap and grow instead of nesting a second scroll area. */
 .ask-ai-json pre {
-    max-height: 220px;
     margin: 0;
     padding: 8px;
-    overflow: auto;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
     font-family: var(--font-code);
     font-size: 12px;
     line-height: 1.45;
@@ -457,6 +644,8 @@
 }
 
 .ask-ai-meta-actions {
+    display: flex;
+    gap: 4px;
     margin-left: auto;
 }
 
@@ -499,15 +688,16 @@
     flex-direction: column;
 }
 
-.ask-ai-content-input {
+/* One-line composer that grows with pasted text (height set in AskAiApp). */
+.ask-ai-question-input {
+    min-width: 0;
     height: auto;
-    min-height: 64px;
-    max-height: 40vh;
-    padding: 6px 7px;
-    border: 0;
-    border-bottom: 1px solid var(--internal-border);
-    font-size: 12px;
-    resize: vertical;
+    min-height: 28px;
+    max-height: 120px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    line-height: 1.35;
+    resize: none;
     user-select: text;
 }
 

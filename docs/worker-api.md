@@ -15,8 +15,8 @@ Browser App
      Cloudflare Worker (worker.js)
             │
             ├── /api/chat → OpenAI-compatible API
-            ├── /api/jev/plan → planner LLM (typed questions)
-            ├── /api/jev → planner LLM + TypeSafe Jev
+            ├── /api/jev/plan → planner LLM (plan, ask for input, or refuse)
+            ├── /api/jev → planner LLM + TypeSafe Jev (best answer + analytics)
             ├── /api/bsky/feed → Bluesky
             ├── /api/fedi/* → Fediverse (Mastodon/GoToSocial)
             └── /api/neodb/shelf → NeoDB
@@ -45,31 +45,43 @@ AI chat completion proxy.
 ```
 
 ### POST /api/jev/plan
-Compiles a request into typed Jev questions with the fast planner model (no Jev call).
+Reads a question with the fast planner model (no Jev call) and replies with one of three `kind`s.
 
 ```typescript
-// Request
-{ prompt: 'Is it urgent and which team owns it?', state?: 'Payouts failed for 3 days!' }
+// Request: inputs answer a previous needs_input reply; answerAnyway forbids asking again
+{ question: 'Is this email a phishing attempt?', inputs?: { email: '…' }, state?: '…', answerAnyway?: boolean }
 
-// Response
-{ plan: { summary, state, questions: { is_urgent: { type: 'noul', instructions, criteria } } }, planner: { model }, timing }
+// kind: "plan": the state plus a primary question (always first) and up to four supporting questions
+{ kind: 'plan', plan: { summary, rationale, state, primary: 'is_phishing', labels, questions }, planner, timing }
+
+// kind: "needs_input": the question is about material the person has not given
+{ kind: 'needs_input', message, fields: [{ key, label, placeholder, multiline, required }], optional, planner, timing }
+
+// kind: "refuse": Jev cannot judge it (generation, arithmetic, no answer space)
+{ kind: 'refuse', message, suggestion, planner, timing }
 ```
 
 ### POST /api/jev
-Plans (unless `plan` is supplied), asks Jev, and forms the requested properties.
+Plans (unless `plan` is supplied), asks Jev, and forms the best answer. A `needs_input` or `refuse` outcome is returned as above without calling Jev. The primary choice question is also asked with its options reversed (Jev leans toward the first option); the two distributions are averaged and compared.
 
 ```typescript
-// Request: { prompt, state? } or { plan }
+// Request: { question, inputs?, state?, answerAnyway? } or { plan }
 // Response
 {
+  kind: 'answer',
   model: 'jev-1.13.0',
-  result: { is_urgent: true, owning_team: 'billing', customer_mood: 2.88 },
-  properties: { is_urgent: { type: 'noul', value: true, probability: 0.97 }, ... },
+  best: { key, title, type, answer: 'Yes', detail, probability: 0.98, confidence: 0.96, certainty: 'high' },
+  result: { is_phishing: true, urgency: true, tone: 2.03 },
+  properties: { is_phishing: { type: 'noul', title, question, primary: true, value: true, probability: 0.98, confidence: 0.96 }, ... },
+  notes: [{ tone: 'warn', text: 'Close call: …' }],
+  jev: { request, response },  // exactly what was sent to and returned by Jev
   plan, planner, usage, timing
 }
 ```
 
-Errors are `{ error, code? }`: 400 bad input, 422 `refused` or `invalid_plan`, 429 over the per-IP budget, 502 upstream failure (including unreachable or unreadable upstreams), 503 not configured or Jev overloaded. Limits: prompt 2,000 chars, content 20,000 chars, 8 questions, 24 choice options, 10 score levels of up to 600 chars each, 16,000 chars of questions in total. Both endpoints share the `JEV_RATE_LIMITER` binding in `wrangler.toml` (20 calls per minute per client IP; one Ask is two calls); without the binding, as in tests, there is no limit. The planner prompt and validation live in `jev.js`; tests in `jev.test.ts`.
+Certainty is `high` at confidence ≥ 0.8, `medium` at ≥ 0.5, otherwise `low` (also when the reversed-order check changes the answer). Yes/no confidence is |2p − 1|, as TypeSafe suggests.
+
+Errors are `{ error, code? }`: 400 bad input, 422 `invalid_plan` (or Jev rejected the questions), 429 over the per-IP budget, 502 upstream failure (including unreachable or unreadable upstreams), 503 not configured or Jev overloaded. Limits: question 2,000 chars, content 20,000 chars, follow-up answers 8,000 chars each, 8 questions, 24 choice options, 10 score levels of up to 600 chars each, 16,000 chars of questions in total. Both endpoints share the `JEV_RATE_LIMITER` binding in `wrangler.toml` (20 calls per minute per client IP; one answered question is two or three calls); without the binding, as in tests, there is no limit. The older `prompt` field is still accepted. The planner prompt and validation live in `jev.js`; tests in `jev.test.ts`.
 
 ### GET /api/bsky/feed
 Bluesky author feed.
@@ -118,7 +130,7 @@ JEV_MODEL = "jev-latest"
 FEDI_INSTANCE = "https://rex.cat"
 ```
 
-`JEV_PLANNER_MODEL` optionally overrides the planner model (defaults to `AI_MODEL`).
+`JEV_PLANNER_MODEL` optionally overrides the planner model (defaults to `AI_MODEL`). `JEV_PLANNER_REASONING_EFFORT` sets the planner's `reasoning_effort` (default `none`, which cuts gemini-2.5-flash-lite from about 13s to 3-5s; set it to an empty string to omit the field). Providers that reject it, or JSON mode, get one retry without both.
 
 ### Production Secrets
 

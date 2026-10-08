@@ -282,7 +282,7 @@ export const ConfigApp: React.FC = () => {
                       <a href={THEMES[theme].credit.url} target="_blank" rel="noopener noreferrer">
                         {THEMES[theme].credit.label}
                       </a>
-                      {" "}(MIT).
+                      {" "}({THEMES[theme].credit.license}).
                     </>
                   )}
                 </p>

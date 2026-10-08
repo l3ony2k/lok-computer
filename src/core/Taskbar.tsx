@@ -33,6 +33,26 @@ export const Taskbar = ({ layout = 'lok' }: { layout?: DesktopLayout }) => {
     };
   }, []);
 
+  // Alt+1..9 brings the Nth task forward, as Turbo Vision's status line advertises.
+  const windowsRef = useRef(windows);
+  windowsRef.current = windows;
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+      const match = /^Digit([1-9])$/.exec(event.code);
+      if (!match) return;
+      const target = event.target as HTMLElement | null;
+      if (target?.closest('input, textarea, select, [contenteditable="true"]')) return;
+      const window = windowsRef.current[Number(match[1]) - 1];
+      if (!window) return;
+      event.preventDefault();
+      if (window.minimized) restoreWithTransition(window);
+      else focusWindow(window.id);
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [focusWindow, restoreWithTransition]);
+
   const handleTaskbarClick = (windowId: string) => {
     const window = windows.find((candidate) => candidate.id === windowId);
     if (!window) return;
@@ -60,14 +80,14 @@ export const Taskbar = ({ layout = 'lok' }: { layout?: DesktopLayout }) => {
         className="taskbar-tasks flex items-center gap-1 whitespace-nowrap h-full overflow-x-auto overflow-y-hidden [&::-webkit-scrollbar]:hidden"
         style={{ scrollbarWidth: 'none' }}
       >
-        {windows.map((window) => (
+        {windows.map((window, index) => (
           <button
             key={window.id}
             className="taskbar-button flex items-center"
             data-taskbar-window-id={window.id}
             onClick={() => handleTaskbarClick(window.id)}
             aria-pressed={activeWindow === window.id}
-            title={window.title}
+            title={index < 9 ? `${window.title} (Alt+${index + 1})` : window.title}
           >
             <CustomIcon iconType={window.iconType} className="mr-1 flex-shrink-0 w-4 h-4" />
             <span className="truncate max-w-[150px]">{window.title}</span>

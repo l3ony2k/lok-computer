@@ -355,6 +355,11 @@
         border: 1px solid transparent;
     }
 
+    /* Menu-bar themes show the frontmost window like an application menu. */
+    .app-header-active {
+        display: none;
+    }
+
     .app-header-button:hover,
     .app-header-button[aria-expanded="true"] {
         background: var(--button-hover);
@@ -1949,23 +1954,32 @@
     --tw-ring-color: hsl(var(--accent));
 }
 
-/* Global thin scrollbar styles for ALL elements */
-* {
-    scrollbar-width: thin;
-    scrollbar-color: var(--scrollbar-thumb) transparent;
+/*
+ * Thin scrollbars. Browsers with ::-webkit-scrollbar use the pseudo-element
+ * rules below, so every theme styles bars the same way; in Chrome the standard
+ * properties would override those rules and leave stale widths after a live
+ * theme switch. Firefox gets the standard properties.
+ */
+@supports not selector(::-webkit-scrollbar) {
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: var(--scrollbar-thumb) transparent;
+    }
+
+    .window-content-area,
+    .scrollable-area {
+        scrollbar-width: thin;
+        scrollbar-color: var(--scrollbar-thumb) transparent;
+    }
 }
 
 .dark * {
     color-scheme: dark;
-    scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 
-/* Unified thin scrollbar styles for all scrollable areas */
+/* Prevent scroll chaining - stops scrollIntoView from bubbling to ancestors */
 .window-content-area,
 .scrollable-area {
-    scrollbar-width: thin;
-    scrollbar-color: var(--scrollbar-thumb) transparent;
-    /* Prevent scroll chaining - stops scrollIntoView from bubbling to ancestors */
     overscroll-behavior: contain;
 }
 
@@ -2671,10 +2685,7 @@ a:hover .animate-marquee-if-overflow {
 /* XP */
 .theme-swatch[data-swatch="xp"] {
     --swatch-desktop: #5a8fd8;
-    background:
-        radial-gradient(ellipse 120% 60% at 30% 100%, #5fa83a 0 55%, transparent 56%),
-        radial-gradient(ellipse 90% 50% at 90% 100%, #4c9631 0 55%, transparent 56%),
-        linear-gradient(#2f6fcf, #8ec1f2 70%);
+    background: #5a8fd8 url("/theme-previews/bliss.webp") center / cover;
 }
 
 .theme-swatch[data-swatch="xp"] .theme-swatch-window {
@@ -2726,9 +2737,7 @@ a:hover .animate-marquee-if-overflow {
 /* 7 */
 .theme-swatch[data-swatch="7"] {
     --swatch-desktop: #1d6fb8;
-    background:
-        radial-gradient(ellipse 70% 50% at 70% 40%, rgba(150, 220, 255, 0.55), transparent 70%),
-        linear-gradient(160deg, #0a3d6b, #1d8fd6 55%, #0b4f8a);
+    background: #1d6fb8 url("/theme-previews/harmony.webp") center / cover;
 }
 
 .theme-swatch[data-swatch="7"] .theme-swatch-window {
@@ -2785,6 +2794,240 @@ a:hover .animate-marquee-if-overflow {
     border-radius: 50%;
     background: radial-gradient(circle at 50% 35%, #9fe0ff, #1c6fc4 60%, #0b3a75);
     box-shadow: 0 0 3px rgba(120, 200, 255, 0.9);
+}
+
+/* System */
+.theme-swatch[data-swatch="system"] {
+    --swatch-desktop: #ffffff;
+    background: repeating-conic-gradient(#000000 0 25%, #ffffff 0 50%) 0 0 / 2px 2px;
+}
+
+.theme-swatch[data-swatch="system"] .theme-swatch-window {
+    background: #ffffff;
+    border: 1px solid #000000;
+    box-shadow: 1px 1px 0 #000000;
+}
+
+.theme-swatch[data-swatch="system"] .theme-swatch-titlebar {
+    background: repeating-linear-gradient(#000000 0 1px, #ffffff 1px 2px) content-box, #ffffff;
+    padding: 2px;
+    border-bottom: 1px solid #000000;
+}
+
+.theme-swatch[data-swatch="system"] .theme-swatch-titlebar > span {
+    flex: 0 0 30%;
+    height: 100%;
+    margin: 0 auto;
+    background: #ffffff;
+}
+
+.theme-swatch[data-swatch="system"] .theme-swatch-titlebar > i {
+    display: none;
+}
+
+.theme-swatch[data-swatch="system"] .theme-swatch-titlebar > i:first-of-type {
+    display: block;
+    order: -1;
+    width: 5px;
+    background: #ffffff;
+    border: 1px solid #000000;
+}
+
+.theme-swatch[data-swatch="system"] .theme-swatch-line {
+    background: #000000;
+}
+
+.theme-swatch[data-swatch="system"] .theme-swatch-button {
+    background: #ffffff;
+    border: 1px solid #000000;
+    border-radius: 3px;
+}
+
+.theme-swatch[data-swatch="system"] .theme-swatch-taskbar {
+    top: 0;
+    bottom: auto;
+    height: 9%;
+    background: #ffffff;
+    border-bottom: 1px solid #000000;
+}
+
+.theme-swatch[data-swatch="system"] .theme-swatch-taskbar > span {
+    width: 4px;
+    height: 5px;
+    margin-left: 3px;
+    background: #000000;
+    border-radius: 2px 2px 3px 3px;
+}
+
+/* TUI */
+.theme-swatch[data-swatch="tui"] {
+    --swatch-desktop: #a8a8a8;
+    background:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='2' shape-rendering='crispEdges'%3E%3Crect width='4' height='2' fill='%23a8a8a8'/%3E%3Crect x='2' width='1' height='1' fill='%230000a8'/%3E%3Crect y='1' width='1' height='1' fill='%230000a8'/%3E%3C/svg%3E") 0 0 / 4px 2px;
+}
+
+.theme-swatch[data-swatch="tui"] .theme-swatch-window {
+    background: #0000a8;
+    border: 3px double #ffffff;
+    box-shadow: 4px 4px 0 #000000;
+}
+
+.theme-swatch[data-swatch="tui"] .theme-swatch-titlebar {
+    justify-content: center;
+}
+
+.theme-swatch[data-swatch="tui"] .theme-swatch-titlebar > span {
+    max-width: 30%;
+    background: #ffffff;
+}
+
+.theme-swatch[data-swatch="tui"] .theme-swatch-titlebar > i {
+    display: none;
+}
+
+.theme-swatch[data-swatch="tui"] .theme-swatch-line {
+    background: #ffff55;
+}
+
+.theme-swatch[data-swatch="tui"] .theme-swatch-line-short {
+    background: #ffffff;
+}
+
+.theme-swatch[data-swatch="tui"] .theme-swatch-button {
+    background: #00a800;
+    box-shadow: 2px 2px 0 #000000;
+}
+
+.theme-swatch[data-swatch="tui"] .theme-swatch-taskbar {
+    top: 0;
+    bottom: auto;
+    height: 9%;
+    background: #a8a8a8;
+}
+
+.theme-swatch[data-swatch="tui"] .theme-swatch-taskbar > span {
+    width: 5px;
+    height: 60%;
+    margin-left: 3px;
+    background: #a80000;
+}
+
+/* 386 */
+.theme-swatch[data-swatch="386"] {
+    --swatch-desktop: #000084;
+}
+
+.theme-swatch[data-swatch="386"] .theme-swatch-window {
+    background: #bbbbbb;
+    box-shadow: 4px 3px 0 #000000;
+}
+
+.theme-swatch[data-swatch="386"] .theme-swatch-titlebar {
+    justify-content: center;
+    margin: 2px 2px 0;
+    border: 2px double #000000;
+    border-bottom: 0;
+}
+
+.theme-swatch[data-swatch="386"] .theme-swatch-titlebar > span {
+    max-width: 34%;
+    background: #000000;
+}
+
+.theme-swatch[data-swatch="386"] .theme-swatch-titlebar > i {
+    display: none;
+}
+
+.theme-swatch[data-swatch="386"] .theme-swatch-body {
+    margin: 0 2px 2px;
+    border: 2px double #000000;
+    border-top: 0;
+}
+
+.theme-swatch[data-swatch="386"] .theme-swatch-line {
+    background: #00aaaa;
+    height: 3px;
+}
+
+.theme-swatch[data-swatch="386"] .theme-swatch-line-short {
+    background: #000000;
+    height: 2px;
+}
+
+.theme-swatch[data-swatch="386"] .theme-swatch-button {
+    background: #00aaaa;
+    box-shadow: 2px 2px 0 #000000;
+}
+
+.theme-swatch[data-swatch="386"] .theme-swatch-taskbar {
+    top: 0;
+    bottom: auto;
+    height: 9%;
+    background: #bbbbbb;
+}
+
+.theme-swatch[data-swatch="386"] .theme-swatch-taskbar > span {
+    width: 14%;
+    height: 2px;
+    margin-left: 3px;
+    background: #aa0000;
+}
+
+/* CS 1.6 */
+.theme-swatch[data-swatch="cs16"] {
+    --swatch-desktop: #4a5942;
+    background: #1b2433 url("/theme-previews/cs16.webp") center / cover;
+}
+
+.theme-swatch[data-swatch="cs16"] .theme-swatch-window {
+    padding: 1px;
+    background: #4a5942;
+    border: 1px solid;
+    border-color: #8c9284 #292c21 #292c21 #8c9284;
+}
+
+.theme-swatch[data-swatch="cs16"] .theme-swatch-titlebar > span {
+    background: #dedfd6;
+}
+
+.theme-swatch[data-swatch="cs16"] .theme-swatch-titlebar > i {
+    display: none;
+}
+
+.theme-swatch[data-swatch="cs16"] .theme-swatch-titlebar > i:last-child {
+    display: block;
+    border: 1px solid;
+    border-color: #8c9284 #292c21 #292c21 #8c9284;
+}
+
+.theme-swatch[data-swatch="cs16"] .theme-swatch-body {
+    background: #3e4637;
+    border: 1px solid;
+    border-color: #292c21 #8c9284 #8c9284 #292c21;
+}
+
+.theme-swatch[data-swatch="cs16"] .theme-swatch-line {
+    background: #dedfd6;
+}
+
+.theme-swatch[data-swatch="cs16"] .theme-swatch-line-short {
+    background: #c4b550;
+}
+
+.theme-swatch[data-swatch="cs16"] .theme-swatch-button {
+    background: #4a5942;
+    border: 1px solid;
+    border-color: #8c9284 #292c21 #292c21 #8c9284;
+}
+
+.theme-swatch[data-swatch="cs16"] .theme-swatch-taskbar {
+    background: #4a5942;
+    border-top: 1px solid #8c9284;
+}
+
+.theme-swatch[data-swatch="cs16"] .theme-swatch-taskbar > span {
+    border: 1px solid;
+    border-color: #8c9284 #292c21 #292c21 #8c9284;
 }
 
 @container (max-width: 520px) {
@@ -3819,9 +4062,14 @@ a:hover .animate-marquee-if-overflow {
     50% { opacity: 0; }
 }
 
-/* System update toasts follow the same square control hierarchy as app chrome. */
+/*
+ * Toasts are system alerts: the theme's UI face, square chrome, and the same
+ * control hierarchy as windows. Sonner sets a system sans-serif on the toaster
+ * through :where(), so the theme face only has to be named here.
+ */
 [data-sonner-toaster] {
     z-index: 2147483200 !important;
+    font-family: var(--font-ui);
 }
 
 [data-sonner-toast] {
@@ -3830,7 +4078,34 @@ a:hover .animate-marquee-if-overflow {
     color: var(--text-color) !important;
     background: var(--header-bg) !important;
     box-shadow: var(--surface-shadow) !important;
-    font-family: inherit !important;
+    font-family: var(--font-ui) !important;
+    font-size: 12px !important;
+}
+
+[data-sonner-toast] [data-title] {
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+[data-sonner-toast] [data-description] {
+    color: color-mix(in srgb, var(--text-color) 72%, transparent) !important;
+    line-height: 1.35;
+}
+
+[data-sonner-toast] [data-icon] {
+    color: var(--text-color);
+}
+
+[data-sonner-toast] [data-icon] svg {
+    width: 14px;
+    height: 14px;
+}
+
+[data-sonner-toast] [data-close-button] {
+    color: var(--text-color) !important;
+    background: var(--header-bg) !important;
+    border: 1px solid var(--header-border) !important;
+    border-radius: 0 !important;
 }
 
 [data-sonner-toast] [data-button] {

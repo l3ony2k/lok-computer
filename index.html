@@ -9,17 +9,19 @@
     <script>
       (function () {
         try {
-          var themes = { "lok": "lok", "98": "classic", "xp": "classic", "7": "classic" };
+          var layouts = { "lok": "lok", "98": "classic", "xp": "classic", "7": "classic", "system": "lok", "tui": "lok", "386": "lok", "cs16": "classic" };
+          var chromes = { "lok": "lok", "98": "classic", "xp": "classic", "7": "classic", "system": "classic", "tui": "classic", "386": "classic", "cs16": "classic" };
           var darkCapable = { "lok": true };
           var root = document.documentElement;
           var stored = {};
           try { stored = JSON.parse(localStorage.getItem("lok.theme") || "{}") || {}; } catch (error) {}
           var fromUrl = new URLSearchParams(location.search).get("theme");
-          var theme = themes.hasOwnProperty(fromUrl) ? fromUrl : themes.hasOwnProperty(stored.theme) ? stored.theme : "lok";
+          var theme = layouts.hasOwnProperty(fromUrl) ? fromUrl : layouts.hasOwnProperty(stored.theme) ? stored.theme : "lok";
           var appearance = stored.appearance || localStorage.getItem("theme") || "system";
           var dark = darkCapable[theme] === true && (appearance === "dark" || (appearance === "system" && matchMedia("(prefers-color-scheme: dark)").matches));
           root.setAttribute("data-theme", theme);
-          root.setAttribute("data-layout", themes[theme]);
+          root.setAttribute("data-layout", layouts[theme]);
+          root.setAttribute("data-chrome", chromes[theme]);
           if (dark) root.classList.add("dark");
           root.style.colorScheme = dark ? "dark" : "light";
         } catch (error) {}

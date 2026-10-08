@@ -12,12 +12,18 @@
  * ids in sync with that script; `theme.test.ts` enforces it.
  */
 
-export type ThemeId = 'lok' | '98' | 'xp' | '7';
+export type ThemeId = 'lok' | '98' | 'xp' | '7' | 'system' | 'tui' | '386' | 'cs16';
 export type Appearance = 'light' | 'dark' | 'system';
 export type ColorScheme = 'light' | 'dark';
 
-/** `lok` keeps the top bar; `classic` merges start menu, tasks, and tray into one taskbar. */
+/** `lok` keeps the top menu bar; `classic` merges start menu, tasks, and tray into one taskbar. */
 export type DesktopLayout = 'lok' | 'classic';
+
+/**
+ * Which component layer draws windows, controls, and menus. `classic` loads
+ * the shared token-driven layer in src/themes/classic.css under any layout.
+ */
+export type ThemeChrome = 'lok' | 'classic';
 
 export interface ThemeDefinition {
   id: ThemeId;
@@ -25,13 +31,19 @@ export interface ThemeDefinition {
   tagline: string;
   description: string;
   layout: DesktopLayout;
+  chrome: ThemeChrome;
   /** Color schemes the theme implements. Single-scheme themes ignore the appearance preference. */
   schemes: readonly ColorScheme[];
   /** Browser UI color (`<meta name="theme-color">`) per scheme. */
   themeColor: Readonly<Partial<Record<ColorScheme, string>>>;
   /** Label on the start button in the classic layout. */
   startLabel?: string;
-  credit?: { label: string; url: string };
+  /** System menu label in the top menu bar; defaults to the wordmark. */
+  menuLabel?: string;
+  /** Upstream project the theme is built on, shown in Config and About. */
+  credit?: { label: string; url: string; license: string };
+  /** Default desktop picture, decoded before the theme switches so it never pops in. */
+  wallpaper?: string;
   /** Lazily loads the scoped stylesheet; absent for the built-in theme. */
   loadStyles?: () => Promise<unknown>;
   /** CSS font shorthands warmed with the stylesheet so text never swaps after a switch. */
@@ -57,6 +69,7 @@ export const THEMES: Readonly<Record<ThemeId, ThemeDefinition>> = {
     tagline: 'Monospace, flat, square',
     description: 'The native lok.computer system with light and dark modes.',
     layout: 'lok',
+    chrome: 'lok',
     schemes: ['light', 'dark'],
     themeColor: { light: '#f0f0f0', dark: '#1a1a1a' },
   },
@@ -66,10 +79,11 @@ export const THEMES: Readonly<Record<ThemeId, ThemeDefinition>> = {
     tagline: 'Beveled silver chrome',
     description: 'Raised bevels, navy title bars, pixel type, and a teal desktop.',
     layout: 'classic',
+    chrome: 'classic',
     schemes: ['light'],
     themeColor: { light: '#008080' },
     startLabel: 'Start',
-    credit: { label: '98.css by Jordan Scales', url: 'https://github.com/jdan/98.css' },
+    credit: { label: '98.css by Jordan Scales', url: 'https://github.com/jdan/98.css', license: 'MIT' },
     loadStyles: () => Promise.all([import('@/themes/classic.css'), import('@/themes/98/theme.css')]),
     fonts: ['11px "Pixelated MS Sans Serif"', 'bold 11px "Pixelated MS Sans Serif"'],
   },
@@ -77,29 +91,88 @@ export const THEMES: Readonly<Record<ThemeId, ThemeDefinition>> = {
     id: 'xp',
     name: 'XP',
     tagline: 'Luna blue and olive green',
-    description: 'Glossy Luna title bars, rounded controls, and the green start button.',
+    description: 'Glossy Luna title bars, rounded controls, the green start button, and Bliss.',
     layout: 'classic',
+    chrome: 'classic',
     schemes: ['light'],
     themeColor: { light: '#245edb' },
     startLabel: 'start',
-    credit: { label: 'XP.css by Adam Hammad', url: 'https://github.com/botoxparty/XP.css' },
+    credit: { label: 'XP.css by Adam Hammad', url: 'https://github.com/botoxparty/XP.css', license: 'MIT' },
     loadStyles: () => Promise.all([import('@/themes/classic.css'), import('@/themes/xp/theme.css')]),
+    wallpaper: new URL('../themes/xp/bliss.webp', import.meta.url).href,
   },
   '7': {
     id: '7',
     name: '7',
     tagline: 'Aero glass and soft light',
-    description: 'Translucent glass frames, glowing caption buttons, and the start orb.',
+    description: 'Translucent glass frames, glowing caption buttons, the start orb, and Harmony.',
     layout: 'classic',
+    chrome: 'classic',
     schemes: ['light'],
     themeColor: { light: '#1c5a8a' },
-    credit: { label: '7.css by Khang Nguyen', url: 'https://github.com/khang-nd/7.css' },
+    credit: { label: '7.css by Khang Nguyen', url: 'https://github.com/khang-nd/7.css', license: 'MIT' },
     loadStyles: () => Promise.all([import('@/themes/classic.css'), import('@/themes/7/theme.css')]),
+    wallpaper: new URL('../themes/7/harmony.webp', import.meta.url).href,
+  },
+  system: {
+    id: 'system',
+    name: 'System',
+    tagline: 'One-bit Macintosh',
+    description: 'Black and white, Chicago type, striped title bars, and a gray desktop pattern.',
+    layout: 'lok',
+    chrome: 'classic',
+    schemes: ['light'],
+    themeColor: { light: '#ffffff' },
+    credit: { label: 'system.css by Sakun Acharige', url: 'https://github.com/sakofchit/system.css', license: 'MIT' },
+    loadStyles: () => Promise.all([import('@/themes/classic.css'), import('@/themes/system/theme.css')]),
+    fonts: ['12px Chicago_12', '16px Geneva_9', '12px ChicagoFLF'],
+  },
+  tui: {
+    id: 'tui',
+    name: 'TUI',
+    tagline: 'Turbo Vision text mode',
+    description: 'Double-line frames, a shaded blue desktop, hotkey menus, and the VGA font.',
+    layout: 'lok',
+    chrome: 'classic',
+    schemes: ['light'],
+    themeColor: { light: '#0000a8' },
+    menuLabel: '\u2261',
+    credit: { label: 'TuiCss by Vinicius Reif Biavatti', url: 'https://github.com/vinibiavatti1/TuiCss', license: 'MIT' },
+    loadStyles: () => Promise.all([import('@/themes/classic.css'), import('@/themes/tui/theme.css')]),
+    fonts: ['16px "Perfect DOS VGA 437"'],
+  },
+  '386': {
+    id: '386',
+    name: '386',
+    tagline: 'DOS dialogs on deep blue',
+    description: 'Gray dialogs, block shadows, red hotkeys, cyan fields, and Fixedsys.',
+    layout: 'lok',
+    chrome: 'classic',
+    schemes: ['light'],
+    themeColor: { light: '#000084' },
+    credit: { label: 'BOOTSTRA.386 by Chris McKenzie', url: 'https://github.com/kristopolous/BOOTSTRA.386', license: 'Apache-2.0' },
+    loadStyles: () => Promise.all([import('@/themes/classic.css'), import('@/themes/386/theme.css')]),
+    fonts: ['16px Fixedsys500c'],
+  },
+  cs16: {
+    id: 'cs16',
+    name: 'CS 1.6',
+    tagline: 'Olive VGUI',
+    description: 'The Counter-Strike 1.6 interface: olive panels, hairline bevels, and a pixel sans.',
+    layout: 'classic',
+    chrome: 'classic',
+    schemes: ['light'],
+    themeColor: { light: '#4a5942' },
+    startLabel: 'Menu',
+    credit: { label: 'cs16.css by Samuel Breznjak', url: 'https://github.com/ekmas/cs16.css', license: 'MIT' },
+    loadStyles: () => Promise.all([import('@/themes/classic.css'), import('@/themes/cs16/theme.css')]),
+    fonts: ['16px ArialPixel'],
+    wallpaper: new URL('../themes/cs16/background.webp', import.meta.url).href,
   },
 };
 
 /** Display order. Not derived from THEMES: integer-like keys ('7', '98') would sort first. */
-export const THEME_IDS: readonly ThemeId[] = ['lok', '98', 'xp', '7'];
+export const THEME_IDS: readonly ThemeId[] = ['lok', '98', 'xp', '7', 'system', 'tui', '386', 'cs16'];
 export const APPEARANCES: readonly Appearance[] = ['light', 'dark', 'system'];
 
 export const isThemeId = (value: unknown): value is ThemeId => (
@@ -190,15 +263,27 @@ const warmFonts = async (fonts: readonly string[] = []) => {
   await Promise.all(fonts.map((font) => document.fonts.load(font).catch(() => undefined)));
 };
 
-/** Loads a theme stylesheet and its fonts once. Resolves immediately for the built-in theme. */
+const WALLPAPER_WARM_LIMIT_MS = 1500;
+
+/** Decodes the wallpaper so it paints with the theme; a slow network only delays it briefly. */
+const warmWallpaper = (url?: string): Promise<void> => {
+  if (!url || typeof Image === 'undefined') return Promise.resolve();
+  const image = new Image();
+  image.src = url;
+  const decoded = image.decode().catch(() => undefined);
+  const limit = new Promise<void>((resolve) => setTimeout(resolve, WALLPAPER_WARM_LIMIT_MS));
+  return Promise.race([decoded, limit]);
+};
+
+/** Loads a theme stylesheet, fonts, and wallpaper once. Resolves immediately for the built-in theme. */
 export const loadThemeStyles = (theme: ThemeId): Promise<void> => {
-  const { loadStyles, fonts } = THEMES[theme];
+  const { loadStyles, fonts, wallpaper } = THEMES[theme];
   if (!loadStyles) return Promise.resolve();
 
   let pending = styleLoads.get(theme);
   if (!pending) {
-    pending = loadStyles()
-      .then(() => warmFonts(fonts))
+    pending = Promise.all([loadStyles().then(() => warmFonts(fonts)), warmWallpaper(wallpaper)])
+      .then(() => undefined)
       .catch((error) => {
         styleLoads.delete(theme);
         throw error;
@@ -231,6 +316,7 @@ export const applyThemeToDocument = (theme: ThemeId, scheme: ColorScheme) => {
 
   root.dataset.theme = theme;
   root.dataset.layout = THEMES[theme].layout;
+  root.dataset.chrome = THEMES[theme].chrome;
   root.classList.toggle('dark', scheme === 'dark');
   root.style.colorScheme = scheme;
 

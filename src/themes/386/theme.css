@@ -1,0 +1,730 @@
+/*
+ * 386 theme: DOS dialogs on deep blue, after BOOTSTRA.386
+ * (https://github.com/kristopolous/BOOTSTRA.386, Apache-2.0, see ./LICENSE).
+ * Type is Fixedsys Excelsior 5.00c (GPL, as bundled with BOOTSTRA.386).
+ * Glyphs in ./icons are rendered from the VGA font in black on gray.
+ *
+ * Gray dialogs float on #000084 with a block shadow; push buttons read
+ * `< OK >`, fields are cyan, hotkeys are red, the status line is cyan.
+ *
+ * Scope: html[data-theme="386"][data-layout]:not(#_) outranks classic.css.
+ */
+
+@font-face {
+    font-family: Fixedsys500c;
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("./fonts/Fixedsys500c.woff2") format("woff2");
+}
+
+html[data-theme="386"][data-layout]:not(#_) {
+    --dos-blue: #000084;
+    --dos-gray: #bbbbbb;
+    --dos-dark: #555555;
+    --dos-black: #000000;
+    --dos-white: #ffffff;
+    --dos-cyan: #00aaaa;
+    --dos-red: #aa0000;
+    --dos-yellow: #fefe54;
+    --dos-shadow: 9px 9px 0 #000000;
+    /* ▒ in gray on black for scroll tracks */
+    --dos-shade: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='2' height='2' shape-rendering='crispEdges'%3E%3Crect width='2' height='2' fill='%23000000'/%3E%3Crect x='1' width='1' height='1' fill='%23bbbbbb'/%3E%3Crect y='1' width='1' height='1' fill='%23bbbbbb'/%3E%3C/svg%3E");
+
+    /* lok tokens */
+    --font-ui: Fixedsys500c, "Perfect DOS VGA 437", "Lucida Console", "Courier New", monospace;
+    --font-code: Fixedsys500c, "Lucida Console", "Courier New", monospace;
+    --retro-window: 0 0% 73%;
+    --retro-window-titlebar: 0 0% 73%;
+    --background: 0 0% 73%;
+    --foreground: 0 0% 0%;
+    --card: 0 0% 73%;
+    --card-foreground: 0 0% 0%;
+    --popover: 0 0% 73%;
+    --popover-foreground: 0 0% 0%;
+    --primary: 180 100% 33%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 73%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 0 0% 73%;
+    --muted-foreground: 0 0% 33%;
+    --accent: 0 0% 0%;
+    --accent-foreground: 0 0% 100%;
+    --border: 0 0% 0%;
+    --input: 180 100% 33%;
+    --ring: 0 0% 0%;
+    --header-bg: var(--dos-gray);
+    --header-border: var(--dos-black);
+    --internal-border: var(--dos-black);
+    --internal-border-hover: var(--dos-black);
+    --scrollbar-thumb: var(--dos-black);
+    --scrollbar-thumb-hover: var(--dos-black);
+    --block-bg: var(--dos-gray);
+    --block-border: var(--dos-black);
+    --button-bg: var(--dos-gray);
+    --button-hover: var(--dos-gray);
+    --text-color: var(--dos-black);
+    --link-color: var(--dos-blue);
+    --detail-bg: var(--dos-gray);
+    --detail-border: var(--dos-black);
+    --detail-header-bg: var(--dos-gray);
+    --detail-meta-bg: var(--dos-gray);
+    --icon-color: var(--dos-black);
+    --focus-color: var(--dos-black);
+    --vis-public-color: #005500;
+    --vis-private-color: var(--dos-red);
+    --loading-bg: var(--dos-gray);
+    --loading-bar: var(--dos-cyan);
+    --log-bg: var(--dos-blue);
+    --log-text: var(--dos-gray);
+    --log-muted: #7777aa;
+    --log-error: #ff5555;
+    --log-warn: var(--dos-yellow);
+    --log-info: #55ffff;
+    --log-prefix-default: var(--dos-gray);
+    --log-prefix-cache: #55ff55;
+    --log-prefix-api: #55ffff;
+    --log-prefix-app: var(--dos-yellow);
+    --log-prefix-session: #ff55ff;
+    --log-prefix-registry: #ff5555;
+    --selection-bg: var(--dos-black);
+    --selection-fg: var(--dos-gray);
+    --desktop-bg: var(--dos-blue);
+    --desktop-pattern: none;
+    --desktop-label-color: var(--dos-gray);
+    --desktop-label-edge: transparent;
+    --desktop-icon-drop-shadow: transparent;
+    --taskbar-height: 19px;
+    --media-stage-bg: var(--dos-black);
+    --media-stage-fg: #55ff55;
+    --media-accent: var(--dos-cyan);
+    --ask-ai-bar: var(--dos-cyan);
+
+    /* Component tokens */
+    --c-face: var(--dos-gray);
+    --c-font-size: 16px;
+    --c-text-xs: 16px;
+    --c-text-sm: 16px;
+    --c-text-base: 16px;
+    --c-title-font: var(--font-ui);
+    --c-title-size: 16px;
+    --c-title-weight: 400;
+    --c-placeholder: #e0ffff;
+    --c-focus-outline: 0;
+    --c-focus-offset: 0;
+    --c-control-height: 19px;
+
+    --c-btn-fg: var(--dos-black);
+    --c-btn-bg: transparent;
+    --c-btn-border: 0;
+    --c-btn-radius: 0;
+    --c-btn-shadow: none;
+    --c-btn-bg-hover: transparent;
+    --c-btn-border-hover: 0;
+    --c-btn-shadow-hover: none;
+    --c-btn-bg-active: var(--dos-black);
+    --c-btn-border-active: 0;
+    --c-btn-shadow-active: none;
+    --c-btn-bg-on: var(--dos-black);
+    --c-btn-fg-on: var(--dos-gray);
+    --c-btn-border-on: 0;
+    --c-btn-shadow-on: none;
+    --c-btn-shadow-default: none;
+    --c-btn-fg-disabled: var(--dos-dark);
+    --c-btn-text-shadow-disabled: none;
+    --c-joined-gap: 8px;
+    --c-toast-width: 448px;
+    --c-toast-title-weight: 400;
+
+    --c-field-fg: var(--dos-white);
+    --c-field-bg: var(--dos-cyan);
+    --c-field-border: 0;
+    --c-field-radius: 0;
+    --c-field-shadow: none;
+    --c-field-height: 19px;
+    --c-field-bg-disabled: var(--dos-dark);
+    --c-select-arrow: url("./icons/select.svg");
+    --c-select-arrow-position: right 0 center;
+    --c-readout-bg: var(--dos-cyan);
+    --c-readout-border: 0;
+    --c-readout-shadow: none;
+
+    --c-check-bg: transparent;
+    --c-check-border: 0;
+    --c-check-shadow: none;
+    --c-check-mark: url("./icons/check-on.svg");
+    --c-radio-dot: url("./icons/radio-on.svg");
+    --c-track-bg: var(--dos-black);
+    --c-track-height: 4px;
+    --c-track-shadow: none;
+    --c-thumb-image: url("./icons/thumb.svg");
+    --c-thumb-width: 8px;
+    --c-thumb-height: 16px;
+
+    --c-window-bg: var(--dos-gray);
+    --c-window-border: 0;
+    --c-window-radius: 0;
+    --c-window-padding: 0 4px 8px;
+    --c-window-shadow: var(--dos-shadow);
+    --c-client-gap: 0;
+    --c-client-bg: var(--dos-gray);
+    --c-client-border: 0;
+    --c-title-height: 19px;
+    --c-title-padding: 0 4px;
+    --c-title-radius: 0;
+    --c-title-fg: var(--dos-black);
+    --c-title-bg: transparent;
+    --c-title-fg-inactive: var(--dos-dark);
+    --c-title-bg-inactive: transparent;
+    --c-controls-gap: 0;
+
+    --c-menu-bg: var(--dos-gray);
+    --c-menu-border: 0;
+    --c-menu-radius: 0;
+    --c-menu-padding: 9px 4px;
+    --c-menu-shadow: var(--dos-shadow);
+    --c-menu-divider: 1px solid var(--dos-black);
+    --c-menu-divider-light: 0;
+    --c-hl-bg: var(--dos-black);
+    --c-hl-fg: var(--dos-gray);
+    --c-hl-border: 0;
+    --c-hl-radius: 0;
+    --c-hover-bg: transparent;
+
+    --c-menubar-height: 19px;
+    --c-menubar-bg: var(--dos-gray);
+    --c-menubar-fg: var(--dos-black);
+    --c-menubar-border: 0;
+    --c-menubar-font: var(--font-ui);
+    --c-menubar-size: 16px;
+    --c-menubar-item-padding: 0 8px;
+    --c-menubar-hl-bg: var(--dos-black);
+    --c-menubar-hl-fg: var(--dos-white);
+    --c-menubar-weight: 400;
+    --c-menubar-active-weight: 400;
+
+    --c-toolbar-bg: var(--dos-gray);
+    --c-toolbar-border: 0;
+    --c-toolbar-shadow: none;
+    --c-status-bg: var(--dos-gray);
+    --c-status-shadow: inset 0 1px var(--dos-black);
+    --c-status-padding: 0 4px;
+    --c-tab-bg: var(--dos-gray);
+    --c-tab-bg-on: var(--dos-black);
+    --c-tab-border: 0;
+    --c-tab-border-top-on: 0;
+    --c-tab-radius: 0;
+    --c-tab-shadow: none;
+    --c-tab-shadow-on: none;
+    --c-tab-panel-border: 0;
+    --c-tab-panel-shadow: none;
+    --c-group-border: 1px solid var(--dos-black);
+    --c-group-shadow: none;
+    --c-list-bg: var(--dos-gray);
+    --c-list-shadow: inset 0 0 0 1px var(--dos-black);
+    --c-header-bg: var(--dos-gray);
+    --c-header-border: 0;
+    --c-header-shadow: inset 0 -1px var(--dos-black);
+    --c-header-shadow-active: inset 0 -1px var(--dos-black);
+    --c-splitter-border: var(--dos-black);
+    --c-splitter-shadow: inset 1px 0 var(--dos-black);
+
+    --c-taskbar-bg: var(--dos-cyan);
+    --c-taskbar-fg: var(--dos-black);
+    --c-taskbar-border-top: 0;
+    --c-taskbar-shadow: none;
+    --c-taskbar-padding: 0;
+    --c-task-height: 19px;
+    --c-task-gap: 0;
+    --c-task-fg: var(--dos-black);
+    --c-task-bg: transparent;
+    --c-task-border: 0;
+    --c-task-radius: 0;
+    --c-task-shadow: none;
+    --c-task-bg-hover: transparent;
+    --c-task-bg-on: var(--dos-black);
+    --c-task-fg-on: var(--dos-cyan);
+    --c-task-shadow-on: none;
+    --c-task-weight-on: 400;
+
+    --c-scrollbar-thumb: var(--dos-black);
+    --c-scrollbar-track: var(--dos-gray);
+    --c-desktop-label-shadow: none;
+    --c-desktop-label-selected-bg: var(--dos-black);
+    --c-desktop-label-selected-border: 0;
+    --c-desktop-icon-selected-filter: none;
+    --c-modal-backdrop: transparent;
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---------- Type ---------- */
+
+html[data-theme="386"][data-layout]:not(#_) body :not(svg, svg *) {
+    font-size: 16px;
+}
+
+html[data-theme="386"][data-layout]:not(#_) *,
+html[data-theme="386"][data-layout]:not(#_) *::before,
+html[data-theme="386"][data-layout]:not(#_) *::after {
+    font-family: var(--font-ui);
+}
+
+html[data-theme="386"][data-layout]:not(#_) :where(h1, h2, h3, h4, h5, h6, strong, b, th) {
+    font-weight: 400;
+}
+
+html[data-theme="386"][data-layout]:not(#_) :where(.text-lg, .text-xl, .text-2xl, h1, h2, h3) {
+    font-size: 16px;
+    line-height: 19px;
+}
+
+html[data-theme="386"][data-layout]:not(#_) :where(h1, h2, h3) {
+    text-transform: uppercase;
+}
+
+html[data-theme="386"][data-layout]:not(#_) a {
+    color: var(--dos-blue);
+    text-decoration: underline;
+}
+
+html[data-theme="386"][data-layout]:not(#_) a:hover {
+    color: var(--dos-gray);
+    background: var(--dos-black);
+    text-decoration: none;
+}
+
+html[data-theme="386"][data-layout]:not(#_) ::selection {
+    color: var(--dos-gray);
+    background: var(--dos-black);
+}
+
+/* ---------- Menu bar: hotkeys in red ---------- */
+
+html[data-theme="386"][data-layout]:not(#_) .system-menu-button::first-letter,
+html[data-theme="386"][data-layout]:not(#_) .app-header-active::first-letter {
+    color: var(--dos-red);
+}
+
+html[data-theme="386"][data-layout]:not(#_) .system-menu-button {
+    display: block;
+    line-height: 19px;
+}
+
+html[data-theme="386"][data-layout]:not(#_) .system-menu-button:hover::first-letter,
+html[data-theme="386"][data-layout]:not(#_) .system-menu-button[aria-expanded="true"]::first-letter {
+    color: var(--dos-yellow);
+}
+
+html[data-theme="386"][data-layout]:not(#_) .app-header .app-header-button:not(.system-menu-button) {
+    gap: 16px;
+}
+
+/* ---------- Windows: a dialog with a double frame and the title on its edge ---------- */
+
+html[data-theme="386"][data-layout]:not(#_) .window-surface {
+    position: relative;
+    isolation: isolate;
+}
+
+html[data-theme="386"][data-layout]:not(#_) .window-surface::before {
+    content: "";
+    position: absolute;
+    z-index: 0;
+    inset: 8px 3px 4px;
+    border: 3px double var(--dos-black);
+    pointer-events: none;
+}
+
+html[data-theme="386"][data-layout]:not(#_) .window-surface[data-window-surface-id]:not([data-active])::before {
+    inset: 9px 4px 5px;
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--dos-dark);
+}
+
+html[data-theme="386"][data-layout]:not(#_) .window-surface[data-maximized] {
+    box-shadow: none;
+}
+
+html[data-theme="386"][data-layout]:not(#_) .window-titlebar {
+    position: relative;
+    z-index: 1;
+    gap: 0;
+}
+
+html[data-theme="386"][data-layout]:not(#_) .window-titlebar .window-controls {
+    display: contents;
+}
+
+html[data-theme="386"][data-layout]:not(#_) .window-menu-button,
+html[data-theme="386"][data-layout]:not(#_) .window-menu-button:hover,
+html[data-theme="386"][data-layout]:not(#_) .window-menu-button[aria-expanded="true"] {
+    order: 0;
+    width: 24px;
+    height: 19px;
+    margin-left: auto;
+    padding: 0 0 0 8px;
+    background: var(--dos-gray);
+}
+
+html[data-theme="386"][data-layout]:not(#_) .window-menu-button img {
+    width: 16px;
+    height: 16px;
+}
+
+html[data-theme="386"][data-layout]:not(#_) .window-title {
+    order: 1;
+    flex: 0 1 auto;
+    min-width: 0;
+    margin-right: auto;
+    padding: 0 8px 0 4px;
+    line-height: 19px;
+    background: var(--dos-gray);
+}
+
+html[data-theme="386"][data-layout]:not(#_) .window-surface[data-active] .window-title {
+    color: var(--dos-gray);
+    background: var(--dos-black);
+}
+
+html[data-theme="386"][data-layout]:not(#_) .window-surface[data-active] .window-menu-button {
+    background: var(--dos-black);
+}
+
+html[data-theme="386"][data-layout]:not(#_) .window-surface[data-active] .window-menu-button img {
+    filter: grayscale(1) brightness(1.6);
+}
+
+html[data-theme="386"][data-layout]:not(#_) .window-control,
+html[data-theme="386"][data-layout]:not(#_) .window-control:hover:not(:disabled),
+html[data-theme="386"][data-layout]:not(#_) .window-control:active:not(:disabled) {
+    width: 24px;
+    height: 19px;
+    min-height: 19px;
+    flex: 0 0 auto;
+    padding: 0;
+    background-color: var(--dos-gray);
+    background-size: 24px 16px;
+    background-position: center;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+html[data-theme="386"][data-layout]:not(#_) .window-control[data-window-control="close"] {
+    order: -1;
+    margin-left: 6px;
+    background-image: url("./icons/close.svg");
+}
+
+html[data-theme="386"][data-layout]:not(#_) .window-control[data-window-control="close"]:active { background-image: url("./icons/close-on.svg"); }
+
+html[data-theme="386"][data-layout]:not(#_) .window-control[data-window-control="minimize"] {
+    order: 2;
+    background-image: url("./icons/minimize.svg");
+}
+
+html[data-theme="386"][data-layout]:not(#_) .window-control[data-window-control="minimize"]:active { background-image: url("./icons/minimize-on.svg"); }
+
+html[data-theme="386"][data-layout]:not(#_) .window-control[data-window-control="maximize"] {
+    order: 3;
+    margin-right: 6px;
+    background-image: url("./icons/maximize.svg");
+}
+
+html[data-theme="386"][data-layout]:not(#_) .window-control[data-window-control="maximize"]:active { background-image: url("./icons/maximize-on.svg"); }
+
+html[data-theme="386"][data-layout]:not(#_) .window-control[data-window-control="restore"] {
+    order: 3;
+    margin-right: 6px;
+    background-image: url("./icons/restore.svg");
+}
+
+html[data-theme="386"][data-layout]:not(#_) .window-control[data-window-control="restore"]:active { background-image: url("./icons/restore-on.svg"); }
+
+html[data-theme="386"][data-layout]:not(#_) .window-surface[data-window-surface-id]:not([data-active]) .window-control {
+    visibility: hidden;
+}
+
+html[data-theme="386"][data-layout]:not(#_) .window-surface > .window-content-area,
+html[data-theme="386"][data-layout]:not(#_) .window-surface > .flex-1 {
+    position: relative;
+    z-index: 1;
+    margin: 0 4px;
+}
+
+/* ---------- Push buttons: < OK > ---------- */
+
+html[data-theme="386"][data-layout]:not(#_) :where(
+    .retro-button,
+    button.arena-toolbar-control,
+    .arena-detail-action,
+    .oobe-segmented button,
+    .oobe-choice,
+    .oobe-oneko-options button,
+    .config-oneko-option,
+    .system-kernel-retry,
+    [data-sonner-toast] [data-button]
+):not(.window-control) {
+    gap: 4px;
+    padding: 0;
+    line-height: 19px;
+}
+
+html[data-theme="386"][data-layout]:not(#_) :where(
+    .retro-button,
+    button.arena-toolbar-control,
+    .arena-detail-action,
+    .oobe-segmented button,
+    .oobe-choice,
+    .system-kernel-retry,
+    [data-sonner-toast] [data-button]
+):not(.window-control, [aria-label])::before {
+    content: "<";
+    flex: 0 0 auto;
+    padding-right: 4px;
+}
+
+html[data-theme="386"][data-layout]:not(#_) :where(
+    .retro-button,
+    button.arena-toolbar-control,
+    .arena-detail-action,
+    .oobe-segmented button,
+    .oobe-choice,
+    .system-kernel-retry,
+    [data-sonner-toast] [data-button]
+):not(.window-control, [aria-label])::after {
+    content: ">";
+    flex: 0 0 auto;
+    padding-left: 4px;
+}
+
+html[data-theme="386"][data-layout]:not(#_) :where(.retro-button, button.arena-toolbar-control, .arena-detail-action):is(:hover, :focus-visible):not(:disabled) {
+    color: var(--dos-white);
+}
+
+html[data-theme="386"][data-layout]:not(#_) :where(.retro-button, button.arena-toolbar-control, .arena-detail-action):is(:active, [data-active="true"], [aria-pressed="true"]):not(:disabled) {
+    color: var(--dos-gray);
+}
+
+html[data-theme="386"][data-layout]:not(#_) :where(.retro-button[data-variant="primary"], .arena-detail-action-primary)::before,
+html[data-theme="386"][data-layout]:not(#_) :where(.retro-button[data-variant="primary"], .arena-detail-action-primary)::after {
+    color: var(--dos-white);
+}
+
+html[data-theme="386"][data-layout]:not(#_) :where(.retro-button[data-variant="primary"], .arena-detail-action-primary) {
+    font-weight: 400;
+}
+
+html[data-theme="386"][data-layout]:not(#_) :where(.retro-button, button.arena-toolbar-control) svg {
+    color: currentColor;
+}
+
+/* Icon-only buttons (they carry an aria-label) show the glyph without brackets. */
+html[data-theme="386"][data-layout]:not(#_) :where(.retro-button, button.arena-toolbar-control)[aria-label]:not(.window-control) {
+    padding: 0 4px;
+}
+
+/* ---------- Fields: cyan with white text ---------- */
+
+html[data-theme="386"][data-layout]:not(#_) .app-readout {
+    color: var(--dos-white);
+}
+
+html[data-theme="386"][data-layout]:not(#_) :where(.search-input, input.arena-toolbar-control, select.arena-toolbar-control, textarea.search-input) {
+    padding: 0 8px;
+    line-height: 19px;
+    caret-color: var(--dos-yellow);
+}
+
+html[data-theme="386"][data-layout]:not(#_) :where(.search-input, input.arena-toolbar-control, select.arena-toolbar-control, textarea.search-input):focus-visible {
+    outline: 0;
+    box-shadow: inset 0 -2px var(--dos-yellow);
+}
+
+html[data-theme="386"][data-layout]:not(#_) select.arena-toolbar-control {
+    padding-right: 16px;
+    background-size: 8px 16px;
+}
+
+html[data-theme="386"][data-layout]:not(#_) input[type="checkbox"],
+html[data-theme="386"][data-layout]:not(#_) input[type="radio"],
+html[data-theme="386"][data-layout]:not(#_) input[type="checkbox"]:hover:not(:disabled),
+html[data-theme="386"][data-layout]:not(#_) input[type="radio"]:hover:not(:disabled) {
+    width: 24px;
+    height: 16px;
+    background: url("./icons/check-off.svg") center / 24px 16px no-repeat;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+html[data-theme="386"][data-layout]:not(#_) input[type="checkbox"]:checked { background-image: url("./icons/check-on.svg"); }
+html[data-theme="386"][data-layout]:not(#_) input[type="radio"] { background-image: url("./icons/radio-off.svg"); }
+html[data-theme="386"][data-layout]:not(#_) input[type="radio"]:checked { background-image: url("./icons/radio-on.svg"); }
+
+/* ---------- Scrollbars ---------- */
+
+html[data-theme="386"][data-layout]:not(#_) ::-webkit-scrollbar {
+    width: 16px;
+    height: 16px;
+    background: var(--dos-black);
+}
+
+html[data-theme="386"][data-layout]:not(#_) ::-webkit-scrollbar-track {
+    background: var(--dos-shade) 0 0 / 2px 2px;
+}
+
+html[data-theme="386"][data-layout]:not(#_) ::-webkit-scrollbar-thumb,
+html[data-theme="386"][data-layout]:not(#_) ::-webkit-scrollbar-thumb:hover {
+    min-height: 16px;
+    background: var(--dos-black);
+    border: 0;
+    border-radius: 0;
+}
+
+html[data-theme="386"][data-layout]:not(#_) ::-webkit-scrollbar-corner {
+    background: var(--dos-black);
+}
+
+html[data-theme="386"][data-layout]:not(#_) ::-webkit-scrollbar-button:vertical:start:decrement,
+html[data-theme="386"][data-layout]:not(#_) ::-webkit-scrollbar-button:vertical:end:increment,
+html[data-theme="386"][data-layout]:not(#_) ::-webkit-scrollbar-button:horizontal:start:decrement,
+html[data-theme="386"][data-layout]:not(#_) ::-webkit-scrollbar-button:horizontal:end:increment {
+    display: block;
+    width: 16px;
+    height: 16px;
+    background-size: 16px 16px;
+}
+
+html[data-theme="386"][data-layout]:not(#_) ::-webkit-scrollbar-button:vertical:start { background-image: url("./icons/scroll-up.svg"); }
+html[data-theme="386"][data-layout]:not(#_) ::-webkit-scrollbar-button:vertical:end { background-image: url("./icons/scroll-down.svg"); }
+html[data-theme="386"][data-layout]:not(#_) ::-webkit-scrollbar-button:horizontal:start { background-image: url("./icons/scroll-left.svg"); }
+html[data-theme="386"][data-layout]:not(#_) ::-webkit-scrollbar-button:horizontal:end { background-image: url("./icons/scroll-right.svg"); }
+
+/* ---------- Menus ---------- */
+
+html[data-theme="386"][data-layout]:not(#_) .menu-surface::before {
+    content: "";
+    position: absolute;
+    inset: 4px 2px;
+    border: 1px solid var(--dos-black);
+    pointer-events: none;
+}
+
+html[data-theme="386"][data-layout]:not(#_) .menu-item-button {
+    min-height: 19px;
+    padding: 0 24px 0 8px;
+    line-height: 19px;
+}
+
+html[data-theme="386"][data-layout]:not(#_) .menu-item-button svg {
+    color: currentColor;
+}
+
+html[data-theme="386"][data-layout]:not(#_) .menu-surface > .border-t {
+    margin: 4px -2px;
+}
+
+/* ---------- Status line: <About> <Media> ---------- */
+
+html[data-theme="386"][data-layout]:not(#_) .taskbar-tasks {
+    padding: 0 4px;
+}
+
+html[data-theme="386"][data-layout]:not(#_) .taskbar-button {
+    width: auto;
+    padding: 0 4px;
+    gap: 0;
+}
+
+html[data-theme="386"][data-layout]:not(#_) .taskbar-button::before { content: "<"; }
+html[data-theme="386"][data-layout]:not(#_) .taskbar-button::after { content: ">"; }
+
+html[data-theme="386"][data-layout]:not(#_) .taskbar-button img {
+    display: none;
+}
+
+/* ---------- Desktop ---------- */
+
+html[data-theme="386"][data-layout]:not(#_) .desktop-icon-label {
+    padding: 0 8px;
+    color: var(--dos-black);
+    background: var(--dos-gray);
+    line-height: 19px;
+}
+
+html[data-theme="386"][data-layout]:not(#_) .desktop-icon-button[data-selected="true"] .desktop-icon-label {
+    color: var(--dos-gray);
+    background: var(--dos-black);
+}
+
+/* ---------- Toasts: a message box ---------- */
+
+html[data-theme="386"][data-layout]:not(#_) [data-sonner-toast] {
+    padding: 16px !important;
+    color: var(--dos-black) !important;
+    background: var(--dos-gray) !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: inset 0 0 0 4px var(--dos-gray), inset 0 0 0 5px var(--dos-black), inset 0 0 0 6px var(--dos-gray), inset 0 0 0 7px var(--dos-black), var(--dos-shadow) !important;
+    font-size: 16px !important;
+}
+
+html[data-theme="386"][data-layout]:not(#_) [data-sonner-toast] [data-button] {
+    padding: 0 !important;
+}
+
+html[data-theme="386"][data-layout]:not(#_) [data-sonner-toast] [data-button]:hover {
+    color: var(--dos-white) !important;
+}
+
+/* ---------- Tabs ---------- */
+
+html[data-theme="386"][data-layout]:not(#_) .app-tab-bar {
+    padding: 4px 0;
+    gap: 8px;
+}
+
+html[data-theme="386"][data-layout]:not(#_) .app-tab-bar .retro-button,
+html[data-theme="386"][data-layout]:not(#_) .app-tab-bar .retro-button:hover:not(:disabled),
+html[data-theme="386"][data-layout]:not(#_) .app-tab-bar .retro-button[data-active="true"] {
+    height: 19px;
+    min-height: 19px;
+    margin: 0;
+    padding: 0 4px;
+    box-shadow: none;
+}
+
+html[data-theme="386"][data-layout]:not(#_) .app-tab-bar .retro-button[data-active="true"] {
+    color: var(--dos-gray);
+}
+
+/* ---------- Content ---------- */
+
+html[data-theme="386"][data-layout]:not(#_) .config-section-title {
+    top: -10px;
+    background: var(--dos-gray);
+}
+
+html[data-theme="386"][data-layout]:not(#_) .config-sidebar .config-category-button::before,
+html[data-theme="386"][data-layout]:not(#_) .config-sidebar .config-category-button::after,
+html[data-theme="386"][data-layout]:not(#_) .theme-picker-option::before,
+html[data-theme="386"][data-layout]:not(#_) .theme-picker-option::after {
+    content: none;
+}
+
+html[data-theme="386"][data-layout]:not(#_) .console-layout,
+html[data-theme="386"][data-layout]:not(#_) .console-layout * {
+    line-height: 19px;
+}
+
+/* wttr.in's ANSI colors were made for a black console. */
+html[data-theme="386"][data-layout]:not(#_) .weather-output {
+    color: var(--dos-gray);
+    background: var(--dos-black);
+}
+
+html[data-theme="386"][data-layout]:not(#_) .calendar-panel svg {
+    color: var(--dos-black);
+}

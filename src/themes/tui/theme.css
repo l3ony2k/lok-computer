@@ -1,0 +1,804 @@
+/*
+ * TUI theme: Borland Turbo Vision in VGA text mode, after TuiCss
+ * (https://github.com/vinibiavatti1/TuiCss, MIT, see ./LICENSE). Type is
+ * Perfect DOS VGA 437 by Zeh Fernando; every glyph in ./icons is rendered from
+ * that font, so frames, buttons, and checkboxes sit on the same 8x16 cells.
+ *
+ * Geometry follows the VGA box-drawing glyphs: horizontal lines are 1px with a
+ * 1px gap, vertical lines 2px with a 1px gap, so `border: 3px 5px double` is
+ * exactly ═ and ║.
+ *
+ * Scope: html[data-theme="tui"][data-layout]:not(#_) outranks classic.css.
+ */
+
+@font-face {
+    font-family: "Perfect DOS VGA 437";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("./fonts/PerfectDOSVGA437Win.woff2") format("woff2");
+}
+
+html[data-theme="tui"][data-layout]:not(#_) {
+    /* VGA text palette */
+    --vga-black: #000000;
+    --vga-blue: #0000a8;
+    --vga-green: #00a800;
+    --vga-cyan: #00a8a8;
+    --vga-red: #a80000;
+    --vga-magenta: #a800a8;
+    --vga-brown: #a85400;
+    --vga-gray: #a8a8a8;
+    --vga-dark: #545454;
+    --vga-bright-green: #55ff55;
+    --vga-bright-cyan: #55ffff;
+    --vga-yellow: #ffff55;
+    --vga-white: #ffffff;
+    /* ░ desktop: blue light-shade cells on gray */
+    --tv-desktop: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='2' shape-rendering='crispEdges'%3E%3Crect width='4' height='2' fill='%23a8a8a8'/%3E%3Crect x='3' width='1' height='1' fill='%230000a8'/%3E%3Crect x='1' y='1' width='1' height='1' fill='%230000a8'/%3E%3C/svg%3E");
+    /* ▒ scrollbar track: cyan medium shade on blue */
+    --tv-track: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='2' height='2' shape-rendering='crispEdges'%3E%3Crect width='2' height='2' fill='%230000a8'/%3E%3Crect x='1' width='1' height='1' fill='%2300a8a8'/%3E%3Crect y='1' width='1' height='1' fill='%2300a8a8'/%3E%3C/svg%3E");
+    --tv-shadow: 16px 16px 0 rgba(0, 0, 0, 0.82);
+    --tv-shadow-small: 8px 8px 0 #000000;
+
+    /* lok tokens */
+    --font-ui: "Perfect DOS VGA 437", "Lucida Console", "Courier New", monospace;
+    --font-code: "Perfect DOS VGA 437", "Lucida Console", "Courier New", monospace;
+    --retro-window: 240 100% 33%;
+    --retro-window-titlebar: 240 100% 33%;
+    --background: 240 100% 33%;
+    --foreground: 0 0% 100%;
+    --card: 240 100% 33%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 66%;
+    --popover-foreground: 0 0% 0%;
+    --primary: 120 100% 33%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 66%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 240 100% 25%;
+    --muted-foreground: 0 0% 66%;
+    --accent: 180 100% 33%;
+    --accent-foreground: 0 0% 0%;
+    --border: 0 0% 100%;
+    --input: 0 0% 0%;
+    --ring: 180 100% 66%;
+    --header-bg: var(--vga-gray);
+    --header-border: var(--vga-white);
+    --internal-border: var(--vga-cyan);
+    --internal-border-hover: var(--vga-bright-cyan);
+    --scrollbar-thumb: var(--vga-cyan);
+    --scrollbar-thumb-hover: var(--vga-cyan);
+    --block-bg: var(--vga-blue);
+    --block-border: var(--vga-cyan);
+    --button-bg: var(--vga-green);
+    --button-hover: var(--vga-green);
+    --text-color: var(--vga-white);
+    --link-color: var(--vga-bright-cyan);
+    --detail-bg: var(--vga-blue);
+    --detail-border: var(--vga-cyan);
+    --detail-header-bg: var(--vga-blue);
+    --detail-meta-bg: var(--vga-blue);
+    --icon-color: var(--vga-white);
+    --focus-color: var(--vga-yellow);
+    --vis-public-color: var(--vga-bright-green);
+    --vis-private-color: #ff5555;
+    --loading-bg: var(--vga-blue);
+    --loading-bar: var(--vga-cyan);
+    --log-bg: var(--vga-black);
+    --log-text: var(--vga-gray);
+    --log-muted: var(--vga-dark);
+    --log-error: #ff5555;
+    --log-warn: var(--vga-yellow);
+    --log-info: var(--vga-bright-cyan);
+    --log-prefix-default: var(--vga-gray);
+    --log-prefix-cache: var(--vga-bright-green);
+    --log-prefix-api: var(--vga-bright-cyan);
+    --log-prefix-app: var(--vga-yellow);
+    --log-prefix-session: #ff55ff;
+    --log-prefix-registry: #ff5555;
+    --selection-bg: var(--vga-cyan);
+    --selection-fg: var(--vga-black);
+    --desktop-bg: var(--vga-gray);
+    --desktop-pattern: var(--tv-desktop);
+    --desktop-pattern-size: 4px 2px;
+    --desktop-label-color: var(--vga-white);
+    --desktop-label-edge: transparent;
+    --desktop-icon-drop-shadow: transparent;
+    --taskbar-height: 16px;
+    --media-stage-bg: var(--vga-black);
+    --media-stage-fg: var(--vga-bright-green);
+    --media-accent: var(--vga-cyan);
+    --ask-ai-bar: var(--vga-cyan);
+
+    /* Component tokens */
+    --c-face: var(--vga-blue);
+    --c-font-size: 16px;
+    --c-text-xs: 16px;
+    --c-text-sm: 16px;
+    --c-text-base: 16px;
+    --c-title-font: var(--font-ui);
+    --c-title-size: 16px;
+    --c-title-weight: 400;
+    --c-placeholder: var(--vga-dark);
+    --c-focus-outline: 0;
+    --c-focus-offset: 0;
+    --c-control-height: 16px;
+
+    --c-btn-fg: var(--vga-black);
+    --c-btn-bg: var(--vga-green);
+    --c-btn-border: 0;
+    --c-btn-radius: 0;
+    --c-btn-shadow: var(--tv-shadow-small);
+    --c-btn-bg-hover: var(--vga-green);
+    --c-btn-border-hover: 0;
+    --c-btn-shadow-hover: var(--tv-shadow-small);
+    --c-btn-bg-active: var(--vga-cyan);
+    --c-btn-border-active: 0;
+    --c-btn-shadow-active: none;
+    --c-btn-bg-on: var(--vga-cyan);
+    --c-btn-fg-on: var(--vga-black);
+    --c-btn-border-on: 0;
+    --c-btn-shadow-on: var(--tv-shadow-small);
+    --c-btn-shadow-default: var(--tv-shadow-small);
+    --c-btn-fg-disabled: var(--vga-dark);
+    --c-btn-bg-disabled: var(--vga-gray);
+    --c-btn-shadow-disabled: var(--tv-shadow-small);
+    --c-btn-text-shadow-disabled: none;
+    --c-joined-gap: 16px;
+    --c-toast-width: 448px;
+    --c-toast-title-weight: 400;
+
+    --c-field-fg: var(--vga-white);
+    --c-field-bg: var(--vga-black);
+    --c-field-border: 0;
+    --c-field-radius: 0;
+    --c-field-shadow: none;
+    --c-field-height: 16px;
+    --c-field-bg-disabled: var(--vga-gray);
+    --c-select-arrow: url("./icons/select.svg");
+    --c-select-arrow-position: right 0 center;
+    --c-readout-bg: var(--vga-black);
+    --c-readout-border: 0;
+    --c-readout-shadow: none;
+
+    --c-check-bg: transparent;
+    --c-check-border: 0;
+    --c-check-shadow: none;
+    --c-check-mark: url("./icons/check-on.svg");
+    --c-radio-dot: url("./icons/radio-on.svg");
+    --c-track-bg: var(--tv-track);
+    --c-track-height: 8px;
+    --c-track-shadow: none;
+    --c-thumb-image: url("./icons/thumb.svg");
+    --c-thumb-width: 8px;
+    --c-thumb-height: 16px;
+
+    --c-window-bg: var(--vga-blue);
+    --c-window-border: 0;
+    --c-window-radius: 0;
+    --c-window-padding: 0 8px 16px;
+    --c-window-shadow: var(--tv-shadow);
+    --c-client-gap: 0;
+    --c-client-bg: var(--vga-blue);
+    --c-client-border: 0;
+    --c-title-height: 16px;
+    --c-title-padding: 0 8px;
+    --c-title-radius: 0;
+    --c-title-fg: var(--vga-white);
+    --c-title-bg: transparent;
+    --c-title-fg-inactive: var(--vga-white);
+    --c-title-bg-inactive: transparent;
+    --c-controls-gap: 0;
+
+    --c-menu-bg: var(--vga-gray);
+    --c-menu-border: 0;
+    --c-menu-radius: 0;
+    --c-menu-padding: 8px 8px;
+    --c-menu-shadow: var(--tv-shadow);
+    --c-menu-divider: 1px solid var(--vga-black);
+    --c-menu-divider-light: 0;
+    --c-hl-bg: var(--vga-green);
+    --c-hl-fg: var(--vga-black);
+    --c-hl-border: 0;
+    --c-hl-radius: 0;
+    --c-hover-bg: transparent;
+
+    --c-menubar-height: 16px;
+    --c-menubar-bg: var(--vga-gray);
+    --c-menubar-fg: var(--vga-black);
+    --c-menubar-border: 0;
+    --c-menubar-font: var(--font-ui);
+    --c-menubar-size: 16px;
+    --c-menubar-item-padding: 0 8px;
+    --c-menubar-hl-bg: var(--vga-green);
+    --c-menubar-hl-fg: var(--vga-black);
+    --c-menubar-active-weight: 400;
+
+    --c-toolbar-bg: var(--vga-blue);
+    --c-toolbar-border: 0;
+    --c-toolbar-shadow: none;
+    --c-status-bg: var(--vga-blue);
+    --c-status-shadow: none;
+    --c-status-padding: 0 8px;
+    --c-tab-bg: var(--vga-blue);
+    --c-tab-bg-on: var(--vga-gray);
+    --c-tab-border: 0;
+    --c-tab-border-top-on: 0;
+    --c-tab-radius: 0;
+    --c-tab-shadow: none;
+    --c-tab-shadow-on: none;
+    --c-tab-panel-border: 0;
+    --c-tab-panel-shadow: none;
+    --c-group-border: 1px solid var(--vga-white);
+    --c-group-shadow: none;
+    --c-group-title-fg: var(--vga-white);
+    --c-list-bg: var(--vga-cyan);
+    --c-list-shadow: none;
+    --c-header-bg: var(--vga-blue);
+    --c-header-border: 0;
+    --c-header-shadow: none;
+    --c-header-shadow-active: none;
+    --c-splitter-border: var(--vga-white);
+    --c-splitter-shadow: inset 2px 0 var(--vga-white);
+
+    --c-taskbar-bg: var(--vga-gray);
+    --c-taskbar-fg: var(--vga-black);
+    --c-taskbar-border-top: 0;
+    --c-taskbar-shadow: none;
+    --c-taskbar-padding: 0;
+    --c-task-height: 16px;
+    --c-task-gap: 0;
+    --c-task-fg: var(--vga-black);
+    --c-task-bg: transparent;
+    --c-task-border: 0;
+    --c-task-radius: 0;
+    --c-task-shadow: none;
+    --c-task-bg-hover: transparent;
+    --c-task-bg-on: var(--vga-green);
+    --c-task-fg-on: var(--vga-black);
+    --c-task-shadow-on: none;
+    --c-task-weight-on: 400;
+
+    --c-scrollbar-thumb: var(--vga-cyan);
+    --c-scrollbar-track: var(--vga-blue);
+    --c-desktop-label-shadow: none;
+    --c-desktop-label-selected-bg: var(--vga-green);
+    --c-desktop-label-selected-border: 0;
+    --c-desktop-icon-selected-filter: none;
+    --c-modal-backdrop: transparent;
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---------- Type: one size, one face ---------- */
+
+html[data-theme="tui"][data-layout]:not(#_) body :not(svg, svg *) {
+    font-size: 16px;
+}
+
+html[data-theme="tui"][data-layout]:not(#_) body,
+html[data-theme="tui"][data-layout]:not(#_) :where(h1, h2, h3, h4, h5, h6, strong, b, th) {
+    font-weight: 400;
+}
+
+html[data-theme="tui"][data-layout]:not(#_) :where(h1, h2, h3, h4, strong, b) {
+    color: var(--vga-yellow);
+}
+
+html[data-theme="tui"][data-layout]:not(#_) :where(.text-lg, .text-xl, .text-2xl, h1, h2, h3) {
+    font-size: 16px;
+    line-height: 16px;
+}
+
+html[data-theme="tui"][data-layout]:not(#_) *,
+html[data-theme="tui"][data-layout]:not(#_) *::before,
+html[data-theme="tui"][data-layout]:not(#_) *::after {
+    font-family: var(--font-ui);
+}
+
+html[data-theme="tui"][data-layout]:not(#_) a {
+    color: var(--vga-bright-cyan);
+    text-decoration: none;
+}
+
+html[data-theme="tui"][data-layout]:not(#_) a:hover {
+    color: var(--vga-black);
+    background: var(--vga-cyan);
+}
+
+html[data-theme="tui"][data-layout]:not(#_) ::selection {
+    color: var(--vga-black);
+    background: var(--vga-cyan);
+}
+
+/* ---------- Menu bar ---------- */
+
+html[data-theme="tui"][data-layout]:not(#_) .system-menu-button {
+    color: var(--vga-black);
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .app-header-active::first-letter {
+    color: var(--vga-red);
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .app-header .app-header-button:not(.system-menu-button) {
+    gap: 16px;
+}
+
+/* ---------- Windows: ╔═[■]═══ Title ═══[↑]═╗ ---------- */
+
+html[data-theme="tui"][data-layout]:not(#_) .window-surface {
+    position: relative;
+    isolation: isolate;
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .window-surface::before {
+    content: "";
+    position: absolute;
+    z-index: 0;
+    inset: 5px 2px 8px;
+    border-color: var(--vga-white);
+    border-style: double;
+    border-width: 3px 5px;
+    pointer-events: none;
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .window-surface[data-window-surface-id]:not([data-active])::before {
+    inset: 7px 3px 8px;
+    border-style: solid;
+    border-width: 1px 2px;
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .draggable-window.is-maximized .window-surface,
+html[data-theme="tui"][data-layout]:not(#_) .window-surface[data-maximized] {
+    box-shadow: none;
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .window-titlebar {
+    position: relative;
+    z-index: 1;
+    margin: 0 -8px;
+    gap: 0;
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .window-titlebar .window-controls {
+    display: contents;
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .window-menu-button,
+html[data-theme="tui"][data-layout]:not(#_) .window-menu-button:hover,
+html[data-theme="tui"][data-layout]:not(#_) .window-menu-button[aria-expanded="true"] {
+    order: 0;
+    width: 32px;
+    height: 16px;
+    margin-left: auto;
+    padding: 0 8px;
+    background: var(--vga-blue);
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .window-menu-button img {
+    width: 16px;
+    height: 16px;
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .window-title {
+    order: 1;
+    flex: 0 1 auto;
+    min-width: 0;
+    margin-right: auto;
+    padding-right: 8px;
+    line-height: 16px;
+    background: var(--vga-blue);
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .window-control,
+html[data-theme="tui"][data-layout]:not(#_) .window-control:hover:not(:disabled),
+html[data-theme="tui"][data-layout]:not(#_) .window-control:active:not(:disabled) {
+    width: 24px;
+    height: 16px;
+    min-height: 16px;
+    flex: 0 0 auto;
+    padding: 0;
+    background-color: var(--vga-blue);
+    background-size: 24px 16px;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .window-control[data-window-control="close"] {
+    order: -1;
+    margin-left: 8px;
+    background-image: url("./icons/close.svg");
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .window-control[data-window-control="close"]:active {
+    background-image: url("./icons/close-active.svg");
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .window-control[data-window-control="minimize"] {
+    order: 2;
+    background-image: url("./icons/minimize.svg");
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .window-control[data-window-control="minimize"]:active {
+    background-image: url("./icons/minimize-active.svg");
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .window-control[data-window-control="maximize"] {
+    order: 3;
+    margin-right: 8px;
+    background-image: url("./icons/maximize.svg");
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .window-control[data-window-control="maximize"]:active {
+    background-image: url("./icons/maximize-active.svg");
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .window-control[data-window-control="restore"] {
+    order: 3;
+    margin-right: 8px;
+    background-image: url("./icons/restore.svg");
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .window-control[data-window-control="restore"]:active {
+    background-image: url("./icons/restore-active.svg");
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .window-surface[data-window-surface-id]:not([data-active]) .window-control {
+    visibility: hidden;
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .window-surface > .window-content-area,
+html[data-theme="tui"][data-layout]:not(#_) .window-surface > .flex-1 {
+    position: relative;
+    z-index: 1;
+    margin: 0 -2px;
+}
+
+/* ---------- Buttons: green with a half-cell black shadow ---------- */
+
+html[data-theme="tui"][data-layout]:not(#_) :where(
+    .retro-button,
+    button.arena-toolbar-control,
+    .arena-detail-action,
+    .oobe-segmented button,
+    .oobe-choice,
+    .oobe-oneko-options button,
+    .config-oneko-option,
+    .system-kernel-retry,
+    [data-sonner-toast] [data-button]
+):not(.window-control) {
+    margin-right: 8px;
+    margin-bottom: 8px;
+    padding: 0 8px;
+    line-height: 16px;
+}
+
+html[data-theme="tui"][data-layout]:not(#_) :where(
+    .retro-button,
+    button.arena-toolbar-control,
+    .arena-detail-action,
+    .oobe-segmented button,
+    .oobe-choice,
+    [data-sonner-toast] [data-button]
+):not(.window-control):active:not(:disabled) {
+    transform: translate(8px, 8px);
+}
+
+html[data-theme="tui"][data-layout]:not(#_) :where(.retro-button, button.arena-toolbar-control, .arena-detail-action):focus-visible {
+    color: var(--vga-white);
+    outline: 0;
+}
+
+html[data-theme="tui"][data-layout]:not(#_) :where(.retro-button[data-variant="primary"], .arena-detail-action-primary) {
+    color: var(--vga-bright-cyan);
+    font-weight: 400;
+}
+
+html[data-theme="tui"][data-layout]:not(#_) :where(.retro-button, button.arena-toolbar-control):disabled {
+    text-decoration: line-through;
+}
+
+html[data-theme="tui"][data-layout]:not(#_) :where(.retro-button, button.arena-toolbar-control) svg {
+    color: currentColor;
+}
+
+/* Frame-hugging toolbars don't need the button shadow's spacing on their last row. */
+html[data-theme="tui"][data-layout]:not(#_) :where(.app-toolbar-row, .arena-address-bar, .app-footer-row) {
+    min-height: 32px;
+    align-items: flex-start;
+    padding-top: 4px;
+}
+
+/* ---------- Fields ---------- */
+
+html[data-theme="tui"][data-layout]:not(#_) :where(.search-input, input.arena-toolbar-control, select.arena-toolbar-control, textarea.search-input) {
+    padding: 0 8px;
+    line-height: 16px;
+    caret-color: var(--vga-yellow);
+}
+
+html[data-theme="tui"][data-layout]:not(#_) :where(.search-input, input.arena-toolbar-control, select.arena-toolbar-control, textarea.search-input):focus-visible {
+    color: var(--vga-yellow);
+    outline: 0;
+}
+
+html[data-theme="tui"][data-layout]:not(#_) select.arena-toolbar-control {
+    padding-right: 16px;
+    background-size: 8px 16px;
+}
+
+html[data-theme="tui"][data-layout]:not(#_) input[type="checkbox"],
+html[data-theme="tui"][data-layout]:not(#_) input[type="radio"],
+html[data-theme="tui"][data-layout]:not(#_) input[type="checkbox"]:hover:not(:disabled),
+html[data-theme="tui"][data-layout]:not(#_) input[type="radio"]:hover:not(:disabled) {
+    width: 24px;
+    height: 16px;
+    background: url("./icons/check-off.svg") center / 24px 16px no-repeat;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+html[data-theme="tui"][data-layout]:not(#_) input[type="checkbox"]:checked {
+    background-image: url("./icons/check-on.svg");
+}
+
+html[data-theme="tui"][data-layout]:not(#_) input[type="radio"] {
+    background-image: url("./icons/radio-off.svg");
+}
+
+html[data-theme="tui"][data-layout]:not(#_) input[type="radio"]:checked {
+    background-image: url("./icons/radio-on.svg");
+}
+
+html[data-theme="tui"][data-layout]:not(#_) input[type="range"] {
+    height: 16px;
+}
+
+html[data-theme="tui"][data-layout]:not(#_) input[type="range"]::-webkit-slider-runnable-track {
+    background-size: 2px 2px;
+}
+
+/* ---------- Scrollbars: ▲ ▒▒■▒▒ ▼ ---------- */
+
+html[data-theme="tui"][data-layout]:not(#_) ::-webkit-scrollbar {
+    width: 16px;
+    height: 16px;
+    background: var(--vga-blue);
+}
+
+html[data-theme="tui"][data-layout]:not(#_) ::-webkit-scrollbar-track {
+    background: var(--tv-track) 0 0 / 2px 2px;
+}
+
+html[data-theme="tui"][data-layout]:not(#_) ::-webkit-scrollbar-thumb,
+html[data-theme="tui"][data-layout]:not(#_) ::-webkit-scrollbar-thumb:hover {
+    min-height: 16px;
+    background: var(--vga-cyan);
+    border: 0;
+    border-radius: 0;
+    box-shadow: inset 4px 0 var(--vga-blue), inset -4px 0 var(--vga-blue);
+}
+
+html[data-theme="tui"][data-layout]:not(#_) ::-webkit-scrollbar-thumb:horizontal {
+    box-shadow: inset 0 4px var(--vga-blue), inset 0 -4px var(--vga-blue);
+}
+
+html[data-theme="tui"][data-layout]:not(#_) ::-webkit-scrollbar-corner {
+    background: var(--vga-blue);
+}
+
+html[data-theme="tui"][data-layout]:not(#_) ::-webkit-scrollbar-button:vertical:start:decrement,
+html[data-theme="tui"][data-layout]:not(#_) ::-webkit-scrollbar-button:vertical:end:increment,
+html[data-theme="tui"][data-layout]:not(#_) ::-webkit-scrollbar-button:horizontal:start:decrement,
+html[data-theme="tui"][data-layout]:not(#_) ::-webkit-scrollbar-button:horizontal:end:increment {
+    display: block;
+    width: 16px;
+    height: 16px;
+    background-size: 16px 16px;
+}
+
+html[data-theme="tui"][data-layout]:not(#_) ::-webkit-scrollbar-button:vertical:start { background-image: url("./icons/scroll-up.svg"); }
+html[data-theme="tui"][data-layout]:not(#_) ::-webkit-scrollbar-button:vertical:end { background-image: url("./icons/scroll-down.svg"); }
+html[data-theme="tui"][data-layout]:not(#_) ::-webkit-scrollbar-button:horizontal:start { background-image: url("./icons/scroll-left.svg"); }
+html[data-theme="tui"][data-layout]:not(#_) ::-webkit-scrollbar-button:horizontal:end { background-image: url("./icons/scroll-right.svg"); }
+
+/* ---------- Menus: gray box, single black frame, green bar ---------- */
+
+html[data-theme="tui"][data-layout]:not(#_) .menu-surface {
+    color: var(--vga-black);
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .menu-surface::before {
+    content: "";
+    position: absolute;
+    inset: 7px 3px;
+    border: solid var(--vga-black);
+    border-width: 1px 2px;
+    pointer-events: none;
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .menu-item-button {
+    min-height: 16px;
+    padding: 0 24px 0 8px;
+    color: var(--vga-black);
+    line-height: 16px;
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .menu-item-button:disabled {
+    color: var(--vga-dark);
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .menu-item-button svg {
+    color: currentColor;
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .menu-surface > .border-t {
+    margin: 7px -6px 8px;
+}
+
+/* ---------- Status line: numbered windows ---------- */
+
+html[data-theme="tui"][data-layout]:not(#_) .taskbar-tasks {
+    counter-reset: tui-window;
+    padding: 0 8px;
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .taskbar-button {
+    width: auto;
+    max-width: none;
+    padding: 0 8px;
+    gap: 8px;
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .taskbar-button::before {
+    counter-increment: tui-window;
+    content: "Alt-" counter(tui-window);
+    color: var(--vga-red);
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .taskbar-button[aria-pressed="true"]::before {
+    color: var(--vga-black);
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .taskbar-button img {
+    display: none;
+}
+
+/* ---------- Desktop ---------- */
+
+html[data-theme="tui"][data-layout]:not(#_) .desktop-icon-label {
+    padding: 0 8px;
+    color: var(--vga-white);
+    background: var(--vga-blue);
+    line-height: 16px;
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .desktop-icon-button[data-selected="true"] .desktop-icon-label {
+    color: var(--vga-black);
+    background: var(--vga-green);
+}
+
+/* ---------- Dialogs, toasts ---------- */
+
+html[data-theme="tui"][data-layout]:not(#_) [data-sonner-toast] {
+    padding: 16px 16px 16px !important;
+    color: var(--vga-black) !important;
+    background: var(--vga-gray) !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: inset 0 0 0 5px var(--vga-gray), inset 0 0 0 6px var(--vga-white), inset 0 0 0 7px var(--vga-gray), inset 0 0 0 8px var(--vga-white), var(--tv-shadow) !important;
+    font-size: 16px !important;
+}
+
+html[data-theme="tui"][data-layout]:not(#_) [data-sonner-toast] :where([data-title], [data-description]) {
+    color: var(--vga-black) !important;
+}
+
+html[data-theme="tui"][data-layout]:not(#_) [data-sonner-toast] [data-button] {
+    margin-bottom: 8px;
+}
+
+/* ---------- Tabs: gray highlight on blue, like a Turbo Vision cluster ---------- */
+
+html[data-theme="tui"][data-layout]:not(#_) .app-tab-bar {
+    padding: 0 0 8px;
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .app-tab-bar .retro-button,
+html[data-theme="tui"][data-layout]:not(#_) .app-tab-bar .retro-button:hover:not(:disabled) {
+    height: 16px;
+    min-height: 16px;
+    margin: 0;
+    padding: 0 8px;
+    color: var(--vga-gray);
+    box-shadow: none;
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .app-tab-bar .retro-button[data-active="true"] {
+    height: 16px;
+    min-height: 16px;
+    margin: 0;
+    padding: 0 8px;
+    color: var(--vga-blue);
+    box-shadow: none;
+}
+
+/* Theme picker reads as a list with a cyan selection bar, not a wall of buttons. */
+html[data-theme="tui"][data-layout]:not(#_) .theme-picker-option,
+html[data-theme="tui"][data-layout]:not(#_) .theme-picker-option:hover:not(:disabled),
+html[data-theme="tui"][data-layout]:not(#_) .theme-picker-option:active:not(:disabled) {
+    margin: 0;
+    padding: 8px;
+    color: var(--vga-white);
+    background: transparent;
+    box-shadow: none;
+    transform: none;
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .theme-picker-option:is([data-active="true"], :focus-visible) {
+    color: var(--vga-black);
+    background: var(--vga-cyan);
+    box-shadow: none;
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .theme-picker-option :where(.theme-picker-tagline) {
+    color: inherit;
+}
+
+/* Cyan list viewers carry black text, as in Turbo Vision. */
+html[data-theme="tui"][data-layout]:not(#_) :where(.media-player-playlist, .config-sidebar) {
+    color: var(--vga-black);
+}
+
+html[data-theme="tui"][data-layout]:not(#_) :where(.media-player-playlist) :where(strong, b, small) {
+    color: inherit;
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .media-player-track[data-selected] {
+    color: var(--vga-white);
+    background: var(--vga-blue);
+}
+
+/* ---------- Content ---------- */
+
+html[data-theme="tui"][data-layout]:not(#_) .config-section-title {
+    top: -9px;
+    background: var(--vga-blue);
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .config-sidebar .config-category-button,
+html[data-theme="tui"][data-layout]:not(#_) .config-sidebar .config-category-button:hover:not(:disabled) {
+    height: 16px;
+    min-height: 16px;
+    margin: 0;
+    color: var(--vga-black);
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .config-sidebar .config-category-button[data-active="true"] {
+    color: var(--vga-white);
+    background: var(--vga-blue);
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .config-sidebar {
+    color: var(--vga-black);
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .console-layout,
+html[data-theme="tui"][data-layout]:not(#_) .console-layout * {
+    line-height: 16px;
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .calendar-panel {
+    color: var(--vga-black);
+}
+
+html[data-theme="tui"][data-layout]:not(#_) .calendar-panel svg {
+    color: var(--vga-black);
+}
+
+html[data-theme="tui"][data-layout]:not(#_) img:not(.desktop-icon-image img, .window-menu-button img) {
+    image-rendering: pixelated;
+}

@@ -1,0 +1,709 @@
+/*
+ * System theme: the one-bit Macintosh of System 6. Fonts come from system.css
+ * (https://github.com/sakofchit/system.css, MIT, see ./LICENSE); the Chicago
+ * and Geneva bitmap recreations are by Giles Booth. Glyphs in ./icons are
+ * redrawn pixel for pixel at their native size.
+ *
+ * Layout: the lok layout's top bar becomes the menu bar, with the Apple menu
+ * and the frontmost window's name. Window chrome follows the 1988 Finder:
+ * pinstriped title bar, close box on the left, zoom box on the right.
+ *
+ * Scope: html[data-theme="system"][data-layout]:not(#_) outranks classic.css.
+ */
+
+@font-face {
+    font-family: Chicago_12;
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("./fonts/ChiKareGo2.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: Geneva_9;
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("./fonts/FindersKeepers.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: ChicagoFLF;
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("./fonts/ChicagoFLF.woff2") format("woff2");
+}
+
+html[data-theme="system"][data-layout]:not(#_) {
+    --mac-gray-image: repeating-conic-gradient(#000000 0 25%, #ffffff 0 50%);
+    --mac-gray: var(--mac-gray-image) 0 0 / 2px 2px;
+    --mac-shadow: 1px 1px 0 #000000;
+
+    /* lok tokens */
+    --font-ui: Chicago_12, ChicagoFLF, "Geneva", "Helvetica Neue", Arial, sans-serif;
+    --font-small: Geneva_9, Chicago_12, "Geneva", Arial, sans-serif;
+    /* The Monaco bitmap recreation is not strictly monospaced and lacks box drawing, so code uses Monaco itself. */
+    --font-code: Monaco, Menlo, "Courier New", monospace;
+    --retro-window: 0 0% 100%;
+    --retro-window-titlebar: 0 0% 100%;
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 0%;
+    --primary: 0 0% 0%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 100%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 0 0% 100%;
+    --muted-foreground: 0 0% 40%;
+    --accent: 0 0% 0%;
+    --accent-foreground: 0 0% 100%;
+    --border: 0 0% 0%;
+    --input: 0 0% 0%;
+    --ring: 0 0% 0%;
+    --header-bg: #ffffff;
+    --header-border: #000000;
+    --internal-border: #000000;
+    --internal-border-hover: #000000;
+    --scrollbar-thumb: #ffffff;
+    --scrollbar-thumb-hover: #ffffff;
+    --block-bg: #ffffff;
+    --block-border: #000000;
+    --button-bg: #ffffff;
+    --button-hover: #ffffff;
+    --text-color: #000000;
+    --link-color: #000000;
+    --detail-bg: #ffffff;
+    --detail-border: #000000;
+    --detail-header-bg: #ffffff;
+    --detail-meta-bg: #ffffff;
+    --icon-color: #000000;
+    --focus-color: #000000;
+    --vis-public-color: #000000;
+    --vis-private-color: #000000;
+    --loading-bg: #ffffff;
+    --loading-bar: #000000;
+    --log-bg: #ffffff;
+    --log-text: #000000;
+    --log-muted: #555555;
+    --log-error: #000000;
+    --log-warn: #000000;
+    --log-info: #000000;
+    --log-prefix-default: #000000;
+    --log-prefix-cache: #000000;
+    --log-prefix-api: #000000;
+    --log-prefix-app: #000000;
+    --log-prefix-session: #000000;
+    --log-prefix-registry: #000000;
+    --selection-bg: #000000;
+    --selection-fg: #ffffff;
+    --desktop-bg: #ffffff;
+    --desktop-pattern: var(--mac-gray-image);
+    --desktop-pattern-size: 2px 2px;
+    --desktop-label-color: #000000;
+    --desktop-label-edge: transparent;
+    --desktop-icon-drop-shadow: transparent;
+    --taskbar-height: 24px;
+    --media-stage-bg: #000000;
+    --media-stage-fg: #ffffff;
+    --media-accent: #000000;
+    --ask-ai-bar: #000000;
+
+    /* Component tokens */
+    --c-face: #ffffff;
+    /* The bitmap fonts sit on a 16px grid: 16px Chicago_12 is the 12pt Chicago, 16px Geneva_9 is Geneva 9. */
+    --c-font-size: 16px;
+    --c-text-xs: 16px;
+    --c-text-sm: 16px;
+    --c-text-base: 16px;
+    --c-title-font: var(--font-ui);
+    --c-title-size: 16px;
+    --c-title-weight: 400;
+    --c-placeholder: #777777;
+    --c-focus-outline: 1px dotted #000000;
+    --c-focus-offset: 1px;
+    --c-control-height: 22px;
+
+    --c-btn-fg: #000000;
+    --c-btn-bg: #ffffff;
+    --c-btn-border: 4px solid transparent;
+    --c-btn-radius: 0;
+    --c-btn-shadow: none;
+    --c-btn-bg-hover: #ffffff;
+    --c-btn-border-hover: 4px solid transparent;
+    --c-btn-shadow-hover: none;
+    --c-btn-bg-active: #000000;
+    --c-btn-border-active: 4px solid transparent;
+    --c-btn-shadow-active: none;
+    --c-btn-bg-on: #000000;
+    --c-btn-fg-on: #ffffff;
+    --c-btn-border-on: 4px solid transparent;
+    --c-btn-shadow-on: none;
+    --c-btn-shadow-default: none;
+    --c-btn-fg-disabled: #888888;
+    --c-btn-text-shadow-disabled: none;
+    --c-joined-gap: 4px;
+    --c-toast-width: 420px;
+    --c-toast-title-weight: 400;
+
+    --c-field-fg: #000000;
+    --c-field-bg: #ffffff;
+    --c-field-border: 1px solid #000000;
+    --c-field-radius: 0;
+    --c-field-shadow: none;
+    --c-field-height: 22px;
+    --c-field-bg-disabled: #ffffff;
+    --c-select-arrow: url("./icons/popup-arrow.svg");
+    --c-select-arrow-position: right 6px center;
+    --c-readout-bg: #ffffff;
+    --c-readout-border: 1px solid #000000;
+    --c-readout-shadow: none;
+
+    --c-check-bg: #ffffff;
+    --c-check-border: 0;
+    --c-check-shadow: none;
+    --c-check-mark: url("./icons/check-x.svg");
+    --c-radio-dot: url("./icons/radio-on.svg");
+    --c-track-bg: #000000;
+    --c-track-height: 1px;
+    --c-track-shadow: none;
+    --c-thumb-image: url("./icons/thumb.svg");
+    --c-thumb-width: 11px;
+    --c-thumb-height: 14px;
+
+    --c-window-bg: #ffffff;
+    --c-window-border: 1px solid #000000;
+    --c-window-radius: 0;
+    --c-window-padding: 0;
+    --c-window-shadow: var(--mac-shadow);
+    --c-client-gap: 0;
+    --c-client-bg: #ffffff;
+    --c-client-border: 0;
+    --c-title-height: 20px;
+    --c-title-padding: 4px 3px;
+    --c-title-radius: 0;
+    --c-title-fg: #000000;
+    --c-title-bg: #ffffff;
+    --c-title-fg-inactive: #000000;
+    --c-title-bg-inactive: #ffffff;
+    --c-controls-gap: 0;
+
+    --c-menu-bg: #ffffff;
+    --c-menu-border: 1px solid #000000;
+    --c-menu-radius: 0;
+    --c-menu-padding: 0 0 1px;
+    --c-menu-shadow: var(--mac-shadow);
+    --c-menu-divider: 1px dotted #000000;
+    --c-menu-divider-light: 0;
+    --c-hl-bg: #000000;
+    --c-hl-fg: #ffffff;
+    --c-hl-border: 1px solid #000000;
+    --c-hl-radius: 0;
+    --c-hover-bg: transparent;
+
+    --c-menubar-height: 20px;
+    --c-menubar-bg: #ffffff;
+    --c-menubar-fg: #000000;
+    --c-menubar-border: 1px solid #000000;
+    --c-menubar-font: var(--font-ui);
+    --c-menubar-size: 16px;
+    --c-menubar-item-padding: 0 10px;
+    --c-menubar-hl-bg: #000000;
+    --c-menubar-hl-fg: #ffffff;
+    --c-menubar-active-weight: 400;
+
+    --c-toolbar-bg: #ffffff;
+    --c-toolbar-border: 1px solid #000000;
+    --c-toolbar-shadow: none;
+    --c-status-bg: #ffffff;
+    --c-status-shadow: inset 0 1px #000000;
+    --c-status-padding: 2px 6px;
+    --c-tab-bg: #ffffff;
+    --c-tab-bg-on: #ffffff;
+    --c-tab-border: 1px solid #000000;
+    --c-tab-border-top-on: 1px solid #000000;
+    --c-tab-radius: 0;
+    --c-tab-shadow: none;
+    --c-tab-shadow-on: none;
+    --c-tab-panel-border: 1px solid #000000;
+    --c-tab-panel-shadow: none;
+    --c-group-border: 1px solid #000000;
+    --c-group-shadow: none;
+    --c-list-bg: #ffffff;
+    --c-list-shadow: inset 0 0 0 1px #000000;
+    --c-header-bg: #ffffff;
+    --c-header-border: 1px solid #000000;
+    --c-header-shadow: none;
+    --c-header-shadow-active: none;
+    --c-splitter-border: #000000;
+    --c-splitter-shadow: inset 1px 0 #000000, inset -1px 0 #000000;
+
+    --c-taskbar-bg: #ffffff;
+    --c-taskbar-fg: #000000;
+    --c-taskbar-border-top: 1px solid #000000;
+    --c-taskbar-shadow: none;
+    --c-taskbar-padding: 2px 4px;
+    --c-task-height: 18px;
+    --c-task-fg: #000000;
+    --c-task-bg: #ffffff;
+    --c-task-border: 1px solid #000000;
+    --c-task-radius: 4px;
+    --c-task-shadow: none;
+    --c-task-bg-on: #000000;
+    --c-task-fg-on: #ffffff;
+    --c-task-shadow-on: none;
+    --c-task-weight-on: 400;
+
+    --c-scrollbar-thumb: #ffffff;
+    --c-scrollbar-track: #888888;
+    --c-desktop-label-shadow: none;
+    --c-desktop-label-selected-bg: #000000;
+    --c-desktop-label-selected-border: 0;
+    --c-desktop-icon-selected-filter: invert(1);
+    --c-modal-backdrop: transparent;
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---------- Type ---------- */
+
+/* Bitmap type has one size: 16px is Chicago 12 and Geneva 9 on their pixel grid. */
+html[data-theme="system"][data-layout]:not(#_) body :not(svg, svg *, .weather-output, .weather-output *, .console-layout, .console-layout *) {
+    font-size: 16px;
+}
+
+html[data-theme="system"][data-layout]:not(#_) :where(.desktop-icon-label, .taskbar-clock, .app-footer-row, .arena-file-footer, .theme-picker-tagline, .config-help-text, .media-player-track-text small) {
+    font-family: var(--font-small);
+    font-size: 16px;
+}
+
+html[data-theme="system"][data-layout]:not(#_) a {
+    text-decoration: underline;
+}
+
+/* ---------- Screen corners: the 1984 display had rounded black corners ---------- */
+
+html[data-theme="system"][data-layout]:not(#_) .app-header {
+    position: relative;
+}
+
+html[data-theme="system"][data-layout]:not(#_) .app-header::before,
+html[data-theme="system"][data-layout]:not(#_) .app-header::after,
+html[data-theme="system"][data-layout]:not(#_) .taskbar::before,
+html[data-theme="system"][data-layout]:not(#_) .taskbar::after {
+    content: "";
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    pointer-events: none;
+}
+
+html[data-theme="system"][data-layout]:not(#_) .app-header::before {
+    top: 0;
+    left: 0;
+    background: radial-gradient(circle at 100% 100%, transparent 5.5px, #000000 6px);
+}
+
+html[data-theme="system"][data-layout]:not(#_) .app-header::after {
+    top: 0;
+    right: 0;
+    background: radial-gradient(circle at 0 100%, transparent 5.5px, #000000 6px);
+}
+
+html[data-theme="system"][data-layout]:not(#_) .taskbar {
+    position: relative;
+}
+
+html[data-theme="system"][data-layout]:not(#_) .taskbar::before {
+    bottom: 0;
+    left: 0;
+    background: radial-gradient(circle at 100% 0, transparent 5.5px, #000000 6px);
+}
+
+html[data-theme="system"][data-layout]:not(#_) .taskbar::after {
+    bottom: 0;
+    right: 0;
+    background: radial-gradient(circle at 0 0, transparent 5.5px, #000000 6px);
+}
+
+/* ---------- Menu bar ---------- */
+
+html[data-theme="system"][data-layout]:not(#_) .system-menu-button {
+    width: 34px;
+    padding: 0;
+    font-size: 0;
+    color: transparent;
+    background: url("./icons/apple.svg") center / 9px 11px no-repeat;
+}
+
+html[data-theme="system"][data-layout]:not(#_) .system-menu-button:hover,
+html[data-theme="system"][data-layout]:not(#_) .system-menu-button[aria-expanded="true"] {
+    background: #000000 url("./icons/apple.svg") center / 9px 11px no-repeat;
+    filter: none;
+}
+
+html[data-theme="system"][data-layout]:not(#_) .system-menu-button[aria-expanded="true"] {
+    /* Inverted Apple: white glyph on black */
+    background-image: none;
+    position: relative;
+}
+
+html[data-theme="system"][data-layout]:not(#_) .system-menu-button[aria-expanded="true"]::after,
+html[data-theme="system"][data-layout]:not(#_) .system-menu-button:hover::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: url("./icons/apple.svg") center / 9px 11px no-repeat;
+    filter: invert(1);
+}
+
+html[data-theme="system"][data-layout]:not(#_) .app-header .app-header-button:not(.system-menu-button) {
+    gap: 8px;
+}
+
+/* ---------- Windows ---------- */
+
+html[data-theme="system"][data-layout]:not(#_) .window-titlebar {
+    position: relative;
+    gap: 0;
+    background:
+        repeating-linear-gradient(#000000 0 1px, #ffffff 1px 2px) content-box,
+        #ffffff;
+    border-bottom: 1px solid #000000;
+}
+
+html[data-theme="system"][data-layout]:not(#_) .window-surface[data-window-surface-id]:not([data-active]) .window-titlebar {
+    background: #ffffff;
+}
+
+/* Close box left, title centered, collapse and zoom boxes right. */
+html[data-theme="system"][data-layout]:not(#_) .window-titlebar .window-controls {
+    display: contents;
+}
+
+html[data-theme="system"][data-layout]:not(#_) .window-control,
+html[data-theme="system"][data-layout]:not(#_) .window-control:hover:not(:disabled),
+html[data-theme="system"][data-layout]:not(#_) .window-control:active:not(:disabled) {
+    width: 13px;
+    height: 13px;
+    min-height: 13px;
+    flex: 0 0 auto;
+    margin: -1px 5px;
+    padding: 0;
+    background-color: transparent;
+    background-size: 13px 13px;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+html[data-theme="system"][data-layout]:not(#_) .window-control[data-window-control="close"] {
+    order: -2;
+    background-image: url("./icons/close.svg");
+}
+
+html[data-theme="system"][data-layout]:not(#_) .window-control[data-window-control="close"]:active {
+    background-image: url("./icons/close-active.svg");
+}
+
+html[data-theme="system"][data-layout]:not(#_) .window-control[data-window-control="minimize"] {
+    order: 2;
+    margin-right: 0;
+    background-image: url("./icons/collapse.svg");
+}
+
+html[data-theme="system"][data-layout]:not(#_) .window-control[data-window-control="minimize"]:active {
+    background-image: url("./icons/collapse-active.svg");
+}
+
+html[data-theme="system"][data-layout]:not(#_) .window-control:is([data-window-control="maximize"], [data-window-control="restore"]) {
+    order: 3;
+    margin-left: 4px;
+    background-image: url("./icons/zoom.svg");
+}
+
+html[data-theme="system"][data-layout]:not(#_) .window-control:is([data-window-control="maximize"], [data-window-control="restore"]):active {
+    background-image: url("./icons/zoom-active.svg");
+}
+
+html[data-theme="system"][data-layout]:not(#_) .window-surface[data-window-surface-id]:not([data-active]) .window-control {
+    visibility: hidden;
+}
+
+/* The proxy icon and title share one white plate centered on the stripes. */
+html[data-theme="system"][data-layout]:not(#_) .window-menu-button,
+html[data-theme="system"][data-layout]:not(#_) .window-menu-button:hover,
+html[data-theme="system"][data-layout]:not(#_) .window-menu-button[aria-expanded="true"] {
+    order: 0;
+    width: 22px;
+    height: 13px;
+    margin: -1px 0 -1px auto;
+    padding: 0 0 0 6px;
+    background: #ffffff;
+}
+
+html[data-theme="system"][data-layout]:not(#_) .window-menu-button img {
+    width: 13px;
+    height: 13px;
+}
+
+html[data-theme="system"][data-layout]:not(#_) .window-title {
+    order: 1;
+    flex: 0 1 auto;
+    min-width: 0;
+    height: 13px;
+    margin: -1px auto -1px 0;
+    padding: 0 7px 0 5px;
+    line-height: 13px;
+    background: #ffffff;
+}
+
+html[data-theme="system"][data-layout]:not(#_) .window-surface[data-window-surface-id]:not([data-active]) .window-title {
+    color: #000000;
+}
+
+html[data-theme="system"][data-layout]:not(#_) .window-surface[data-window-surface-id]:not([data-active]) {
+    box-shadow: var(--mac-shadow);
+}
+
+/* ---------- Push buttons: pixel-stepped round rectangles ---------- */
+
+html[data-theme="system"][data-layout]:not(#_) :where(
+    .retro-button,
+    button.arena-toolbar-control,
+    .arena-detail-action,
+    .oobe-segmented button,
+    .oobe-choice,
+    .oobe-oneko-options button,
+    .config-oneko-option,
+    .system-kernel-retry,
+    [data-sonner-toast] [data-button]
+):not(.window-control) {
+    border-image: url("./icons/button.svg") 4 fill / 4px / 0 stretch;
+    background-clip: padding-box;
+    background-color: transparent;
+}
+
+html[data-theme="system"][data-layout]:not(#_) :where(
+    .retro-button,
+    button.arena-toolbar-control,
+    .arena-detail-action,
+    .oobe-segmented button,
+    .oobe-choice,
+    .oobe-oneko-options button,
+    .config-oneko-option,
+    .system-kernel-retry,
+    [data-sonner-toast] [data-button]
+):not(.window-control):is(:active:not(:disabled), [data-active="true"], [aria-pressed="true"]) {
+    color: #ffffff;
+    border-image-source: url("./icons/button-active.svg");
+}
+
+html[data-theme="system"][data-layout]:not(#_) :where(.retro-button[data-variant="primary"], .arena-detail-action-primary):not(:active) {
+    margin: -4px;
+    border-width: 8px;
+    border-image: url("./icons/button-default.svg") 8 fill / 8px / 0 stretch;
+}
+
+html[data-theme="system"][data-layout]:not(#_) :where(.retro-button, button.arena-toolbar-control) svg {
+    color: currentColor;
+}
+
+/* ---------- Fields ---------- */
+
+html[data-theme="system"][data-layout]:not(#_) :where(.search-input, input.arena-toolbar-control, select.arena-toolbar-control, textarea.search-input):focus-visible {
+    outline: 0;
+    box-shadow: inset 0 0 0 1px #000000;
+}
+
+html[data-theme="system"][data-layout]:not(#_) select.arena-toolbar-control {
+    box-shadow: var(--mac-shadow);
+    background-size: 11px 6px;
+}
+
+html[data-theme="system"][data-layout]:not(#_) input[type="checkbox"] {
+    width: 12px;
+    height: 12px;
+    background: #ffffff;
+    box-shadow: inset 0 0 0 1px #000000;
+}
+
+html[data-theme="system"][data-layout]:not(#_) input[type="checkbox"]:checked {
+    background: url("./icons/check-x.svg") center / 12px 12px no-repeat;
+    box-shadow: none;
+}
+
+html[data-theme="system"][data-layout]:not(#_) input[type="radio"],
+html[data-theme="system"][data-layout]:not(#_) input[type="radio"]:hover:not(:disabled) {
+    width: 12px;
+    height: 12px;
+    background: url("./icons/radio.svg") center / 12px 12px no-repeat;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+html[data-theme="system"][data-layout]:not(#_) input[type="radio"]:checked {
+    background-image: url("./icons/radio-on.svg");
+}
+
+html[data-theme="system"][data-layout]:not(#_) input[type="range"]::-webkit-slider-thumb {
+    image-rendering: pixelated;
+}
+
+/* ---------- Scrollbars: gray pattern track, white elevator, framed arrows ---------- */
+
+html[data-theme="system"][data-layout]:not(#_) ::-webkit-scrollbar {
+    width: 16px;
+    height: 16px;
+    background: #ffffff;
+}
+
+html[data-theme="system"][data-layout]:not(#_) ::-webkit-scrollbar-track {
+    background: var(--mac-gray);
+    box-shadow: inset 1px 0 #000000, inset -1px 0 #000000;
+}
+
+html[data-theme="system"][data-layout]:not(#_) ::-webkit-scrollbar-track:horizontal {
+    box-shadow: inset 0 1px #000000, inset 0 -1px #000000;
+}
+
+html[data-theme="system"][data-layout]:not(#_) ::-webkit-scrollbar-thumb,
+html[data-theme="system"][data-layout]:not(#_) ::-webkit-scrollbar-thumb:hover {
+    min-height: 16px;
+    background: #ffffff;
+    border: 0;
+    border-radius: 0;
+    box-shadow: inset 0 0 0 1px #000000;
+}
+
+html[data-theme="system"][data-layout]:not(#_) ::-webkit-scrollbar-corner {
+    background: #ffffff;
+    box-shadow: inset 1px 1px #000000;
+}
+
+html[data-theme="system"][data-layout]:not(#_) ::-webkit-scrollbar-button:vertical:start:decrement,
+html[data-theme="system"][data-layout]:not(#_) ::-webkit-scrollbar-button:vertical:end:increment,
+html[data-theme="system"][data-layout]:not(#_) ::-webkit-scrollbar-button:horizontal:start:decrement,
+html[data-theme="system"][data-layout]:not(#_) ::-webkit-scrollbar-button:horizontal:end:increment {
+    display: block;
+    width: 16px;
+    height: 16px;
+    background-size: 16px 16px;
+}
+
+html[data-theme="system"][data-layout]:not(#_) ::-webkit-scrollbar-button:vertical:start { background-image: url("./icons/scroll-up.svg"); }
+html[data-theme="system"][data-layout]:not(#_) ::-webkit-scrollbar-button:vertical:start:active { background-image: url("./icons/scroll-up-active.svg"); }
+html[data-theme="system"][data-layout]:not(#_) ::-webkit-scrollbar-button:vertical:end { background-image: url("./icons/scroll-down.svg"); }
+html[data-theme="system"][data-layout]:not(#_) ::-webkit-scrollbar-button:vertical:end:active { background-image: url("./icons/scroll-down-active.svg"); }
+html[data-theme="system"][data-layout]:not(#_) ::-webkit-scrollbar-button:horizontal:start { background-image: url("./icons/scroll-left.svg"); }
+html[data-theme="system"][data-layout]:not(#_) ::-webkit-scrollbar-button:horizontal:start:active { background-image: url("./icons/scroll-left-active.svg"); }
+html[data-theme="system"][data-layout]:not(#_) ::-webkit-scrollbar-button:horizontal:end { background-image: url("./icons/scroll-right.svg"); }
+html[data-theme="system"][data-layout]:not(#_) ::-webkit-scrollbar-button:horizontal:end:active { background-image: url("./icons/scroll-right-active.svg"); }
+
+/* ---------- Menus ---------- */
+
+html[data-theme="system"][data-layout]:not(#_) .menu-item-button {
+    min-height: 18px;
+    padding: 1px 22px 1px 10px;
+    border: 0;
+}
+
+html[data-theme="system"][data-layout]:not(#_) .menu-item-button:hover:not(:disabled) svg,
+html[data-theme="system"][data-layout]:not(#_) .menu-item-shell.has-submenu:hover > .menu-item-button svg {
+    color: #ffffff;
+}
+
+html[data-theme="system"][data-layout]:not(#_) .menu-item-button:hover:not(:disabled) img,
+html[data-theme="system"][data-layout]:not(#_) .menu-item-shell.has-submenu:hover > .menu-item-button img {
+    filter: invert(1);
+}
+
+/* ---------- Taskbar: a strip of window tabs along the bottom edge ---------- */
+
+html[data-theme="system"][data-layout]:not(#_) .taskbar-button {
+    width: auto;
+    max-width: 180px;
+    padding: 0 8px;
+}
+
+/* ---------- Desktop ---------- */
+
+/* Geneva 9 is 11px tall; the label hugs it like a Finder name. */
+html[data-theme="system"][data-layout]:not(#_) .desktop-icon-label {
+    margin-top: 2px;
+    padding: 1px 3px;
+    color: #000000;
+    background: #ffffff;
+    line-height: 11px;
+}
+
+html[data-theme="system"][data-layout]:not(#_) .desktop-icon-button[data-selected="true"] .desktop-icon-label {
+    color: #ffffff;
+    background: #000000;
+}
+
+/* ---------- Dialogs and alerts: the double frame of a modal dialog ---------- */
+
+html[data-theme="system"][data-layout]:not(#_) [data-sonner-toast] {
+    padding: 12px 14px !important;
+    border: 1px solid #000000 !important;
+    border-radius: 0 !important;
+    box-shadow: inset 0 0 0 2px #ffffff, inset 0 0 0 4px #000000, var(--mac-shadow) !important;
+}
+
+html[data-theme="system"][data-layout]:not(#_) .oobe-window {
+    box-shadow: inset 0 0 0 2px #ffffff, inset 0 0 0 4px #000000, var(--mac-shadow);
+}
+
+html[data-theme="system"][data-layout]:not(#_) [data-sonner-toast] [data-button] {
+    border: 4px solid transparent !important;
+    border-image: url("./icons/button.svg") 4 fill / 4px / 0 stretch !important;
+    background: transparent !important;
+}
+
+html[data-theme="system"][data-layout]:not(#_) [data-sonner-toast] [data-button]:active {
+    color: #ffffff !important;
+    border-image-source: url("./icons/button-active.svg") !important;
+}
+
+/* ---------- Content ---------- */
+
+html[data-theme="system"][data-layout]:not(#_) .app-tab-bar .retro-button,
+html[data-theme="system"][data-layout]:not(#_) .app-tab-bar .retro-button:hover:not(:disabled),
+html[data-theme="system"][data-layout]:not(#_) .app-tab-bar .retro-button[data-active="true"] {
+    color: #000000;
+    border-image: none;
+    border: 1px solid #000000;
+    border-bottom: 0;
+    background: #ffffff;
+}
+
+html[data-theme="system"][data-layout]:not(#_) .app-tab-bar .retro-button[data-active="true"] {
+    font-weight: 400;
+    text-decoration: underline;
+}
+
+html[data-theme="system"][data-layout]:not(#_) .config-sidebar .config-category-button {
+    border-image: none;
+}
+
+html[data-theme="system"][data-layout]:not(#_) .console-layout,
+html[data-theme="system"][data-layout]:not(#_) .console-layout * {
+    font-family: var(--font-code);
+}
+
+/* One bit: wttr.in's ANSI colors become black ink. */
+html[data-theme="system"][data-layout]:not(#_) .weather-output * {
+    color: #000000 !important;
+}
+
+html[data-theme="system"][data-layout]:not(#_) .media-player-stage {
+    image-rendering: pixelated;
+}
+
+html[data-theme="system"][data-layout]:not(#_) .calendar-panel svg {
+    color: #000000;
+}

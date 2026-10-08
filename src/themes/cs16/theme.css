@@ -1,0 +1,584 @@
+/*
+ * CS 1.6 theme: the Counter-Strike 1.6 / Steam VGUI of 2003, after cs16.css
+ * (https://github.com/ekmas/cs16.css, MIT, see ./LICENSE), which also provides
+ * ArialPixel and the glyphs in ./icons. The desktop is the game's main menu
+ * background, assembled from its 800x600 tiles.
+ *
+ * Every surface is olive with a hairline bevel: light top-left for raised,
+ * dark top-left for sunken. Accent yellow marks selection and checked state.
+ *
+ * Scope: html[data-theme="cs16"][data-layout]:not(#_) outranks classic.css.
+ */
+
+@font-face {
+    font-family: ArialPixel;
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("./fonts/ArialPixel.woff2") format("woff2");
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) {
+    --cs-bg: #4a5942;
+    --cs-bg-2: #3e4637;
+    --cs-accent: #c4b550;
+    --cs-accent-2: #958831;
+    --cs-text: #dedfd6;
+    --cs-text-2: #d8ded3;
+    --cs-text-3: #a0aa95;
+    --cs-light: #8c9284;
+    --cs-dark: #292c21;
+    --cs-disabled: #292c21;
+    --cs-disabled-shadow: #75806f;
+    --cs-track: #5a6a50;
+    --cs-raised: inset 1px 1px var(--cs-light), inset -1px -1px var(--cs-dark);
+    --cs-sunken: inset 1px 1px var(--cs-dark), inset -1px -1px var(--cs-light);
+
+    /* lok tokens */
+    --font-ui: ArialPixel, Tahoma, Verdana, system-ui, sans-serif;
+    /* ArialPixel is proportional; code and ASCII art need a real monospace. */
+    --font-code: "Lucida Console", Consolas, Menlo, "Courier New", monospace;
+    --retro-window: 96 15% 30%;
+    --retro-window-titlebar: 96 15% 30%;
+    --background: 96 15% 30%;
+    --foreground: 70 10% 85%;
+    --card: 92 12% 25%;
+    --card-foreground: 70 10% 85%;
+    --popover: 96 15% 30%;
+    --popover-foreground: 70 10% 85%;
+    --primary: 53 49% 54%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 92 12% 25%;
+    --secondary-foreground: 70 10% 85%;
+    --muted: 92 12% 25%;
+    --muted-foreground: 86 9% 63%;
+    --accent: 53 49% 54%;
+    --accent-foreground: 0 0% 0%;
+    --border: 75 6% 55%;
+    --input: 92 12% 25%;
+    --ring: 53 49% 54%;
+    --header-bg: var(--cs-bg);
+    --header-border: var(--cs-dark);
+    --internal-border: var(--cs-dark);
+    --internal-border-hover: var(--cs-light);
+    --scrollbar-thumb: var(--cs-bg);
+    --scrollbar-thumb-hover: var(--cs-bg);
+    --block-bg: var(--cs-bg-2);
+    --block-border: var(--cs-dark);
+    --button-bg: var(--cs-bg);
+    --button-hover: var(--cs-bg);
+    --text-color: var(--cs-text);
+    --link-color: var(--cs-accent);
+    --detail-bg: var(--cs-bg);
+    --detail-border: var(--cs-dark);
+    --detail-header-bg: var(--cs-bg);
+    --detail-meta-bg: var(--cs-bg-2);
+    --icon-color: var(--cs-text);
+    --focus-color: #000000;
+    --vis-public-color: #9ccc65;
+    --vis-private-color: #e57361;
+    --loading-bg: var(--cs-bg-2);
+    --loading-bar: var(--cs-accent);
+    --log-bg: #1f2419;
+    --log-text: var(--cs-text);
+    --log-muted: var(--cs-text-3);
+    --log-error: #e57361;
+    --log-warn: var(--cs-accent);
+    --log-info: #a6c8d9;
+    --log-prefix-default: var(--cs-text-3);
+    --log-prefix-cache: #9ccc65;
+    --log-prefix-api: #a6c8d9;
+    --log-prefix-app: var(--cs-accent);
+    --log-prefix-session: #d39ad3;
+    --log-prefix-registry: #e57361;
+    --selection-bg: var(--cs-accent-2);
+    --selection-fg: #ffffff;
+    --desktop-bg: #1b2433;
+    --desktop-pattern: url("./background.webp");
+    --desktop-pattern-size: cover;
+    --desktop-label-color: var(--cs-text);
+    --desktop-label-edge: transparent;
+    --desktop-icon-drop-shadow: rgba(0, 0, 0, 0.6);
+    --taskbar-height: 30px;
+    --media-stage-bg: #11140e;
+    --media-stage-fg: var(--cs-accent);
+    --media-accent: var(--cs-accent);
+    --ask-ai-bar: var(--cs-accent);
+
+    /* Component tokens */
+    --c-face: var(--cs-bg);
+    --c-font-size: 16px;
+    --c-text-xs: 16px;
+    --c-text-sm: 16px;
+    --c-text-base: 16px;
+    --c-title-font: var(--font-ui);
+    --c-title-size: 16px;
+    --c-title-weight: 400;
+    --c-placeholder: var(--cs-text-3);
+    --c-focus-outline: 1px solid #000000;
+    --c-focus-offset: 0;
+    --c-control-height: 24px;
+
+    --c-btn-fg: var(--cs-text);
+    --c-btn-bg: var(--cs-bg);
+    --c-btn-border: 0;
+    --c-btn-radius: 0;
+    --c-btn-shadow: var(--cs-raised);
+    --c-btn-bg-hover: var(--cs-bg);
+    --c-btn-border-hover: 0;
+    --c-btn-shadow-hover: var(--cs-raised);
+    --c-btn-bg-active: var(--cs-bg);
+    --c-btn-border-active: 0;
+    --c-btn-shadow-active: var(--cs-sunken);
+    --c-btn-bg-on: var(--cs-bg);
+    --c-btn-fg-on: var(--cs-accent);
+    --c-btn-border-on: 0;
+    --c-btn-shadow-on: var(--cs-sunken);
+    --c-btn-shadow-default: var(--cs-raised), 0 0 0 1px #000000;
+    --c-btn-fg-disabled: var(--cs-disabled);
+    --c-btn-text-shadow-disabled: 1px 1px 0 var(--cs-disabled-shadow);
+    --c-joined-gap: 2px;
+    --c-toast-width: 400px;
+    --c-toast-title-weight: 400;
+
+    --c-field-fg: var(--cs-text-2);
+    --c-field-bg: var(--cs-bg-2);
+    --c-field-border: 0;
+    --c-field-radius: 0;
+    --c-field-shadow: var(--cs-sunken);
+    --c-field-height: 24px;
+    --c-field-bg-disabled: var(--cs-bg);
+    --c-select-arrow: url("./icons/select.svg");
+    --c-select-arrow-position: right 7px center;
+    --c-select-arrow-size: 7px 4px;
+    --c-readout-bg: var(--cs-bg-2);
+    --c-readout-border: 0;
+    --c-readout-shadow: var(--cs-sunken);
+
+    --c-check-bg: var(--cs-bg-2);
+    --c-check-border: 0;
+    --c-check-shadow: var(--cs-sunken);
+    --c-check-mark: url("./icons/check.svg");
+    --c-radio-dot: url("./icons/radio-dot.svg");
+    --c-track-bg: #1f1f1f;
+    --c-track-height: 4px;
+    --c-track-shadow: var(--cs-sunken);
+    --c-thumb-image: linear-gradient(var(--cs-bg), var(--cs-bg));
+    --c-thumb-width: 8px;
+    --c-thumb-height: 16px;
+
+    --c-window-bg: var(--cs-bg);
+    --c-window-border: 0;
+    --c-window-radius: 0;
+    --c-window-padding: 4px;
+    --c-window-shadow: var(--cs-raised);
+    --c-client-gap: 2px;
+    --c-client-bg: var(--cs-bg);
+    --c-client-border: 0;
+    --c-title-height: 24px;
+    --c-title-padding: 0 0 0 2px;
+    --c-title-radius: 0;
+    --c-title-fg: #ffffff;
+    --c-title-bg: transparent;
+    --c-title-fg-inactive: var(--cs-text-3);
+    --c-title-bg-inactive: transparent;
+    --c-controls-gap: 0;
+
+    --c-menu-bg: var(--cs-bg);
+    --c-menu-border: 0;
+    --c-menu-radius: 0;
+    --c-menu-padding: 3px;
+    --c-menu-shadow: var(--cs-raised), 2px 2px 0 rgba(0, 0, 0, 0.35);
+    --c-menu-divider: 1px solid var(--cs-dark);
+    --c-menu-divider-light: 1px solid var(--cs-light);
+    --c-hl-bg: var(--cs-accent-2);
+    --c-hl-fg: #ffffff;
+    --c-hl-border: 0;
+    --c-hl-radius: 0;
+    --c-hover-bg: transparent;
+
+    --c-toolbar-bg: var(--cs-bg);
+    --c-toolbar-border: 1px solid var(--cs-dark);
+    --c-toolbar-shadow: 0 1px 0 var(--cs-light);
+    --c-status-bg: var(--cs-bg);
+    --c-status-shadow: var(--cs-sunken);
+    --c-status-padding: 2px;
+    --c-tab-bg: var(--cs-bg);
+    --c-tab-bg-hover: var(--cs-bg);
+    --c-tab-bg-on: var(--cs-bg);
+    --c-tab-border: 0;
+    --c-tab-border-top-on: 0;
+    --c-tab-radius: 0;
+    --c-tab-shadow: inset 1px 1px var(--cs-light), inset -1px 0 var(--cs-dark);
+    --c-tab-shadow-on: inset 1px 1px var(--cs-light), inset -1px 0 var(--cs-dark);
+    --c-tab-panel-border: 0;
+    --c-tab-panel-shadow: inset 0 -1px var(--cs-light);
+    --c-group-border: 1px solid var(--cs-light);
+    --c-group-shadow: none;
+    --c-group-title-fg: var(--cs-text);
+    --c-list-bg: var(--cs-bg-2);
+    --c-list-shadow: var(--cs-sunken);
+    --c-header-bg: var(--cs-bg);
+    --c-header-border: 0;
+    --c-header-shadow: var(--cs-raised);
+    --c-header-shadow-active: var(--cs-sunken);
+    --c-splitter-border: var(--cs-dark);
+    --c-splitter-shadow: inset 1px 0 var(--cs-light), inset -1px 0 var(--cs-dark);
+
+    --c-taskbar-bg: var(--cs-bg);
+    --c-taskbar-fg: var(--cs-text);
+    --c-taskbar-border-top: 0;
+    --c-taskbar-shadow: inset 0 1px var(--cs-light);
+    --c-taskbar-padding: 3px 3px 2px;
+    --c-task-height: 24px;
+    --c-task-gap: 2px;
+    --c-task-fg: var(--cs-text);
+    --c-task-bg: var(--cs-bg);
+    --c-task-border: 0;
+    --c-task-radius: 0;
+    --c-task-shadow: var(--cs-raised);
+    --c-task-bg-hover: var(--cs-bg);
+    --c-task-bg-on: var(--cs-bg-2);
+    --c-task-fg-on: var(--cs-accent);
+    --c-task-shadow-on: var(--cs-sunken);
+    --c-task-weight-on: 400;
+    --c-tray-bg: var(--cs-bg);
+    --c-tray-shadow: var(--cs-sunken);
+    --c-tray-height: 24px;
+    --c-tray-date-display: inline;
+
+    --c-scrollbar-thumb: var(--cs-bg);
+    --c-scrollbar-track: var(--cs-track);
+    --c-desktop-label-shadow: 1px 1px 0 #000000;
+    --c-desktop-label-selected-bg: var(--cs-accent-2);
+    --c-desktop-label-selected-border: 0;
+    --c-desktop-icon-selected-filter: sepia(0.6) saturate(1.4);
+    --c-modal-backdrop: transparent;
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---------- Type ---------- */
+
+/* ArialPixel is drawn on a 16px grid; other sizes blur. */
+html[data-theme="cs16"][data-layout]:not(#_) body :not(svg, svg *, .weather-output, .weather-output *, .console-layout, .console-layout *) {
+    font-size: 16px;
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) :where(h1, h2, h3, h4, h5, h6, strong, b, th) {
+    font-weight: 400;
+    color: #ffffff;
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) :where(.text-lg, .text-xl, .text-2xl, h1, h2) {
+    font-size: 16px;
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) a {
+    color: var(--cs-accent);
+    text-decoration: none;
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) a:hover {
+    color: #ffffff;
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) ::selection {
+    color: #ffffff;
+    background: var(--cs-accent-2);
+}
+
+/* ---------- Desktop ---------- */
+
+html[data-theme="cs16"][data-layout]:not(#_) .desktop-container:not(.has-wallpaper) {
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) .desktop-icon-label {
+    padding: 1px 4px;
+    color: var(--cs-text);
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) .desktop-icon-button[data-selected="true"] .desktop-icon-label {
+    color: #ffffff;
+    text-shadow: none;
+}
+
+/* ---------- Windows: olive panel, white caption, boxed close ---------- */
+
+html[data-theme="cs16"][data-layout]:not(#_) .window-titlebar {
+    gap: 5px;
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) .window-control,
+html[data-theme="cs16"][data-layout]:not(#_) .window-control:hover:not(:disabled) {
+    width: 18px;
+    height: 18px;
+    min-height: 18px;
+    padding: 0;
+    color: var(--cs-text);
+    background-color: var(--cs-bg);
+    background-size: 16px 16px;
+    border: 0;
+    border-radius: 0;
+    box-shadow: var(--cs-raised);
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) .window-control:active:not(:disabled) {
+    background-color: var(--cs-bg);
+    box-shadow: var(--cs-sunken);
+    background-position: calc(50% + 1px) calc(50% + 1px);
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) .window-control[data-window-control="close"] {
+    margin-left: 2px;
+    background-image: url("./icons/close.svg");
+}
+
+/* Minimize and zoom reuse the VGUI arrow glyphs. */
+html[data-theme="cs16"][data-layout]:not(#_) .window-control[data-window-control="minimize"] {
+    background-image: url("./icons/scroll-down.svg");
+    background-size: 15px 16px;
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) .window-control:is([data-window-control="maximize"], [data-window-control="restore"]) {
+    background-image: url("./icons/scroll-up.svg");
+    background-size: 15px 16px;
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) .window-control[data-window-control="restore"] {
+    background-image: url("./icons/scroll-down.svg"), url("./icons/scroll-up.svg");
+    background-position: center 3px, center -3px;
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) .window-control:hover:not(:disabled) {
+    filter: brightness(1.15);
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) .window-surface[data-window-surface-id]:not([data-active]) .window-menu-button img {
+    opacity: 0.7;
+}
+
+/* ---------- Buttons ---------- */
+
+html[data-theme="cs16"][data-layout]:not(#_) :where(
+    .retro-button,
+    button.arena-toolbar-control,
+    .arena-detail-action,
+    .oobe-segmented button,
+    .oobe-choice,
+    .config-oneko-option,
+    [data-sonner-toast] [data-button]
+):not(.window-control) {
+    padding: 0 6px;
+    justify-content: flex-start;
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) :where(.retro-button, button.arena-toolbar-control, .arena-detail-action):hover:not(:disabled) {
+    color: #ffffff;
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) :where(.retro-button, button.arena-toolbar-control, .arena-detail-action):focus-visible {
+    outline: 1px solid #000000;
+    outline-offset: -1px;
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) :where(.retro-button[data-variant="primary"], .arena-detail-action-primary) {
+    font-weight: 400;
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) :where(.retro-button, button.arena-toolbar-control) svg {
+    color: currentColor;
+}
+
+/* ---------- Fields ---------- */
+
+html[data-theme="cs16"][data-layout]:not(#_) :where(.search-input, input.arena-toolbar-control, select.arena-toolbar-control, textarea.search-input):focus-visible {
+    outline: 0;
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) :where(.search-input, input.arena-toolbar-control, textarea.search-input):focus-visible::placeholder {
+    color: var(--cs-accent);
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) input[type="checkbox"] {
+    width: 12px;
+    height: 12px;
+    background-size: 10px 10px;
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) input[type="radio"],
+html[data-theme="cs16"][data-layout]:not(#_) input[type="radio"]:hover:not(:disabled) {
+    width: 12px;
+    height: 12px;
+    background: url("./icons/radio.svg") center / 12px 12px no-repeat;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) input[type="radio"]:checked {
+    background:
+        url("./icons/radio-dot.svg") center / 6px 6px no-repeat,
+        url("./icons/radio.svg") center / 12px 12px no-repeat;
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) input[type="range"]::-webkit-slider-thumb {
+    box-shadow: var(--cs-raised);
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) input:is([type="checkbox"], [type="radio"]):checked + :where(span, label) {
+    color: var(--cs-accent);
+}
+
+/* ---------- Scrollbars ---------- */
+
+html[data-theme="cs16"][data-layout]:not(#_) ::-webkit-scrollbar {
+    width: 18px;
+    height: 18px;
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) ::-webkit-scrollbar-track {
+    background: var(--cs-track);
+    box-shadow: inset 0 0 0 1px var(--cs-dark);
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) ::-webkit-scrollbar-thumb,
+html[data-theme="cs16"][data-layout]:not(#_) ::-webkit-scrollbar-thumb:hover {
+    background: var(--cs-bg);
+    border: 0;
+    border-radius: 0;
+    box-shadow: var(--cs-raised);
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) ::-webkit-scrollbar-corner {
+    background: var(--cs-track);
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) ::-webkit-scrollbar-button:vertical:start:decrement,
+html[data-theme="cs16"][data-layout]:not(#_) ::-webkit-scrollbar-button:vertical:end:increment,
+html[data-theme="cs16"][data-layout]:not(#_) ::-webkit-scrollbar-button:horizontal:start:decrement,
+html[data-theme="cs16"][data-layout]:not(#_) ::-webkit-scrollbar-button:horizontal:end:increment {
+    display: block;
+    width: 18px;
+    height: 18px;
+    background-color: var(--cs-bg);
+    background-repeat: no-repeat;
+    background-position: center;
+    box-shadow: var(--cs-raised);
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) ::-webkit-scrollbar-button:vertical:start { background-image: url("./icons/scroll-up.svg"); }
+html[data-theme="cs16"][data-layout]:not(#_) ::-webkit-scrollbar-button:vertical:start:hover { background-image: url("./icons/scroll-up-hover.svg"); }
+html[data-theme="cs16"][data-layout]:not(#_) ::-webkit-scrollbar-button:vertical:end { background-image: url("./icons/scroll-down.svg"); }
+html[data-theme="cs16"][data-layout]:not(#_) ::-webkit-scrollbar-button:vertical:end:active { background-image: url("./icons/scroll-down-active.svg"); }
+html[data-theme="cs16"][data-layout]:not(#_) ::-webkit-scrollbar-button:horizontal:start { background-image: url("./icons/scroll-left.svg"); }
+html[data-theme="cs16"][data-layout]:not(#_) ::-webkit-scrollbar-button:horizontal:start:hover { background-image: url("./icons/scroll-left-hover.svg"); }
+html[data-theme="cs16"][data-layout]:not(#_) ::-webkit-scrollbar-button:horizontal:end { background-image: url("./icons/scroll-right.svg"); }
+html[data-theme="cs16"][data-layout]:not(#_) ::-webkit-scrollbar-button:horizontal:end:hover { background-image: url("./icons/scroll-right-hover.svg"); }
+
+html[data-theme="cs16"][data-layout]:not(#_) ::-webkit-scrollbar-button:active {
+    box-shadow: var(--cs-sunken);
+}
+
+/* ---------- Taskbar and start menu ---------- */
+
+html[data-theme="cs16"][data-layout]:not(#_) .start-button {
+    height: 24px;
+    padding: 0 8px 0 4px;
+    gap: 5px;
+    color: #ffffff;
+    background: var(--cs-bg);
+    border: 0;
+    box-shadow: var(--cs-raised);
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) .start-button[aria-expanded="true"] {
+    color: var(--cs-accent);
+    box-shadow: var(--cs-sunken);
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) .start-button-icon {
+    width: 16px;
+    height: 16px;
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) .taskbar-tasks {
+    margin-left: 3px;
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) .app-menu-banner {
+    width: 22px;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 6px;
+    background: var(--cs-bg-2);
+    box-shadow: inset -1px 0 var(--cs-dark);
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) .app-menu-banner span {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    color: var(--cs-accent);
+    font-size: 16px;
+    letter-spacing: 0;
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) .app-menu-banner b {
+    color: var(--cs-text);
+    font-weight: 400;
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) .menu-item-button {
+    min-height: 24px;
+    border: 0;
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) .app-menu-panel[data-placement="bottom"] .menu-item-button {
+    min-height: 28px;
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) .menu-item-button svg {
+    color: currentColor;
+}
+
+/* ---------- Dialogs and toasts: the Options dialog ---------- */
+
+html[data-theme="cs16"][data-layout]:not(#_) [data-sonner-toast] {
+    color: var(--cs-text) !important;
+    background: var(--cs-bg) !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: var(--cs-raised), 2px 2px 0 rgba(0, 0, 0, 0.35) !important;
+    font-size: 16px !important;
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) [data-sonner-toast] [data-title] {
+    color: #ffffff !important;
+}
+
+/* ---------- Tabs ---------- */
+
+html[data-theme="cs16"][data-layout]:not(#_) .app-tab-bar .retro-button {
+    color: #ffffff;
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) .app-tab-bar .retro-button[data-active="true"] {
+    color: var(--cs-accent);
+}
+
+/* ---------- Content ---------- */
+
+html[data-theme="cs16"][data-layout]:not(#_) .app-window-layout > .window-content-area {
+    background: var(--cs-bg);
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) .console-layout,
+html[data-theme="cs16"][data-layout]:not(#_) .console-layout * {
+    font-family: var(--font-code);
+    font-size: 13px;
+}
+
+html[data-theme="cs16"][data-layout]:not(#_) .calendar-panel svg {
+    color: var(--cs-text);
+}

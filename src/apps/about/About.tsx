@@ -3,6 +3,7 @@ import { WindowLayout } from "@/components/window/WindowLayout";
 import { RetroButton } from "@/components/ui/RetroButton";
 import { usePersistedState } from "@/hooks/useStorage";
 import { SYSTEM_VERSION } from "@/lib/system";
+import { THEMES, THEME_IDS } from "@/lib/theme";
 
 // Import local 88x31 button images
 import omglolButton from "@/assets/buttons/omglol.png";
@@ -16,6 +17,18 @@ import twitterButton from "@/assets/buttons/twitter.gif";
 import mailButton from "@/assets/buttons/email.png";
 import l3onButton from "@/assets/buttons/l3on.gif";
 import codebergButton from "@/assets/buttons/codeberg.gif";
+
+// Theme credits come from the theme registry so new themes are credited automatically.
+const THEME_CREDITS = THEME_IDS.flatMap((id) => THEMES[id].credit ?? []);
+
+const TYPE_AND_PICTURE_CREDITS = [
+  { label: "Perfect DOS VGA 437 by Zeh Fernando", url: "https://www.dafont.com/perfect-dos-vga-437.font" },
+  { label: "Chicago and Geneva bitmap recreations by Giles Booth", url: "https://www.suppertime.co.uk/blogmywiki/" },
+  { label: "Fixedsys Excelsior", url: "https://github.com/kika/fixedsys" },
+  { label: "Bliss by Charles O'Rear", url: "https://en.wikipedia.org/wiki/Bliss_(image)" },
+  { label: "Harmony by Chuck Anderson", url: "https://en.wikipedia.org/wiki/Windows_7" },
+  { label: "the Counter-Strike 1.6 menu art by Valve", url: "https://store.steampowered.com/app/10/CounterStrike/" },
+];
 
 // ============================================
 // About This Section
@@ -73,6 +86,33 @@ const AboutThis = () => {
           <a href="https://vale.rocks/portfolio/88x31-buttons-badges" className="underline text-blue-700 dark:text-blue-300">
             vale.rocks' 88x31 buttons
           </a>
+          .
+        </p>
+
+        <p className="mt-4">
+          themes are built on:{" "}
+          {THEME_CREDITS.map((credit, index) => (
+            <span key={credit.url}>
+              {index > 0 && ", "}
+              <a href={credit.url} className="underline text-blue-700 dark:text-blue-300">
+                {credit.label}
+              </a>
+              {" "}({credit.license})
+            </span>
+          ))}
+          .
+        </p>
+
+        <p className="mt-4">
+          type and pictures:{" "}
+          {TYPE_AND_PICTURE_CREDITS.map((credit, index) => (
+            <span key={credit.label}>
+              {index > 0 && ", "}
+              <a href={credit.url} className="underline text-blue-700 dark:text-blue-300">
+                {credit.label}
+              </a>
+            </span>
+          ))}
           .
         </p>
       </div>
