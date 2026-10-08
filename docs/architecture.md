@@ -44,7 +44,9 @@ Low-level window construction lives behind a provider-internal launch context. `
 
 `src/hooks/useWindowManager.ts` owns live window state, stable commands, z-index allocation, and Window session persistence. `WindowManagerProvider` supplies separate state, command, and internal launch contexts.
 
-Session restoration reconstructs Application views from the catalog and injects `onPropsChange`, allowing current view state to update serializable window props.
+Session restoration and the launcher both inject `onPropsChange`, allowing current view state to update serializable window props (used by Share Window).
+
+Launching a single-instance Application with explicit `props` delivers them to the running window: its content is re-rendered in place with the merged props, so app state survives and the app reacts to the new props. Use a one-shot request object with an id (see `MediaRequest`) when the delivery must be applied exactly once.
 
 ### Cached requests
 
@@ -72,6 +74,24 @@ Are.na, Bsky, Fedi, Shelf, and Weather retain only source-specific URL, status, 
 The shared module owns profile/feed query coordination, infinite paging, loading/error/terminal states, profile and post chrome, and media launch. Each adapter maps its remote source into the Social feed domain.
 
 The shared layout uses project-specific `lok-reader-*` CSS hooks. Keep these hooks neutral: generic names such as `social-feed`, `social-post`, and `social-media` can be mistaken for cosmetic-filter targets by Brave Shields in aggressive mode. In that failure mode, requests complete and posts briefly render before injected filter CSS hides them. This is a presentation-layer concern; API routes, query keys, and cache keys should retain their domain names.
+
+### Themes
+
+`src/lib/theme.ts` is the theme registry and engine. A theme is a complete visual system (tokens, chrome geometry, type, desktop layout), not a color swap.
+
+- `lok` ships in the entry stylesheet and supports light and dark.
+- `98`, `xp`, and `7` are lazily loaded stylesheets in `src/themes/`, each layered on the shared `src/themes/classic.css` structure. They load during boot when active, and on hover in the theme picker.
+- The preference lives in localStorage (`lok.theme`) so the inline script in `index.html` can apply `data-theme`, `data-layout`, `.dark`, and `color-scheme` before first paint. `?theme=<id>` on any URL applies and persists a theme.
+- `ThemeProvider`/`useTheme` (`src/hooks/useTheme.tsx`) apply attributes in a layout effect, suspend transitions for the swap, sync across tabs, and follow the OS color scheme.
+- `data-layout="classic"` moves the system menu and clock into the taskbar (start button, task list, tray).
+
+### Media hand-off
+
+`src/apps/media/mediaLibrary.ts` is a dependency-free module other apps import to hand audio or video to the Media Player: `openApplication(MEDIA_PLAYER_TYPE, { props: { request: createMediaRequest([createMediaItem(url)]) } })`. The player applies each request id once, even across window restores.
+
+### Ask AI (Jev)
+
+`jev.js` beside the Worker plans and answers typed questions: a fast LLM compiles a request into Jev questions (noul, choice, score), Jev answers them, and the Worker forms `result`, a JSON object keyed by the requested properties. The Ask AI app calls `/api/jev/plan` then `/api/jev` so the plan appears before the answers.
 
 ### Are.na channel browsing
 

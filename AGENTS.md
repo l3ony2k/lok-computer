@@ -46,6 +46,19 @@ Use `useApplicationLauncher` for every app launch, including nested dynamic wind
 
 App chunks remain code-split but are warmed during `SystemStartup`, along with bundled local assets. Window content still retains a Suspense fallback.
 
+### Themes
+
+- `src/lib/theme.ts` is the theme registry; `src/hooks/useTheme.tsx` is the provider and hook. Do not reintroduce `next-themes`.
+- `lok` ships in `src/index.css`. `98`, `xp`, and `7` are lazy stylesheets in `src/themes/` on top of `src/themes/classic.css`, scoped with `html[data-layout="classic"]:not(#_)` and `html[data-theme="<id>"][data-layout]:not(#_)`.
+- The inline script in `index.html` applies the stored theme before first paint; `src/lib/theme.test.ts` keeps it in sync with the registry.
+- Use shared tokens for new styles and check new UI in all four themes. Rounded corners are allowed only inside the XP and 7 skins.
+
+### Media Player and Ask AI
+
+- Hand media to the player with `createMediaRequest`/`createMediaItem` from `src/apps/media/mediaLibrary.ts`; the player applies each request id once.
+- Launching a single-instance app with explicit props delivers them to the running window.
+- Ask AI calls `/api/jev/plan` and `/api/jev`. The planner prompt, plan validation, Jev call, and result forming live in `jev.js` with tests in `jev.test.ts`. Worker secrets: `TYPESAFE_API_KEY` plus the existing `AI_*` planner settings.
+
 ### Are.na
 
 - Shared file rendering lives in `src/apps/arena/components/ArenaFileView.tsx`.

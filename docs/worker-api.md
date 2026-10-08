@@ -15,6 +15,8 @@ Browser App
      Cloudflare Worker (worker.js)
             │
             ├── /api/chat → OpenAI-compatible API
+            ├── /api/jev/plan → planner LLM (typed questions)
+            ├── /api/jev → planner LLM + TypeSafe Jev
             ├── /api/bsky/feed → Bluesky
             ├── /api/fedi/* → Fediverse (Mastodon/GoToSocial)
             └── /api/neodb/shelf → NeoDB
@@ -41,6 +43,33 @@ AI chat completion proxy.
 // Response
 { choices: [{ message: { content: 'Hi!' } }] }
 ```
+
+### POST /api/jev/plan
+Compiles a request into typed Jev questions with the fast planner model (no Jev call).
+
+```typescript
+// Request
+{ prompt: 'Is it urgent and which team owns it?', state?: 'Payouts failed for 3 days!' }
+
+// Response
+{ plan: { summary, state, questions: { is_urgent: { type: 'noul', instructions, criteria } } }, planner: { model }, timing }
+```
+
+### POST /api/jev
+Plans (unless `plan` is supplied), asks Jev, and forms the requested properties.
+
+```typescript
+// Request: { prompt, state? } or { plan }
+// Response
+{
+  model: 'jev-1.13.0',
+  result: { is_urgent: true, owning_team: 'billing', customer_mood: 2.88 },
+  properties: { is_urgent: { type: 'noul', value: true, probability: 0.97 }, ... },
+  plan, planner, usage, timing
+}
+```
+
+Errors are `{ error, code? }`: 400 bad input, 422 `refused` or `invalid_plan`, 429 over the per-IP budget, 502 upstream failure (including unreachable or unreadable upstreams), 503 not configured or Jev overloaded. Limits: prompt 2,000 chars, content 20,000 chars, 8 questions, 24 choice options, 10 score levels of up to 600 chars each, 16,000 chars of questions in total. Both endpoints share the `JEV_RATE_LIMITER` binding in `wrangler.toml` (20 calls per minute per client IP; one Ask is two calls); without the binding, as in tests, there is no limit. The planner prompt and validation live in `jev.js`; tests in `jev.test.ts`.
 
 ### GET /api/bsky/feed
 Bluesky author feed.
@@ -85,8 +114,11 @@ account_id = "your-account-id"
 [vars]
 AI_MODEL = "gemini-2.5-flash-lite"
 AI_TEMPERATURE = "0.8"
+JEV_MODEL = "jev-latest"
 FEDI_INSTANCE = "https://rex.cat"
 ```
+
+`JEV_PLANNER_MODEL` optionally overrides the planner model (defaults to `AI_MODEL`).
 
 ### Production Secrets
 
@@ -95,6 +127,7 @@ Set via Cloudflare Dashboard or CLI:
 ```bash
 wrangler secret put AI_API_KEY
 wrangler secret put AI_BASE_URL
+wrangler secret put TYPESAFE_API_KEY
 wrangler secret put BSKY_HANDLE
 wrangler secret put BSKY_APP_PASSWORD
 wrangler secret put FEDI_ACCESS_TOKEN
@@ -110,6 +143,9 @@ wrangler secret put NEODB_ACCESS_TOKEN
 ```bash
 # Run worker locally
 wrangler dev
+
+# Point the Vite dev proxy at it instead of production
+LOK_API_ORIGIN=http://localhost:8787 bun dev
 ```
 
 ### Deploy Worker

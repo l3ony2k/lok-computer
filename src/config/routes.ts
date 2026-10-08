@@ -154,7 +154,32 @@ export const ROUTES: RouteConfig[] = [
         componentType: 'AI Talk',
         extractProps: () => ({}),
         generateUrl: () => '/ai',
-        getTitle: () => 'AI Talk',
+        getTitle: () => 'Ask AI',
+    },
+
+    // Media Player. `src` enqueues and plays a URL; `nowPlaying` is the shareable state.
+    {
+        pattern: 'media',
+        componentType: 'MediaPlayer',
+        extractProps: (_, query) => {
+            const src = query.get('src');
+            if (!src) return {};
+            return {
+                request: {
+                    id: `route-${Date.now()}`,
+                    play: true,
+                    items: [{ src, title: query.get('title') || undefined }],
+                },
+            };
+        },
+        generateUrl: (props) => {
+            const nowPlaying = props.nowPlaying as { src?: string; title?: string } | undefined;
+            if (!nowPlaying?.src) return '/media';
+            const params = new URLSearchParams({ src: nowPlaying.src });
+            if (nowPlaying.title) params.set('title', nowPlaying.title);
+            return `/media?${params.toString()}`;
+        },
+        getTitle: () => 'Media',
     },
 
     {

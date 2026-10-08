@@ -71,8 +71,17 @@ export interface WindowManagerActionsContextType {
   updateWindowProps: (id: string, props: Record<string, unknown>) => void;
 }
 
+export interface WindowLaunchInput extends WindowInput {
+  singleInstance?: boolean;
+  /**
+   * When a single-instance window already exists, replace its content and
+   * merge its props so the running app receives the new launch props.
+   */
+  deliverProps?: boolean;
+}
+
 export interface WindowManagerLaunchContextType {
-  addOrFocusWindow: (window: WindowInput & { singleInstance?: boolean }) => string;
+  addOrFocusWindow: (window: WindowLaunchInput) => string;
 }
 
 export interface WindowManagerController {
@@ -329,11 +338,22 @@ export const useWindowManagerController = (): WindowManagerController => {
     return id;
   }, [nextZIndex]);
 
-  const addOrFocusWindow = useCallback((window: WindowInput & { singleInstance?: boolean }) => {
-    // If singleInstance is true, check if a window with the same title already exists
+  const addOrFocusWindow = useCallback((window: WindowLaunchInput) => {
+    // Single-instance windows are identified by Application type; titles can collide
+    // (an Are.na channel named "Media") or drift (sessions saved under an old app name).
     if (window.singleInstance) {
-      const existingWindow = windowsRef.current.find(w => w.title === window.title);
+      const existingWindow = windowsRef.current.find((w) => (
+        window.componentType ? w.componentType === window.componentType : w.title === window.title
+      ));
       if (existingWindow) {
+        if (window.deliverProps) {
+          // Same component type re-renders in place, so app state survives and sees the new props.
+          setWindows((prev) => prev.map((w) => (
+            w.id === existingWindow.id
+              ? { ...w, content: window.content, props: { ...w.props, ...window.props } }
+              : w
+          )));
+        }
         // Focus the existing window and bring it to front
         focusWindow(existingWindow.id);
         return existingWindow.id;
@@ -341,8 +361,9 @@ export const useWindowManagerController = (): WindowManagerController => {
     }
 
     // If no existing window found or singleInstance is false, create a new window
-    const { singleInstance, ...windowProps } = window; // Remove singleInstance from props
+    const { singleInstance, deliverProps, ...windowProps } = window;
     void singleInstance;
+    void deliverProps;
     return addWindow(windowProps);
   }, [focusWindow, addWindow]);
 

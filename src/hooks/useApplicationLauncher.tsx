@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { createApplicationElement, getApplicationDefinition } from '@/config/apps';
 import { WINDOW_DEFAULTS } from '@/config/window';
-import { useWindowLaunchActions } from '@/hooks/useWindowManager';
+import { useWindowActions, useWindowLaunchActions } from '@/hooks/useWindowManager';
 
 export interface ApplicationLaunchOptions {
   title?: string;
@@ -23,6 +23,7 @@ export interface ApplicationLaunchOptions {
  */
 export const useApplicationLauncher = () => {
   const { addOrFocusWindow } = useWindowLaunchActions();
+  const { updateWindowProps } = useWindowActions();
 
   return useCallback((componentType: string, options: ApplicationLaunchOptions = {}) => {
     const application = getApplicationDefinition(componentType);
@@ -35,10 +36,15 @@ export const useApplicationLauncher = () => {
       ...application.defaultProps,
       ...options.props,
     };
-    const content = createApplicationElement(componentType, props);
+    // Apps report shareable view state through onPropsChange; the id is bound once the window exists.
+    let windowId: string | null = null;
+    const onPropsChange = (nextProps: Record<string, unknown>) => {
+      if (windowId) updateWindowProps(windowId, nextProps);
+    };
+    const content = createApplicationElement(componentType, props, onPropsChange);
     if (!content) return null;
 
-    return addOrFocusWindow({
+    windowId = addOrFocusWindow({
       title: options.title ?? application.name,
       content,
       componentType: application.componentType,
@@ -48,9 +54,11 @@ export const useApplicationLauncher = () => {
       minWidth: WINDOW_DEFAULTS.MIN_WIDTH,
       minHeight: WINDOW_DEFAULTS.MIN_HEIGHT,
       singleInstance: options.singleInstance ?? application.singleInstance,
+      deliverProps: options.props !== undefined,
       props,
       x: options.x,
       y: options.y,
     });
-  }, [addOrFocusWindow]);
+    return windowId;
+  }, [addOrFocusWindow, updateWindowProps]);
 };

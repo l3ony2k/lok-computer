@@ -59,6 +59,7 @@ Use `usePersistedState` for view-state lifecycle and `cachedRequest` for remote 
 
 A single Cloudflare Worker acts as an API proxy for everything that requires credentials:
 - `/api/chat` — forwards to an OpenAI-compatible endpoint (env: `AI_BASE_URL`, `AI_API_KEY`, `AI_MODEL`)
+- `/api/jev/plan`, `/api/jev` — Ask AI: a fast planner LLM (same endpoint, optional `JEV_PLANNER_MODEL`) compiles typed questions, TypeSafe Jev answers them (env: `TYPESAFE_API_KEY`, `JEV_MODEL`); logic in `jev.js`
 - `/api/bsky/feed` — fetches Bluesky posts (env: `BSKY_HANDLE`, `BSKY_APP_PASSWORD`)
 - `/api/fedi/account` and `/api/fedi/statuses` — Mastodon/GoToSocial proxy (env: `FEDI_INSTANCE`, `FEDI_ACCESS_TOKEN`)
 - `/api/neodb/shelf` — NeoDB reading shelf proxy (env: `NEODB_ACCESS_TOKEN`)
@@ -69,9 +70,18 @@ Deploy/configure via `wrangler.toml`. Secrets are set in the Cloudflare dashboar
 
 `RouteInterpreter` (`src/components/RouteInterpreter.tsx`) runs once on mount, reads the URL, opens the corresponding window(s), then replaces the URL with `/`. Supports single windows (`/explorer/channel-slug`) and multi-window specs (`/open?w=about,weather,explorer/my-channel`).
 
+### Themes
+
+`src/lib/theme.ts` registers four themes: `lok` (default, light/dark) and lazily loaded classic skins `98`, `xp`, `7` in `src/themes/` built on the shared `src/themes/classic.css`. The preference is stored in localStorage (`lok.theme`) and applied before first paint by the inline script in `index.html`; keep the two in sync (`src/lib/theme.test.ts` checks). Use `useTheme()` from `src/hooks/useTheme.tsx` (never `next-themes`). Style new surfaces with shared tokens so every theme recolors them, and verify UI changes in all four themes. Classic layouts move the system menu and clock into the taskbar.
+
+### Media Player and Ask AI
+
+- `src/apps/media/` is the Media Player. Other apps hand it audio or video with `createMediaRequest`/`createMediaItem` from `mediaLibrary.ts` and `openApplication(MEDIA_PLAYER_TYPE, { props: { request } })`.
+- `src/apps/ask-ai/` is Ask AI (catalog identity `AI Talk`). It calls `/api/jev/plan` then `/api/jev`; the pipeline lives in `jev.js` (planner prompt, plan validation, Jev call, result forming).
+
 ### User Settings
 
-`useUserSettings` (`src/hooks/useUserSettings.ts`) manages wallpaper, CRT effects, Oneko, and debug logging preferences. Settings are persisted to IndexedDB.
+`useUserSettings` (`src/hooks/useUserSettings.ts`) manages wallpaper, CRT effects, Oneko, and debug logging preferences. Settings are persisted to IndexedDB. Theme and color mode live in the theme engine, not in user settings.
 
 ### Are.na Integration
 

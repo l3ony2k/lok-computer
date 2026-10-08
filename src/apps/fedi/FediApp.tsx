@@ -21,7 +21,7 @@ interface Account {
 
 interface MediaAttachment {
   id: string;
-  type: 'image' | 'video' | 'gifv' | 'unknown';
+  type: 'image' | 'video' | 'gifv' | 'audio' | 'unknown';
   url: string;
   preview_url: string;
   description: string | null;
@@ -134,9 +134,10 @@ const adapter: SocialFeedAdapter = {
           createdAt: displayStatus.created_at,
           body: <div className="text-sm break-words mb-2 [&>p]:mb-2 last:[&>p]:mb-0 [&_a]:text-blue-400 [&_a]:underline" dangerouslySetInnerHTML={{ __html: displayStatus.content }} />,
           media: displayStatus.media_attachments
-            .filter((media) => media.type === 'image')
+            .filter((media) => media.type !== 'unknown')
             .map((media) => ({
               id: media.id,
+              kind: media.type === 'image' ? 'image' as const : media.type === 'audio' ? 'audio' as const : 'video' as const,
               previewUrl: media.preview_url,
               fullUrl: media.url,
               alt: media.description || 'Attachment',

@@ -32,7 +32,7 @@
     },
     {
       "name": "AI",
-      "description": "Message processing through the server-configured model provider."
+      "description": "Message processing through the server-configured model provider, and typed judgments from the Jev decision model."
     },
     {
       "name": "Social",
@@ -126,6 +126,146 @@
           },
           "500": {
             "$ref": "#/components/responses/UpstreamFailure"
+          }
+        }
+      }
+    },
+    "/api/jev/plan": {
+      "post": {
+        "operationId": "planJevQuestions",
+        "summary": "Plan typed Jev questions for a request",
+        "description": "Uses the server-configured fast language model to compile a natural-language request, and optional content, into typed Jev questions (noul, choice, score) without calling Jev. Use it to preview or edit a plan before submitting it to askJev. Do not send secrets or sensitive personal data.",
+        "tags": ["AI"],
+        "requestBody": {
+          "required": true,
+          "description": "What to judge and, optionally, the content to judge.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JevPlanRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A validated plan ready for askJev.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JevPlanResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "405": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "422": {
+            "description": "The planner found nothing to judge (code `refused`) or could not produce a valid plan (code `invalid_plan`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "This client exceeded the Ask AI budget of 20 calls per minute.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "$ref": "#/components/responses/UpstreamFailure"
+          },
+          "503": {
+            "description": "The planner model is not configured on this server.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/jev": {
+      "post": {
+        "operationId": "askJev",
+        "summary": "Answer a request with Jev and return the requested properties",
+        "description": "Plans typed questions with the server-configured fast language model (or uses a supplied plan), evaluates them with TypeSafe's Jev decision model, and returns `result`, a JSON object keyed by the requested properties, plus per-property probabilities and confidence. Supplying `plan` skips the planner. Do not send secrets or sensitive personal data.",
+        "tags": ["AI"],
+        "requestBody": {
+          "required": true,
+          "description": "A request to plan, or a plan to evaluate as written.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JevAskRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Typed answers formed into the requested properties.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JevAnswer"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "405": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "422": {
+            "description": "The request or plan was rejected: nothing to judge, an invalid plan, or questions Jev refused.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "This client exceeded the Ask AI budget of 20 calls per minute.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "$ref": "#/components/responses/UpstreamFailure"
+          },
+          "503": {
+            "description": "Jev or the planner is not configured, or Jev is temporarily overloaded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
@@ -732,6 +872,296 @@
           },
           "details": {
             "type": "string"
+          },
+          "code": {
+            "type": "string",
+            "description": "Machine-readable reason when available, e.g. refused or invalid_plan."
+          }
+        }
+      },
+      "JevPlanRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["prompt"],
+        "properties": {
+          "prompt": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000,
+            "description": "The properties you want back, in plain language, e.g. \"Is it urgent and which team owns it?\""
+          },
+          "state": {
+            "description": "Content to judge: text, or JSON with descriptive field names.",
+            "oneOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "object"
+              },
+              {
+                "type": "array"
+              }
+            ]
+          }
+        }
+      },
+      "JevAskRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Provide `prompt` (and optional `state`) to plan automatically, or `plan` to evaluate a plan as written.",
+        "properties": {
+          "prompt": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000,
+            "description": "The properties you want back, in plain language."
+          },
+          "state": {
+            "description": "Content to judge: text, or JSON with descriptive field names.",
+            "oneOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "object"
+              },
+              {
+                "type": "array"
+              }
+            ]
+          },
+          "plan": {
+            "$ref": "#/components/schemas/JevPlan"
+          }
+        }
+      },
+      "JevQuestion": {
+        "type": "object",
+        "required": ["type", "instructions"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["noul", "choice", "score"],
+            "description": "noul is yes/no, choice picks one option, score places the state on ordered levels."
+          },
+          "instructions": {
+            "description": "The complete question sent to Jev.",
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object"
+              },
+              {
+                "type": "array"
+              }
+            ]
+          },
+          "criteria": {
+            "description": "Noul: {true, false} descriptions. Choice: option key to description (2-24 options). Score: ordered level descriptions (2-10).",
+            "oneOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "array"
+              }
+            ]
+          }
+        }
+      },
+      "JevPlan": {
+        "type": "object",
+        "required": ["state", "questions"],
+        "properties": {
+          "summary": {
+            "type": "string",
+            "description": "One sentence describing what will be judged."
+          },
+          "state": {
+            "description": "Content to judge: text, or JSON with descriptive field names.",
+            "oneOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "object"
+              },
+              {
+                "type": "array"
+              }
+            ]
+          },
+          "questions": {
+            "type": "object",
+            "description": "One to eight questions keyed by snake_case property name.",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JevQuestion"
+            }
+          }
+        }
+      },
+      "JevPlanResponse": {
+        "type": "object",
+        "required": ["plan", "timing"],
+        "properties": {
+          "plan": {
+            "$ref": "#/components/schemas/JevPlan"
+          },
+          "planner": {
+            "type": ["object", "null"],
+            "properties": {
+              "model": {
+                "type": "string"
+              }
+            }
+          },
+          "timing": {
+            "type": "object",
+            "properties": {
+              "plannerMs": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "JevProperty": {
+        "type": "object",
+        "required": ["type", "question", "value"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["noul", "choice", "score"]
+          },
+          "question": {
+            "type": "string"
+          },
+          "value": {
+            "description": "Boolean for noul (probability >= 0.5), option key for choice, number for score.",
+            "oneOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          },
+          "probability": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Noul only: probability that the answer is yes."
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Choice and score: how peaked the distribution is."
+          },
+          "probabilities": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          },
+          "options": {
+            "type": "object",
+            "description": "Choice only: option descriptions."
+          },
+          "level": {
+            "type": "integer",
+            "description": "Score only: nearest level index."
+          },
+          "label": {
+            "type": "string",
+            "description": "Score only: nearest level description."
+          },
+          "max": {
+            "type": "integer",
+            "description": "Score only: highest level index."
+          },
+          "scale": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Score only: level descriptions."
+          }
+        }
+      },
+      "JevAnswer": {
+        "type": "object",
+        "required": ["model", "plan", "result", "properties"],
+        "properties": {
+          "model": {
+            "type": "string",
+            "description": "Versioned Jev model that answered, e.g. jev-1.13.0."
+          },
+          "planner": {
+            "type": ["object", "null"],
+            "properties": {
+              "model": {
+                "type": "string"
+              }
+            }
+          },
+          "plan": {
+            "$ref": "#/components/schemas/JevPlan"
+          },
+          "result": {
+            "type": "object",
+            "description": "The requested properties as plain JSON values.",
+            "additionalProperties": {
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                }
+              ]
+            }
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JevProperty"
+            }
+          },
+          "usage": {
+            "type": ["object", "null"],
+            "properties": {
+              "input_tokens": {
+                "type": "integer"
+              },
+              "output_tokens": {
+                "type": "integer"
+              }
+            }
+          },
+          "timing": {
+            "type": "object",
+            "properties": {
+              "plannerMs": {
+                "type": ["integer", "null"]
+              },
+              "jevMs": {
+                "type": "integer"
+              }
+            }
           }
         }
       }

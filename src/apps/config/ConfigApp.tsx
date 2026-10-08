@@ -1,27 +1,27 @@
 import React, { useEffect, useState } from "react";
-import { useTheme } from "next-themes";
 import {
   Bell,
   Bug,
   Cat,
   CheckCircle,
-  Computer,
   Copy,
   Database,
   Image,
   Monitor,
-  Moon,
   Palette,
   Power,
   RefreshCw,
   ServerCog,
   Sparkles,
-  Sun,
+  SunMoon,
   Trash2,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUserSettings } from "@/hooks/useUserSettings";
+import { useTheme } from "@/hooks/useTheme";
+import { THEMES } from "@/lib/theme";
+import { AppearancePicker, ThemePicker } from "@/components/system/ThemePicker";
 import { WindowLayout } from "@/components/window/WindowLayout";
 import { RetroButton } from "@/components/ui/RetroButton";
 import { toast } from "sonner";
@@ -114,7 +114,7 @@ const RangeSetting = ({
 );
 
 export const ConfigApp: React.FC = () => {
-  const { theme, setTheme } = useTheme();
+  const { theme, appearance, colorScheme } = useTheme();
   const { settings, updateSetting } = useUserSettings();
   const [activeCategory, setActiveCategory] = useState<ConfigCategory>("style");
   const [customWallpaperUrl, setCustomWallpaperUrl] = useState("");
@@ -197,7 +197,7 @@ export const ConfigApp: React.FC = () => {
 
   const getDiagnostics = () => ({
     version: SYSTEM_VERSION,
-    theme,
+    theme: { theme, appearance, colorScheme },
     viewport: `${window.innerWidth}x${window.innerHeight}`,
     online: navigator.onLine,
     indexedDB: isStorageAvailable(),
@@ -272,18 +272,24 @@ export const ConfigApp: React.FC = () => {
         <div className="config-content scrollable-area">
           {activeCategory === "style" && (
             <div className="config-category-content">
-              <ConfigSection title="Appearance" icon={Sun}>
-                <div className="config-theme-grid">
-                  <RetroButton active={theme === "light"} onClick={() => setTheme("light")}>
-                    <Sun className="h-4 w-4" /> Light
-                  </RetroButton>
-                  <RetroButton active={theme === "dark"} onClick={() => setTheme("dark")}>
-                    <Moon className="h-4 w-4" /> Dark
-                  </RetroButton>
-                  <RetroButton active={theme === "system"} onClick={() => setTheme("system")}>
-                    <Computer className="h-4 w-4" /> Auto
-                  </RetroButton>
-                </div>
+              <ConfigSection title="Theme" icon={Palette}>
+                <ThemePicker />
+                <p className="config-help-text">
+                  {THEMES[theme].description}
+                  {THEMES[theme].credit && (
+                    <>
+                      {" "}Based on{" "}
+                      <a href={THEMES[theme].credit.url} target="_blank" rel="noopener noreferrer">
+                        {THEMES[theme].credit.label}
+                      </a>
+                      {" "}(MIT).
+                    </>
+                  )}
+                </p>
+              </ConfigSection>
+
+              <ConfigSection title="Color mode" icon={SunMoon}>
+                <AppearancePicker />
               </ConfigSection>
 
               <ConfigSection title="Wallpaper" icon={Image}>
@@ -300,7 +306,7 @@ export const ConfigApp: React.FC = () => {
                   {settings.wallpaper ? (
                     <div style={{ backgroundImage: `url("${settings.wallpaper}")` }} />
                   ) : (
-                    <span>Default pattern</span>
+                    <span>Theme default</span>
                   )}
                 </div>
 

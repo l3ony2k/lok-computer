@@ -4,6 +4,7 @@ import { WindowLayout } from '@/components/window/WindowLayout';
 import { StateMessage } from '@/components/ui/StateMessage';
 import { RetroButton } from '@/components/ui/RetroButton';
 import { useApplicationLauncher } from '@/hooks/useApplicationLauncher';
+import { MEDIA_PLAYER_TYPE, createMediaItem, createMediaRequest } from '@/apps/media/mediaLibrary';
 
 export interface SocialProfile {
   sourceId: string;
@@ -29,6 +30,8 @@ export interface SocialPost {
   body: ReactNode;
   media?: Array<{
     id: string;
+    /** Images open in the Image Viewer; time-based media open in the Media Player. */
+    kind?: 'image' | 'video' | 'audio';
     previewUrl: string;
     fullUrl: string;
     alt: string;
@@ -192,19 +195,39 @@ export const SocialFeedApp = ({ adapter }: { adapter: SocialFeedAdapter }) => {
                         </div>
                         {post.body}
                         {post.media && post.media.length > 0 && (
-                          <div className="lok-reader-media-strip" aria-label="Post images">
+                          <div className="lok-reader-media-strip" aria-label="Post media">
                             {post.media.map((media) => (
                               <button
                                 key={media.id}
                                 type="button"
                                 className="lok-reader-media-item"
+                                data-kind={media.kind ?? 'image'}
                                 style={{ aspectRatio: media.aspectRatio ?? '1 / 1' }}
+                                title={media.kind === 'video' || media.kind === 'audio' ? 'Play in Media' : undefined}
                                 onClick={(event) => {
                                   event.stopPropagation();
+                                  if (media.kind === 'video' || media.kind === 'audio') {
+                                    openApplication(MEDIA_PLAYER_TYPE, {
+                                      props: {
+                                        request: createMediaRequest([createMediaItem(media.fullUrl, {
+                                          title: media.alt !== 'Attachment' ? media.alt : `${post.author.displayName} ${media.kind}`,
+                                          artist: `@${post.author.handle}`,
+                                          kind: media.kind,
+                                          origin: 'app',
+                                        })]),
+                                      },
+                                    });
+                                    return;
+                                  }
                                   openApplication('ImageViewer', { props: { imageUrl: media.fullUrl } });
                                 }}
                               >
-                                <img src={media.previewUrl} alt={media.alt} loading="lazy" />
+                                {media.previewUrl
+                                  ? <img src={media.previewUrl} alt={media.alt} loading="lazy" />
+                                  : <span className="lok-reader-media-placeholder">{media.kind ?? 'media'}</span>}
+                                {(media.kind === 'video' || media.kind === 'audio') && (
+                                  <span className="lok-reader-media-play" aria-hidden="true">▶</span>
+                                )}
                               </button>
                             ))}
                           </div>

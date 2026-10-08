@@ -1,0 +1,456 @@
+/*
+ * 98 theme. Values, glyphs, and the pixel font come from 98.css
+ * (https://github.com/jdan/98.css, MIT, see ./LICENSE). The console uses
+ * Perfect DOS VGA 437 by Zeh Fernando, as bundled with XP.css.
+ *
+ * Scope: html[data-theme="98"][data-layout]:not(#_) outranks classic.css.
+ */
+
+@font-face {
+    font-family: "Pixelated MS Sans Serif";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("./fonts/ms_sans_serif.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "Pixelated MS Sans Serif";
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url("./fonts/ms_sans_serif_bold.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "Perfect DOS VGA 437";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("./fonts/PerfectDOSVGA437Win.woff2") format("woff2");
+}
+
+html[data-theme="98"][data-layout]:not(#_) {
+    /* Bevels */
+    --w98-raised: inset -1px -1px #0a0a0a, inset 1px 1px #ffffff, inset -2px -2px #808080, inset 2px 2px #dfdfdf;
+    --w98-raised-outer: inset -1px -1px #0a0a0a, inset 1px 1px #dfdfdf, inset -2px -2px #808080, inset 2px 2px #ffffff;
+    --w98-pressed: inset -1px -1px #ffffff, inset 1px 1px #0a0a0a, inset -2px -2px #dfdfdf, inset 2px 2px #808080;
+    --w98-default: inset -2px -2px #0a0a0a, inset 1px 1px #0a0a0a, inset 2px 2px #ffffff, inset -3px -3px #808080, inset 3px 3px #dfdfdf;
+    --w98-field: inset -1px -1px #ffffff, inset 1px 1px #808080, inset -2px -2px #dfdfdf, inset 2px 2px #0a0a0a;
+    --w98-status: inset -1px -1px #dfdfdf, inset 1px 1px #808080;
+    --w98-dither: repeating-conic-gradient(#ffffff 0 25%, #c0c0c0 0 50%) 0 0 / 2px 2px;
+
+    /* lok tokens */
+    --font-ui: "Pixelated MS Sans Serif", "MS Sans Serif", "Microsoft Sans Serif", Tahoma, Arial, sans-serif;
+    --font-code: "Perfect DOS VGA 437", "Lucida Console", "Courier New", monospace;
+    --retro-window: 0 0% 75%;
+    --retro-window-titlebar: 240 100% 25%;
+    --background: 0 0% 75%;
+    --foreground: 0 0% 0%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
+    --popover: 0 0% 75%;
+    --popover-foreground: 0 0% 0%;
+    --primary: 240 100% 25%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 75%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 0 0% 87%;
+    --muted-foreground: 0 0% 31%;
+    --accent: 240 100% 25%;
+    --accent-foreground: 0 0% 100%;
+    --border: 0 0% 50%;
+    --input: 0 0% 50%;
+    --ring: 0 0% 0%;
+    --header-bg: #c0c0c0;
+    --header-border: #0a0a0a;
+    --internal-border: #808080;
+    --internal-border-hover: #404040;
+    --scrollbar-thumb: #c0c0c0;
+    --scrollbar-thumb-hover: #c0c0c0;
+    --block-bg: #ffffff;
+    --block-border: #0a0a0a;
+    --button-bg: #c0c0c0;
+    --button-hover: #c0c0c0;
+    --text-color: #000000;
+    --link-color: #0000ff;
+    --detail-bg: #ffffff;
+    --detail-border: #808080;
+    --detail-header-bg: #c0c0c0;
+    --detail-meta-bg: #c0c0c0;
+    --icon-color: #000000;
+    --focus-color: #000000;
+    --vis-public-color: #008000;
+    --vis-private-color: #800000;
+    --loading-bg: #c0c0c0;
+    --loading-bar: #000080;
+    --log-bg: #000000;
+    --log-text: #c0c0c0;
+    --log-muted: #808080;
+    --log-error: #ff5555;
+    --log-warn: #ffff55;
+    --log-info: #55ffff;
+    --log-prefix-default: #aaaaaa;
+    --log-prefix-cache: #55ff55;
+    --log-prefix-api: #55ffff;
+    --log-prefix-app: #ffff55;
+    --log-prefix-session: #ff55ff;
+    --log-prefix-registry: #ff5555;
+    --selection-bg: #000080;
+    --selection-fg: #ffffff;
+    --desktop-bg: #008080;
+    --desktop-pattern: none;
+    --desktop-label-color: #ffffff;
+    --desktop-label-edge: transparent;
+    --desktop-icon-drop-shadow: transparent;
+    --taskbar-height: 30px;
+    --media-stage-bg: #000000;
+    --media-stage-fg: #00ff00;
+    --media-accent: #000080;
+
+    /* Component tokens */
+    --c-face: #c0c0c0;
+    --c-font-size: 11px;
+    --c-text-xs: 11px;
+    --c-text-sm: 11px;
+    --c-text-base: 11px;
+    --c-title-size: 11px;
+    --c-placeholder: #808080;
+    --c-focus-outline: 1px dotted #000000;
+    --c-focus-offset: -4px;
+
+    --c-btn-fg: #000000;
+    --c-btn-bg: #c0c0c0;
+    --c-btn-border: 0;
+    --c-btn-radius: 0;
+    --c-btn-shadow: var(--w98-raised);
+    --c-btn-bg-hover: #c0c0c0;
+    --c-btn-border-hover: 0;
+    --c-btn-shadow-hover: var(--w98-raised);
+    --c-btn-bg-active: #c0c0c0;
+    --c-btn-border-active: 0;
+    --c-btn-shadow-active: var(--w98-pressed);
+    --c-btn-bg-on: var(--w98-dither);
+    --c-btn-border-on: 0;
+    --c-btn-shadow-on: var(--w98-pressed);
+    --c-btn-shadow-default: var(--w98-default);
+    --c-btn-fg-disabled: #808080;
+    --c-btn-text-shadow-disabled: 1px 1px 0 #ffffff;
+
+    --c-field-fg: #000000;
+    --c-field-bg: #ffffff;
+    --c-field-border: 0;
+    --c-field-radius: 0;
+    --c-field-shadow: var(--w98-field);
+    --c-field-height: 21px;
+    --c-field-bg-disabled: #c0c0c0;
+    --c-select-arrow: url("./icons/button-down.svg");
+    --c-select-arrow-position: right 2px center;
+    --c-readout-bg: #c0c0c0;
+    --c-readout-border: 0;
+    --c-readout-shadow: var(--w98-status);
+
+    --c-check-bg: #ffffff;
+    --c-check-border: 0;
+    --c-check-shadow: var(--w98-field);
+    --c-check-mark: url("./icons/checkmark.svg");
+    --c-radio-dot: url("./icons/radio-dot.svg");
+    --c-track-bg: #000000;
+    --c-track-height: 2px;
+    --c-track-shadow: 1px 1px 0 #ffffff, -1px -1px 0 #808080;
+    --c-thumb-image: url("./icons/indicator-horizontal.svg");
+
+    --c-window-bg: #c0c0c0;
+    --c-window-border: 0;
+    --c-window-radius: 0;
+    --c-window-padding: 3px;
+    --c-window-shadow: var(--w98-raised-outer);
+    --c-client-gap: 2px;
+    --c-client-bg: #c0c0c0;
+    --c-title-height: 18px;
+    --c-title-padding: 0 2px 0 2px;
+    --c-title-radius: 0;
+    --c-title-fg: #ffffff;
+    --c-title-bg: linear-gradient(90deg, #000080, #1084d0);
+    --c-title-fg-inactive: #c0c0c0;
+    --c-title-bg-inactive: linear-gradient(90deg, #808080, #b5b5b5);
+    --c-controls-gap: 0px;
+
+    --c-menu-bg: #c0c0c0;
+    --c-menu-border: 0;
+    --c-menu-radius: 0;
+    --c-menu-padding: 3px;
+    --c-menu-shadow: var(--w98-raised-outer);
+    --c-menu-divider: 1px solid #808080;
+    --c-menu-divider-light: 1px solid #ffffff;
+    --c-hl-bg: #000080;
+    --c-hl-fg: #ffffff;
+    --c-hl-border: 1px solid #000080;
+    --c-hl-radius: 0;
+    --c-hover-bg: transparent;
+
+    --c-toolbar-border: 1px solid #808080;
+    --c-toolbar-shadow: 0 1px 0 #ffffff;
+    --c-status-shadow: var(--w98-status);
+    --c-status-padding: 2px;
+    --c-tab-bg: #c0c0c0;
+    --c-tab-bg-on: #c0c0c0;
+    --c-tab-border: 0;
+    --c-tab-radius: 3px 3px 0 0;
+    --c-tab-shadow: inset -1px 0 #0a0a0a, inset 1px 1px #dfdfdf, inset -2px 0 #808080, inset 2px 2px #ffffff;
+    --c-tab-shadow-on: inset -1px 0 #0a0a0a, inset 1px 1px #dfdfdf, inset -2px 0 #808080, inset 2px 2px #ffffff;
+    --c-tab-panel-border: 0;
+    --c-tab-panel-shadow: inset 0 -1px #ffffff;
+    --c-group-border: 1px solid #808080;
+    --c-group-shadow: inset 1px 1px #ffffff, 1px 1px #ffffff;
+    --c-list-bg: #ffffff;
+    --c-list-shadow: var(--w98-field);
+    --c-header-bg: #c0c0c0;
+    --c-header-shadow: var(--w98-raised);
+    --c-header-shadow-active: var(--w98-pressed);
+
+    --c-taskbar-bg: #c0c0c0;
+    --c-taskbar-border-top: 0;
+    --c-taskbar-shadow: inset 0 1px #dfdfdf, inset 0 2px #ffffff;
+    --c-taskbar-padding: 4px 2px 2px;
+    --c-task-height: 22px;
+    --c-task-fg: #000000;
+    --c-task-bg: #c0c0c0;
+    --c-task-border: 0;
+    --c-task-radius: 0;
+    --c-task-shadow: var(--w98-raised);
+    --c-task-bg-on: var(--w98-dither);
+    --c-task-shadow-on: var(--w98-pressed);
+    --c-task-weight-on: 700;
+    --c-tray-bg: #c0c0c0;
+    --c-tray-shadow: var(--w98-status);
+
+    --c-scrollbar-thumb: #c0c0c0;
+    --c-scrollbar-track: #dfdfdf;
+    --c-desktop-label-selected-bg: #000080;
+    --c-desktop-label-selected-border: 1px dotted #ffff7f;
+    --c-desktop-icon-selected-filter: brightness(0.55) sepia(1) hue-rotate(185deg) saturate(5);
+    --c-modal-backdrop: transparent;
+    -webkit-font-smoothing: none;
+}
+
+/* ---------- Window chrome ---------- */
+
+html[data-theme="98"][data-layout]:not(#_) .window-title {
+    padding-left: 1px;
+}
+
+html[data-theme="98"][data-layout]:not(#_) .window-control,
+html[data-theme="98"][data-layout]:not(#_) .window-control:hover:not(:disabled) {
+    width: 16px;
+    height: 14px;
+    min-height: 14px;
+    background-color: #c0c0c0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: var(--w98-raised);
+}
+
+html[data-theme="98"][data-layout]:not(#_) .window-control:active:not(:disabled) {
+    box-shadow: var(--w98-pressed);
+    background-position: calc(50% + 1px) calc(50% + 1px);
+}
+
+html[data-theme="98"][data-layout]:not(#_) .window-control[data-window-control="minimize"] {
+    background-image: url("./icons/minimize.svg");
+    background-position: bottom 3px left 4px;
+}
+
+html[data-theme="98"][data-layout]:not(#_) .window-control[data-window-control="maximize"] {
+    background-image: url("./icons/maximize.svg");
+    background-position: top 2px left 3px;
+}
+
+html[data-theme="98"][data-layout]:not(#_) .window-control[data-window-control="restore"] {
+    background-image: url("./icons/restore.svg");
+    background-position: top 2px left 3px;
+}
+
+html[data-theme="98"][data-layout]:not(#_) .window-control[data-window-control="close"] {
+    margin-left: 2px;
+    background-image: url("./icons/close.svg");
+    background-position: top 3px left 4px;
+}
+
+/* ---------- Taskbar and start menu ---------- */
+
+html[data-theme="98"][data-layout]:not(#_) .start-button {
+    height: 22px;
+    padding: 0 5px 0 3px;
+    gap: 3px;
+    color: #000000;
+    background: #c0c0c0;
+    border: 0;
+    box-shadow: var(--w98-raised);
+    font-weight: 700;
+}
+
+html[data-theme="98"][data-layout]:not(#_) .start-button[aria-expanded="true"] {
+    box-shadow: var(--w98-pressed);
+    outline: 1px dotted #000000;
+    outline-offset: -4px;
+}
+
+html[data-theme="98"][data-layout]:not(#_) .start-button-icon {
+    width: 16px;
+    height: 16px;
+}
+
+html[data-theme="98"][data-layout]:not(#_) .taskbar-tasks {
+    margin-left: 2px;
+    padding-left: 6px;
+    box-shadow: inset 1px 0 #808080, inset 2px 0 #ffffff;
+}
+
+html[data-theme="98"][data-layout]:not(#_) .app-menu-banner {
+    width: 21px;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 6px;
+    color: #c0c0c0;
+    background: linear-gradient(0deg, #000080, #1084d0);
+}
+
+html[data-theme="98"][data-layout]:not(#_) .app-menu-banner span {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0;
+    color: #ffffff;
+}
+
+html[data-theme="98"][data-layout]:not(#_) .app-menu-banner b {
+    color: #c0c0c0;
+}
+
+html[data-theme="98"][data-layout]:not(#_) .app-menu-panel[data-placement="bottom"] .menu-item-button {
+    min-height: 30px;
+}
+
+/* ---------- Scrollbars ---------- */
+
+html[data-theme="98"][data-layout]:not(#_) ::-webkit-scrollbar {
+    width: 16px;
+    height: 16px;
+}
+
+html[data-theme="98"][data-layout]:not(#_) ::-webkit-scrollbar-corner {
+    background: #dfdfdf;
+}
+
+html[data-theme="98"][data-layout]:not(#_) ::-webkit-scrollbar-track {
+    background-image: url("./icons/scrollbar-background.svg");
+}
+
+html[data-theme="98"][data-layout]:not(#_) ::-webkit-scrollbar-thumb,
+html[data-theme="98"][data-layout]:not(#_) ::-webkit-scrollbar-thumb:hover {
+    background-color: #c0c0c0;
+    border-radius: 0;
+    box-shadow: var(--w98-raised);
+}
+
+html[data-theme="98"][data-layout]:not(#_) ::-webkit-scrollbar-button:vertical:start:decrement,
+html[data-theme="98"][data-layout]:not(#_) ::-webkit-scrollbar-button:vertical:end:increment,
+html[data-theme="98"][data-layout]:not(#_) ::-webkit-scrollbar-button:horizontal:start:decrement,
+html[data-theme="98"][data-layout]:not(#_) ::-webkit-scrollbar-button:horizontal:end:increment {
+    display: block;
+}
+
+html[data-theme="98"][data-layout]:not(#_) ::-webkit-scrollbar-button:vertical:start {
+    height: 16px;
+    background-image: url("./icons/button-up.svg");
+}
+
+html[data-theme="98"][data-layout]:not(#_) ::-webkit-scrollbar-button:vertical:end {
+    height: 16px;
+    background-image: url("./icons/button-down.svg");
+}
+
+html[data-theme="98"][data-layout]:not(#_) ::-webkit-scrollbar-button:horizontal:start {
+    width: 16px;
+    background-image: url("./icons/button-left.svg");
+}
+
+html[data-theme="98"][data-layout]:not(#_) ::-webkit-scrollbar-button:horizontal:end {
+    width: 16px;
+    background-image: url("./icons/button-right.svg");
+}
+
+/* ---------- Controls ---------- */
+
+html[data-theme="98"][data-layout]:not(#_) input[type="radio"] {
+    width: 12px;
+    height: 12px;
+    background: url("./icons/radio-border.svg") center / 12px 12px no-repeat;
+    box-shadow: none;
+}
+
+html[data-theme="98"][data-layout]:not(#_) input[type="radio"]:checked {
+    background:
+        url("./icons/radio-dot.svg") center / 4px 4px no-repeat,
+        url("./icons/radio-border.svg") center / 12px 12px no-repeat;
+}
+
+html[data-theme="98"][data-layout]:not(#_) input[type="checkbox"]:disabled:checked {
+    background-image: url("./icons/checkmark-disabled.svg");
+}
+
+html[data-theme="98"][data-layout]:not(#_) input[type="radio"]:disabled {
+    background-image: url("./icons/radio-border-disabled.svg");
+}
+
+/* ---------- Content ---------- */
+
+html[data-theme="98"][data-layout]:not(#_) .app-window-layout {
+    background: #c0c0c0;
+}
+
+html[data-theme="98"][data-layout]:not(#_) .app-window-layout > .window-content-area {
+    background: var(--detail-bg);
+    box-shadow: var(--w98-field);
+}
+
+html[data-theme="98"][data-layout]:not(#_) .app-window-layout.console-layout > .window-content-area,
+html[data-theme="98"][data-layout]:not(#_) .app-window-layout.config-window-layout > .window-content-area {
+    box-shadow: none;
+}
+
+html[data-theme="98"][data-layout]:not(#_) .console-layout,
+html[data-theme="98"][data-layout]:not(#_) .console-layout * {
+    font-family: var(--font-code);
+    font-size: 16px;
+    line-height: 1;
+}
+
+html[data-theme="98"][data-layout]:not(#_) .console-command-row {
+    box-shadow: none;
+}
+
+html[data-theme="98"][data-layout]:not(#_) .arena-file-card {
+    border: 0;
+    box-shadow: none;
+}
+
+html[data-theme="98"][data-layout]:not(#_) .arena-file-grid-preview {
+    background: #ffffff;
+    box-shadow: var(--w98-field);
+}
+
+html[data-theme="98"][data-layout]:not(#_) .arena-file-card-text {
+    border-top: 0;
+}
+
+html[data-theme="98"][data-layout]:not(#_) .calendar-panel svg {
+    color: #000000;
+}
+
+html[data-theme="98"][data-layout]:not(#_) .lok-reader-entry-list > .lok-reader-entry,
+html[data-theme="98"][data-layout]:not(#_) .lok-reader-entry-list > .lok-reader-entry + .lok-reader-entry {
+    border-color: #808080;
+}

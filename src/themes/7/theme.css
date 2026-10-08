@@ -1,0 +1,654 @@
+/*
+ * 7 theme. Aero values, caption glyphs, and control art follow 7.css
+ * (https://github.com/khang-nd/7.css, MIT, see ./LICENSE). Glass frames use
+ * backdrop blur, which falls back to tinted gradients when unsupported or when
+ * the visitor prefers reduced transparency.
+ *
+ * Scope: html[data-theme="7"][data-layout]:not(#_) outranks classic.css.
+ */
+
+html[data-theme="7"][data-layout]:not(#_) {
+    --w7-el-grad: linear-gradient(#f2f2f2 45%, #ebebeb 45%, #cfcfcf);
+    --w7-el-grad-h: linear-gradient(#eaf6fd 45%, #bee6fd 45%, #a7d9f5);
+    --w7-el-grad-a: linear-gradient(#e5f4fc, #c4e5f6 30% 50%, #98d1ef 50%, #68b3db);
+    --w7-glass: rgba(69, 128, 196, 0.62);
+    --w7-glass-inactive: rgba(165, 190, 220, 0.55);
+    --w7-glass-sheen: linear-gradient(transparent 20%, rgba(255, 255, 255, 0.55) 40%, transparent 41%), linear-gradient(to right, rgba(255, 255, 255, 0.4), rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.2));
+    --w7-caption: linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.3) 45%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.1) 75%, rgba(255, 255, 255, 0.5));
+    --w7-caption-hover: radial-gradient(circle at bottom, #2aceda, transparent 65%), linear-gradient(#b6d9ee 50%, #1a6ca1 50%);
+    --w7-caption-active: radial-gradient(circle at bottom, #0bfdfa, transparent 65%), linear-gradient(#86a7bc 50%, #092747 50%);
+    --w7-close: linear-gradient(rgba(224, 161, 151, 0.9), #cf796a 25% 50%, #d54f36 50%);
+    --w7-close-hover: radial-gradient(circle at 50% 170%, #f4e676 10% 20%, transparent 60%), linear-gradient(#fb9d8b, #ee6d56 25% 50%, #d42809 50%);
+    --w7-close-active: radial-gradient(circle at 50% 170%, #dcc03f 10% 20%, transparent 60%), linear-gradient(#d1a894, #b67562 25% 50%, #7d0d01 50%);
+    --w7-select: linear-gradient(#dcebfc, #c1dcfc);
+
+    --font-ui: "Segoe UI", "SegoeUI", system-ui, -apple-system, "Noto Sans", sans-serif;
+    --font-code: Consolas, "Cascadia Mono", "Lucida Console", monospace;
+    --retro-window: 0 0% 94%;
+    --background: 0 0% 94%;
+    --foreground: 0 0% 0%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
+    --popover: 0 0% 94%;
+    --popover-foreground: 0 0% 0%;
+    --primary: 210 60% 40%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 94%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 38%;
+    --accent: 213 85% 87%;
+    --accent-foreground: 0 0% 0%;
+    --border: 0 0% 56%;
+    --input: 225 5% 69%;
+    --ring: 207 51% 46%;
+    --header-bg: #f0f0f0;
+    --header-border: #8e8f8f;
+    --internal-border: #d5d5d5;
+    --internal-border-hover: #3c7fb1;
+    --block-bg: #ffffff;
+    --block-border: #8e8f8f;
+    --button-bg: #f2f2f2;
+    --button-hover: #e5f3fb;
+    --text-color: #000000;
+    --link-color: #0066cc;
+    --detail-bg: #ffffff;
+    --detail-border: #d5d5d5;
+    --detail-header-bg: #f0f0f0;
+    --detail-meta-bg: #f7f9fc;
+    --icon-color: #1e395b;
+    --focus-color: #000000;
+    --vis-public-color: #1f8a3a;
+    --vis-private-color: #c42b1c;
+    --loading-bg: #e6e6e6;
+    --loading-bar: #06b025;
+    --log-bg: #0c0c0c;
+    --log-text: #cccccc;
+    --log-muted: #767676;
+    --log-error: #e74856;
+    --log-warn: #f9f1a5;
+    --log-info: #61d6d6;
+    --log-prefix-default: #a0a0a0;
+    --log-prefix-cache: #16c60c;
+    --log-prefix-api: #61d6d6;
+    --log-prefix-app: #f9f1a5;
+    --log-prefix-session: #b4009e;
+    --log-prefix-registry: #e74856;
+    --selection-bg: #3399ff;
+    --selection-fg: #ffffff;
+    --desktop-bg: #0f62ae;
+    --desktop-pattern:
+        radial-gradient(ellipse 34% 22% at 70% 42%, rgba(255, 255, 255, 0.55), rgba(170, 225, 255, 0.25) 45%, transparent 75%),
+        conic-gradient(from 205deg at 70% 42%, transparent 0deg, rgba(150, 215, 255, 0.28) 18deg, transparent 36deg, rgba(110, 195, 255, 0.2) 70deg, transparent 95deg, rgba(160, 225, 255, 0.18) 140deg, transparent 170deg, transparent 360deg),
+        radial-gradient(ellipse 50% 30% at 18% 88%, rgba(80, 180, 255, 0.35), transparent 70%),
+        radial-gradient(ellipse 120% 95% at 68% 40%, #2d9be2 0%, #1576c6 30%, #0b4f8a 62%, #062e5a 100%);
+    --desktop-pattern-size: 100% 100%;
+    --desktop-label-color: #ffffff;
+    --desktop-label-edge: transparent;
+    --desktop-icon-drop-shadow: transparent;
+    --taskbar-height: 40px;
+    --media-stage-bg: #050b14;
+    --media-stage-fg: #7fd3ff;
+    --media-accent: #2b7bd0;
+
+    --c-face: #f0f0f0;
+    --c-font-size: 12px;
+    --c-text-xs: 11px;
+    --c-text-sm: 12px;
+    --c-text-base: 13px;
+    --c-title-size: 12px;
+    --c-title-weight: 400;
+    --c-title-text-shadow: 0 0 10px #ffffff, 0 0 10px #ffffff, 0 0 8px #ffffff, 0 0 6px #ffffff;
+    --c-title-text-shadow-inactive: 0 0 10px #ffffff, 0 0 8px #ffffff;
+    --c-placeholder: #6d6d6d;
+    --c-focus-outline: 1px dotted #000000;
+    --c-focus-offset: -4px;
+
+    --c-btn-fg: #000000;
+    --c-btn-bg: var(--w7-el-grad);
+    --c-btn-border: 1px solid #8e8f8f;
+    --c-btn-radius: 3px;
+    --c-btn-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.8);
+    --c-btn-bg-hover: var(--w7-el-grad-h);
+    --c-btn-border-hover: 1px solid #3c7fb1;
+    --c-btn-shadow-hover: inset 0 0 0 1px rgba(255, 255, 255, 0.8);
+    --c-btn-bg-active: var(--w7-el-grad-a);
+    --c-btn-border-active: 1px solid #6d91ab;
+    --c-btn-shadow-active: inset 1px 1px 0 rgba(0, 0, 0, 0.2), inset -1px 1px 0 rgba(0, 0, 0, 0.07);
+    --c-btn-bg-on: var(--w7-el-grad-a);
+    --c-btn-border-on: 1px solid #6d91ab;
+    --c-btn-shadow-on: inset 1px 1px 0 rgba(0, 0, 0, 0.2), inset -1px 1px 0 rgba(0, 0, 0, 0.07);
+    --c-btn-border-default: 1px solid #5586a3;
+    --c-btn-shadow-default: inset 0 0 1px 1px rgba(52, 222, 255, 0.85);
+    --c-btn-fg-disabled: #838383;
+    --c-btn-bg-disabled: #f4f4f4;
+    --c-btn-border-disabled: 1px solid #adb2b5;
+    --c-btn-shadow-disabled: none;
+    --c-joined-gap: 3px;
+
+    --c-field-fg: #000000;
+    --c-field-bg: #ffffff;
+    --c-field-border: 1px solid #abadb3;
+    --c-field-radius: 2px;
+    --c-field-shadow: none;
+    --c-field-height: 23px;
+    --c-field-bg-disabled: #f4f4f4;
+    --c-select-arrow: url("./icons/select-arrow.svg"), var(--w7-el-grad);
+    --c-select-arrow-position: right 2px center, 0 0;
+    --c-select-arrow-size: 16px 17px, 100% 100%;
+    --c-readout-bg: #ffffff;
+    --c-readout-border: 1px solid #abadb3;
+    --c-readout-shadow: none;
+
+    --c-check-bg: #f6f6f6;
+    --c-check-border: 1px solid #8e8f8f;
+    --c-check-shadow: inset 0 0 0 1px #f4f4f4, inset 1px 1px 0 1px #aeaeae, inset -1px -1px 0 1px #dddddd, inset 3px 3px 6px #cccccc;
+    --c-check-shadow-hover: inset 0 0 0 1px #def9fa, inset 1px 1px 0 1px #79c6f9, inset -1px -1px 0 1px #c6e9fc, inset 3px 3px 6px #b1dffd;
+    --c-check-mark: url("./icons/checkmark.svg");
+    --c-radio-dot: radial-gradient(circle at 50% 50%, #a6e5f6 0, #4bb5dd 2px, #1d6c96 3.4px, transparent 4px);
+    --c-track-bg: #f0f0f0;
+    --c-track-height: 3px;
+    --c-track-shadow: inset 1px 1px 1px #999999, inset -1px 0 #999999, 0 1px #ffffff;
+    --c-thumb-width: 10px;
+    --c-thumb-height: 18px;
+    --c-thumb-image: url("./icons/slider-thumb.png");
+    --c-thumb-image-hover: url("./icons/slider-thumb-hover.png");
+
+    --c-window-bg: var(--w7-glass-sheen), var(--w7-glass);
+    --c-window-border: 1px solid rgba(0, 0, 0, 0.7);
+    --c-window-radius: 6px;
+    --c-window-padding: 0 7px 7px;
+    --c-window-shadow: 2px 2px 10px 1px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.67);
+    --c-client-bg: #ffffff;
+    --c-client-border: 1px solid rgba(0, 0, 0, 0.7);
+    --c-title-height: 29px;
+    --c-title-padding: 0 0 0 1px;
+    --c-title-radius: 0;
+    --c-title-fg: #000000;
+    --c-title-bg: transparent;
+    --c-title-fg-inactive: #3d3d3d;
+    --c-title-bg-inactive: transparent;
+    --c-controls-gap: 0px;
+
+    --c-menu-bg: #f0f0f0;
+    --c-menu-border: 1px solid #979797;
+    --c-menu-radius: 0;
+    --c-menu-padding: 2px;
+    --c-menu-shadow: 4px 4px 3px -2px rgba(0, 0, 0, 0.5);
+    --c-menu-divider: 1px solid #e0e0e0;
+    --c-menu-divider-light: 1px solid #ffffff;
+    --c-hl-bg: var(--w7-select);
+    --c-hl-fg: #000000;
+    --c-hl-border: 1px solid #7da2ce;
+    --c-hl-radius: 3px;
+    --c-hover-bg: linear-gradient(#fafbfd, #ebf3fd);
+    --c-hover-border: 1px solid #b8d6fb;
+
+    --c-toolbar-bg: linear-gradient(#ffffff, #f6f8fc 40%, #e9eef6 100%);
+    --c-toolbar-border: 1px solid #c5d3e2;
+    --c-toolbar-shadow: none;
+    --c-status-bg: linear-gradient(#f5f8fc, #e8edf5);
+    --c-status-shadow: inset 0 1px #d6dbe5;
+    --c-status-padding: 0;
+    --c-tab-bg: var(--w7-el-grad);
+    --c-tab-bg-hover: var(--w7-el-grad-h);
+    --c-tab-bg-on: #ffffff;
+    --c-tab-border: 1px solid #898c95;
+    --c-tab-radius: 2px 2px 0 0;
+    --c-tab-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.8);
+    --c-tab-shadow-on: none;
+    --c-tab-panel-border: 1px solid #898c95;
+    --c-group-border: 1px solid #d5dfe5;
+    --c-group-radius: 3px;
+    --c-group-title-fg: #1e3287;
+    --c-list-bg: #ffffff;
+    --c-list-shadow: none;
+    --c-header-bg: linear-gradient(#ffffff, #f7f8fa);
+    --c-header-bg-hover: linear-gradient(#f3f8fd, #e3f1fb);
+    --c-header-border: 0;
+    --c-header-shadow: inset -1px 0 #e3e5e8, inset 0 -1px #d5d5d5;
+    --c-header-shadow-active: inset -1px 0 #c0dcf3, inset 0 -1px #a6c7e3;
+
+    --c-taskbar-bg: linear-gradient(rgba(42, 72, 110, 0.72), rgba(14, 28, 48, 0.88));
+    --c-taskbar-border-top: 1px solid rgba(255, 255, 255, 0.32);
+    --c-taskbar-shadow: inset 0 1px rgba(255, 255, 255, 0.12);
+    --c-taskbar-padding: 0 0 0 4px;
+    --c-taskbar-fg: #ffffff;
+    --c-task-height: 36px;
+    --c-task-gap: 2px;
+    --c-task-fg: #ffffff;
+    --c-task-bg: linear-gradient(rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.05) 50%, rgba(0, 0, 0, 0.12) 50%, rgba(255, 255, 255, 0.08));
+    --c-task-border: 1px solid rgba(0, 0, 0, 0.55);
+    --c-task-radius: 3px;
+    --c-task-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+    --c-task-bg-hover: radial-gradient(ellipse at 50% 120%, rgba(120, 200, 255, 0.55), transparent 70%), linear-gradient(rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.1) 50%, rgba(0, 0, 0, 0.08) 50%, rgba(255, 255, 255, 0.12));
+    --c-task-bg-on: radial-gradient(ellipse at 50% 120%, rgba(150, 215, 255, 0.6), transparent 70%), linear-gradient(rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0.16) 50%, rgba(0, 0, 0, 0.04) 50%, rgba(255, 255, 255, 0.18));
+    --c-task-border-on: 1px solid rgba(0, 0, 0, 0.7);
+    --c-task-shadow-on: inset 0 0 0 1px rgba(255, 255, 255, 0.45), inset 0 0 6px rgba(160, 220, 255, 0.5);
+    --c-tray-height: 100%;
+    --c-tray-fg: #ffffff;
+    --c-tray-bg: linear-gradient(rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0));
+    --c-tray-border: 0;
+    --c-tray-shadow: inset 1px 0 rgba(0, 0, 0, 0.35), inset 2px 0 rgba(255, 255, 255, 0.12);
+    --c-tray-date-display: block;
+
+    --c-scrollbar-thumb: #cfcfcf;
+    --c-scrollbar-track: #f0f0f0;
+    --c-desktop-label-shadow: 0 1px 2px rgba(0, 0, 0, 0.95), 0 0 4px rgba(0, 0, 0, 0.6);
+    --c-desktop-label-selected-bg: linear-gradient(rgba(220, 235, 252, 0.42), rgba(193, 220, 252, 0.42));
+    --c-desktop-label-selected-border: 1px solid rgba(255, 255, 255, 0.65);
+    --c-modal-backdrop: rgba(0, 0, 0, 0.18);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- Glass windows ---------- */
+
+html[data-theme="7"][data-layout]:not(#_) .window-surface {
+    -webkit-backdrop-filter: blur(7px) saturate(1.25);
+    backdrop-filter: blur(7px) saturate(1.25);
+}
+
+html[data-theme="7"][data-layout]:not(#_) .window-surface[data-window-surface-id]:not([data-active]) {
+    background: var(--w7-glass-sheen), var(--w7-glass-inactive);
+    box-shadow: 1px 1px 6px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+}
+
+html[data-theme="7"][data-layout]:not(#_) .window-surface > .window-content-area,
+html[data-theme="7"][data-layout]:not(#_) .window-surface > .flex-1,
+html[data-theme="7"][data-layout]:not(#_) .window-surface > .oobe-layout {
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.6);
+}
+
+html[data-theme="7"][data-layout]:not(#_) .window-surface > .oobe-layout {
+    border: 1px solid rgba(0, 0, 0, 0.7);
+    background: #ffffff;
+}
+
+html[data-theme="7"][data-layout]:not(#_) .oobe-window > .oobe-footer {
+    margin-top: 0;
+    border: 1px solid rgba(0, 0, 0, 0.7);
+    border-top: 0;
+}
+
+html[data-theme="7"][data-layout]:not(#_) .window-titlebar {
+    align-items: flex-start;
+}
+
+html[data-theme="7"][data-layout]:not(#_) .window-menu-button,
+html[data-theme="7"][data-layout]:not(#_) .window-title {
+    align-self: center;
+}
+
+html[data-theme="7"][data-layout]:not(#_) .window-controls {
+    align-self: flex-start;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(0, 0, 0, 0.45);
+    border-top: 0;
+    border-radius: 0 0 5px 5px;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.67), 1px 0 0 rgba(255, 255, 255, 0.67), -1px 0 0 rgba(255, 255, 255, 0.67);
+}
+
+html[data-theme="7"][data-layout]:not(#_) .window-control,
+html[data-theme="7"][data-layout]:not(#_) .window-control:hover:not(:disabled),
+html[data-theme="7"][data-layout]:not(#_) .window-control:active:not(:disabled) {
+    width: 27px;
+    height: 19px;
+    min-height: 19px;
+    border: 0;
+    border-right: 1px solid rgba(0, 0, 0, 0.45);
+    border-radius: 0;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.67);
+    background-image: var(--w7-caption-glyph), var(--w7-caption);
+    background-position: center, 0 0;
+    background-size: auto, 100% 100%;
+    background-repeat: no-repeat;
+    transition: background 0.2s linear, box-shadow 0.2s linear;
+}
+
+html[data-theme="7"][data-layout]:not(#_) .window-control:hover:not(:disabled) {
+    background-image: var(--w7-caption-glyph), var(--w7-caption-hover);
+    box-shadow: 0 0 7px 3px rgba(93, 196, 240, 0.85), inset 0 0 0 1px rgba(255, 255, 255, 0.67);
+}
+
+html[data-theme="7"][data-layout]:not(#_) .window-control:active:not(:disabled) {
+    background-image: var(--w7-caption-glyph), var(--w7-caption-active);
+}
+
+html[data-theme="7"][data-layout]:not(#_) .window-control[data-window-control="minimize"] {
+    --w7-caption-glyph: url("./icons/minimize.png");
+    background-position: center 10px, 0 0;
+}
+
+html[data-theme="7"][data-layout]:not(#_) .window-control[data-window-control="maximize"] {
+    --w7-caption-glyph: url("./icons/maximize.png");
+}
+
+html[data-theme="7"][data-layout]:not(#_) .window-control[data-window-control="restore"] {
+    --w7-caption-glyph: url("./icons/restore.png");
+}
+
+html[data-theme="7"][data-layout]:not(#_) .window-control[data-window-control="close"],
+html[data-theme="7"][data-layout]:not(#_) .window-control[data-window-control="close"]:hover:not(:disabled),
+html[data-theme="7"][data-layout]:not(#_) .window-control[data-window-control="close"]:active:not(:disabled) {
+    --w7-caption-glyph: url("./icons/close.png");
+    width: 46px;
+    border-right: 0;
+    background-image: var(--w7-caption-glyph), var(--w7-caption), var(--w7-close);
+    background-size: auto, 100% 100%, 100% 100%;
+}
+
+html[data-theme="7"][data-layout]:not(#_) .window-control[data-window-control="close"]:hover:not(:disabled) {
+    background-image: var(--w7-caption-glyph), var(--w7-close-hover);
+    background-size: auto, 100% 100%;
+    box-shadow: 0 0 7px 3px rgba(230, 142, 117, 0.9), inset 0 0 0 1px rgba(255, 255, 255, 0.67);
+}
+
+html[data-theme="7"][data-layout]:not(#_) .window-control[data-window-control="close"]:active:not(:disabled) {
+    background-image: var(--w7-caption-glyph), var(--w7-close-active);
+    background-size: auto, 100% 100%;
+}
+
+/* Inactive windows dim their caption strip; the close button loses its red. */
+html[data-theme="7"][data-layout]:not(#_) .window-surface[data-window-surface-id]:not([data-active]) .window-control[data-window-control="close"]:not(:hover) {
+    background-image: var(--w7-caption-glyph), var(--w7-caption);
+    background-size: auto, 100% 100%;
+}
+
+html[data-theme="7"][data-layout]:not(#_) .window-transition-ghost {
+    background: var(--w7-glass-sheen), var(--w7-glass);
+}
+
+/* ---------- Taskbar and start orb ---------- */
+
+html[data-theme="7"][data-layout]:not(#_) .taskbar {
+    -webkit-backdrop-filter: blur(10px) saturate(1.4);
+    backdrop-filter: blur(10px) saturate(1.4);
+}
+
+html[data-theme="7"][data-layout]:not(#_) .start-button,
+html[data-theme="7"][data-layout]:not(#_) .start-button:hover {
+    width: 40px;
+    height: 38px;
+    padding: 0;
+    margin-right: 6px;
+    background:
+        radial-gradient(ellipse 70% 40% at 50% 22%, rgba(255, 255, 255, 0.75), transparent 70%),
+        radial-gradient(circle at 50% 115%, rgba(140, 225, 255, 0.95) 0 22%, transparent 60%),
+        radial-gradient(circle at 50% 50%, #3a9be6 0 40%, #11559f 68%, #062a5c 100%);
+    border: 1px solid rgba(0, 0, 0, 0.65);
+    border-radius: 50%;
+    box-shadow: 0 0 6px rgba(120, 200, 255, 0.55), inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+
+html[data-theme="7"][data-layout]:not(#_) .start-button:hover,
+html[data-theme="7"][data-layout]:not(#_) .start-button[aria-expanded="true"] {
+    box-shadow: 0 0 12px 3px rgba(130, 215, 255, 0.85), inset 0 0 0 1px rgba(255, 255, 255, 0.55);
+    filter: brightness(1.15);
+}
+
+html[data-theme="7"][data-layout]:not(#_) .start-button-icon {
+    width: 22px;
+    height: 22px;
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.6));
+}
+
+html[data-theme="7"][data-layout]:not(#_) .taskbar-button {
+    width: 168px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+
+html[data-theme="7"][data-layout]:not(#_) .taskbar-button > img {
+    width: 22px;
+    height: 22px;
+}
+
+html[data-theme="7"][data-layout]:not(#_) .taskbar-clock {
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 10px;
+    line-height: 1.25;
+    text-align: center;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+
+html[data-theme="7"][data-layout]:not(#_) .taskbar-tray {
+    padding: 0 4px;
+}
+
+html[data-theme="7"][data-layout]:not(#_) .app-menu-panel[data-placement="bottom"] {
+    flex-direction: column;
+    width: 280px;
+    padding: 6px;
+    overflow: visible;
+    background: linear-gradient(rgba(40, 70, 105, 0.82), rgba(18, 34, 56, 0.9));
+    border: 1px solid rgba(0, 0, 0, 0.75);
+    border-radius: 6px;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35) inset, 3px 3px 12px rgba(0, 0, 0, 0.6);
+    -webkit-backdrop-filter: blur(10px) saturate(1.4);
+    backdrop-filter: blur(10px) saturate(1.4);
+}
+
+html[data-theme="7"][data-layout]:not(#_) .app-menu-banner {
+    order: 2;
+    height: 34px;
+    align-items: center;
+    gap: 8px;
+    padding: 0 8px;
+    color: #ffffff;
+    font-size: 13px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+
+html[data-theme="7"][data-layout]:not(#_) .app-menu-banner::before {
+    content: "";
+    width: 26px;
+    height: 26px;
+    flex: 0 0 auto;
+    background: #ffffff url("/favicon-96x96.png") center / cover no-repeat;
+    border: 2px solid rgba(255, 255, 255, 0.85);
+    border-radius: 3px;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
+}
+
+html[data-theme="7"][data-layout]:not(#_) .app-menu-banner b {
+    font-weight: 400;
+    opacity: 0.8;
+}
+
+html[data-theme="7"][data-layout]:not(#_) .app-menu-panel[data-placement="bottom"] .app-menu-items {
+    padding: 4px;
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.55);
+    border-radius: 3px;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.45);
+}
+
+html[data-theme="7"][data-layout]:not(#_) .app-menu-panel[data-placement="bottom"] .menu-item-button {
+    min-height: 32px;
+}
+
+html[data-theme="7"][data-layout]:not(#_) .menu-surface:not(.app-menu-panel)::before {
+    content: "";
+    position: absolute;
+    top: 2px;
+    bottom: 2px;
+    left: 28px;
+    width: 2px;
+    box-shadow: inset 1px 0 rgba(0, 0, 0, 0.15), inset -1px 0 #ffffff;
+    pointer-events: none;
+}
+
+html[data-theme="7"][data-layout]:not(#_) .menu-surface.calendar-panel::before {
+    content: none;
+}
+
+html[data-theme="7"][data-layout]:not(#_) .menu-item-button {
+    padding-left: 6px;
+}
+
+/* ---------- Scrollbars ---------- */
+
+html[data-theme="7"][data-layout]:not(#_) ::-webkit-scrollbar {
+    width: 17px;
+    height: 17px;
+}
+
+html[data-theme="7"][data-layout]:not(#_) ::-webkit-scrollbar-corner {
+    background: #f2f2f2;
+}
+
+html[data-theme="7"][data-layout]:not(#_) ::-webkit-scrollbar-track:vertical {
+    background: linear-gradient(to right, #e5e5e5, #f0f0f0 20%);
+}
+
+html[data-theme="7"][data-layout]:not(#_) ::-webkit-scrollbar-track:horizontal {
+    background: linear-gradient(to bottom, #e5e5e5, #f0f0f0 20%);
+}
+
+html[data-theme="7"][data-layout]:not(#_) ::-webkit-scrollbar-thumb {
+    border: 1px solid #8e8f8f;
+    border-radius: 3px;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.8);
+}
+
+html[data-theme="7"][data-layout]:not(#_) ::-webkit-scrollbar-thumb:vertical {
+    background: url("./icons/scroll-thumb-v.png") no-repeat 50%, linear-gradient(to right, #f2f2f2 45%, #ebebeb 45%, #cfcfcf);
+}
+
+html[data-theme="7"][data-layout]:not(#_) ::-webkit-scrollbar-thumb:horizontal {
+    background: url("./icons/scroll-thumb-h.png") no-repeat 50%, linear-gradient(to bottom, #f2f2f2 45%, #ebebeb 45%, #cfcfcf);
+}
+
+html[data-theme="7"][data-layout]:not(#_) ::-webkit-scrollbar-thumb:hover:vertical {
+    background: url("./icons/scroll-thumb-v.png") no-repeat 50%, linear-gradient(to right, #eaf6fd 45%, #bee6fd 45%);
+    border-color: #3c7fb1;
+}
+
+html[data-theme="7"][data-layout]:not(#_) ::-webkit-scrollbar-thumb:hover:horizontal {
+    background: url("./icons/scroll-thumb-h.png") no-repeat 50%, linear-gradient(to bottom, #eaf6fd 45%, #bee6fd 45%);
+    border-color: #3c7fb1;
+}
+
+html[data-theme="7"][data-layout]:not(#_) ::-webkit-scrollbar-button:vertical:start:decrement,
+html[data-theme="7"][data-layout]:not(#_) ::-webkit-scrollbar-button:vertical:end:increment,
+html[data-theme="7"][data-layout]:not(#_) ::-webkit-scrollbar-button:horizontal:start:decrement,
+html[data-theme="7"][data-layout]:not(#_) ::-webkit-scrollbar-button:horizontal:end:increment {
+    display: block;
+}
+
+html[data-theme="7"][data-layout]:not(#_) ::-webkit-scrollbar-button:vertical {
+    height: 17px;
+}
+
+html[data-theme="7"][data-layout]:not(#_) ::-webkit-scrollbar-button:horizontal {
+    width: 17px;
+}
+
+html[data-theme="7"][data-layout]:not(#_) ::-webkit-scrollbar-button:vertical:start {
+    background: url("./icons/scroll-up.svg") center no-repeat, linear-gradient(to right, #e5e5e5, #f0f0f0 20%);
+}
+
+html[data-theme="7"][data-layout]:not(#_) ::-webkit-scrollbar-button:vertical:end {
+    background: url("./icons/scroll-down.svg") center no-repeat, linear-gradient(to right, #e5e5e5, #f0f0f0 20%);
+}
+
+html[data-theme="7"][data-layout]:not(#_) ::-webkit-scrollbar-button:horizontal:start {
+    background: url("./icons/scroll-left.svg") center no-repeat, linear-gradient(to bottom, #e5e5e5, #f0f0f0 20%);
+}
+
+html[data-theme="7"][data-layout]:not(#_) ::-webkit-scrollbar-button:horizontal:end {
+    background: url("./icons/scroll-right.svg") center no-repeat, linear-gradient(to bottom, #e5e5e5, #f0f0f0 20%);
+}
+
+/* ---------- Controls ---------- */
+
+html[data-theme="7"][data-layout]:not(#_) input[type="checkbox"]:checked {
+    background-size: 10px 10px;
+}
+
+html[data-theme="7"][data-layout]:not(#_) input[type="checkbox"],
+html[data-theme="7"][data-layout]:not(#_) input[type="radio"] {
+    width: 14px;
+    height: 14px;
+}
+
+html[data-theme="7"][data-layout]:not(#_) :where(.search-input, input.arena-toolbar-control):hover:not(:disabled) {
+    border-color: #5794bf #b7d5ea #c7e2f1 #c5daed;
+}
+
+html[data-theme="7"][data-layout]:not(#_) :where(.search-input, input.arena-toolbar-control):focus {
+    border-color: #3d7bad #a4c9e3 #b7d9ed #b5cfe7;
+}
+
+html[data-theme="7"][data-layout]:not(#_) select.arena-toolbar-control:hover:not(:disabled) {
+    background-image: url("./icons/select-arrow.svg"), var(--w7-el-grad-h);
+    border-color: #3c7fb1;
+}
+
+/* ---------- Content ---------- */
+
+html[data-theme="7"][data-layout]:not(#_) .app-window-layout {
+    background: #ffffff;
+}
+
+html[data-theme="7"][data-layout]:not(#_) .console-layout,
+html[data-theme="7"][data-layout]:not(#_) .console-layout * {
+    font-family: var(--font-code);
+    font-size: 13px;
+}
+
+html[data-theme="7"][data-layout]:not(#_) .config-sidebar {
+    background: linear-gradient(#f1f5fb, #e3ebf6);
+    border: 1px solid #c5d3e2;
+}
+
+html[data-theme="7"][data-layout]:not(#_) .config-content,
+html[data-theme="7"][data-layout]:not(#_) .config-section-title {
+    background: #ffffff;
+}
+
+html[data-theme="7"][data-layout]:not(#_) .config-layout {
+    background: #ffffff;
+}
+
+html[data-theme="7"][data-layout]:not(#_) .arena-file-card {
+    border-color: #e5e5e5;
+    border-radius: 3px;
+}
+
+html[data-theme="7"][data-layout]:not(#_) .arena-file-card:hover {
+    background: var(--c-hover-bg);
+    border-color: #b8d6fb;
+}
+
+html[data-theme="7"][data-layout]:not(#_) .arena-file-card[data-selected="true"] {
+    outline: 0;
+    border-color: #7da2ce;
+    background: var(--w7-select);
+}
+
+html[data-theme="7"][data-layout]:not(#_) .arena-file-card[data-selected="true"] .arena-file-card-text {
+    background: transparent;
+}
+
+html[data-theme="7"][data-layout]:not(#_) .lok-reader-entry-list > .lok-reader-entry,
+html[data-theme="7"][data-layout]:not(#_) .lok-reader-entry-list > .lok-reader-entry + .lok-reader-entry {
+    border-color: #e5e5e5;
+    border-radius: 3px;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+    html[data-theme="7"][data-layout]:not(#_) .window-surface,
+    html[data-theme="7"][data-layout]:not(#_) .taskbar,
+    html[data-theme="7"][data-layout]:not(#_) .app-menu-panel[data-placement="bottom"] {
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+    }
+
+    html[data-theme="7"][data-layout]:not(#_) {
+        --w7-glass: #4580c4;
+        --w7-glass-inactive: #a5bedc;
+        --c-taskbar-bg: linear-gradient(#2a486e, #0e1c30);
+    }
+}

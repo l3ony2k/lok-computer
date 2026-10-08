@@ -1,4 +1,5 @@
 import { Agent, CredentialSession } from '@atproto/api'; // Standard npm import
+import { JevError, planQuestions, runJevRequest } from './jev.js';
 
 /**
  * Available Environment Variables:
@@ -10,6 +11,12 @@ import { Agent, CredentialSession } from '@atproto/api'; // Standard npm import
  * - AI_TEMPERATURE: Temperature setting for response generation (0.0 to 1.0)
  * - AI_SYSTEM_INSTRUCTION: System instruction to set AI behavior and context
  * 
+ * Ask AI (Jev) Configuration:
+ * - TYPESAFE_API_KEY: TypeSafe API key for the Jev decision model
+ * - JEV_MODEL: Jev model or alias (default: jev-latest)
+ * - JEV_RATE_LIMITER: rate limiting binding for both Ask AI endpoints (wrangler.toml)
+ * - JEV_PLANNER_MODEL: Fast planner model on AI_BASE_URL (default: AI_MODEL)
+ *
  * Bluesky Configuration:
  * - BSKY_HANDLE: Bluesky account handle
  * - BSKY_APP_PASSWORD: Bluesky app-specific password
@@ -45,6 +52,31 @@ function makeJsonResponse(body, status = 200) {
     }
   });
 }
+
+const readJsonBody = async (request) => {
+  try {
+    return await request.json();
+  } catch {
+    throw new JevError('Request body must be JSON.', 400);
+  }
+};
+
+// Every Ask AI call spends planner and Jev credits, so each client IP gets a budget.
+const checkJevRateLimit = async (request, env) => {
+  if (!env.JEV_RATE_LIMITER) return;
+  const key = request.headers.get('CF-Connecting-IP') ?? 'anonymous';
+  const { success } = await env.JEV_RATE_LIMITER.limit({ key });
+  if (!success) throw new JevError('Too many requests. Try again in a minute.', 429);
+};
+
+const makeJevErrorResponse = (error) => {
+  if (error instanceof JevError) {
+    if (error.details) console.error('Jev upstream detail:', error.details);
+    return makeJsonResponse({ error: error.message, ...(error.code ? { code: error.code } : {}) }, error.status);
+  }
+  console.error('Error in Jev endpoint:', error);
+  return makeJsonResponse({ error: 'Internal server error' }, 500);
+};
 
 function makeMethodNotAllowedResponse(allow) {
   const response = makeJsonResponse({ error: 'Method not allowed' }, 405);
@@ -110,6 +142,40 @@ export default {
         service: 'lok.computer public API',
         status: 'ok',
       });
+    }
+
+    // Ask AI: plan typed questions with a fast LLM, without calling Jev.
+    if (url.pathname === '/api/jev/plan') {
+      if (request.method !== 'POST') {
+        return makeMethodNotAllowedResponse('POST');
+      }
+      try {
+        await checkJevRateLimit(request, env);
+        const started = Date.now();
+        const body = await readJsonBody(request);
+        const { plan, plannerModel } = await planQuestions(body ?? {}, env);
+        return makeJsonResponse({
+          plan,
+          planner: plannerModel ? { model: plannerModel } : null,
+          timing: { plannerMs: Date.now() - started },
+        });
+      } catch (error) {
+        return makeJevErrorResponse(error);
+      }
+    }
+
+    // Ask AI: answer a prompt (or a supplied plan) with Jev and form the requested properties.
+    if (url.pathname === '/api/jev') {
+      if (request.method !== 'POST') {
+        return makeMethodNotAllowedResponse('POST');
+      }
+      try {
+        await checkJevRateLimit(request, env);
+        const body = await readJsonBody(request);
+        return makeJsonResponse(await runJevRequest(body ?? {}, env));
+      } catch (error) {
+        return makeJevErrorResponse(error);
+      }
     }
 
     // Route for AI chat

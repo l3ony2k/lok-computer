@@ -1,4 +1,5 @@
 import React, { CSSProperties, useEffect, useState, useLayoutEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { CustomIcon } from '@/components/window/CustomIcon';
 import { ChevronRight } from 'lucide-react';
 
@@ -9,9 +10,13 @@ export interface AppMenuItem {
   subItems?: AppMenuItem[];
 }
 
+/** `top` drops from the top bar; `bottom` rises from the taskbar as a start menu. */
+export type MenuPlacement = 'top' | 'bottom';
+
 interface AppMenuProps {
   items: AppMenuItem[];
   isOpen: boolean;
+  placement?: MenuPlacement;
   onClose: () => void;
 }
 
@@ -127,6 +132,7 @@ const MenuItem: React.FC<{ item: AppMenuItem; onClose: () => void }> = ({ item, 
 export const AppMenu: React.FC<AppMenuProps> = ({
   items,
   isOpen,
+  placement = 'top',
   onClose
 }) => {
   if (!isOpen) return null;
@@ -138,7 +144,8 @@ export const AppMenu: React.FC<AppMenuProps> = ({
     }
   };
 
-  return (
+  // Portaled so the taskbar's stacking context cannot trap the menu below windows.
+  return createPortal(
     <>
       <style>
         {`
@@ -155,12 +162,20 @@ export const AppMenu: React.FC<AppMenuProps> = ({
         className="fixed inset-0 z-[10000]"
         onClick={handleOutsideClick}
       >
-        <div className="menu-surface absolute top-[43px] left-[10px] min-w-[200px] select-none" role="menu">
-          {items.map((item) => (
-            <MenuItem key={item.name} item={item} onClose={onClose} />
-          ))}
+        <div className="menu-surface app-menu-panel min-w-[200px] select-none" data-placement={placement} role="menu">
+          {placement === 'bottom' && (
+            <div className="app-menu-banner" aria-hidden="true">
+              <span>lok<b>.computer</b></span>
+            </div>
+          )}
+          <div className="app-menu-items">
+            {items.map((item) => (
+              <MenuItem key={item.name} item={item} onClose={onClose} />
+            ))}
+          </div>
         </div>
       </div>
-    </>
+    </>,
+    document.body,
   );
 };

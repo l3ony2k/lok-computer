@@ -5,6 +5,7 @@ import { WindowContainer, Taskbar } from "@/components/WindowManager";
 import { DesktopIcons } from "@/components/desktop/DesktopIcons";
 import { TopBar } from "./TopBar";
 import { useUserSettings } from "@/hooks/useUserSettings";
+import { useTheme } from "@/hooks/useTheme";
 import { adjustWindowToViewport, type WindowDimensions, type ViewportDimensions } from "@/lib/utils";
 import { WINDOW_DEFAULTS } from "@/config/window";
 import { Oneko } from "@/components/oneko/Oneko";
@@ -15,6 +16,8 @@ export const Desktop = () => {
     const { windows } = useWindowState();
     const { updateWindowPosition, updateWindowDimensions } = useWindowActions();
     const { settings, updateSetting, isLoading } = useUserSettings();
+    const { definition } = useTheme();
+    const isClassicLayout = definition.layout === 'classic';
 
     // The legacy prompt flag migrates existing users past the new first-run flow.
     const showOobe = !isLoading && !settings.oobe?.completed && !settings.oneko?.hasBeenAsked;
@@ -118,20 +121,21 @@ export const Desktop = () => {
         return () => window.removeEventListener('resize', fitWindowsToViewport);
     }, [fitWindowsToViewport]);
 
+    // The desktop area changes size when a theme moves the top bar into the taskbar.
     useEffect(() => {
         fitWindowsToViewport();
-    }, [fitWindowsToViewport, windowIdentity]);
+    }, [fitWindowsToViewport, windowIdentity, definition.layout]);
 
     return (
         <div className="h-screen w-screen flex flex-col">
-            <TopBar />
+            {!isClassicLayout && <TopBar />}
 
             <div ref={desktopContainerRef} className={`desktop-container relative overflow-hidden ${settings.wallpaper ? 'has-wallpaper' : ''}`}>
                 <WindowContainer />
                 <DesktopIcons />
             </div>
 
-            <Taskbar />
+            <Taskbar layout={definition.layout} />
 
             {/* Oneko cat */}
             <Oneko />

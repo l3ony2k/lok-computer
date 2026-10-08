@@ -87,6 +87,9 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 *   [x] Develop `Link Web` app module (visualizing links/connections).
 *   [x] Develop `Browser` app module (basic iframe-based browser).
 *   [x] Develop `Talk to AI` app module (chat interface with dummy responses).
+*   [x] Rebuild `Talk to AI` as `Ask AI` on TypeSafe's Jev decision model: a fast LLM plans typed questions, Jev answers, and the result is JSON keyed by the requested properties.
+*   [x] Develop `Media` app module (audio and video player with playlist, spectrum analyzer, Media Session controls, and hand-off from Are.na and the fediverse reader).
+*   [x] Add desktop themes: `lok`, plus `98`, `XP`, and `7` after 98.css, XP.css, and 7.css, with a classic taskbar layout.
 
 ### Phase 4: Persistence & Polish
 
@@ -98,6 +101,13 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 *   [ ] Configure deployment (e.g., using Netlify, Vercel).
 
 ## Development Log
+
+### Session: Themes, Media player, and Ask AI on Jev (2026-10-08)
+
+*   Replaced `next-themes` with an in-house theme engine (`src/lib/theme.ts`, `src/hooks/useTheme.tsx`). The preference is applied before first paint, classic themes load lazily, and `?theme=98` on any URL shares a theme.
+*   Added the classic desktop layout: start button, task list, and tray clock in the taskbar for 98, XP, and 7.
+*   Added the Media app (`src/apps/media/`) with a public-domain and Creative Commons starter library. The Console's `play <url>` command sends a URL to it.
+*   Rebuilt Ask AI (`src/apps/ask-ai/`, `jev.js`, `/api/jev/plan`, `/api/jev`). Both endpoints are rate limited per client IP through the `JEV_RATE_LIMITER` binding.
 
 ### Session: Bsky Posts App - Date Formatting & Image Viewer (Current Date - Please fill in)
 

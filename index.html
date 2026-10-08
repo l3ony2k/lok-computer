@@ -5,6 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#f0f0f0" />
     <script>window.__SYSTEM_VERSION__ = "%SYSTEM_VERSION%";</script>
+    <!-- Pre-paint theme resolution; mirrors src/lib/theme.ts (enforced by theme.test.ts). -->
+    <script>
+      (function () {
+        try {
+          var themes = { "lok": "lok", "98": "classic", "xp": "classic", "7": "classic" };
+          var darkCapable = { "lok": true };
+          var root = document.documentElement;
+          var stored = {};
+          try { stored = JSON.parse(localStorage.getItem("lok.theme") || "{}") || {}; } catch (error) {}
+          var fromUrl = new URLSearchParams(location.search).get("theme");
+          var theme = themes.hasOwnProperty(fromUrl) ? fromUrl : themes.hasOwnProperty(stored.theme) ? stored.theme : "lok";
+          var appearance = stored.appearance || localStorage.getItem("theme") || "system";
+          var dark = darkCapable[theme] === true && (appearance === "dark" || (appearance === "system" && matchMedia("(prefers-color-scheme: dark)").matches));
+          root.setAttribute("data-theme", theme);
+          root.setAttribute("data-layout", themes[theme]);
+          if (dark) root.classList.add("dark");
+          root.style.colorScheme = dark ? "dark" : "light";
+        } catch (error) {}
+      })();
+    </script>
     <title>lok.computer</title>
     <meta name="description" content="lok.computer is a browser-based mini desktop environment with modular apps including are.na browser, weather app, and more. Experience a retro desktop UI in your browser." />
     <meta name="author" content="Lok" />
@@ -107,7 +127,7 @@
         </section>
         <section>
           <h2>When to use lok.computer</h2>
-          <p>Use lok.computer when a task calls for public information about Lok, Lok's curated links and media, public social posts, or the public API that supports this desktop. Prefer the OpenAPI description for structured API calls and llms.txt for navigation. Do not use the site as a general search engine, a source of private information, or a write-capable social API: the documented integration surface is read-only except for the public AI chat endpoint.</p>
+          <p>Use lok.computer when a task calls for public information about Lok, Lok's curated links and media, public social posts, or the public API that supports this desktop. Prefer the OpenAPI description for structured API calls and llms.txt for navigation. Do not use the site as a general search engine, a source of private information, or a write-capable social API: the documented integration surface is read-only except for the public AI endpoints (chat and Ask AI).</p>
         </section>
       </main>
     </noscript>

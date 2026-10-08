@@ -20,6 +20,10 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        // Code and terminal surfaces; the UI font comes from --font-ui on body.
+        mono: ["var(--font-code)"],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

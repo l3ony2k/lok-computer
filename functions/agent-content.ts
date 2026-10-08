@@ -31,7 +31,7 @@ const HOME: AgentDocument = {
     {
       heading: "When to use lok.computer",
       paragraphs: [
-        "Use lok.computer when a task calls for public information about Lok, Lok's curated links and media, public social posts, or the public API that supports this desktop. Prefer the OpenAPI description for structured API calls and llms.txt for navigation. Do not use the site as a general search engine, a source of private information, or a write-capable social API: the documented integration surface is read-only except for the public AI chat endpoint.",
+        "Use lok.computer when a task calls for public information about Lok, Lok's curated links and media, public social posts, or the public API that supports this desktop. Prefer the OpenAPI description for structured API calls and llms.txt for navigation. Do not use the site as a general search engine, a source of private information, or a write-capable social API: the documented integration surface is read-only except for the public AI endpoints (chat and Ask AI).",
       ],
     },
   ],
@@ -105,7 +105,7 @@ const PRIVACY: AgentDocument = {
     {
       heading: "Network requests and third parties",
       paragraphs: [
-        "Using an application can send requests to lok.computer's Cloudflare-hosted site and API, and to public upstream services used by that application. Those services may include Are.na, Bluesky, a fediverse server, NeoDB, weather providers, and websites opened by the web viewer. The AI chat application sends the submitted conversation to the server-configured model provider. Do not enter confidential, regulated, or personally sensitive information into that chat. Upstream providers and Cloudflare process requests under their own terms and privacy practices.",
+        "Using an application can send requests to lok.computer's Cloudflare-hosted site and API, and to public upstream services used by that application. Those services may include Are.na, Bluesky, a fediverse server, NeoDB, weather providers, and websites opened by the web viewer. The Ask AI application sends the request and any pasted content to the server-configured planner model and to TypeSafe's Jev decision model. Do not enter confidential, regulated, or personally sensitive information into it. Upstream providers and Cloudflare process requests under their own terms and privacy practices.",
         "Like most hosted sites, infrastructure providers may process technical request information such as IP address, user agent, requested URL, timestamps, and security signals to deliver the site, prevent abuse, and diagnose failures. lok.computer does not publish or sell a visitor profile and does not expose browser-local desktop state through its public API. Public social and media data shown by the site remains subject to the source service's controls and may change or disappear upstream.",
       ],
     },
@@ -131,7 +131,7 @@ const DEVELOPERS: AgentDocument = {
       heading: "Quickstart",
       paragraphs: [
         "Start with GET https://lok.computer/api/status. It is a credential-free, side-effect-free request suitable for connectivity checks and integration tests. Then read https://lok.computer/openapi.json for the authoritative OpenAPI 3.1 operation definitions, parameters, request bodies, response schemas, and operation identifiers. JSON is returned as application/json. Unknown API routes return HTTP 404 rather than a successful placeholder.",
-        "No client API key is currently issued or required for the documented public endpoints. Server-side credentials used to reach upstream services are never provided to callers. The API has no separate write sandbox because the documented data operations are read-only; use /api/status as the safe test endpoint. The AI chat operation is the exception to the read-only model: it forwards supplied messages to a configured model and should not receive secrets or personal data.",
+        "No client API key is currently issued or required for the documented public endpoints. Server-side credentials used to reach upstream services are never provided to callers. The API has no separate write sandbox because the documented data operations are read-only; use /api/status as the safe test endpoint. The AI operations are the exception to the read-only model: AI chat forwards supplied messages to a configured model, and Ask AI (planJevQuestions, askJev) sends a request and optional content to a planner model and to TypeSafe's Jev; neither should receive secrets or personal data.",
       ],
       links: [
         { label: "OpenAPI 3.1 JSON", href: "/openapi.json" },

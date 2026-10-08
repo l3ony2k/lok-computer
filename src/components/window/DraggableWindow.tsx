@@ -234,7 +234,12 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
         enableResizing={!windowProps.maximized}
         dragHandleClassName="window-titlebar"
       >
-        <div data-window-surface-id={windowProps.id} className={cn("window-surface flex flex-col w-full h-full overflow-hidden")}>
+        <div
+          data-window-surface-id={windowProps.id}
+          data-active={isActive || undefined}
+          data-maximized={windowProps.maximized || undefined}
+          className="window-surface flex flex-col w-full h-full overflow-hidden"
+        >
           {/* Title bar - fixed height */}
           <div
             className="window-titlebar"
@@ -251,22 +256,26 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
             >
               <CustomIcon iconType={windowProps.iconType} className="w-4 h-4" />
             </button>
-            <span className="flex-1 truncate">{windowProps.title}</span>
-            <div className="flex gap-1">
+            <span className="window-title flex-1 truncate">{windowProps.title}</span>
+            <div className="window-controls flex gap-1">
               <button
                 className="retro-button window-control"
+                data-window-control="minimize"
                 onClick={handleMinimize}
                 onTouchEnd={handleMinimize}
                 title="Minimize"
+                aria-label="Minimize"
               >
                 <Minimize className="w-3 h-3" />
               </button>
               {windowProps.maximized ? (
                 <button
                   className="retro-button window-control"
+                  data-window-control="restore"
                   onClick={handleMaximizeRestore}
                   onTouchEnd={handleMaximizeRestore}
                   title="Restore"
+                  aria-label="Restore"
                 >
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M8 0H2C1.44772 0 1 0.447715 1 1V7C1 7.55228 1.44772 8 2 8H8C8.55228 8 9 7.55228 9 7V1C9 0.447715 8.55228 0 8 0ZM8 7H2V1H8V7ZM10 3H9V4H10V10H4V9H3V10C3 10.5523 3.44772 11 4 11H10C10.5523 11 11 10.5523 11 10V4C11 3.44772 10.5523 3 10 3Z" fill="currentColor" />
@@ -275,18 +284,22 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
               ) : (
                 <button
                   className="retro-button window-control"
+                  data-window-control="maximize"
                   onClick={handleMaximizeRestore}
                   onTouchEnd={handleMaximizeRestore}
                   title="Maximize"
+                  aria-label="Maximize"
                 >
                   <Maximize className="w-3 h-3" />
                 </button>
               )}
               <button
                 className="retro-button window-control"
+                data-window-control="close"
                 onClick={handleClose}
                 onTouchEnd={handleClose}
                 title="Close"
+                aria-label="Close"
               >
                 <X className="w-3 h-3" />
               </button>
@@ -297,7 +310,7 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
           <div className="window-content-area flex-1 overflow-auto" style={{ position: 'relative' }}>
             <Suspense
               fallback={
-                <div className="flex h-full items-center justify-center font-mono text-xs text-muted-foreground">
+                <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
                   Loading...
                 </div>
               }

@@ -20,6 +20,7 @@ import mailIcon from '../../assets/icons/mail.png'; // Add mail icon for guestbo
 import fediIcon from '../../assets/icons/fedi.png'; // Add fedi icon for fedi
 import shelfIcon from '../../assets/icons/shelf.png'; // Add shelf icon
 import noteIcon from '../../assets/icons/note.png'; // Add note icon for buttons app
+import mediaIcon from '../../assets/icons/media.png';
 // Add imports for any other icons you have...
 
 interface CustomIconProps {
@@ -48,6 +49,7 @@ const iconMap: { [key: string]: string } = { // The value is now the imported UR
   fedi: fediIcon, // Add fedi icon mapping
   shelf: shelfIcon, // Add shelf icon mapping
   note: noteIcon, // Add note icon mapping for buttons app
+  media: mediaIcon,
   // Add other mappings corresponding to your imports
 };
 

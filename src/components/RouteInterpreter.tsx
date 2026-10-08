@@ -10,6 +10,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useWindowState } from '@/hooks/useWindowManager';
 import { useApplicationLauncher } from '@/hooks/useApplicationLauncher';
 import { matchRoute, parseWindowSpec, ROUTES } from '@/config/routes';
+import { THEME_QUERY_PARAM } from '@/lib/theme';
 
 interface RouteInterpreterProps {
     /** Called when route interpretation is complete */
@@ -101,6 +102,10 @@ export const RouteInterpreter = ({ onComplete }: RouteInterpreterProps) => {
             // No matching route, just mark as processed
             if (path !== '/' && path !== '') {
                 console.warn(`[RouteInterpreter] No matching route for path: ${path}`);
+            }
+            // A shared `/?theme=` link has already been applied by the theme engine.
+            if (searchParams.has(THEME_QUERY_PARAM)) {
+                navigate('/', { replace: true });
             }
             onComplete?.();
         };

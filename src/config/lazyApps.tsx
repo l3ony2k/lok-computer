@@ -31,10 +31,11 @@ export const APP_MODULE_LOADERS = {
     About: () => import('@/apps/about/About'),
     Config: () => import('@/apps/config/ConfigApp'),
     Console: () => import('@/apps/console/ConsoleApp'),
-    TalkToAI: () => import('@/apps/talk-to-ai/TalkToAI'),
+    AskAI: () => import('@/apps/ask-ai/AskAiApp'),
     Guestbook: () => import('@/apps/guestbook/GuestbookApp'),
     Shelf: () => import('@/apps/shelf/ShelfApp'),
     Links: () => import('@/apps/links/LinksApp'),
+    MediaPlayer: () => import('@/apps/media/MediaPlayerApp'),
 } as const;
 
 export const ChannelBrowser = lazy(() =>
@@ -68,8 +69,8 @@ export const ConfigApp = lazy(() =>
 export const ConsoleApp = lazy(() =>
     APP_MODULE_LOADERS.Console().then(m => ({ default: m.ConsoleApp })));
 
-export const TalkToAI = lazy(() =>
-    APP_MODULE_LOADERS.TalkToAI().then(m => ({ default: m.TalkToAI })));
+export const AskAiApp = lazy(() =>
+    APP_MODULE_LOADERS.AskAI().then(m => ({ default: m.AskAiApp })));
 
 export const GuestbookApp = lazy(() =>
     APP_MODULE_LOADERS.Guestbook().then(m => ({ default: m.GuestbookApp })));
@@ -79,3 +80,6 @@ export const ShelfApp = lazy(() =>
 
 export const LinksApp = lazy(() =>
     APP_MODULE_LOADERS.Links().then(m => ({ default: m.LinksApp })));
+
+export const MediaPlayerApp = lazy(() =>
+    APP_MODULE_LOADERS.MediaPlayer().then(m => ({ default: m.MediaPlayerApp })));

@@ -222,38 +222,47 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/h
 
 ## Design System
 
-### Color Scheme
+### Themes
 
-Uses CSS custom properties for theming:
-
-```css
-/* Light mode */
-:root {
-  --background: 0 0% 100%;
-  --foreground: 0 0% 3.9%;
-  --accent: 240 4.8% 95.9%;
-  --border: 240 5.9% 90%;
-  --muted: 240 4.8% 95.9%;
-  --muted-foreground: 240 3.8% 46.1%;
-}
-
-/* Dark mode */
-.dark {
-  --background: 0 0% 3.9%;
-  --foreground: 0 0% 98%;
-}
-```
-
-### Theme Toggle
+The desktop has four themes. `lok` is the native monospace system with light and dark modes; `98`, `xp`, and `7` recreate classic desktops after [98.css](https://github.com/jdan/98.css), [XP.css](https://github.com/botoxparty/XP.css), and [7.css](https://github.com/khang-nd/7.css) (MIT, licenses in `src/themes/*/LICENSE`).
 
 ```tsx
-import { useTheme } from 'next-themes';
+import { useTheme } from '@/hooks/useTheme';
 
-const { theme, setTheme } = useTheme();
-setTheme('dark'); // 'light', 'dark', or 'system'
+const { theme, appearance, colorScheme, setTheme, setAppearance, prefetchTheme } = useTheme();
+await setTheme('98');        // loads the stylesheet, then swaps atomically
+setAppearance('dark');       // light | dark | system; only lok has two schemes
 ```
 
----
+How it fits together:
+
+| Layer | File | Role |
+|-------|------|------|
+| Registry and engine | `src/lib/theme.ts` | Theme metadata, preference parsing, lazy style loading, root attributes |
+| Pre-paint | `index.html` inline script | Sets `data-theme`, `data-layout`, `.dark`, and `color-scheme` before React |
+| Provider | `src/hooks/useTheme.tsx` | State, OS scheme tracking, cross-tab sync |
+| Base tokens | `src/index.css` `:root` / `.dark` | lok values for every token |
+| Classic structure | `src/themes/classic.css` | Bevels, title bars, taskbar, menus, fields, and controls drawn from `--c-*` component tokens |
+| Theme skins | `src/themes/{98,xp,7}/theme.css` | Token values, caption glyphs, scrollbars, fonts, start button |
+
+Scoping: classic rules use `html[data-layout="classic"]:not(#_)` and theme rules `html[data-theme="98"][data-layout]:not(#_)`. The never-matching id gives them id-level specificity, so they override base component rules without `!important`, and a theme skin always beats the shared classic layer regardless of stylesheet order.
+
+Theme-level tokens every surface should use:
+
+```css
+--font-ui, --font-code            /* UI and code typefaces */
+--text-color, --link-color
+--detail-bg, --detail-header-bg   /* window content and its chrome */
+--header-bg, --block-bg, --button-bg, --button-hover
+--internal-border, --block-border
+--selection-bg, --selection-fg
+--desktop-bg, --desktop-pattern, --desktop-pattern-size, --desktop-label-color
+--media-stage-bg, --media-stage-fg, --media-accent
+```
+
+Window chrome exposes stable hooks for skins: `.window-surface[data-active]`, `.window-titlebar`, `.window-title`, `.window-controls`, and `.window-control[data-window-control="minimize|maximize|restore|close"]`. In classic layouts the taskbar renders `.start-button`, `.taskbar-tasks`, `.taskbar-tray`, and `.taskbar-clock`; the system menu becomes `.app-menu-panel[data-placement="bottom"]` with an `.app-menu-banner`.
+
+The "no rounded corners" rule applies to lok and to Tailwind classes. The XP and 7 skins keep their source systems' curves inside theme CSS.
 
 ## Tailwind Classes
 

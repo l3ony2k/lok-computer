@@ -38,9 +38,10 @@ export default defineConfig(({ mode }) => ({
     // The API Worker owns upstream credentials. Proxy API calls during local
     // development so browser requests use the same authenticated service as
     // the deployed site instead of falling through to Vite's SPA fallback.
+    // LOK_API_ORIGIN points the proxy at a local Worker (e.g. `wrangler dev`).
     proxy: {
       "/api": {
-        target: "https://lok.computer",
+        target: process.env.LOK_API_ORIGIN || "https://lok.computer",
         changeOrigin: true,
         secure: true,
       },

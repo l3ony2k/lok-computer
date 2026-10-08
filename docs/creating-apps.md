@@ -80,6 +80,22 @@ openApplication('ImageViewer', {
 });
 ```
 
+## Handing media to the Media Player
+
+```tsx
+import { MEDIA_PLAYER_TYPE, createMediaItem, createMediaRequest } from '@/apps/media/mediaLibrary';
+
+openApplication(MEDIA_PLAYER_TYPE, {
+  props: { request: createMediaRequest([createMediaItem(url, { title, kind: 'video', origin: 'app' })]) },
+});
+```
+
+The player is single-instance; explicit launch props reach a running player, which applies each request id once.
+
+## Theme coverage
+
+Shared chrome lives in `src/index.css`. Styles used by a single app can live beside it (for example `src/apps/media/media-player.css`) and be imported by the app module, so they ship with the lazy chunk instead of the render-blocking entry stylesheet. Either way, use the shared tokens (`--text-color`, `--detail-bg`, `--internal-border`, `--block-bg`, and so on), so classic themes recolor them automatically. Reuse `RetroButton`, `.search-input`, `.app-toolbar-row`, `.app-footer-row`, and `.app-readout`: `src/themes/classic.css` restyles those hooks for 98, XP, and 7. Add app-specific classic overrides to `classic.css` only when a surface needs a different shape, and check the app in every theme.
+
 ## Persisting view state
 
 ```tsx

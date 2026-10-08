@@ -1,0 +1,1006 @@
+/*
+ * Classic desktop structure shared by the 98, XP, and 7 themes.
+ *
+ * Loaded on demand alongside a classic theme (see src/lib/theme.ts). Every
+ * rule is scoped to `html[data-layout="classic"]:not(#_)`; the never-matching
+ * id gives the layer id-level specificity so it overrides base component
+ * styles without !important. Theme files add `[data-theme]` to the same scope,
+ * which always outranks this file regardless of stylesheet order.
+ *
+ * This file draws shapes from component tokens (--c-*) that each theme sets.
+ */
+
+html[data-layout="classic"]:not(#_) {
+    --ask-ai-bar: var(--selection-bg);
+    --c-font-size: 11px;
+    --c-text-xs: 11px;
+    --c-text-sm: 11px;
+    --c-text-base: 12px;
+    --c-title-font: var(--font-ui);
+    --c-title-size: 11px;
+    --c-title-weight: 700;
+    --c-control-height: 23px;
+    --c-focus-outline: 1px dotted #000000;
+    --c-focus-offset: -4px;
+    --c-btn-disabled-opacity: 1;
+    --c-btn-text-shadow-disabled: none;
+    --c-client-gap: 0px;
+    --c-client-border: 0;
+    --c-controls-gap: 2px;
+
+    --chrome-height: 30px;
+    --control-height: var(--c-control-height);
+    --surface-shadow: var(--c-window-shadow);
+    --menu-shadow: var(--c-menu-shadow);
+}
+
+/* ---------- Type ---------- */
+
+html[data-layout="classic"]:not(#_) body {
+    font-size: var(--c-font-size);
+    line-height: 1.35;
+}
+
+html[data-layout="classic"]:not(#_) .text-xs {
+    font-size: var(--c-text-xs);
+    line-height: 1.35;
+}
+
+html[data-layout="classic"]:not(#_) .text-sm {
+    font-size: var(--c-text-sm);
+    line-height: 1.4;
+}
+
+html[data-layout="classic"]:not(#_) .text-base {
+    font-size: var(--c-text-base);
+}
+
+/* The lok type ramp (10-14px) collapses to the system size, as classic UIs used one point size. */
+html[data-layout="classic"]:not(#_) :where(
+    .app-readout, .arena-address-label, .arena-detail-action, .arena-detail-comment,
+    .arena-detail-comment-header span, .arena-detail-connection, .arena-detail-connection > span:last-child,
+    .arena-detail-load-more, .arena-detail-meta, .arena-file-card-medium .arena-file-grid-preview,
+    .arena-file-card-small .arena-file-grid-preview, .arena-file-card-small .arena-file-item-meta,
+    .arena-file-card-small .arena-file-item-title, .arena-file-error, .arena-file-fallback-preview > span,
+    .arena-file-footer, .arena-file-item-meta, .arena-file-list-thumbnail span, .arena-file-table,
+    .arena-file-table-small, .arena-file-table-medium, .arena-file-text-preview, .arena-file-toolbar,
+    .arena-toolbar-control, .config-category-button, .config-checkbox-row, .config-help-text,
+    .config-range-setting, .config-request-list span, .config-setting-heading, .config-stats-grid dd,
+    .config-stats-grid dt, .config-system-info dd, .config-system-info dt, .config-wallpaper-preview,
+    .oobe-brand span, .oobe-footer > span, .oobe-live-preview small, .oobe-page p, .oobe-range-setting,
+    .oobe-range-setting output, .oobe-step, .oobe-step > span, .oobe-step-count, .oobe-summary dd,
+    .oobe-summary dt, .theme-picker-label, .theme-picker-tagline, .weather-attribution,
+    .window-transition-ghost-titlebar, #guestbooks___challenge-answer-container label,
+    #guestbooks___guestbook-messages-container blockquote,
+    #guestbooks___guestbook-messages-container p:first-child b,
+    #guestbooks___guestbook-messages-container p:first-child small
+) {
+    font-size: var(--c-font-size);
+}
+
+/* Classic systems show the arrow on controls; only hyperlinks use the hand. */
+html[data-layout="classic"]:not(#_) :where(button, select, summary, label, [role="button"], [role="menuitem"], [role="tab"], input[type="checkbox"], input[type="radio"], input[type="range"]) {
+    cursor: default;
+}
+
+html[data-layout="classic"]:not(#_) :where(button, a, input, textarea, select, [tabindex]):focus-visible {
+    outline: var(--c-focus-outline);
+    outline-offset: var(--c-focus-offset);
+}
+
+html[data-layout="classic"]:not(#_) ::placeholder {
+    color: var(--c-placeholder, #808080);
+}
+
+/* Native scrollbars replace the thin lok bars. WebKit draws themed parts;
+   Firefox, which lacks the pseudo-elements, gets matching colors. */
+html[data-layout="classic"]:not(#_) *,
+html[data-layout="classic"]:not(#_) .window-content-area,
+html[data-layout="classic"]:not(#_) .scrollable-area {
+    scrollbar-width: auto;
+    scrollbar-color: auto;
+}
+
+@supports not selector(::-webkit-scrollbar) {
+    html[data-layout="classic"]:not(#_) * {
+        scrollbar-color: var(--c-scrollbar-thumb, #c0c0c0) var(--c-scrollbar-track, #dfdfdf);
+    }
+}
+
+html[data-layout="classic"]:not(#_) ::-webkit-scrollbar {
+    width: 16px;
+    height: 16px;
+}
+
+html[data-layout="classic"]:not(#_) ::-webkit-scrollbar-thumb {
+    border-radius: 0;
+}
+
+/* ---------- Desktop ---------- */
+
+html[data-layout="classic"]:not(#_) .desktop-icon-label {
+    padding: 1px 3px;
+    font-weight: 400;
+    font-size: var(--c-font-size);
+    text-shadow: var(--c-desktop-label-shadow, none);
+}
+
+html[data-layout="classic"]:not(#_) .desktop-icon-image img {
+    filter: none;
+}
+
+html[data-layout="classic"]:not(#_) .desktop-icon-button[data-selected="true"] .desktop-icon-image,
+html[data-layout="classic"]:not(#_) .desktop-icon-button:focus-visible .desktop-icon-image {
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+}
+
+html[data-layout="classic"]:not(#_) .desktop-icon-button[data-selected="true"] .desktop-icon-image img,
+html[data-layout="classic"]:not(#_) .desktop-icon-button:focus-visible .desktop-icon-image img {
+    filter: var(--c-desktop-icon-selected-filter, none);
+}
+
+html[data-layout="classic"]:not(#_) .desktop-icon-button[data-selected="true"] .desktop-icon-label,
+html[data-layout="classic"]:not(#_) .desktop-icon-button:focus-visible .desktop-icon-label {
+    color: var(--c-hl-fg);
+    background: var(--c-desktop-label-selected-bg, var(--c-hl-bg));
+    border: var(--c-desktop-label-selected-border, 1px dotted transparent);
+    border-radius: var(--c-hl-radius);
+    box-shadow: none;
+    text-shadow: none;
+}
+
+/* ---------- Windows ---------- */
+
+html[data-layout="classic"]:not(#_) .window-surface {
+    padding: var(--c-window-padding);
+    color: var(--text-color);
+    background: var(--c-window-bg);
+    border: var(--c-window-border);
+    border-radius: var(--c-window-radius);
+    box-shadow: var(--c-window-shadow);
+}
+
+html[data-layout="classic"]:not(#_) .draggable-window.is-maximized .window-surface {
+    border-radius: 0;
+}
+
+html[data-layout="classic"]:not(#_) .window-titlebar {
+    height: var(--c-title-height);
+    min-height: var(--c-title-height);
+    flex: 0 0 auto;
+    gap: 3px;
+    padding: var(--c-title-padding);
+    color: var(--c-title-fg);
+    background: var(--c-title-bg);
+    border: 0;
+    border-radius: var(--c-title-radius);
+    font-family: var(--c-title-font);
+    font-size: var(--c-title-size);
+    font-weight: var(--c-title-weight);
+    text-shadow: var(--c-title-text-shadow, none);
+}
+
+html[data-layout="classic"]:not(#_) .draggable-window.is-maximized .window-titlebar {
+    border-radius: 0;
+}
+
+html[data-layout="classic"]:not(#_) .window-surface[data-window-surface-id]:not([data-active]) .window-titlebar {
+    color: var(--c-title-fg-inactive);
+    background: var(--c-title-bg-inactive);
+    text-shadow: var(--c-title-text-shadow-inactive, none);
+}
+
+html[data-layout="classic"]:not(#_) .window-title {
+    letter-spacing: 0;
+}
+
+html[data-layout="classic"]:not(#_) .window-menu-button,
+html[data-layout="classic"]:not(#_) .window-menu-button:hover,
+html[data-layout="classic"]:not(#_) .window-menu-button[aria-expanded="true"] {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 auto;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+}
+
+html[data-layout="classic"]:not(#_) .window-controls {
+    align-self: center;
+    gap: var(--c-controls-gap);
+}
+
+html[data-layout="classic"]:not(#_) .window-control {
+    min-width: 0;
+    padding: 0;
+    color: transparent;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+/* Theme stylesheets draw caption glyphs; the lok icons stay in the DOM for a11y. */
+html[data-layout="classic"]:not(#_) .window-control > svg {
+    display: none;
+}
+
+html[data-layout="classic"]:not(#_) .window-surface > .window-content-area,
+html[data-layout="classic"]:not(#_) .window-surface > .flex-1 {
+    margin-top: var(--c-client-gap);
+    background: var(--c-client-bg, var(--detail-bg));
+    border: var(--c-client-border);
+}
+
+html[data-layout="classic"]:not(#_) .window-content {
+    border-top: 0;
+}
+
+html[data-layout="classic"]:not(#_) .window-transition-ghost {
+    padding: var(--c-window-padding);
+    background: var(--c-window-bg);
+    border: var(--c-window-border);
+    border-radius: var(--c-window-radius);
+    box-shadow: var(--c-window-shadow);
+}
+
+html[data-layout="classic"]:not(#_) .window-transition-ghost-titlebar {
+    min-height: var(--c-title-height);
+    padding: var(--c-title-padding);
+    color: var(--c-title-fg);
+    background: var(--c-title-bg);
+    border-radius: var(--c-title-radius);
+    font-family: var(--c-title-font);
+    font-size: var(--c-title-size);
+    font-weight: var(--c-title-weight);
+    text-shadow: var(--c-title-text-shadow, none);
+}
+
+/* ---------- Raised controls ---------- */
+
+html[data-layout="classic"]:not(#_) :where(
+    .retro-button,
+    button.arena-toolbar-control,
+    .arena-detail-action,
+    .oobe-segmented button,
+    .oobe-choice,
+    .oobe-oneko-options button,
+    .config-oneko-option,
+    .theme-picker-option,
+    .system-kernel-retry,
+    [data-sonner-toast] [data-button]
+) {
+    min-height: var(--c-control-height);
+    color: var(--c-btn-fg);
+    background: var(--c-btn-bg);
+    border: var(--c-btn-border);
+    border-radius: var(--c-btn-radius);
+    box-shadow: var(--c-btn-shadow);
+    font-family: var(--font-ui);
+    font-size: var(--c-font-size);
+    font-weight: 400;
+    text-decoration: none;
+}
+
+html[data-layout="classic"]:not(#_) :where(.retro-button, button.arena-toolbar-control) {
+    height: var(--c-control-height);
+    padding: 0 8px;
+}
+
+html[data-layout="classic"]:not(#_) :where(
+    .retro-button,
+    button.arena-toolbar-control,
+    .arena-detail-action,
+    .oobe-segmented button,
+    .oobe-choice,
+    .oobe-oneko-options button,
+    .config-oneko-option,
+    .theme-picker-option,
+    [data-sonner-toast] [data-button]
+):hover:not(:disabled) {
+    color: var(--c-btn-fg);
+    background: var(--c-btn-bg-hover);
+    border: var(--c-btn-border-hover);
+    box-shadow: var(--c-btn-shadow-hover);
+}
+
+html[data-layout="classic"]:not(#_) :where(
+    .retro-button,
+    button.arena-toolbar-control,
+    .arena-detail-action,
+    .oobe-segmented button,
+    .oobe-choice,
+    .oobe-oneko-options button,
+    .config-oneko-option,
+    .theme-picker-option,
+    [data-sonner-toast] [data-button]
+):active:not(:disabled) {
+    background: var(--c-btn-bg-active);
+    border: var(--c-btn-border-active);
+    box-shadow: var(--c-btn-shadow-active);
+}
+
+html[data-layout="classic"]:not(#_) :where(
+    .retro-button,
+    button.arena-toolbar-control,
+    .oobe-segmented button,
+    .oobe-choice,
+    .oobe-oneko-options button,
+    .config-oneko-option,
+    .theme-picker-option
+):is([data-active="true"], [aria-pressed="true"]) {
+    color: var(--c-btn-fg-on, var(--c-btn-fg));
+    background: var(--c-btn-bg-on);
+    border: var(--c-btn-border-on);
+    box-shadow: var(--c-btn-shadow-on);
+}
+
+html[data-layout="classic"]:not(#_) :where(.retro-button[data-variant="primary"], .arena-detail-action-primary) {
+    color: var(--c-btn-fg);
+    background: var(--c-btn-bg);
+    border: var(--c-btn-border-default, var(--c-btn-border));
+    box-shadow: var(--c-btn-shadow-default, var(--c-btn-shadow));
+    font-weight: 700;
+}
+
+html[data-layout="classic"]:not(#_) :where(.retro-button, button.arena-toolbar-control, .oobe-segmented button, .oobe-choice):disabled {
+    color: var(--c-btn-fg-disabled);
+    background: var(--c-btn-bg-disabled, var(--c-btn-bg));
+    border: var(--c-btn-border-disabled, var(--c-btn-border));
+    box-shadow: var(--c-btn-shadow-disabled, var(--c-btn-shadow));
+    text-shadow: var(--c-btn-text-shadow-disabled);
+    opacity: var(--c-btn-disabled-opacity);
+}
+
+html[data-layout="classic"]:not(#_) :where(.retro-button, button.arena-toolbar-control):disabled svg {
+    opacity: 0.45;
+}
+
+/* Joined controls keep each control's own frame. */
+html[data-layout="classic"]:not(#_) :where(.app-control-group, .app-joined-control, .arena-file-button-group, .arena-address-group) > * + * {
+    margin-left: var(--c-joined-gap, 0px);
+}
+
+/* ---------- Fields ---------- */
+
+html[data-layout="classic"]:not(#_) :where(
+    .search-input,
+    input.arena-toolbar-control,
+    select.arena-toolbar-control,
+    textarea.search-input,
+    #guestbooks___challenge-answer-container input
+) {
+    color: var(--c-field-fg);
+    background-color: var(--c-field-bg);
+    border: var(--c-field-border);
+    border-radius: var(--c-field-radius);
+    box-shadow: var(--c-field-shadow);
+    font-family: var(--font-ui);
+    font-size: var(--c-font-size);
+}
+
+html[data-layout="classic"]:not(#_) :where(.search-input, input.arena-toolbar-control, select.arena-toolbar-control):not(textarea) {
+    height: var(--c-field-height, 21px);
+    min-height: var(--c-field-height, 21px);
+}
+
+html[data-layout="classic"]:not(#_) :where(.search-input, input.arena-toolbar-control):disabled {
+    background-color: var(--c-field-bg-disabled, var(--c-face));
+}
+
+html[data-layout="classic"]:not(#_) select.arena-toolbar-control {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 22px;
+    background-image: var(--c-select-arrow);
+    background-repeat: no-repeat;
+    background-position: var(--c-select-arrow-position, right 2px center);
+    background-size: var(--c-select-arrow-size, auto);
+}
+
+html[data-layout="classic"]:not(#_) .app-joined-control > .search-input + .retro-button,
+html[data-layout="classic"]:not(#_) .arena-address-group > .arena-toolbar-control + .arena-toolbar-control {
+    margin-left: var(--c-joined-gap, 0px);
+}
+
+/* Checkboxes, radios, and sliders are drawn from tokens and theme images. */
+html[data-layout="classic"]:not(#_) input[type="checkbox"],
+html[data-layout="classic"]:not(#_) input[type="radio"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 13px;
+    height: 13px;
+    flex: 0 0 auto;
+    margin: 0;
+    background-color: var(--c-check-bg);
+    background-repeat: no-repeat;
+    background-position: center;
+    border: var(--c-check-border);
+    border-radius: 0;
+    box-shadow: var(--c-check-shadow);
+}
+
+html[data-layout="classic"]:not(#_) input[type="radio"] {
+    border-radius: 50%;
+}
+
+html[data-layout="classic"]:not(#_) input[type="checkbox"]:checked {
+    background-image: var(--c-check-mark);
+}
+
+html[data-layout="classic"]:not(#_) input[type="radio"]:checked {
+    background-image: var(--c-radio-dot);
+}
+
+html[data-layout="classic"]:not(#_) input[type="checkbox"]:hover:not(:disabled),
+html[data-layout="classic"]:not(#_) input[type="radio"]:hover:not(:disabled) {
+    box-shadow: var(--c-check-shadow-hover, var(--c-check-shadow));
+}
+
+html[data-layout="classic"]:not(#_) input[type="checkbox"]:disabled,
+html[data-layout="classic"]:not(#_) input[type="radio"]:disabled {
+    background-color: var(--c-check-bg-disabled, var(--c-face));
+}
+
+html[data-layout="classic"]:not(#_) input[type="range"] {
+    appearance: none;
+    -webkit-appearance: none;
+    height: 21px;
+    background: transparent;
+}
+
+html[data-layout="classic"]:not(#_) input[type="range"]::-webkit-slider-runnable-track {
+    height: var(--c-track-height, 2px);
+    background: var(--c-track-bg);
+    border: 0;
+    border-radius: var(--c-track-radius, 0);
+    box-shadow: var(--c-track-shadow);
+}
+
+html[data-layout="classic"]:not(#_) input[type="range"]::-moz-range-track {
+    height: var(--c-track-height, 2px);
+    background: var(--c-track-bg);
+    border: 0;
+    border-radius: var(--c-track-radius, 0);
+    box-shadow: var(--c-track-shadow);
+}
+
+html[data-layout="classic"]:not(#_) input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: var(--c-thumb-width, 11px);
+    height: var(--c-thumb-height, 21px);
+    margin-top: calc((var(--c-track-height, 2px) - var(--c-thumb-height, 21px)) / 2);
+    background: var(--c-thumb-image) center / contain no-repeat;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+html[data-layout="classic"]:not(#_) input[type="range"]::-moz-range-thumb {
+    width: var(--c-thumb-width, 11px);
+    height: var(--c-thumb-height, 21px);
+    background: var(--c-thumb-image) center / contain no-repeat;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+html[data-layout="classic"]:not(#_) input[type="range"]:hover:not(:disabled)::-webkit-slider-thumb {
+    background-image: var(--c-thumb-image-hover, var(--c-thumb-image));
+}
+
+/* ---------- App chrome ---------- */
+
+html[data-layout="classic"]:not(#_) .window-toolbar {
+    background: var(--c-toolbar-bg, var(--c-face));
+}
+
+html[data-layout="classic"]:not(#_) .window-footer {
+    background: var(--c-face);
+}
+
+html[data-layout="classic"]:not(#_) .window-toolbar {
+    border-bottom: var(--c-toolbar-border);
+    box-shadow: var(--c-toolbar-shadow, none);
+}
+
+html[data-layout="classic"]:not(#_) .window-footer {
+    border-top: 0;
+    padding: var(--c-status-padding, 2px);
+}
+
+html[data-layout="classic"]:not(#_) :where(.app-toolbar-row, .arena-address-bar, .arena-file-toolbar) {
+    background: var(--c-toolbar-bg, var(--c-face));
+}
+
+html[data-layout="classic"]:not(#_) :where(.app-toolbar-row, .arena-address-bar) {
+    border-bottom: var(--c-toolbar-border);
+    box-shadow: var(--c-toolbar-shadow, none);
+}
+
+html[data-layout="classic"]:not(#_) .app-toolbar-stack > .app-toolbar-row:last-child {
+    border-bottom: 0;
+    box-shadow: none;
+}
+
+html[data-layout="classic"]:not(#_) :where(.app-footer-row, .arena-file-footer) {
+    min-height: 24px;
+    padding: 2px 6px;
+    color: var(--text-color);
+    background: var(--c-status-bg, var(--c-face));
+    border-top: 0;
+    border-radius: var(--c-status-radius, 0);
+    box-shadow: var(--c-status-shadow);
+    font-size: var(--c-font-size);
+}
+
+html[data-layout="classic"]:not(#_) .app-readout {
+    color: var(--text-color);
+    background: var(--c-readout-bg, var(--c-field-bg));
+    border: var(--c-readout-border, var(--c-field-border));
+    border-radius: var(--c-field-radius);
+    box-shadow: var(--c-readout-shadow, var(--c-field-shadow));
+    font-size: var(--c-font-size);
+}
+
+/* Tabs */
+html[data-layout="classic"]:not(#_) .app-tab-bar {
+    gap: 0;
+    padding: 4px 4px 0;
+    background: var(--c-face);
+    border-bottom: var(--c-tab-panel-border);
+    box-shadow: var(--c-tab-panel-shadow, none);
+}
+
+html[data-layout="classic"]:not(#_) .app-tab-bar .retro-button {
+    height: 20px;
+    min-height: 20px;
+    margin: 2px -1px 0 0;
+    padding: 0 10px;
+    color: var(--text-color);
+    background: var(--c-tab-bg);
+    border: var(--c-tab-border);
+    border-bottom: 0;
+    border-radius: var(--c-tab-radius);
+    box-shadow: var(--c-tab-shadow);
+}
+
+html[data-layout="classic"]:not(#_) .app-tab-bar .retro-button:hover:not(:disabled) {
+    background: var(--c-tab-bg-hover, var(--c-tab-bg));
+    box-shadow: var(--c-tab-shadow-hover, var(--c-tab-shadow));
+}
+
+html[data-layout="classic"]:not(#_) .app-tab-bar .retro-button[data-active="true"] {
+    z-index: 1;
+    height: 23px;
+    min-height: 23px;
+    margin: 0 -1px -1px 0;
+    padding-bottom: 1px;
+    background: var(--c-tab-bg-on);
+    border-top: var(--c-tab-border-top-on, var(--c-tab-border));
+    box-shadow: var(--c-tab-shadow-on);
+}
+
+/* Config sidebar reads as a selection list rather than a stack of buttons. */
+html[data-layout="classic"]:not(#_) .config-sidebar {
+    align-items: stretch;
+    gap: 1px;
+    padding: 6px;
+    background: var(--c-list-bg, var(--c-field-bg));
+    border-right: 0;
+    box-shadow: var(--c-list-shadow, var(--c-field-shadow));
+    margin: 6px 0 6px 6px;
+    border-radius: var(--c-field-radius);
+}
+
+html[data-layout="classic"]:not(#_) .config-sidebar .config-category-button,
+html[data-layout="classic"]:not(#_) .config-sidebar .config-category-button:hover:not(:disabled),
+html[data-layout="classic"]:not(#_) .config-sidebar .config-category-button:active:not(:disabled) {
+    width: 100%;
+    height: 24px;
+    min-height: 24px;
+    margin: 0;
+    padding: 0 6px;
+    color: var(--text-color);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--c-hl-radius);
+    box-shadow: none;
+}
+
+html[data-layout="classic"]:not(#_) .config-sidebar .config-category-button:hover:not(:disabled) {
+    background: var(--c-hover-bg, transparent);
+    border: var(--c-hover-border, 1px solid transparent);
+}
+
+html[data-layout="classic"]:not(#_) .config-sidebar .config-category-button[data-active="true"] {
+    width: 100%;
+    margin: 0;
+    color: var(--c-hl-fg);
+    background: var(--c-hl-bg);
+    border: var(--c-hl-border);
+}
+
+html[data-layout="classic"]:not(#_) .config-layout {
+    grid-template-columns: 124px minmax(0, 1fr);
+    background: var(--c-face);
+}
+
+html[data-layout="classic"]:not(#_) .config-content {
+    background: var(--c-face);
+}
+
+/* Group boxes: section titles become legends sitting on an etched frame. */
+html[data-layout="classic"]:not(#_) .config-section {
+    position: relative;
+    margin: 10px 0 14px;
+    padding-top: 6px;
+    background: transparent;
+    border: var(--c-group-border);
+    border-radius: var(--c-group-radius, 0);
+    box-shadow: var(--c-group-shadow, none);
+}
+
+html[data-layout="classic"]:not(#_) .config-section-title {
+    position: absolute;
+    top: -8px;
+    left: 8px;
+    min-height: 0;
+    height: auto;
+    padding: 0 3px;
+    color: var(--c-group-title-fg, var(--text-color));
+    background: var(--c-face);
+    border: 0;
+    font-size: var(--c-font-size);
+    font-weight: 400;
+}
+
+html[data-layout="classic"]:not(#_) .config-section-body {
+    padding: 12px 10px 10px;
+}
+
+html[data-layout="classic"]:not(#_) :where(.config-system-info, .config-stats-grid) {
+    background: transparent;
+    border: 0;
+    gap: 4px;
+}
+
+html[data-layout="classic"]:not(#_) :where(.config-system-info, .config-stats-grid) > div {
+    background: var(--c-field-bg);
+    border: var(--c-field-border);
+    border-radius: var(--c-field-radius);
+    box-shadow: var(--c-field-shadow);
+}
+
+html[data-layout="classic"]:not(#_) :where(.config-wallpaper-preview, .config-wallpaper-option, .theme-swatch) {
+    border: var(--c-field-border);
+    border-radius: var(--c-field-radius);
+    box-shadow: var(--c-field-shadow);
+}
+
+html[data-layout="classic"]:not(#_) .config-request-list span {
+    background: var(--c-face);
+    border: var(--c-field-border);
+    border-radius: var(--c-field-radius);
+}
+
+/* Lists, tables, and selection */
+html[data-layout="classic"]:not(#_) .arena-file-table th,
+html[data-layout="classic"]:not(#_) .arena-file-table th.arena-file-thumbnail-cell {
+    background: var(--c-face);
+}
+
+html[data-layout="classic"]:not(#_) .arena-file-table th button {
+    height: 20px;
+    background: var(--c-header-bg, var(--c-btn-bg));
+    border: var(--c-header-border, 0);
+    box-shadow: var(--c-header-shadow, var(--c-btn-shadow));
+    font-size: var(--c-font-size);
+}
+
+html[data-layout="classic"]:not(#_) .arena-file-table th button:hover,
+html[data-layout="classic"]:not(#_) .arena-file-table th button[data-active="true"] {
+    background: var(--c-header-bg-hover, var(--c-header-bg, var(--c-btn-bg)));
+}
+
+html[data-layout="classic"]:not(#_) .arena-file-table th button:active {
+    box-shadow: var(--c-header-shadow-active, var(--c-btn-shadow-active));
+}
+
+html[data-layout="classic"]:not(#_) .arena-file-table tbody tr:hover td {
+    background: var(--c-hover-bg, var(--block-bg));
+}
+
+html[data-layout="classic"]:not(#_) .arena-file-table tbody tr[data-selected="true"] td {
+    color: var(--c-hl-fg);
+    background: var(--c-hl-bg);
+}
+
+html[data-layout="classic"]:not(#_) .arena-file-card[data-selected="true"] {
+    outline: var(--c-focus-outline);
+    outline-offset: -3px;
+}
+
+html[data-layout="classic"]:not(#_) .arena-file-card[data-selected="true"] .arena-file-card-text {
+    color: var(--c-hl-fg);
+    background: var(--c-hl-bg);
+}
+
+html[data-layout="classic"]:not(#_) .arena-file-card[data-selected="true"] .arena-file-item-title {
+    color: inherit;
+}
+
+html[data-layout="classic"]:not(#_) .arena-file-list-scroller,
+html[data-layout="classic"]:not(#_) .arena-file-contents {
+    background: var(--block-bg);
+}
+
+html[data-layout="classic"]:not(#_) .arena-detail-header {
+    border-bottom: var(--c-toolbar-border);
+    background: var(--c-face);
+}
+
+html[data-layout="classic"]:not(#_) .resizable-divider {
+    background: var(--c-face);
+    box-shadow: var(--c-splitter-shadow, none);
+}
+
+/* ---------- Menus ---------- */
+
+html[data-layout="classic"]:not(#_) .menu-surface {
+    padding: var(--c-menu-padding);
+    color: var(--text-color);
+    background: var(--c-menu-bg);
+    border: var(--c-menu-border);
+    border-radius: var(--c-menu-radius);
+    box-shadow: var(--c-menu-shadow);
+}
+
+html[data-layout="classic"]:not(#_) .menu-item-button {
+    min-height: 22px;
+    padding: 3px 20px 3px 6px;
+    color: var(--text-color);
+    border: 1px solid transparent;
+    border-radius: var(--c-hl-radius);
+    font-size: var(--c-font-size);
+}
+
+html[data-layout="classic"]:not(#_) .menu-item-button:hover:not(:disabled),
+html[data-layout="classic"]:not(#_) .menu-item-shell.has-submenu:hover > .menu-item-button {
+    color: var(--c-hl-fg);
+    background: var(--c-hl-bg);
+    border: var(--c-hl-border);
+}
+
+html[data-layout="classic"]:not(#_) .menu-item-button:disabled {
+    color: var(--c-btn-fg-disabled);
+    text-shadow: var(--c-btn-text-shadow-disabled);
+    opacity: 1;
+}
+
+html[data-layout="classic"]:not(#_) .menu-surface > .border-t {
+    margin: 3px 2px;
+    border-top: var(--c-menu-divider);
+    border-bottom: var(--c-menu-divider-light, 0);
+}
+
+html[data-layout="classic"]:not(#_) .calendar-panel .bg-accent {
+    color: var(--c-hl-fg);
+    background: var(--c-hl-bg);
+    border-radius: var(--c-hl-radius);
+}
+
+/* ---------- Taskbar ---------- */
+
+html[data-layout="classic"]:not(#_) .taskbar {
+    gap: 4px;
+    padding: var(--c-taskbar-padding, 2px 2px 2px 2px);
+    color: var(--c-taskbar-fg, var(--text-color));
+    background: var(--c-taskbar-bg);
+    border-top: var(--c-taskbar-border-top);
+    box-shadow: var(--c-taskbar-shadow, none);
+}
+
+html[data-layout="classic"]:not(#_) .taskbar-tasks {
+    gap: var(--c-task-gap, 3px);
+    padding: 0 2px;
+}
+
+html[data-layout="classic"]:not(#_) .taskbar-button {
+    width: 160px;
+    height: var(--c-task-height, 22px);
+    padding: 0 6px;
+    justify-content: flex-start;
+    color: var(--c-task-fg);
+    background: var(--c-task-bg);
+    border: var(--c-task-border);
+    border-radius: var(--c-task-radius);
+    box-shadow: var(--c-task-shadow);
+    font-size: var(--c-font-size);
+}
+
+html[data-layout="classic"]:not(#_) .taskbar-button:hover {
+    background: var(--c-task-bg-hover, var(--c-task-bg));
+    box-shadow: var(--c-task-shadow-hover, var(--c-task-shadow));
+}
+
+html[data-layout="classic"]:not(#_) .taskbar-button[aria-pressed="true"] {
+    color: var(--c-task-fg-on, var(--c-task-fg));
+    background: var(--c-task-bg-on);
+    border: var(--c-task-border-on, var(--c-task-border));
+    box-shadow: var(--c-task-shadow-on);
+    font-weight: var(--c-task-weight-on, 400);
+}
+
+html[data-layout="classic"]:not(#_) .taskbar-button > span {
+    max-width: none;
+}
+
+html[data-layout="classic"]:not(#_) .taskbar-tray {
+    height: var(--c-tray-height, 22px);
+    padding: 0 8px;
+    color: var(--c-tray-fg, var(--text-color));
+    background: var(--c-tray-bg, transparent);
+    border: var(--c-tray-border, 0);
+    box-shadow: var(--c-tray-shadow, none);
+}
+
+html[data-layout="classic"]:not(#_) .taskbar-clock,
+html[data-layout="classic"]:not(#_) .taskbar-clock:hover,
+html[data-layout="classic"]:not(#_) .taskbar-clock[aria-expanded="true"] {
+    height: 100%;
+    padding: 0 2px;
+    color: inherit;
+    background: transparent;
+    border: 0;
+    font-size: var(--c-font-size);
+}
+
+html[data-layout="classic"]:not(#_) .app-menu-panel[data-placement="bottom"] {
+    min-width: 0;
+}
+
+html[data-layout="classic"]:not(#_) .taskbar-clock-date {
+    display: var(--c-tray-date-display, none);
+}
+
+html[data-layout="classic"]:not(#_) .app-menu-banner {
+    display: flex;
+    flex: 0 0 auto;
+}
+
+/* ---------- Dialogs, toasts, setup ---------- */
+
+html[data-layout="classic"]:not(#_) [data-sonner-toast] {
+    padding: var(--c-window-padding) !important;
+    color: var(--text-color) !important;
+    background: var(--c-face) !important;
+    border: var(--c-window-border) !important;
+    border-radius: var(--c-window-radius) !important;
+    box-shadow: var(--c-window-shadow) !important;
+    font-size: var(--c-font-size) !important;
+}
+
+html[data-layout="classic"]:not(#_) .oobe-overlay {
+    background: var(--c-modal-backdrop, rgba(0, 0, 0, 0.25));
+}
+
+html[data-layout="classic"]:not(#_) .oobe-steps {
+    background: var(--c-face);
+    border-right: var(--c-toolbar-border);
+}
+
+html[data-layout="classic"]:not(#_) .oobe-content {
+    background: var(--c-face);
+}
+
+html[data-layout="classic"]:not(#_) .oobe-footer {
+    background: var(--c-face);
+    border-top: var(--c-toolbar-border);
+}
+
+html[data-layout="classic"]:not(#_) .oobe-step[data-active="true"] {
+    color: var(--c-hl-fg);
+    background: var(--c-hl-bg);
+    border: var(--c-hl-border);
+    border-radius: var(--c-hl-radius);
+}
+
+html[data-layout="classic"]:not(#_) .oobe-page h1 {
+    font-size: 16px;
+}
+
+html[data-layout="classic"]:not(#_) :where(.oobe-live-preview:not(.oobe-crt-preview), .oobe-summary, .oobe-page-icon) {
+    background: var(--c-field-bg);
+    border: var(--c-field-border);
+    border-radius: var(--c-field-radius);
+    box-shadow: var(--c-field-shadow);
+}
+
+/* ---------- Content surfaces ---------- */
+
+html[data-layout="classic"]:not(#_) :where(.lok-reader-identity-pane, .guestbook-composer-pane) {
+    background: var(--c-face);
+}
+
+html[data-layout="classic"]:not(#_) .lok-reader-entry-list > .lok-reader-entry {
+    background: var(--block-bg);
+}
+
+html[data-layout="classic"]:not(#_) .weather-output {
+    font-family: var(--font-code);
+}
+
+/* ---------- Media Player ---------- */
+
+html[data-layout="classic"]:not(#_) .media-player-playlist {
+    background: var(--c-list-bg, var(--block-bg));
+    border-color: var(--c-splitter-border, var(--internal-border));
+}
+
+html[data-layout="classic"]:not(#_) .media-player-playlist-header {
+    color: var(--text-color);
+    background: var(--c-toolbar-bg, var(--c-face));
+    border-bottom: var(--c-toolbar-border);
+    font-size: var(--c-font-size);
+}
+
+html[data-layout="classic"]:not(#_) .media-player-track {
+    min-height: 30px;
+    border-bottom-color: transparent;
+    border-radius: var(--c-hl-radius);
+    font-size: var(--c-font-size);
+}
+
+html[data-layout="classic"]:not(#_) .media-player-track:hover {
+    background: var(--c-hover-bg, transparent);
+}
+
+html[data-layout="classic"]:not(#_) .media-player-track[data-selected] {
+    color: var(--c-hl-fg);
+    background: var(--c-hl-bg);
+    outline: var(--c-focus-outline);
+    outline-offset: -1px;
+}
+
+html[data-layout="classic"]:not(#_) .media-player-track-remove:hover {
+    color: var(--c-btn-fg);
+    background: var(--c-btn-bg);
+    border: var(--c-btn-border);
+    border-radius: var(--c-btn-radius);
+    box-shadow: var(--c-btn-shadow);
+}
+
+html[data-layout="classic"]:not(#_) .media-player-time {
+    min-width: 54px;
+}
+
+/* ---------- Ask AI ---------- */
+
+html[data-layout="classic"]:not(#_) :where(.ask-ai-request, .ask-ai-property, .ask-ai-json, .ask-ai-intro) {
+    border-radius: var(--c-field-radius);
+}
+
+html[data-layout="classic"]:not(#_) .ask-ai-request {
+    background: var(--c-face);
+    border: var(--c-group-border);
+}
+
+html[data-layout="classic"]:not(#_) .ask-ai-property {
+    border: var(--c-field-border);
+    box-shadow: var(--c-field-shadow);
+}
+
+html[data-layout="classic"]:not(#_) .ask-ai-json header {
+    background: var(--c-toolbar-bg, var(--c-face));
+}
+
+html[data-layout="classic"]:not(#_) .ask-ai-content-input {
+    border-radius: 0;
+    box-shadow: none;
+}
+
+html[data-layout="classic"]:not(#_) .media-player-track-text {
+    padding-left: 1px;
+}

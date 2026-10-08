@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useWindowActions, useWindowState } from '@/hooks/useWindowManager';
 import { useApplicationLauncher } from '@/hooks/useApplicationLauncher';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@/hooks/useTheme';
+import { APPEARANCES, THEMES, THEME_IDS, isAppearance, isThemeId, supportsAppearance } from '@/lib/theme';
 import { APP_LIST } from '@/config/apps';
+import { MEDIA_PLAYER_TYPE, createMediaItem, createMediaRequest, isPlayableMedia, normalizeMediaUrl } from '@/apps/media/mediaLibrary';
 import { WindowLayout } from '@/components/window/WindowLayout';
 import { rebootIntoKernelPanic, rebootSystem, requestSystemUpdateCheck, SYSTEM_VERSION } from '@/lib/system';
 
@@ -106,7 +108,7 @@ export const ConsoleApp: React.FC = () => {
   const { windows } = useWindowState();
   const { closeWindow } = useWindowActions();
   const openApplication = useApplicationLauncher();
-  const { theme, setTheme } = useTheme();
+  const { theme, appearance, colorScheme, setTheme, setAppearance } = useTheme();
 
   // Add auto-focus effect
   useEffect(() => {
@@ -129,7 +131,7 @@ export const ConsoleApp: React.FC = () => {
       action: () => {
         console.info('Available commands:',
           Object.entries(commands)
-            .map(([name, cmd]) => `\n${name}${cmd.name === 'apps' ? ' [list|open|close] [app]' : cmd.name === 'theme' ? ' [get|set|toggle] [theme]' : ''}: ${cmd.description}`)
+            .map(([name, cmd]) => `\n${name}${cmd.name === 'apps' ? ' [list|open|close] [app]' : cmd.name === 'theme' ? ' [get|list|set|mode|toggle] [value]' : cmd.name === 'play' ? ' <url>' : ''}: ${cmd.description}`)
             .join('')
         );
       }
@@ -183,33 +185,68 @@ export const ConsoleApp: React.FC = () => {
         }
       }
     },
+    play: {
+      name: 'play',
+      description: 'Play an audio or video URL in Media',
+      action: (args?: string[]) => {
+        const url = normalizeMediaUrl(args?.join(' ') ?? '');
+        if (!url) {
+          console.error('Usage: play <audio or video URL>');
+          return;
+        }
+        if (!isPlayableMedia(url)) console.warn('No audio or video extension found; trying it anyway.');
+        openApplication(MEDIA_PLAYER_TYPE, {
+          props: { request: createMediaRequest([createMediaItem(url, { origin: 'url' })]) },
+        });
+        console.info(`Playing ${url}`);
+      }
+    },
     theme: {
       name: 'theme',
-      description: 'Manage theme (get, set, toggle)',
+      description: 'Manage the desktop theme (get, list, set, mode, toggle)',
       action: (args?: string[]) => {
         const subCommand = args?.[0]?.toLowerCase();
-        const themeArg = args?.[1]?.toLowerCase();
+        const value = args?.[1]?.toLowerCase();
 
         switch (subCommand) {
+          case undefined:
           case 'get':
-            console.info('Current theme:', theme);
+            console.info('Current theme:', { theme, appearance, colorScheme });
+            break;
+          case 'list':
+            console.info('Available themes:', THEME_IDS
+              .map((id) => `\n- ${id}${id === theme ? ' (active)' : ''}: ${THEMES[id].tagline}`)
+              .join(''));
             break;
           case 'set':
-            if (!themeArg || !['light', 'dark', 'system'].includes(themeArg)) {
-              console.error('Usage: theme set [light|dark|system]');
+            if (!isThemeId(value)) {
+              console.error(`Usage: theme set [${THEME_IDS.join('|')}]`);
               return;
             }
-            setTheme(themeArg);
-            console.info(`Theme set to: ${themeArg}`);
+            setTheme(value)
+              .then(() => console.info(`Theme set to: ${THEMES[value].name}`))
+              .catch(() => console.error(`Theme ${value} could not be loaded`));
+            break;
+          case 'mode':
+            if (!isAppearance(value)) {
+              console.error(`Usage: theme mode [${APPEARANCES.join('|')}]`);
+              return;
+            }
+            setAppearance(value);
+            console.info(supportsAppearance(theme)
+              ? `Appearance set to: ${value}`
+              : `Appearance set to: ${value} (applies to themes with light and dark modes)`);
             break;
           case 'toggle': {
-            const newTheme = theme === 'dark' ? 'light' : 'dark';
-            setTheme(newTheme);
-            console.info(`Theme toggled to: ${newTheme}`);
+            const next = colorScheme === 'dark' ? 'light' : 'dark';
+            setAppearance(next);
+            console.info(supportsAppearance(theme)
+              ? `Appearance toggled to: ${next}`
+              : `${THEMES[theme].name} has a single palette; appearance saved as ${next}`);
             break;
           }
           default:
-            console.error('Usage: theme [get|set|toggle] [theme]');
+            console.error('Usage: theme [get|list|set|mode|toggle] [value]');
         }
       }
     },
@@ -219,7 +256,8 @@ export const ConsoleApp: React.FC = () => {
       action: () => {
         console.info('System Status:', {
           time: new Date().toLocaleString(),
-          theme: theme,
+          theme,
+          appearance,
           openWindows: windows.length,
           apps: APP_LIST.length,
           windowTitles: windows.map(w => w.title)

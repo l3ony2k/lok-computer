@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import type { MenuPlacement } from '@/components/menu/AppMenu';
 
 interface CalendarProps {
   isOpen: boolean;
   onClose: () => void;
   date?: Date;
+  placement?: MenuPlacement;
 }
 
 // Calculate Swatch Internet Time (.beats) with centibeats
@@ -31,7 +34,8 @@ const getSwatchBeats = (date: Date): string => {
 export const Calendar: React.FC<CalendarProps> = ({
   isOpen,
   onClose,
-  date = new Date()
+  date = new Date(),
+  placement = 'top',
 }) => {
   const [clockTime, setClockTime] = useState(new Date());
 
@@ -125,12 +129,13 @@ export const Calendar: React.FC<CalendarProps> = ({
     );
   }
 
-  return (
+  // Portaled so the taskbar's stacking context cannot trap the panel below windows.
+  return createPortal(
     <div
       className="fixed inset-0 z-[10000]"
       onClick={handleOutsideClick}
     >
-      <div className="menu-surface absolute top-[43px] right-[10px] p-3 select-none" role="dialog" aria-label="Calendar and clock">
+      <div className="menu-surface calendar-panel p-3 select-none" data-placement={placement} role="dialog" aria-label="Calendar and clock">
         {/* Analog Clock */}
         <div className="flex justify-center mb-3 select-none">
           <svg width="110" height="110" viewBox="0 0 110 110">
@@ -227,6 +232,7 @@ No time zones, same time worldwide!`}
           {calendarDays}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };

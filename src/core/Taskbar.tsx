@@ -1,31 +1,34 @@
 import { useRef, useEffect } from 'react';
 import { useWindowActions, useWindowState } from '@/hooks/useWindowManager';
-import { CustomIcon } from '@/components/window/CustomIcon'; // Adjusted import path
+import { CustomIcon } from '@/components/window/CustomIcon';
 import { useWindowTransitions } from '@/hooks/useWindowTransitions';
+import type { DesktopLayout } from '@/lib/theme';
+import { SystemClock, SystemMenuButton } from './SystemMenu';
 
-export const Taskbar = () => {
+export const Taskbar = ({ layout = 'lok' }: { layout?: DesktopLayout }) => {
   const { windows, activeWindow } = useWindowState();
   const { focusWindow } = useWindowActions();
   const { minimizeWithTransition, restoreWithTransition } = useWindowTransitions();
-  const taskbarRef = useRef<HTMLDivElement>(null);
+  const tasksRef = useRef<HTMLDivElement>(null);
+  const isClassic = layout === 'classic';
 
   useEffect(() => {
-    const taskbar = taskbarRef.current;
+    const tasks = tasksRef.current;
 
     const handleWheel = (event: WheelEvent) => {
-      if (taskbar && event.deltaY !== 0) {
+      if (tasks && event.deltaY !== 0) {
         event.preventDefault();
-        taskbar.scrollLeft += event.deltaY + event.deltaX;
+        tasks.scrollLeft += event.deltaY + event.deltaX;
       }
     };
 
-    if (taskbar) {
-      taskbar.addEventListener('wheel', handleWheel, { passive: false });
+    if (tasks) {
+      tasks.addEventListener('wheel', handleWheel, { passive: false });
     }
 
     return () => {
-      if (taskbar) {
-        taskbar.removeEventListener('wheel', handleWheel);
+      if (tasks) {
+        tasks.removeEventListener('wheel', handleWheel);
       }
     };
   }, []);
@@ -45,24 +48,38 @@ export const Taskbar = () => {
 
   return (
     <div
-      ref={taskbarRef}
-      className="taskbar h-[35px] flex items-center text-sm relative z-50 overflow-x-auto overflow-y-hidden scrollable-area [&::-webkit-scrollbar]:hidden"
-      style={{ scrollbarWidth: 'none' }}
+      className="taskbar flex items-center text-sm relative z-50 select-none"
+      data-layout={layout}
+      role="toolbar"
+      aria-label="Taskbar"
     >
-      <div className="flex items-center gap-1 whitespace-nowrap h-full">
+      {isClassic && <SystemMenuButton placement="bottom" />}
+
+      <div
+        ref={tasksRef}
+        className="taskbar-tasks flex items-center gap-1 whitespace-nowrap h-full overflow-x-auto overflow-y-hidden [&::-webkit-scrollbar]:hidden"
+        style={{ scrollbarWidth: 'none' }}
+      >
         {windows.map((window) => (
           <button
             key={window.id}
-            className="taskbar-button h-[24px] flex items-center"
+            className="taskbar-button flex items-center"
             data-taskbar-window-id={window.id}
             onClick={() => handleTaskbarClick(window.id)}
             aria-pressed={activeWindow === window.id}
+            title={window.title}
           >
             <CustomIcon iconType={window.iconType} className="mr-1 flex-shrink-0 w-4 h-4" />
             <span className="truncate max-w-[150px]">{window.title}</span>
           </button>
         ))}
       </div>
+
+      {isClassic && (
+        <div className="taskbar-tray flex items-center">
+          <SystemClock placement="bottom" />
+        </div>
+      )}
     </div>
   );
 };

@@ -1,0 +1,522 @@
+/*
+ * Ask AI styles, code-split with the app chunk.
+ * Classic-theme overrides live in src/themes/classic.css.
+ */
+
+.ask-ai-window {
+    container-type: inline-size;
+}
+
+.ask-ai-toolbar {
+    gap: 8px;
+}
+
+.ask-ai-badge {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+}
+
+.ask-ai-tagline {
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    color: color-mix(in srgb, var(--text-color) 62%, transparent);
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ask-ai-transcript {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 10px;
+}
+
+.ask-ai-intro {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px;
+    background: var(--detail-meta-bg);
+    border: 1px dashed var(--internal-border);
+}
+
+.ask-ai-intro h2 {
+    margin: 0;
+    font-size: 15px;
+}
+
+.ask-ai-intro p {
+    margin: 0;
+    color: color-mix(in srgb, var(--text-color) 78%, transparent);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.ask-ai-examples {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.ask-ai-examples-inline {
+    align-items: center;
+    opacity: 0.85;
+}
+
+.ask-ai-examples-inline > span {
+    color: color-mix(in srgb, var(--text-color) 62%, transparent);
+    font-size: 11px;
+}
+
+.ask-ai-examples-inline .retro-button {
+    height: 22px;
+    min-height: 22px;
+    font-size: 11px;
+}
+
+.ask-ai-run {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--internal-border);
+}
+
+.ask-ai-run:last-of-type {
+    border-bottom: 0;
+}
+
+.ask-ai-request {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    gap: 8px;
+    padding: 7px 9px;
+    background: var(--header-bg);
+    border: 1px solid var(--internal-border);
+    font-size: 13px;
+}
+
+.ask-ai-request p {
+    margin: 0;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+    user-select: text;
+}
+
+.ask-ai-tag {
+    margin-left: 8px;
+    padding: 0 4px;
+    border: 1px solid var(--internal-border);
+    font-size: 10px;
+    font-weight: 400;
+    opacity: 0.7;
+}
+
+.ask-ai-content {
+    margin-top: 4px;
+    font-size: 11px;
+}
+
+.ask-ai-content summary {
+    opacity: 0.7;
+}
+
+.ask-ai-content pre {
+    max-height: 140px;
+    margin: 4px 0 0;
+    padding: 6px;
+    overflow: auto;
+    background: var(--block-bg);
+    border: 1px solid var(--internal-border);
+    font-family: var(--font-code);
+    font-size: 11px;
+    white-space: pre-wrap;
+    user-select: text;
+}
+
+.ask-ai-summary {
+    margin: 0;
+    color: color-mix(in srgb, var(--text-color) 78%, transparent);
+    font-size: 12px;
+}
+
+.ask-ai-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-family: var(--font-code);
+    font-size: 11px;
+}
+
+.ask-ai-progress span::before {
+    content: "[WAIT] ";
+    opacity: 0.6;
+}
+
+.ask-ai-progress span:first-child::before,
+.ask-ai-progress span[data-active]::before {
+    content: "[....] ";
+    opacity: 1;
+}
+
+.ask-ai-progress span[data-done]::before {
+    content: "[ OK ] ";
+    color: var(--vis-public-color);
+    opacity: 1;
+}
+
+.ask-ai-progress .ask-ai-cursor::before {
+    content: none;
+}
+
+.ask-ai-cursor {
+    animation: system-boot-blink 800ms steps(1) infinite;
+}
+
+.ask-ai-error {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 6px 8px;
+    color: var(--vis-private-color);
+    background: color-mix(in srgb, var(--vis-private-color) 10%, var(--detail-bg));
+    border: 1px solid color-mix(in srgb, var(--vis-private-color) 40%, transparent);
+    font-size: 12px;
+}
+
+.ask-ai-properties {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr));
+    gap: 8px;
+}
+
+.ask-ai-property {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px;
+    background: var(--block-bg);
+    border: 1px solid var(--internal-border);
+}
+
+.ask-ai-property header {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ask-ai-property code {
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    font-family: var(--font-code);
+    font-size: 12px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ask-ai-type,
+.ask-ai-confidence {
+    flex: 0 0 auto;
+    padding: 0 4px;
+    border: 1px solid var(--internal-border);
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    opacity: 0.75;
+}
+
+.ask-ai-question {
+    margin: 0;
+    color: color-mix(in srgb, var(--text-color) 62%, transparent);
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.ask-ai-value {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.ask-ai-value strong {
+    font-size: 20px;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+}
+
+.ask-ai-value span {
+    font-size: 12px;
+    opacity: 0.75;
+}
+
+.ask-ai-property[data-type="noul"] .ask-ai-value strong {
+    text-transform: uppercase;
+}
+
+.ask-ai-meter {
+    position: relative;
+    display: block;
+    height: 8px;
+    overflow: hidden;
+    background: var(--detail-meta-bg);
+    border: 1px solid var(--internal-border);
+}
+
+.ask-ai-meter > span {
+    display: block;
+    height: 100%;
+    background: color-mix(in srgb, var(--text-color) 35%, transparent);
+}
+
+.ask-ai-meter[data-emphasis] > span {
+    background: var(--ask-ai-bar, var(--text-color));
+}
+
+.ask-ai-options {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.ask-ai-options li {
+    display: grid;
+    grid-template-columns: minmax(0, 40%) minmax(0, 1fr) 4ch;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+}
+
+.ask-ai-options li[data-chosen] {
+    font-weight: 700;
+}
+
+.ask-ai-option-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ask-ai-option-value {
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    opacity: 0.75;
+}
+
+.ask-ai-noul {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.ask-ai-noul-scale {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    text-transform: uppercase;
+}
+
+.ask-ai-noul-track {
+    position: relative;
+    height: 10px;
+    background: var(--detail-meta-bg);
+    border: 1px solid var(--block-border);
+}
+
+.ask-ai-noul-fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    background: var(--ask-ai-bar, var(--text-color));
+}
+
+.ask-ai-noul-midpoint {
+    position: absolute;
+    top: -3px;
+    bottom: -3px;
+    left: 50%;
+    width: 1px;
+    background: var(--text-color);
+    opacity: 0.5;
+}
+
+.ask-ai-noul small {
+    font-family: var(--font-code);
+    font-size: 10px;
+    opacity: 0.65;
+}
+
+.ask-ai-score {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.ask-ai-score-track {
+    position: relative;
+    height: 14px;
+    display: flex;
+    gap: 2px;
+}
+
+.ask-ai-score-level {
+    position: relative;
+    flex: 1 1 0;
+    background: linear-gradient(to top,
+        color-mix(in srgb, var(--ask-ai-bar, var(--text-color)) 45%, transparent) calc(var(--level-probability) * 100%),
+        var(--detail-meta-bg) 0);
+    border: 1px solid var(--internal-border);
+}
+
+.ask-ai-score-level[data-active] {
+    border-color: var(--block-border);
+}
+
+.ask-ai-score-marker {
+    position: absolute;
+    top: -4px;
+    bottom: -4px;
+    width: 2px;
+    margin-left: -1px;
+    background: var(--ask-ai-bar, var(--text-color));
+}
+
+.ask-ai-score-labels {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 10px;
+    opacity: 0.65;
+}
+
+.ask-ai-score-labels span {
+    max-width: 48%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ask-ai-json {
+    color: var(--log-text);
+    background: var(--log-bg);
+    border: 1px solid var(--internal-border);
+}
+
+.ask-ai-json header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 3px 4px 3px 8px;
+    color: var(--text-color);
+    background: var(--header-bg);
+    border-bottom: 1px solid var(--internal-border);
+    font-family: var(--font-code);
+    font-size: 11px;
+}
+
+.ask-ai-json header .retro-button,
+.ask-ai-meta-actions .retro-button {
+    height: 22px;
+    min-height: 22px;
+    font-size: 11px;
+}
+
+.ask-ai-json pre {
+    max-height: 220px;
+    margin: 0;
+    padding: 8px;
+    overflow: auto;
+    font-family: var(--font-code);
+    font-size: 12px;
+    line-height: 1.45;
+    user-select: text;
+}
+
+.ask-ai-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
+    color: color-mix(in srgb, var(--text-color) 60%, transparent);
+    font-family: var(--font-code);
+    font-size: 10px;
+}
+
+.ask-ai-meta-actions {
+    margin-left: auto;
+}
+
+.ask-ai-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.ask-ai-editor label {
+    font-size: 11px;
+    opacity: 0.7;
+}
+
+.ask-ai-editor textarea {
+    height: auto;
+    min-height: 180px;
+    padding: 6px 7px;
+    font-family: var(--font-code);
+    font-size: 11px;
+    line-height: 1.4;
+    resize: vertical;
+    user-select: text;
+}
+
+.ask-ai-editor-error {
+    margin: 0;
+    color: var(--vis-private-color);
+    font-size: 11px;
+}
+
+.ask-ai-editor-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.ask-ai-composer {
+    display: flex;
+    flex-direction: column;
+}
+
+.ask-ai-content-input {
+    height: auto;
+    min-height: 64px;
+    max-height: 40vh;
+    padding: 6px 7px;
+    border: 0;
+    border-bottom: 1px solid var(--internal-border);
+    font-size: 12px;
+    resize: vertical;
+    user-select: text;
+}
+
+.ask-ai-composer-row {
+    justify-content: flex-start;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ask-ai-cursor {
+        animation: none;
+    }
+}

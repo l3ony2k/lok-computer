@@ -140,12 +140,14 @@ export const PopupDialog: React.FC<PopupDialogProps> = ({
                 onMouseDown={handleMouseDown}
             >
                 <CustomIcon iconType={iconType} className="mr-1 w-4 h-4" />
-                <span className="flex-1 truncate">{title}</span>
-                <div className="flex gap-1">
+                <span className="window-title flex-1 truncate">{title}</span>
+                <div className="window-controls flex gap-1">
                     <button
                         className="retro-button window-control"
+                        data-window-control="close"
                         onClick={onClose}
                         title="Close"
+                        aria-label="Close"
                     >
                         <X className="w-3 h-3" />
                     </button>

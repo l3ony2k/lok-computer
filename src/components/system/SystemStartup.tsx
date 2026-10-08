@@ -1,6 +1,8 @@
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { APP_MODULE_COUNT, preloadAppModules } from "@/config/preloadApps";
 import { useUserSettings } from "@/hooks/useUserSettings";
+import { useTheme } from "@/hooks/useTheme";
+import { loadThemeStyles, THEMES } from "@/lib/theme";
 import { useWindowState } from "@/hooks/useWindowManager";
 import { getUserChannels } from "@/lib/api";
 import { consumeBootMode, consumeBootReason, SYSTEM_VERSION } from "@/lib/system";
@@ -26,6 +28,7 @@ const initialStages: BootStage[] = [
   { label: "kernel", detail: `lok kernel ${SYSTEM_VERSION}`, state: "running" },
   { label: "modules", detail: "waiting for app modules", state: "waiting" },
   { label: "assets", detail: "waiting for local assets", state: "waiting" },
+  { label: "theme", detail: "waiting for theme", state: "waiting" },
   { label: "cache", detail: "warming application data", state: "waiting" },
   { label: "settings", detail: "mounting user settings", state: "waiting" },
   { label: "session", detail: "restoring window session", state: "waiting" },
@@ -63,6 +66,8 @@ const withTimeout = async <T,>(promise: Promise<T>, milliseconds: number) => {
 export const SystemStartup = ({ children }: { children: ReactNode }) => {
   const { isLoading: settingsLoading } = useUserSettings();
   const { isSessionRestored } = useWindowState();
+  const { theme } = useTheme();
+  const [bootTheme] = useState(theme);
   const [stages, setStages] = useState(initialStages);
   const [preloadReady, setPreloadReady] = useState(false);
   const [bootComplete, setBootComplete] = useState(false);
@@ -117,11 +122,23 @@ export const SystemStartup = ({ children }: { children: ReactNode }) => {
           if (!cancelled) updateStage("cache", { detail: "Are.na index available on demand", state: "warning" });
         });
 
+      const themeName = THEMES[bootTheme].name;
+      updateStage("theme", { detail: `loading ${themeName} theme`, state: "running" });
+      const themeTask = withTimeout(loadThemeStyles(bootTheme).then(() => true), 8000)
+        .then((loaded) => {
+          if (!cancelled) updateStage("theme", loaded
+            ? { detail: `${themeName} theme applied`, state: "done" }
+            : { detail: `${themeName} theme deferred`, state: "warning" });
+        })
+        .catch(() => {
+          if (!cancelled) updateStage("theme", { detail: `${themeName} theme unavailable`, state: "warning" });
+        });
+
       const fontTask = document.fonts?.ready
         ? withTimeout(document.fonts.ready, 4000)
         : Promise.resolve(null);
 
-      await Promise.all([moduleTask, assetTask, cacheTask, fontTask]);
+      await Promise.all([moduleTask, assetTask, cacheTask, themeTask, fontTask]);
 
       const minimumBootTime = 700;
       const remaining = minimumBootTime - (performance.now() - startedAt);
@@ -134,7 +151,7 @@ export const SystemStartup = ({ children }: { children: ReactNode }) => {
 
     void runPreload();
     return () => { cancelled = true; };
-  }, [bootMode]);
+  }, [bootMode, bootTheme]);
 
   useEffect(() => {
     updateStage("settings", settingsLoading

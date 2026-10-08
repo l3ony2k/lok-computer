@@ -27,8 +27,12 @@ export const TypoText = ({
 
     return (
         <span>
-            {displayText}
-            {isTyping && <span className="animate-pulse">▌</span>}
+            {/* Screen readers get the final text once, not every keystroke. */}
+            <span aria-hidden="true">
+                {displayText}
+                {isTyping && <span className="animate-pulse">▌</span>}
+            </span>
+            <span className="sr-only">{text}</span>
         </span>
     );
 };

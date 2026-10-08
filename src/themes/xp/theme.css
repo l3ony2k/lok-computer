@@ -1,0 +1,526 @@
+/*
+ * XP theme. Palette, gradients, and form glyphs follow XP.css
+ * (https://github.com/botoxparty/XP.css, MIT, see ./LICENSE). Caption glyphs
+ * are drawn locally; the desktop is a CSS landscape, not a bitmap.
+ *
+ * Scope: html[data-theme="xp"][data-layout]:not(#_) outranks classic.css.
+ */
+
+html[data-theme="xp"][data-layout]:not(#_) {
+    --xp-blue: #0054e3;
+    --xp-frame: inset -1px -1px #00138c, inset 1px 1px #0831d9, inset -2px -2px #001ea0, inset 2px 2px #166aee, inset -3px -3px #003bda, inset 3px 3px #0855dd;
+    --xp-frame-inactive: inset -1px -1px #6f87c9, inset 1px 1px #8fa6e0, inset -2px -2px #7b93d1, inset 2px 2px #a9bbea, inset -3px -3px #7f9bd8, inset 3px 3px #93abe3;
+    --xp-button: linear-gradient(180deg, #ffffff 0%, #ecebe5 86%, #d8d0c4 100%);
+    --xp-button-pressed: linear-gradient(180deg, #cdcac3 0%, #e3e3db 8%, #e5e5de 94%, #f2f2f1 100%);
+    --xp-hover: inset -1px 1px #fff0cf, inset 1px 2px #fdd889, inset -2px 2px #fbc761, inset 2px -2px #e5a01a;
+    --xp-focus: inset -1px 1px #cee7ff, inset 1px 2px #98b8ea, inset -2px 2px #bcd4f6, inset 1px -1px #89ade4, inset 2px -2px #89ade4;
+
+    --font-ui: Tahoma, "Segoe UI", Verdana, "DejaVu Sans", sans-serif;
+    --font-code: "Lucida Console", Consolas, "Courier New", monospace;
+    --retro-window: 50 23% 89%;
+    --background: 50 23% 89%;
+    --foreground: 0 0% 0%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 0%;
+    --primary: 217 59% 48%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 50 23% 89%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 50 23% 93%;
+    --muted-foreground: 0 0% 35%;
+    --accent: 217 59% 48%;
+    --accent-foreground: 0 0% 100%;
+    --border: 51 13% 63%;
+    --input: 206 30% 61%;
+    --ring: 217 59% 48%;
+    --header-bg: #ece9d8;
+    --header-border: #003c74;
+    --internal-border: #aca899;
+    --internal-border-hover: #7f9db9;
+    --block-bg: #ffffff;
+    --block-border: #7f9db9;
+    --button-bg: #ece9d8;
+    --button-hover: #f3f2ec;
+    --text-color: #000000;
+    --link-color: #0b4fd6;
+    --detail-bg: #ffffff;
+    --detail-border: #aca899;
+    --detail-header-bg: #ece9d8;
+    --detail-meta-bg: #f6f5ef;
+    --icon-color: #000000;
+    --focus-color: #000000;
+    --vis-public-color: #2a8a2a;
+    --vis-private-color: #c1272d;
+    --loading-bg: #ffffff;
+    --loading-bar: #2fbc2f;
+    --log-bg: #000000;
+    --log-text: #c0c0c0;
+    --log-muted: #808080;
+    --log-error: #ff6b6b;
+    --log-warn: #f5d76e;
+    --log-info: #8ab4ff;
+    --log-prefix-default: #a0a0a0;
+    --log-prefix-cache: #7fd67f;
+    --log-prefix-api: #6fd6e8;
+    --log-prefix-app: #f5d76e;
+    --log-prefix-session: #c49bff;
+    --log-prefix-registry: #ff9fcb;
+    --selection-bg: #316ac5;
+    --selection-fg: #ffffff;
+    --desktop-bg: #5a8fd8;
+    --desktop-pattern:
+        radial-gradient(ellipse 150% 58% at 32% 112%, #74bb4a 0 47%, #62a83b 57%, transparent 58%),
+        radial-gradient(ellipse 90% 46% at 95% 104%, #4f9a33 0 50%, transparent 51%),
+        radial-gradient(ellipse 22% 9% at 24% 30%, rgba(255, 255, 255, 0.85), transparent 72%),
+        radial-gradient(ellipse 30% 8% at 31% 27%, rgba(255, 255, 255, 0.6), transparent 70%),
+        radial-gradient(ellipse 20% 6% at 72% 18%, rgba(255, 255, 255, 0.65), transparent 70%),
+        radial-gradient(ellipse 14% 5% at 82% 24%, rgba(255, 255, 255, 0.5), transparent 70%),
+        linear-gradient(180deg, #1d5fc6 0%, #3f7fd8 30%, #7fb2ec 62%, #c8e1fa 100%);
+    --desktop-pattern-size: 100% 100%;
+    --desktop-label-color: #ffffff;
+    --desktop-label-edge: transparent;
+    --desktop-icon-drop-shadow: transparent;
+    --taskbar-height: 30px;
+    --media-stage-bg: #000000;
+    --media-stage-fg: #7fd67f;
+    --media-accent: #316ac5;
+
+    --c-face: #ece9d8;
+    --c-font-size: 11px;
+    --c-text-xs: 11px;
+    --c-text-sm: 11px;
+    --c-text-base: 12px;
+    --c-title-font: "Trebuchet MS", Tahoma, "Segoe UI", sans-serif;
+    --c-title-size: 13px;
+    --c-title-weight: 700;
+    --c-title-text-shadow: 1px 1px #0f1089;
+    --c-title-text-shadow-inactive: none;
+    --c-placeholder: #8a8a8a;
+    --c-focus-outline: 1px dotted #000000;
+    --c-focus-offset: -4px;
+
+    --c-btn-fg: #000000;
+    --c-btn-bg: var(--xp-button);
+    --c-btn-border: 1px solid #003c74;
+    --c-btn-radius: 3px;
+    --c-btn-shadow: none;
+    --c-btn-bg-hover: var(--xp-button);
+    --c-btn-border-hover: 1px solid #003c74;
+    --c-btn-shadow-hover: var(--xp-hover);
+    --c-btn-bg-active: var(--xp-button-pressed);
+    --c-btn-border-active: 1px solid #003c74;
+    --c-btn-shadow-active: none;
+    --c-btn-bg-on: var(--xp-button-pressed);
+    --c-btn-border-on: 1px solid #003c74;
+    --c-btn-shadow-on: inset 1px 1px 1px rgba(0, 0, 0, 0.15);
+    --c-btn-shadow-default: var(--xp-focus);
+    --c-btn-fg-disabled: #a1a192;
+    --c-btn-bg-disabled: #f4f4f0;
+    --c-btn-border-disabled: 1px solid #c9c7ba;
+    --c-btn-shadow-disabled: none;
+    --c-joined-gap: 2px;
+
+    --c-field-fg: #000000;
+    --c-field-bg: #ffffff;
+    --c-field-border: 1px solid #7f9db9;
+    --c-field-radius: 0;
+    --c-field-shadow: none;
+    --c-field-height: 21px;
+    --c-field-bg-disabled: #ebebe4;
+    --c-select-arrow: url("./icons/dropdown.svg");
+    --c-select-arrow-position: right 1px center;
+    --c-select-arrow-size: 15px 17px;
+    --c-readout-bg: #ffffff;
+    --c-readout-border: 1px solid #7f9db9;
+    --c-readout-shadow: none;
+
+    --c-check-bg: linear-gradient(135deg, #dcdcd7 0%, #ffffff 100%);
+    --c-check-border: 1px solid #1d5281;
+    --c-check-shadow: none;
+    --c-check-shadow-hover: inset -2px -2px #f8b636, inset 2px 2px #fedf9c;
+    --c-check-mark: url("./icons/checkmark.svg");
+    --c-radio-dot: url("./icons/radio-dot.svg");
+    --c-check-bg-disabled: #ffffff;
+    --c-track-bg: #ecebe4;
+    --c-track-height: 3px;
+    --c-track-radius: 2px;
+    --c-track-shadow: inset 1px 1px 0 #9d9c99, 1px 1px 0 #ffffff;
+    --c-thumb-image: url("./icons/indicator-horizontal.svg");
+
+    --c-window-bg: #ece9d8;
+    --c-window-border: 0;
+    --c-window-radius: 8px 8px 0 0;
+    --c-window-padding: 0 0 3px 0;
+    --c-window-shadow: var(--xp-frame), 2px 2px 8px rgba(0, 0, 0, 0.35);
+    --c-client-bg: #ece9d8;
+    --c-title-height: 29px;
+    --c-title-padding: 3px 5px 3px 6px;
+    --c-title-radius: 7px 7px 0 0;
+    --c-title-fg: #ffffff;
+    --c-title-bg: linear-gradient(180deg, #0997ff 0%, #0053ee 8%, #0050ee 40%, #0066ff 88%, #0066ff 93%, #005bff 95%, #003dd7 96%, #003dd7 100%);
+    --c-title-fg-inactive: #d8e4f8;
+    --c-title-bg-inactive: linear-gradient(180deg, #a5bfef 0%, #7b9ee3 8%, #7a97dd 40%, #8aa9e6 88%, #8aa9e6 93%, #839fdf 95%, #7a91d1 96%, #7a91d1 100%);
+    --c-controls-gap: 2px;
+
+    --c-menu-bg: #ffffff;
+    --c-menu-border: 1px solid #aca899;
+    --c-menu-radius: 0;
+    --c-menu-padding: 2px;
+    --c-menu-shadow: 2px 2px 3px rgba(0, 0, 0, 0.35);
+    --c-menu-divider: 1px solid #aca899;
+    --c-hl-bg: #316ac5;
+    --c-hl-fg: #ffffff;
+    --c-hl-border: 1px solid #316ac5;
+    --c-hl-radius: 0;
+    --c-hover-bg: #e8eef9;
+
+    --c-toolbar-bg: linear-gradient(180deg, #fbfbf8, #ece9d8);
+    --c-toolbar-border: 1px solid #d0d0bf;
+    --c-toolbar-shadow: 0 1px 0 #ffffff;
+    --c-status-bg: #ece9d8;
+    --c-status-shadow: inset 0 1px 2px #a0a0a0;
+    --c-status-padding: 0 3px 2px;
+    --c-tab-bg: linear-gradient(180deg, #ffffff 0%, #fafaf9 26%, #f0f0ea 95%, #ecebe5 100%);
+    --c-tab-bg-hover: linear-gradient(180deg, #ffffff 0%, #fafaf9 26%, #f0f0ea 95%, #ecebe5 100%);
+    --c-tab-bg-on: #fcfcfe;
+    --c-tab-border: 1px solid #919b9c;
+    --c-tab-border-top-on: 1px solid #e68b2c;
+    --c-tab-radius: 3px 3px 0 0;
+    --c-tab-shadow: none;
+    --c-tab-shadow-hover: inset 0 2px #ffc73c;
+    --c-tab-shadow-on: inset 0 2px #ffc73c;
+    --c-tab-panel-border: 1px solid #919b9c;
+    --c-group-border: 1px solid #d0d0bf;
+    --c-group-radius: 4px;
+    --c-group-title-fg: #0046d5;
+    --c-list-bg: #ffffff;
+    --c-list-shadow: none;
+    --c-header-bg: linear-gradient(180deg, #ffffff, #ebeadb);
+    --c-header-bg-hover: linear-gradient(180deg, #ffffff, #f3f3ea);
+    --c-header-border: 0;
+    --c-header-shadow: inset 0 -3px #d6d3ce, inset -1px 0 #c7c5b2;
+    --c-header-shadow-active: inset 0 -3px #fc9f2d, inset -1px 0 #c7c5b2;
+
+    --c-taskbar-bg: linear-gradient(180deg, #1f2f86 0, #3165c4 3%, #3682e5 6%, #4490e6 10%, #3883e5 12%, #2b71e0 15%, #2663da 18%, #235bd6 20%, #2258d5 23%, #2157d6 38%, #245ddb 54%, #2562df 86%, #245fdc 89%, #2158d4 92%, #1d4ec0 95%, #1941a5 98%);
+    --c-taskbar-border-top: 0;
+    --c-taskbar-padding: 0;
+    --c-taskbar-fg: #ffffff;
+    --c-task-height: 24px;
+    --c-task-gap: 3px;
+    --c-task-fg: #ffffff;
+    --c-task-bg: #3c81f3;
+    --c-task-border: 0;
+    --c-task-radius: 2px;
+    --c-task-shadow: inset -1px 0 rgba(0, 0, 0, 0.3), inset 1px 1px 1px rgba(255, 255, 255, 0.2);
+    --c-task-bg-hover: #53a3ff;
+    --c-task-bg-on: #1e52b7;
+    --c-task-shadow-on: inset 0 0 1px 1px rgba(0, 0, 0, 0.2), inset 1px 0 1px rgba(0, 0, 0, 0.7);
+    --c-tray-height: 100%;
+    --c-tray-fg: #ffffff;
+    --c-tray-bg: linear-gradient(180deg, #0c59b9 1%, #139ee9 6%, #18b5f2 10%, #139beb 14%, #1290e8 19%, #0d8dea 63%, #0d9ff1 81%, #0f9eed 88%, #119be9 91%, #1392e2 94%, #137ed7 97%, #095bc9 100%);
+    --c-tray-border: 0;
+    --c-tray-shadow: inset 1px 0 1px #18bbff, -1px 0 #1042af;
+
+    --c-scrollbar-thumb: #c8d6fb;
+    --c-scrollbar-track: #f5f4ea;
+    --c-desktop-label-shadow: 1px 1px 1px #000000;
+    --c-desktop-label-selected-bg: #0b61ff;
+    --c-desktop-label-selected-border: 1px dotted #ffffff;
+    --c-desktop-icon-selected-filter: brightness(0.75) sepia(1) hue-rotate(185deg) saturate(4);
+    --c-modal-backdrop: rgba(0, 0, 0, 0.2);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- Window chrome ---------- */
+
+html[data-theme="xp"][data-layout]:not(#_) .window-surface[data-window-surface-id]:not([data-active]) {
+    box-shadow: var(--xp-frame-inactive), 2px 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+html[data-theme="xp"][data-layout]:not(#_) .window-surface > .window-content-area,
+html[data-theme="xp"][data-layout]:not(#_) .window-surface > .flex-1 {
+    margin: 0 3px;
+}
+
+html[data-theme="xp"][data-layout]:not(#_) .window-control,
+html[data-theme="xp"][data-layout]:not(#_) .window-control:hover:not(:disabled) {
+    width: 21px;
+    height: 21px;
+    min-height: 21px;
+    border: 1px solid #ffffff;
+    border-radius: 3px;
+    background-color: transparent;
+    background-image: var(--xp-caption-glyph), radial-gradient(circle at 90% 90%, #0054e9 0%, #2263d5 55%, #4479e4 70%, #a3bbec 90%, #ffffff 100%);
+    background-position: center;
+    background-size: 21px 21px, 100% 100%;
+    box-shadow: inset 0 -1px 2px 1px #4646ff;
+}
+
+html[data-theme="xp"][data-layout]:not(#_) .window-control:hover:not(:disabled) {
+    filter: brightness(1.18);
+}
+
+html[data-theme="xp"][data-layout]:not(#_) .window-control:active:not(:disabled) {
+    filter: brightness(0.85);
+    box-shadow: inset 0 1px 2px 1px #1d1d9b;
+}
+
+html[data-theme="xp"][data-layout]:not(#_) .window-control[data-window-control="minimize"] {
+    --xp-caption-glyph: url("./icons/caption-minimize.svg");
+}
+
+html[data-theme="xp"][data-layout]:not(#_) .window-control[data-window-control="maximize"] {
+    --xp-caption-glyph: url("./icons/caption-maximize.svg");
+}
+
+html[data-theme="xp"][data-layout]:not(#_) .window-control[data-window-control="restore"] {
+    --xp-caption-glyph: url("./icons/caption-restore.svg");
+}
+
+html[data-theme="xp"][data-layout]:not(#_) .window-control[data-window-control="close"],
+html[data-theme="xp"][data-layout]:not(#_) .window-control[data-window-control="close"]:hover:not(:disabled) {
+    --xp-caption-glyph: url("./icons/caption-close.svg");
+    background-image: var(--xp-caption-glyph), radial-gradient(circle at 90% 90%, #cc4600 0%, #dc6527 55%, #cd7546 70%, #ffccb2 90%, #ffffff 100%);
+    box-shadow: inset 0 -1px 2px 1px #da4600;
+}
+
+html[data-theme="xp"][data-layout]:not(#_) .window-surface[data-window-surface-id]:not([data-active]) .window-control {
+    filter: saturate(0.45) brightness(1.2);
+}
+
+/* ---------- Taskbar and start menu ---------- */
+
+html[data-theme="xp"][data-layout]:not(#_) .start-button,
+html[data-theme="xp"][data-layout]:not(#_) .start-button:hover {
+    height: 100%;
+    padding: 0 22px 0 9px;
+    gap: 5px;
+    color: #ffffff;
+    background: linear-gradient(180deg, #3c9b3c 0%, #5abf5a 8%, #3c9b3c 40%, #2f8b2f 88%, #266f26 100%);
+    border: 0;
+    border-radius: 0 10px 10px 0;
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.45), inset -2px 0 2px rgba(0, 0, 0, 0.25), 2px 0 4px rgba(0, 0, 0, 0.35);
+    font-family: "Franklin Gothic Medium", "Trebuchet MS", Tahoma, sans-serif;
+    font-size: 18px;
+    font-style: italic;
+    font-weight: 700;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.65);
+}
+
+html[data-theme="xp"][data-layout]:not(#_) .start-button:hover {
+    filter: brightness(1.1);
+}
+
+html[data-theme="xp"][data-layout]:not(#_) .start-button[aria-expanded="true"] {
+    filter: brightness(0.85);
+}
+
+html[data-theme="xp"][data-layout]:not(#_) .start-button-icon {
+    width: 20px;
+    height: 20px;
+    filter: drop-shadow(1px 1px 1px rgba(0, 0, 0, 0.5));
+}
+
+html[data-theme="xp"][data-layout]:not(#_) .start-button-label {
+    padding-right: 2px;
+}
+
+html[data-theme="xp"][data-layout]:not(#_) .taskbar-button {
+    text-shadow: none;
+}
+
+html[data-theme="xp"][data-layout]:not(#_) .taskbar-clock {
+    padding: 0 6px;
+}
+
+html[data-theme="xp"][data-layout]:not(#_) .app-menu-panel[data-placement="bottom"] {
+    flex-direction: column;
+    width: 300px;
+    padding: 0;
+    overflow: visible;
+    background: #ffffff;
+    border: 1px solid #1c50b6;
+    border-radius: 7px 7px 0 0;
+    box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.45);
+}
+
+html[data-theme="xp"][data-layout]:not(#_) .app-menu-panel[data-placement="bottom"]::after {
+    content: "";
+    display: block;
+    height: 34px;
+    background: linear-gradient(180deg, #4282d6 0%, #3b72cd 10%, #2f63c4 50%, #275cbd 90%, #1c4fae 100%);
+}
+
+html[data-theme="xp"][data-layout]:not(#_) .app-menu-banner {
+    height: 56px;
+    align-items: center;
+    gap: 8px;
+    padding: 0 10px;
+    color: #ffffff;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.25), transparent 30%),
+        linear-gradient(180deg, #1868ce 0%, #0e60cb 12%, #0e60cb 20%, #1164cf 32%, #1667cf 33%, #1b6cd3 47%, #1e70d9 54%, #2476dc 60%, #297ae0 65%, #3482e3 77%, #3786e5 79%, #428ee9 90%, #4791eb 100%);
+    border-radius: 6px 6px 0 0;
+    box-shadow: inset 0 -2px #e8913a;
+    font-family: "Trebuchet MS", Tahoma, sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.55);
+}
+
+html[data-theme="xp"][data-layout]:not(#_) .app-menu-banner::before {
+    content: "";
+    width: 40px;
+    height: 40px;
+    flex: 0 0 auto;
+    background: #ffffff url("/favicon-96x96.png") center / cover no-repeat;
+    border: 2px solid #d8e4f8;
+    border-radius: 3px;
+    box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+html[data-theme="xp"][data-layout]:not(#_) .app-menu-banner b {
+    font-weight: 400;
+    opacity: 0.85;
+}
+
+html[data-theme="xp"][data-layout]:not(#_) .app-menu-panel[data-placement="bottom"] .app-menu-items {
+    padding: 4px 2px;
+    border-left: 1px solid #95bdee;
+    border-right: 1px solid #95bdee;
+}
+
+html[data-theme="xp"][data-layout]:not(#_) .app-menu-panel[data-placement="bottom"] .menu-item-button {
+    min-height: 30px;
+    font-size: 11px;
+}
+
+/* ---------- Scrollbars ---------- */
+
+html[data-theme="xp"][data-layout]:not(#_) ::-webkit-scrollbar {
+    width: 17px;
+    height: 17px;
+}
+
+html[data-theme="xp"][data-layout]:not(#_) ::-webkit-scrollbar-corner {
+    background: #ece9d8;
+}
+
+html[data-theme="xp"][data-layout]:not(#_) ::-webkit-scrollbar-track:vertical {
+    background-image: url("./icons/scroll-background.svg");
+}
+
+html[data-theme="xp"][data-layout]:not(#_) ::-webkit-scrollbar-track:horizontal {
+    background-image: url("./icons/scroll-background-horizontal.svg");
+}
+
+html[data-theme="xp"][data-layout]:not(#_) ::-webkit-scrollbar-thumb {
+    background-color: #c8d6fb;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 7px;
+    border: 1px solid #ffffff;
+    border-radius: 2px;
+    box-shadow: inset -3px 0 #bad1fc, inset 1px 1px #b7caf5;
+}
+
+html[data-theme="xp"][data-layout]:not(#_) ::-webkit-scrollbar-thumb:vertical {
+    background-image: url("./icons/scroll-thumb.svg");
+}
+
+html[data-theme="xp"][data-layout]:not(#_) ::-webkit-scrollbar-thumb:horizontal {
+    background-size: 8px;
+    background-image: url("./icons/scroll-thumb-horizontal.svg");
+}
+
+html[data-theme="xp"][data-layout]:not(#_) ::-webkit-scrollbar-button:vertical:start:decrement,
+html[data-theme="xp"][data-layout]:not(#_) ::-webkit-scrollbar-button:vertical:end:increment,
+html[data-theme="xp"][data-layout]:not(#_) ::-webkit-scrollbar-button:horizontal:start:decrement,
+html[data-theme="xp"][data-layout]:not(#_) ::-webkit-scrollbar-button:horizontal:end:increment {
+    display: block;
+}
+
+html[data-theme="xp"][data-layout]:not(#_) ::-webkit-scrollbar-button:vertical:start {
+    height: 17px;
+    background-image: url("./icons/scroll-arrow-up.svg");
+}
+
+html[data-theme="xp"][data-layout]:not(#_) ::-webkit-scrollbar-button:vertical:end {
+    height: 17px;
+    background-image: url("./icons/scroll-arrow-down.svg");
+}
+
+html[data-theme="xp"][data-layout]:not(#_) ::-webkit-scrollbar-button:horizontal:start {
+    width: 17px;
+    background-image: url("./icons/scroll-arrow-left.svg");
+}
+
+html[data-theme="xp"][data-layout]:not(#_) ::-webkit-scrollbar-button:horizontal:end {
+    width: 17px;
+    background-image: url("./icons/scroll-arrow-right.svg");
+}
+
+/* ---------- Controls ---------- */
+
+html[data-theme="xp"][data-layout]:not(#_) input[type="checkbox"],
+html[data-theme="xp"][data-layout]:not(#_) input[type="radio"] {
+    background-image: var(--c-check-bg);
+    background-color: #ffffff;
+}
+
+html[data-theme="xp"][data-layout]:not(#_) input[type="checkbox"]:checked {
+    background: url("./icons/checkmark.svg") center / 9px 9px no-repeat, var(--c-check-bg);
+}
+
+html[data-theme="xp"][data-layout]:not(#_) input[type="radio"]:checked {
+    background: url("./icons/radio-dot.svg") center / 5px 5px no-repeat, var(--c-check-bg);
+}
+
+html[data-theme="xp"][data-layout]:not(#_) input[type="checkbox"]:disabled,
+html[data-theme="xp"][data-layout]:not(#_) input[type="radio"]:disabled {
+    background: #ffffff;
+    border-color: #cac8bb;
+}
+
+html[data-theme="xp"][data-layout]:not(#_) select.arena-toolbar-control:hover:not(:disabled) {
+    background-image: url("./icons/dropdown-hover.svg");
+}
+
+html[data-theme="xp"][data-layout]:not(#_) :where(.search-input, input.arena-toolbar-control):focus {
+    border-color: #316ac5;
+}
+
+/* ---------- Content ---------- */
+
+html[data-theme="xp"][data-layout]:not(#_) .app-window-layout {
+    background: #ece9d8;
+}
+
+html[data-theme="xp"][data-layout]:not(#_) .app-window-layout > .window-content-area {
+    background: var(--detail-bg);
+}
+
+html[data-theme="xp"][data-layout]:not(#_) .console-layout,
+html[data-theme="xp"][data-layout]:not(#_) .console-layout * {
+    font-family: var(--font-code);
+    font-size: 12px;
+}
+
+html[data-theme="xp"][data-layout]:not(#_) .config-content {
+    background: #f4f3ee;
+}
+
+html[data-theme="xp"][data-layout]:not(#_) .config-section-title {
+    background: #f4f3ee;
+}
+
+html[data-theme="xp"][data-layout]:not(#_) .arena-file-card {
+    border-color: #d0d0bf;
+}
+
+html[data-theme="xp"][data-layout]:not(#_) .lok-reader-entry-list > .lok-reader-entry,
+html[data-theme="xp"][data-layout]:not(#_) .lok-reader-entry-list > .lok-reader-entry + .lok-reader-entry {
+    border-color: #d0d0bf;
+}

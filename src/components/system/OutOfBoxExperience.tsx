@@ -1,16 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
-import { Cat, Check, Monitor, Moon, Palette, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
+import { Cat, Check, Monitor, Palette } from "lucide-react";
+import { useTheme } from "@/hooks/useTheme";
+import { THEMES, type Appearance, type ThemeId } from "@/lib/theme";
+import { AppearancePicker, ThemePicker } from "@/components/system/ThemePicker";
 import { CustomIcon } from "@/components/window/CustomIcon";
 import { RetroButton } from "@/components/ui/RetroButton";
 import type { CrtSettings, OnekoSettings } from "@/hooks/useUserSettings";
 import onekoDefault from "@/assets/oneko.gif";
 import onekoDark from "@/assets/oneko-dark.gif";
 
-type ThemeChoice = "light" | "dark" | "system";
-
 export interface OobeSelection {
-  theme: ThemeChoice;
+  theme: ThemeId;
+  appearance: Appearance;
   oneko: Omit<OnekoSettings, "hasBeenAsked">;
   crt: CrtSettings;
 }
@@ -32,11 +33,8 @@ export const OutOfBoxExperience = ({
   onPreview,
   onComplete,
 }: OutOfBoxExperienceProps) => {
-  const { theme, setTheme } = useTheme();
+  const { theme, appearance } = useTheme();
   const [step, setStep] = useState(0);
-  const [selectedTheme, setSelectedTheme] = useState<ThemeChoice>(() => (
-    theme === "light" || theme === "dark" || theme === "system" ? theme : "system"
-  ));
   const [onekoEnabled, setOnekoEnabled] = useState(initialOneko?.enabled ?? false);
   const [onekoSpeed, setOnekoSpeed] = useState(initialOneko?.speed ?? 10);
   const [onekoVariant, setOnekoVariant] = useState<OnekoSettings["variant"]>(initialOneko?.variant ?? "default");
@@ -47,7 +45,8 @@ export const OutOfBoxExperience = ({
   const [crtCurvature, setCrtCurvature] = useState(initialCrt?.curvature ?? 20);
 
   const selection = useMemo<OobeSelection>(() => ({
-    theme: selectedTheme,
+    theme,
+    appearance,
     oneko: { enabled: onekoEnabled, speed: onekoSpeed, variant: onekoVariant },
     crt: {
       enabled: crtEnabled,
@@ -56,18 +55,13 @@ export const OutOfBoxExperience = ({
       rgbOffset: crtRgbOffset,
       curvature: crtCurvature,
     },
-  }), [crtCurvature, crtEnabled, crtFlicker, crtRgbOffset, crtScanlines, onekoEnabled, onekoSpeed, onekoVariant, selectedTheme]);
+  }), [crtCurvature, crtEnabled, crtFlicker, crtRgbOffset, crtScanlines, onekoEnabled, onekoSpeed, onekoVariant, theme, appearance]);
 
   useEffect(() => {
     if (isOpen) onPreview(selection);
   }, [isOpen, onPreview, selection]);
 
   if (!isOpen) return null;
-
-  const chooseTheme = (value: ThemeChoice) => {
-    setSelectedTheme(value);
-    setTheme(value);
-  };
 
   const finish = () => onComplete(selection);
 
@@ -117,20 +111,10 @@ export const OutOfBoxExperience = ({
               <section className="oobe-page">
                 <div className="oobe-heading">
                   <Palette className="h-5 w-5" />
-                  <div><h1>Appearance</h1><p>Choose a color mode.</p></div>
+                  <div><h1>Appearance</h1><p>Choose a desktop theme. You can change it later in Config.</p></div>
                 </div>
-                <div className="oobe-choice-grid oobe-theme-choices">
-                  {([
-                    { value: "light" as const, label: "Light", icon: Sun },
-                    { value: "dark" as const, label: "Dark", icon: Moon },
-                    { value: "system" as const, label: "Automatic", icon: Monitor },
-                  ]).map(({ value, label, icon: Icon }) => (
-                    <button key={value} type="button" className="oobe-choice" data-active={selectedTheme === value || undefined} onClick={() => chooseTheme(value)}>
-                      <Icon className="h-5 w-5" />
-                      <span>{label}</span>
-                    </button>
-                  ))}
-                </div>
+                <ThemePicker />
+                <AppearancePicker />
               </section>
             )}
 
@@ -221,7 +205,8 @@ export const OutOfBoxExperience = ({
                   <div><h1>Ready</h1><p>Your desktop is configured.</p></div>
                 </div>
                 <dl className="oobe-summary">
-                  <div><dt>Theme</dt><dd>{selectedTheme === "system" ? "Automatic" : selectedTheme}</dd></div>
+                  <div><dt>Theme</dt><dd>{THEMES[theme].name}</dd></div>
+                  <div><dt>Color mode</dt><dd>{THEMES[theme].schemes.length > 1 ? (appearance === "system" ? "Automatic" : appearance) : "Original palette"}</dd></div>
                   <div><dt>Cursor cat</dt><dd>{onekoEnabled ? `${onekoVariant === "dark" ? "Black" : "White"}, speed ${onekoSpeed}` : "Off"}</dd></div>
                   <div><dt>CRT effect</dt><dd>{crtEnabled ? "Custom" : "Off"}</dd></div>
                 </dl>
