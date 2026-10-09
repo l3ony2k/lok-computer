@@ -1,29 +1,23 @@
-import { Agent, CredentialSession } from '@atproto/api'; // Standard npm import
 import { JevError, planQuestions, runJevRequest } from './jev.js';
 
 /**
  * Available Environment Variables:
- * 
- * AI Chat Configuration:
- * - AI_BASE_URL: Base URL for the OpenAI-compatible API endpoint
- * - AI_API_KEY: API key for authentication
- * - AI_MODEL: Model to use for chat completion (e.g., 'gpt-3.5-turbo', 'gpt-4')
- * - AI_TEMPERATURE: Temperature setting for response generation (0.0 to 1.0)
- * - AI_SYSTEM_INSTRUCTION: System instruction to set AI behavior and context
- * 
+ *
  * Ask AI (Jev) Configuration:
+ * - AI_BASE_URL: OpenAI-compatible endpoint that serves the planner model
+ * - AI_API_KEY: API key for that endpoint
+ * - JEV_PLANNER_MODEL: planner model on AI_BASE_URL (required)
+ * - JEV_PLANNER_REASONING_EFFORT: planner reasoning_effort (default: none)
  * - TYPESAFE_API_KEY: TypeSafe API key for the Jev decision model
  * - JEV_MODEL: Jev model or alias (default: jev-latest)
  * - JEV_RATE_LIMITER: rate limiting binding for both Ask AI endpoints (wrangler.toml)
- * - JEV_PLANNER_MODEL: Fast planner model on AI_BASE_URL (default: AI_MODEL)
  *
- * Bluesky Configuration:
- * - BSKY_HANDLE: Bluesky account handle
- * - BSKY_APP_PASSWORD: Bluesky app-specific password
- * 
  * Fedi Configuration:
  * - FEDI_INSTANCE: URL of the Mastodon/GoToSocial instance (e.g., https://rex.cat)
  * - FEDI_ACCESS_TOKEN: Access token for the instance
+ *
+ * NeoDB Configuration:
+ * - NEODB_ACCESS_TOKEN: NeoDB access token
  */
 
 // Helper to set CORS headers
@@ -176,104 +170,6 @@ export default {
         return makeJsonResponse(await runJevRequest(body ?? {}, env));
       } catch (error) {
         return makeJevErrorResponse(error);
-      }
-    }
-
-    // Route for AI chat
-    if (url.pathname === '/api/chat') {
-      try {
-        if (request.method !== 'POST') {
-          return makeMethodNotAllowedResponse('POST');
-        }
-
-        const { messages } = await request.json();
-
-        if (!Array.isArray(messages) || messages.length === 0) {
-          return makeJsonResponse({ error: 'Invalid messages format' }, 400);
-        }
-
-        // Prepare messages array with system instruction if provided
-        const systemInstruction = env.AI_SYSTEM_INSTRUCTION;
-        const messageArray = systemInstruction
-          ? [{ role: 'system', content: systemInstruction }, ...messages.slice(-10)]
-          : messages.slice(-10);
-
-        // Forward the request to the OpenAI-compatible API
-        const response = await fetch(env.AI_BASE_URL + '/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${env.AI_API_KEY}`,
-          },
-          body: JSON.stringify({
-            model: env.AI_MODEL || 'gpt-3.5-turbo',
-            messages: messageArray,
-            temperature: parseFloat(env.AI_TEMPERATURE || '0.7'),
-          }),
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error?.message || 'AI API request failed');
-        }
-
-        const data = await response.json();
-        return makeJsonResponse(data);
-      } catch (error) {
-        console.error('Error in AI chat endpoint:', error);
-        return makeJsonResponse({ error: error.message || 'Internal server error' }, 500);
-      }
-    }
-
-    // Route for Bluesky feed
-    if (url.pathname === '/api/bsky/feed') {
-      try {
-        if (request.method !== 'GET' && request.method !== 'HEAD') {
-          return makeMethodNotAllowedResponse('GET, HEAD');
-        }
-
-        const bskyHandle = env.BSKY_HANDLE;
-        const appPassword = env.BSKY_APP_PASSWORD;
-
-        const cursor = url.searchParams.get('cursor') || undefined;
-        const limitParam = url.searchParams.get('limit');
-        const limit = limitParam ? parseInt(limitParam, 10) : 50;
-
-        if (!bskyHandle) {
-          return makeJsonResponse({ error: 'BSKY_HANDLE not configured in Worker environment' }, 500);
-        }
-        if (!appPassword) {
-          return makeJsonResponse({ error: 'BSKY_APP_PASSWORD not configured in Worker environment' }, 500);
-        }
-
-        const PDS_HOST = 'https://bsky.social';
-        const session = new CredentialSession(new URL(PDS_HOST));
-        await session.login({ identifier: bskyHandle, password: appPassword });
-
-        const agent = new Agent(session);
-
-        const apiResponse = await agent.getAuthorFeed({
-          actor: bskyHandle,
-          limit: limit,
-          cursor: cursor,
-          filter: 'posts_with_replies',
-        });
-
-        if (apiResponse.success) {
-          return makeJsonResponse(apiResponse.data);
-        } else {
-          console.error('Bluesky API error in Worker (success=false):', apiResponse.error, apiResponse.status);
-          return makeJsonResponse(
-            { error: 'Failed to fetch posts from Bluesky API', details: apiResponse.error || 'Unknown API error' },
-            apiResponse.status || 500
-          );
-        }
-      } catch (error) {
-        console.error('Exception fetching Bluesky feed in Worker:', error);
-        if (error.name === 'XRPCError' && typeof error.status === 'number') {
-          return makeJsonResponse({ error: 'Bluesky API request exception', details: error.message }, error.status);
-        }
-        return makeJsonResponse({ error: 'Internal server error in Worker', details: error.message || 'Unknown error' }, 500);
       }
     }
 

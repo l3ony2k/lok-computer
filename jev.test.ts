@@ -29,7 +29,7 @@ const jevReply = (answers: Record<string, unknown>) => new Response(JSON.stringi
   usage: { input_tokens: 300, output_tokens: 40 },
 }));
 
-const env = { TYPESAFE_API_KEY: "ts-key", AI_BASE_URL: "https://planner.test", AI_API_KEY: "ai-key", AI_MODEL: "fast" };
+const env = { TYPESAFE_API_KEY: "ts-key", AI_BASE_URL: "https://planner.test", AI_API_KEY: "ai-key", JEV_PLANNER_MODEL: "fast" };
 
 /** A planner reply as the prompt asks for it: an answer question plus analytics. */
 const plannerPlan = {

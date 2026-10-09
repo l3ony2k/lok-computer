@@ -103,6 +103,11 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 
 ## Development Log
 
+### Session: 3.0.5 — Worker trimmed to what the desktop uses (2026-10-09)
+
+*   Removed `/api/chat` and `/api/bsky/feed` from the Worker, OpenAPI, and docs. The Bsky app has read the public Bluesky API directly for a while, and Ask AI replaced the chat proxy. `@atproto/api` is no longer a dependency, which shrinks the Worker bundle.
+*   The planner no longer falls back to `AI_MODEL`: `JEV_PLANNER_MODEL` is required (503 when unset). `AI_MODEL`, `AI_TEMPERATURE`, `AI_SYSTEM_INSTRUCTION`, `BSKY_HANDLE`, and `BSKY_APP_PASSWORD` can be deleted from the Worker.
+
 ### Session: 3.0.4 — grid tracks, System buttons and code size (2026-10-09)
 
 *   Are.na grids use `auto-fill` instead of `auto-fit`, so a single filtered result keeps its S/M/L card size instead of stretching across the row.

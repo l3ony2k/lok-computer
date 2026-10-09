@@ -5,10 +5,8 @@ account_id = "50d0c53b7190ef6df5c5083b25de689f"
 
 # Development environment variables
 [vars]
-AI_MODEL = "gemini-2.5-flash-lite"
-AI_TEMPERATURE = "0.8"
 JEV_MODEL = "jev-latest"
-# Ask AI question planner on AI_BASE_URL (HyprLab); falls back to AI_MODEL when unset.
+# Ask AI question planner on AI_BASE_URL (HyprLab). Required.
 JEV_PLANNER_MODEL = "gpt-6-luna"
 FEDI_INSTANCE = "https://rex.cat"
 

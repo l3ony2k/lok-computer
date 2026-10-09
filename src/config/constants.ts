@@ -7,6 +7,5 @@ export const APP_CONFIG = {
     BSKY_PROFILE_URL: 'https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=did:plc:2p3gp2g2teuwpuv4skhiik3i',
     FEDI_INSTANCE: 'https://rex.cat',
     FEDI_USERNAME: 'lok',
-    AI_CHAT_ENDPOINT: '/api/chat',
     NEODB_SHELF_ENDPOINT: '/api/neodb/shelf',
 };

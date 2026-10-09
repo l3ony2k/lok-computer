@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components -- loader catalog intentionally shares lazy exports */
 /**
  * Lazy-loaded app components.
  *

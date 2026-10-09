@@ -58,7 +58,7 @@ App chunks remain code-split but are warmed during `SystemStartup`, along with b
 - Hand media to the player with `createMediaRequest`/`createMediaItem` from `src/apps/media/mediaLibrary.ts`; the player applies each request id once.
 - Are.na channel and block links are parsed by `src/apps/arena/utils/arenaLinks.ts` and read by `arenaImport.ts`. The Media Player imports a link's audio and video (`createMediaRequest([], true, { arena })`, `/media?arena=`), and Images (`ImageViewer`) opens a channel as a gallery (`props: { arena, index }`, `/image?arena=`).
 - Launching a single-instance app with explicit props delivers them to the running window.
-- Ask AI is question-first: `/api/jev/plan` replies `plan`, `needs_input` (fields to ask for; re-plan with `inputs`), or `refuse`, and `/api/jev` returns the best answer plus analytics. The planner prompt, validation, Jev call, and result forming live in `jev.js` with tests in `jev.test.ts`. Worker secrets: `TYPESAFE_API_KEY` plus the existing `AI_*` planner settings; `JEV_PLANNER_MODEL` (`gpt-6-luna` in `wrangler.toml`) and optional `JEV_PLANNER_REASONING_EFFORT`.
+- Ask AI is question-first: `/api/jev/plan` replies `plan`, `needs_input` (fields to ask for; re-plan with `inputs`), or `refuse`, and `/api/jev` returns the best answer plus analytics. The planner prompt, validation, Jev call, and result forming live in `jev.js` with tests in `jev.test.ts`. Worker secrets: `TYPESAFE_API_KEY`, `AI_BASE_URL`, `AI_API_KEY`; `JEV_PLANNER_MODEL` is required (`gpt-6-luna` in `wrangler.toml`), `JEV_PLANNER_REASONING_EFFORT` optional. There is no `/api/chat` and no Bluesky route; the Bsky app reads the public Bluesky API directly.
 
 ### Icons
 

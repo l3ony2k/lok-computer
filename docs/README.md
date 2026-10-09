@@ -97,11 +97,11 @@ Production secrets are set via Cloudflare dashboard.
 
 | Variable | Description |
 |----------|-------------|
-| `AI_BASE_URL` | OpenAI-compatible API base URL |
-| `AI_API_KEY` | API key for AI service |
-| `AI_MODEL` | Model name (e.g., `gemini-2.5-flash-lite`) |
-| `BSKY_HANDLE` | Bluesky handle |
-| `BSKY_APP_PASSWORD` | Bluesky app password |
+| `AI_BASE_URL` | OpenAI-compatible API base URL for the Ask AI planner |
+| `AI_API_KEY` | API key for that endpoint |
+| `JEV_PLANNER_MODEL` | Planner model name (required; `gpt-6-luna`) |
+| `TYPESAFE_API_KEY` | TypeSafe Jev API key |
+| `JEV_MODEL` | Jev model or alias (`jev-latest`) |
 | `FEDI_INSTANCE` | Mastodon/GtS instance URL |
 | `FEDI_ACCESS_TOKEN` | Fedi access token |
 | `NEODB_ACCESS_TOKEN` | NeoDB access token |

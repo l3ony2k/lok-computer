@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "lok.computer Public API",
-    "version": "3.0.4",
+    "version": "3.0.5",
     "description": "Public REST endpoints used by the lok.computer browser desktop. Most operations read public data through an upstream provider. No caller API key is currently required. Upstream-dependent operations can fail independently of the credential-free status endpoint.",
     "contact": {
       "name": "Lok",
@@ -86,46 +86,6 @@
           },
           "405": {
             "$ref": "#/components/responses/MethodNotAllowed"
-          }
-        }
-      }
-    },
-    "/api/chat": {
-      "post": {
-        "operationId": "createChatCompletion",
-        "summary": "Submit a chat conversation",
-        "description": "Forwards up to the ten most recent messages, plus the server-configured system instruction when present, to the configured OpenAI-compatible model provider. Do not submit secrets or sensitive personal data.",
-        "tags": ["AI"],
-        "requestBody": {
-          "required": true,
-          "description": "A non-empty conversation. The server uses at most the ten most recent messages.",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ChatRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "An OpenAI-compatible chat completion from the configured provider.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ChatCompletion"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/BadRequest"
-          },
-          "405": {
-            "$ref": "#/components/responses/MethodNotAllowed"
-          },
-          "500": {
-            "$ref": "#/components/responses/UpstreamFailure"
           }
         }
       }
@@ -224,9 +184,15 @@
               "application/json": {
                 "schema": {
                   "oneOf": [
-                    { "$ref": "#/components/schemas/JevAnswer" },
-                    { "$ref": "#/components/schemas/JevNeedsInput" },
-                    { "$ref": "#/components/schemas/JevRefusal" }
+                    {
+                      "$ref": "#/components/schemas/JevAnswer"
+                    },
+                    {
+                      "$ref": "#/components/schemas/JevNeedsInput"
+                    },
+                    {
+                      "$ref": "#/components/schemas/JevRefusal"
+                    }
                   ]
                 }
               }
@@ -270,56 +236,6 @@
                 }
               }
             }
-          }
-        }
-      }
-    },
-    "/api/bsky/feed": {
-      "get": {
-        "operationId": "listBlueskyFeed",
-        "summary": "List Lok's Bluesky feed",
-        "description": "Returns a page of public posts and replies from the server-configured Bluesky account. The operation depends on a valid upstream Bluesky session.",
-        "tags": ["Social"],
-        "parameters": [
-          {
-            "name": "cursor",
-            "in": "query",
-            "required": false,
-            "description": "Opaque cursor returned by a previous page.",
-            "schema": {
-              "type": "string",
-              "minLength": 1
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "description": "Maximum number of feed entries requested from Bluesky.",
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 100,
-              "default": 50
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "A page of Bluesky feed entries.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BlueskyFeed"
-                }
-              }
-            }
-          },
-          "405": {
-            "$ref": "#/components/responses/MethodNotAllowed"
-          },
-          "500": {
-            "$ref": "#/components/responses/UpstreamFailure"
           }
         }
       }
@@ -583,136 +499,6 @@
           "status": {
             "type": "string",
             "const": "ok"
-          }
-        }
-      },
-      "ChatRequest": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["messages"],
-        "properties": {
-          "messages": {
-            "type": "array",
-            "minItems": 1,
-            "items": {
-              "$ref": "#/components/schemas/ChatMessage"
-            }
-          }
-        }
-      },
-      "ChatMessage": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["role", "content"],
-        "properties": {
-          "role": {
-            "type": "string",
-            "enum": ["system", "user", "assistant"]
-          },
-          "content": {
-            "type": "string",
-            "minLength": 1
-          }
-        }
-      },
-      "ChatCompletion": {
-        "type": "object",
-        "required": ["choices"],
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "model": {
-            "type": "string"
-          },
-          "choices": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "required": ["index", "message"],
-              "properties": {
-                "index": {
-                  "type": "integer"
-                },
-                "message": {
-                  "$ref": "#/components/schemas/ChatMessage"
-                },
-                "finish_reason": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      },
-      "BlueskyFeed": {
-        "type": "object",
-        "required": ["feed"],
-        "properties": {
-          "cursor": {
-            "type": "string"
-          },
-          "feed": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "required": ["post"],
-              "properties": {
-                "post": {
-                  "type": "object",
-                  "required": ["uri", "cid", "author", "record"],
-                  "properties": {
-                    "uri": {
-                      "type": "string",
-                      "format": "uri"
-                    },
-                    "cid": {
-                      "type": "string"
-                    },
-                    "author": {
-                      "$ref": "#/components/schemas/BlueskyProfile"
-                    },
-                    "record": {
-                      "type": "object",
-                      "properties": {
-                        "text": {
-                          "type": "string"
-                        },
-                        "createdAt": {
-                          "type": "string",
-                          "format": "date-time"
-                        }
-                      }
-                    }
-                  }
-                },
-                "reply": {
-                  "type": "object"
-                },
-                "reason": {
-                  "type": "object"
-                }
-              }
-            }
-          }
-        }
-      },
-      "BlueskyProfile": {
-        "type": "object",
-        "required": ["did", "handle"],
-        "properties": {
-          "did": {
-            "type": "string"
-          },
-          "handle": {
-            "type": "string"
-          },
-          "displayName": {
-            "type": "string"
-          },
-          "avatar": {
-            "type": "string",
-            "format": "uri"
           }
         }
       },

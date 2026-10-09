@@ -43,7 +43,6 @@ describe("public Worker discovery", () => {
 
   test("rejects non-read methods before contacting upstream providers", async () => {
     for (const path of [
-      "/api/bsky/feed",
       "/api/fedi/account?username=lok",
       "/api/fedi/statuses?accountId=1",
       "/api/neodb/shelf",
@@ -53,6 +52,15 @@ describe("public Worker discovery", () => {
       expect(response.status).toBe(405);
       expect(response.headers.get("allow")).toBe("GET, HEAD");
       expect(await response.json()).toEqual({ error: "Method not allowed" });
+    }
+  });
+
+  test("no longer serves the removed chat and Bluesky routes", async () => {
+    for (const [path, method] of [["/api/chat", "POST"], ["/api/bsky/feed", "GET"]] as const) {
+      const response = await request(path, { method, headers: { Accept: "application/json" } });
+
+      expect(response.status).toBe(404);
+      expect(await response.json()).toEqual({ error: "Not Found" });
     }
   });
 

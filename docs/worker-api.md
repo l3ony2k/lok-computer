@@ -14,10 +14,8 @@ Browser App
             ▼
      Cloudflare Worker (worker.js)
             │
-            ├── /api/chat → OpenAI-compatible API
             ├── /api/jev/plan → planner LLM (plan, ask for input, or refuse)
             ├── /api/jev → planner LLM + TypeSafe Jev (best answer + analytics)
-            ├── /api/bsky/feed → Bluesky
             ├── /api/fedi/* → Fediverse (Mastodon/GoToSocial)
             └── /api/neodb/shelf → NeoDB
 ```
@@ -32,17 +30,6 @@ Browser App
 ---
 
 ## Endpoints
-
-### POST /api/chat
-AI chat completion proxy.
-
-```typescript
-// Request
-{ messages: [{ role: 'user', content: 'Hello' }] }
-
-// Response
-{ choices: [{ message: { content: 'Hi!' } }] }
-```
 
 ### POST /api/jev/plan
 Reads a question with the fast planner model (no Jev call) and replies with one of three `kind`s.
@@ -83,13 +70,6 @@ Certainty is `high` at confidence ≥ 0.8, `medium` at ≥ 0.5, otherwise `low` 
 
 Errors are `{ error, code? }`: 400 bad input, 422 `invalid_plan` (or Jev rejected the questions), 429 over the per-IP budget, 502 upstream failure (including unreachable or unreadable upstreams), 503 not configured or Jev overloaded. Limits: question 2,000 chars, content 20,000 chars, follow-up answers 8,000 chars each, 8 questions, 24 choice options, 10 score levels of up to 600 chars each, 16,000 chars of questions in total. Both endpoints share the `JEV_RATE_LIMITER` binding in `wrangler.toml` (20 calls per minute per client IP; one answered question is two or three calls); without the binding, as in tests, there is no limit. The older `prompt` field is still accepted. The planner prompt and validation live in `jev.js`; tests in `jev.test.ts`.
 
-### GET /api/bsky/feed
-Bluesky author feed.
-
-```
-/api/bsky/feed?limit=50&cursor=xxx
-```
-
 ### GET /api/fedi/account
 Fediverse account lookup.
 
@@ -124,14 +104,12 @@ compatibility_date = "2025-05-15"
 account_id = "your-account-id"
 
 [vars]
-AI_MODEL = "gemini-2.5-flash-lite"
-AI_TEMPERATURE = "0.8"
 JEV_MODEL = "jev-latest"
 JEV_PLANNER_MODEL = "gpt-6-luna"
 FEDI_INSTANCE = "https://rex.cat"
 ```
 
-`JEV_PLANNER_MODEL` sets the Ask AI planner (`gpt-6-luna` on HyprLab; defaults to `AI_MODEL` when unset). `JEV_PLANNER_REASONING_EFFORT` sets the planner's `reasoning_effort` (default `none`: planning is a short structured task, and gpt-6-luna plans in about 3-5s without hidden reasoning; set it to an empty string to omit the field). Providers that reject it, or JSON mode, get one retry without both.
+`JEV_PLANNER_MODEL` sets the Ask AI planner (`gpt-6-luna` on HyprLab) and is required; without it the planner answers 503. `JEV_PLANNER_REASONING_EFFORT` sets the planner's `reasoning_effort` (default `none`: planning is a short structured task, and gpt-6-luna plans in about 3-5s without hidden reasoning; set it to an empty string to omit the field). Providers that reject it, or JSON mode, get one retry without both.
 
 Jev has no clock, so plans for questions about the present ("right now", "current", "latest") carry `"as_of": "<today>"` in the state; the planner is told to add it, and `withAsOfDate` in `jev.js` adds it when the planner forgets.
 
@@ -143,8 +121,6 @@ Set via Cloudflare Dashboard or CLI:
 wrangler secret put AI_API_KEY
 wrangler secret put AI_BASE_URL
 wrangler secret put TYPESAFE_API_KEY
-wrangler secret put BSKY_HANDLE
-wrangler secret put BSKY_APP_PASSWORD
 wrangler secret put FEDI_ACCESS_TOKEN
 wrangler secret put NEODB_ACCESS_TOKEN
 ```

@@ -16,7 +16,7 @@
  * Environment:
  * - TYPESAFE_API_KEY: Jev API key (secret)
  * - JEV_MODEL: Jev model or alias (default `jev-latest`)
- * - JEV_PLANNER_MODEL: planner model on AI_BASE_URL (default AI_MODEL)
+ * - JEV_PLANNER_MODEL: planner model on AI_BASE_URL (required)
  * - JEV_PLANNER_REASONING_EFFORT: planner reasoning_effort (default "none"; "" omits it)
  * - AI_BASE_URL / AI_API_KEY: OpenAI-compatible endpoint shared with /api/chat
  */
@@ -731,7 +731,9 @@ const buildPlannerMessages = ({ question, suppliedState, answerAnyway, today }, 
 const plannerReasoningEffort = (env) => env.JEV_PLANNER_REASONING_EFFORT ?? 'none';
 
 const callPlanner = async (messages, env, fetchImpl, extras) => {
-  if (!env.AI_BASE_URL || !env.AI_API_KEY) throw new JevError('The question planner is not configured on this server.', 503);
+  if (!env.AI_BASE_URL || !env.AI_API_KEY || !env.JEV_PLANNER_MODEL) {
+    throw new JevError('The question planner is not configured on this server.', 503);
+  }
   const effort = plannerReasoningEffort(env);
   const response = await fetchUpstream(fetchImpl, `${env.AI_BASE_URL}/v1/chat/completions`, {
     method: 'POST',
@@ -740,7 +742,7 @@ const callPlanner = async (messages, env, fetchImpl, extras) => {
       Authorization: `Bearer ${env.AI_API_KEY}`,
     },
     body: JSON.stringify({
-      model: env.JEV_PLANNER_MODEL || env.AI_MODEL || 'gpt-4o-mini',
+      model: env.JEV_PLANNER_MODEL,
       messages,
       temperature: 0.2,
       ...(extras ? { response_format: { type: 'json_object' }, ...(effort ? { reasoning_effort: effort } : {}) } : {}),
@@ -757,7 +759,7 @@ const callPlanner = async (messages, env, fetchImpl, extras) => {
   const data = await readUpstreamJson(response, 'The question planner');
   const content = data?.choices?.[0]?.message?.content;
   if (!content) throw new JevError('The question planner returned an empty reply.', 502);
-  return { content, model: data.model ?? env.JEV_PLANNER_MODEL ?? env.AI_MODEL ?? null };
+  return { content, model: data.model ?? env.JEV_PLANNER_MODEL };
 };
 
 /** Reads the question from `question` (or the older `prompt`). */
