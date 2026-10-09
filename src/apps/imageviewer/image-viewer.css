@@ -1,0 +1,92 @@
+/*
+ * Image Viewer styles, code-split with the app chunk.
+ * Colors come from shared tokens so every theme recolors the viewer.
+ */
+
+.image-viewer-address {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.image-viewer-address .search-input {
+    flex: 1 1 auto;
+}
+
+.image-viewer-stage {
+    outline: none;
+}
+
+.image-viewer-stage:focus-visible {
+    outline: 1px dotted var(--text-color);
+    outline-offset: -3px;
+}
+
+.image-viewer-message {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px;
+    color: var(--text-color);
+    font-size: 12px;
+    text-align: center;
+    cursor: default;
+}
+
+.image-viewer-message > span {
+    max-width: 36ch;
+    opacity: 0.7;
+}
+
+.image-viewer-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    max-width: 420px;
+    margin-top: 4px;
+}
+
+.image-viewer-counter {
+    min-width: 64px;
+    font-variant-numeric: tabular-nums;
+}
+
+.image-viewer-footer {
+    min-width: 0;
+}
+
+.image-viewer-caption {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.image-viewer-caption a {
+    color: inherit;
+    text-decoration: underline;
+}
+
+.image-viewer-dims {
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+.image-viewer-dropzone {
+    position: absolute;
+    inset: 6px;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: color-mix(in srgb, var(--detail-bg) 85%, transparent);
+    border: 2px dashed var(--text-color);
+    font-size: 13px;
+    pointer-events: none;
+}

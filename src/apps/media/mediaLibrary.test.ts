@@ -7,6 +7,7 @@ import {
   formatMediaTime,
   inferMediaKind,
   isPlayableMedia,
+  mergeIntoPlaylist,
   normalizeMediaUrl,
   normalizePlayerState,
   pickNextIndex,
@@ -23,6 +24,13 @@ describe('media sources', () => {
     expect(inferMediaKind('https://a.test/movie.webm#t=10')).toBe('video');
     expect(inferMediaKind('https://a.test/page')).toBeNull();
     expect(isPlayableMedia(null)).toBeFalse();
+  });
+
+  test('falls back to the extension when the MIME type is a generic placeholder', () => {
+    expect(inferMediaKind('https://a.test/track.mp3?1362948675', 'application/octet-stream')).toBe('audio');
+    expect(inferMediaKind('https://a.test/clip.mp4', 'binary/octet-stream')).toBe('video');
+    expect(inferMediaKind('https://a.test/blob', 'application/octet-stream')).toBeNull();
+    expect(inferMediaKind('https://a.test/clip', 'Video/MP4; codecs="avc1"')).toBe('video');
   });
 
   test('derives readable titles and accepts only web URLs', () => {
@@ -94,5 +102,29 @@ describe('player state', () => {
     expect(formatMediaTime(65.9)).toBe('01:05');
     expect(formatMediaTime(3725)).toBe('1:02:05');
     expect(formatMediaTime(Number.NaN)).toBe('--:--');
+  });
+});
+
+describe('playlist requests', () => {
+  test('carries an Are.na link only when one is given', () => {
+    expect(createMediaRequest([], true, { arena: 'https://www.are.na/channel/audio' })).toMatchObject({
+      items: [],
+      play: true,
+      arena: 'https://www.are.na/channel/audio',
+    });
+    expect('arena' in createMediaRequest([])).toBeFalse();
+  });
+
+  test('merges by source and points at the first requested item', () => {
+    const queued = createMediaItem('https://a.test/one.mp3');
+    const again = createMediaItem('https://a.test/one.mp3');
+    const fresh = createMediaItem('https://a.test/two.mp3');
+
+    const merged = mergeIntoPlaylist([queued], [again, fresh]);
+    expect(merged.playlist.map((item) => item.id)).toEqual([queued.id, fresh.id]);
+    expect(merged.firstId).toBe(queued.id);
+    expect(merged.added).toBe(1);
+
+    expect(mergeIntoPlaylist([], [])).toEqual({ playlist: [], firstId: null, added: 0 });
   });
 });

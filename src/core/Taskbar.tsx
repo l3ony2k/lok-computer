@@ -33,6 +33,14 @@ export const Taskbar = ({ layout = 'lok' }: { layout?: DesktopLayout }) => {
     };
   }, []);
 
+  // The strip scrolls rather than squeezing titles, so keep the active task in view.
+  useEffect(() => {
+    if (!activeWindow) return;
+    tasksRef.current
+      ?.querySelector<HTMLElement>(`[data-taskbar-window-id="${CSS.escape(activeWindow)}"]`)
+      ?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }, [activeWindow]);
+
   // Alt+1..9 brings the Nth task forward, as Turbo Vision's status line advertises.
   const windowsRef = useRef(windows);
   windowsRef.current = windows;

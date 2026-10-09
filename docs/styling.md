@@ -156,7 +156,7 @@ import { CustomIcon } from '@/components/window/CustomIcon';
 | `webpage` | Web page |
 | `mailbox` | AI/robot |
 | `mail` | Mail envelope |
-| `fedi` | Fediverse logo |
+| `fedi` | GoToSocial sloth |
 | `shelf` | Bookshelf |
 | `note` | Note/document |
 
@@ -356,7 +356,7 @@ settings.crt: {
 
 ## Adding New Icons
 
-1. Add image to `src/assets/icons/`
+1. Draw the icon in `scripts/pixel-icons.mjs` (an ASCII grid on the 32×32 canvas using the shared palette; add a `vector` layer only for detail the grid cannot carry, such as a logo) and run `node scripts/pixel-icons.mjs --only your-icon`, which writes `src/assets/icons/your-icon.png`
 2. Import in `CustomIcon.tsx`:
    ```tsx
    import yourIcon from '../../assets/icons/your-icon.png';

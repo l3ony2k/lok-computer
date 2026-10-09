@@ -10,9 +10,11 @@ import {
   formResult,
   normalizePlan,
   normalizePlannerReply,
+  optionLabel,
   planQuestions,
   runJevRequest,
   toPropertyName,
+  withAsOfDate,
 } from "./jev.js";
 import worker from "./worker.js";
 
@@ -255,6 +257,37 @@ describe("Jev result forming", () => {
   });
 });
 
+describe("Jev answer presentation", () => {
+  test("names options with the casing their descriptions use", () => {
+    expect(optionLabel("donald_trump", "The president is Donald Trump.")).toBe("Donald Trump");
+    expect(optionLabel("usa", "The USA")).toBe("USA");
+    expect(optionLabel("dwarf_planet", "A dwarf planet")).toBe("Dwarf planet");
+    // No matching words: the key is humanized.
+    expect(optionLabel("split_roll", "A single roll, split lengthwise")).toBe("Split roll");
+    expect(optionLabel("other", null)).toBe("Other");
+
+    const plan = normalizePlan({ state: "x", questions: { who: { type: "choice", instructions: "Who?", criteria: { joe_biden: "Joe Biden", donald_trump: "Donald Trump" } } } });
+    const { best, properties } = formResult(plan, {
+      who: { type: "choice", choice: "donald_trump", confidence: 0.6, probabilities: { joe_biden: 0.2, donald_trump: 0.8 } },
+      [`who${ORDER_CHECK_SUFFIX}`]: { type: "choice", choice: "donald_trump", confidence: 0.6, probabilities: { donald_trump: 0.8, joe_biden: 0.2 } },
+    });
+    expect(best?.answer).toBe("Donald Trump");
+    expect(properties.who.optionLabels).toEqual({ joe_biden: "Joe Biden", donald_trump: "Donald Trump" });
+  });
+
+  test("dates present-tense questions that Jev cannot place in time", () => {
+    const plan = { state: { subject: "The US presidency" } };
+    expect(withAsOfDate(plan, "Who is the president right now?", "2026-10-08").state).toEqual({ subject: "The US presidency", as_of: "2026-10-08" });
+    expect(withAsOfDate({ state: null }, "What's the latest iPhone?", "2026-10-08").state).toEqual({ as_of: "2026-10-08" });
+    // Timeless questions, existing dates, and whole-string states are left alone.
+    expect(withAsOfDate(plan, "Is Pluto a planet?", "2026-10-08")).toBe(plan);
+    const dated = { state: { date: "2024-01-01" } };
+    expect(withAsOfDate(dated, "Who is president now?", "2026-10-08")).toBe(dated);
+    const text = { state: "an email" };
+    expect(withAsOfDate(text, "Is this current?", "2026-10-08")).toBe(text);
+  });
+});
+
 describe("Jev pipeline", () => {
   test("retries a malformed plan once with feedback, then asks Jev", async () => {
     const calls: Array<{ url: string; body: Record<string, unknown> }> = [];
@@ -324,6 +357,24 @@ describe("Jev pipeline", () => {
     expect(jevCalls).toBe(2);
     expect(output.planner).toBeNull();
     expect(output.result).toEqual({ sentiment: "positive" });
+  });
+
+  test("retries Jev gateway errors and reports exhausted retries as busy", async () => {
+    let jevCalls = 0;
+    const flaky = async () => {
+      jevCalls += 1;
+      return jevCalls === 1
+        ? new Response("upstream unavailable", { status: 503 })
+        : jevReply({ sentiment: { type: "choice", choice: "mixed", confidence: 1, probabilities: { mixed: 1 } } });
+    };
+    const output = await runJevRequest({ plan: plannerPlan }, env, flaky);
+    expect(jevCalls).toBe(2);
+    expect(output.result).toEqual({ sentiment: "mixed" });
+
+    const down = async () => new Response("bad gateway", { status: 502 });
+    const error = await runJevRequest({ plan: plannerPlan }, env, down).catch((caught) => caught);
+    expect(error).toBeInstanceOf(JevError);
+    expect(error).toMatchObject({ status: 503, message: "Jev is busy right now. Try again in a moment." });
   });
 
   test("falls back when a provider rejects JSON mode or reasoning_effort", async () => {

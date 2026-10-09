@@ -29,6 +29,8 @@ export interface MediaRequest {
   items: MediaItem[];
   /** Start playing the first requested item. */
   play: boolean;
+  /** An Are.na channel or block link the player imports its audio and video from. */
+  arena?: string;
 }
 
 export const MEDIA_PLAYER_TYPE = 'MediaPlayer';
@@ -108,12 +110,15 @@ const extensionOf = (src: string) => {
   }
 };
 
+/** Placeholder types hosts send when they don't know; the extension decides instead. */
+const GENERIC_MIME_TYPES = ['application/octet-stream', 'binary/octet-stream', 'application/x-unknown', 'application/unknown'];
+
 /** Kind from a MIME type, then the URL extension. Unknown sources are treated as audio. */
 export const inferMediaKind = (src: string, mime?: string | null): MediaKind | null => {
-  const type = mime?.toLowerCase() ?? '';
+  const type = mime?.toLowerCase().split(';')[0].trim() ?? '';
   if (type.startsWith('video/')) return 'video';
   if (type.startsWith('audio/') || type === 'application/ogg') return 'audio';
-  if (type) return null;
+  if (type && !GENERIC_MIME_TYPES.includes(type)) return null;
 
   const extension = extensionOf(src);
   if (VIDEO_EXTENSIONS.includes(extension)) return 'video';
@@ -171,11 +176,37 @@ export const createMediaItem = (
 });
 
 /** Builds the launch props payload other apps pass to the player. */
-export const createMediaRequest = (items: MediaItem[], play = true): MediaRequest => ({
+export const createMediaRequest = (
+  items: MediaItem[],
+  play = true,
+  options: Pick<MediaRequest, 'arena'> = {},
+): MediaRequest => ({
   id: createMediaId('request'),
   items,
   play,
+  ...(options.arena ? { arena: options.arena } : {}),
 });
+
+/**
+ * Appends items whose source isn't queued yet. `firstId` is the first requested
+ * item in the result, existing or new, so a request can jump to it.
+ */
+export const mergeIntoPlaylist = (playlist: MediaItem[], incoming: MediaItem[]) => {
+  const merged = [...playlist];
+  let firstId: string | null = null;
+  let added = 0;
+  for (const item of incoming) {
+    const existing = merged.find((candidate) => candidate.src === item.src);
+    if (existing) {
+      firstId ??= existing.id;
+    } else {
+      merged.push(item);
+      added += 1;
+      firstId ??= item.id;
+    }
+  }
+  return { playlist: merged, firstId, added };
+};
 
 export interface MediaPlayerState {
   playlist: MediaItem[];

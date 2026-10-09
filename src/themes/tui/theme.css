@@ -114,9 +114,7 @@ html[data-theme="tui"][data-layout]:not(#_) {
     /* Component tokens */
     --c-face: var(--vga-blue);
     --c-font-size: 16px;
-    --c-text-xs: 16px;
-    --c-text-sm: 16px;
-    --c-text-base: 16px;
+    --c-text-heading: 32px;
     --c-title-font: var(--font-ui);
     --c-title-size: 16px;
     --c-title-weight: 400;
@@ -271,10 +269,10 @@ html[data-theme="tui"][data-layout]:not(#_) {
     -moz-osx-font-smoothing: grayscale;
 }
 
-/* ---------- Type: one size, one face ---------- */
+/* ---------- Type: one face on the 16px cell; headings are double size ---------- */
 
 html[data-theme="tui"][data-layout]:not(#_) body :not(svg, svg *) {
-    font-size: 16px;
+    font-size: var(--c-type-size, var(--c-text-body));
 }
 
 html[data-theme="tui"][data-layout]:not(#_) body,
@@ -287,8 +285,7 @@ html[data-theme="tui"][data-layout]:not(#_) :where(h1, h2, h3, h4, strong, b) {
 }
 
 html[data-theme="tui"][data-layout]:not(#_) :where(.text-lg, .text-xl, .text-2xl, h1, h2, h3) {
-    font-size: 16px;
-    line-height: 16px;
+    line-height: 1;
 }
 
 html[data-theme="tui"][data-layout]:not(#_) *,
@@ -467,7 +464,6 @@ html[data-theme="tui"][data-layout]:not(#_) :where(
     .oobe-choice,
     .oobe-oneko-options button,
     .config-oneko-option,
-    .system-kernel-retry,
     [data-sonner-toast] [data-button]
 ):not(.window-control) {
     margin-right: 8px;
@@ -708,7 +704,7 @@ html[data-theme="tui"][data-layout]:not(#_) .app-tab-bar {
 }
 
 html[data-theme="tui"][data-layout]:not(#_) .app-tab-bar .retro-button,
-html[data-theme="tui"][data-layout]:not(#_) .app-tab-bar .retro-button:hover:not(:disabled) {
+html[data-theme="tui"][data-layout]:not(#_) .app-tab-bar .retro-button:hover:not(:disabled, [data-active="true"]) {
     height: 16px;
     min-height: 16px;
     margin: 0;
@@ -728,8 +724,8 @@ html[data-theme="tui"][data-layout]:not(#_) .app-tab-bar .retro-button[data-acti
 
 /* Theme picker reads as a list with a cyan selection bar, not a wall of buttons. */
 html[data-theme="tui"][data-layout]:not(#_) .theme-picker-option,
-html[data-theme="tui"][data-layout]:not(#_) .theme-picker-option:hover:not(:disabled),
-html[data-theme="tui"][data-layout]:not(#_) .theme-picker-option:active:not(:disabled) {
+html[data-theme="tui"][data-layout]:not(#_) .theme-picker-option:hover:not(:disabled, [data-active="true"]),
+html[data-theme="tui"][data-layout]:not(#_) .theme-picker-option:active:not(:disabled, [data-active="true"]) {
     margin: 0;
     padding: 8px;
     color: var(--vga-white);
@@ -742,10 +738,6 @@ html[data-theme="tui"][data-layout]:not(#_) .theme-picker-option:is([data-active
     color: var(--vga-black);
     background: var(--vga-cyan);
     box-shadow: none;
-}
-
-html[data-theme="tui"][data-layout]:not(#_) .theme-picker-option :where(.theme-picker-tagline) {
-    color: inherit;
 }
 
 /* Cyan list viewers carry black text, as in Turbo Vision. */
@@ -770,7 +762,7 @@ html[data-theme="tui"][data-layout]:not(#_) .config-section-title {
 }
 
 html[data-theme="tui"][data-layout]:not(#_) .config-sidebar .config-category-button,
-html[data-theme="tui"][data-layout]:not(#_) .config-sidebar .config-category-button:hover:not(:disabled) {
+html[data-theme="tui"][data-layout]:not(#_) .config-sidebar .config-category-button:hover:not(:disabled, [data-active="true"]) {
     height: 16px;
     min-height: 16px;
     margin: 0;

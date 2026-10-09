@@ -111,9 +111,8 @@ html[data-theme="98"][data-layout]:not(#_) {
     /* Component tokens */
     --c-face: #c0c0c0;
     --c-font-size: 11px;
-    --c-text-xs: 11px;
-    --c-text-sm: 11px;
-    --c-text-base: 11px;
+    /* MS Sans Serif is drawn for 11px; headings set it at twice that. */
+    --c-text-heading: 22px;
     --c-title-size: 11px;
     --c-placeholder: #808080;
     --c-focus-outline: 1px dotted #000000;

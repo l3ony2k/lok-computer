@@ -72,7 +72,8 @@ export const CustomIcon: React.FC<CustomIconProps> = ({ iconType, className, pix
   return (
     <img
       src={iconSrc}
-      alt={`${iconType || 'icon'}`}
+      // Icons always sit beside a visible or aria label, so they are decorative.
+      alt=""
       className={`inline-block object-contain ${className || ''}`}
       style={pixelated ? { imageRendering: 'pixelated' } : undefined}
       // Prevent dragging the icon itself, which can interfere with window dragging

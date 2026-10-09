@@ -103,6 +103,7 @@ const humanize = (key: string) => {
   const text = key.replace(/_+/g, ' ').trim();
   return text ? text[0].toUpperCase() + text.slice(1) : key;
 };
+const optionName = (property: ChoiceProperty, option: string) => property.optionLabels?.[option] ?? humanize(option);
 const TYPE_LABEL = { noul: 'yes/no', choice: 'choice', score: 'score' } as const;
 const CERTAINTY_LABEL = { high: 'High confidence', medium: 'Some uncertainty', low: 'Unsure' } as const;
 
@@ -147,8 +148,8 @@ const ChoiceView = ({ property }: { property: ChoiceProperty }) => (
   <ol className="ask-ai-options">
     {Object.entries(property.probabilities).map(([option, probability]) => (
       <li key={option} data-chosen={option === property.value || undefined} title={property.options?.[option] ?? undefined}>
-        <span className="ask-ai-option-name">{humanize(option)}</span>
-        <Meter value={probability} label={`${humanize(option)} probability`} emphasis={option === property.value} />
+        <span className="ask-ai-option-name">{optionName(property, option)}</span>
+        <Meter value={probability} label={`${optionName(property, option)} probability`} emphasis={option === property.value} />
         <span className="ask-ai-option-value">{percent(probability)}</span>
       </li>
     ))}
@@ -183,9 +184,18 @@ const ScoreView = ({ property }: { property: ScoreProperty }) => {
 
 const formatValue = (property: JevProperty) => {
   if (property.type === 'noul') return property.value ? 'Yes' : 'No';
-  if (property.type === 'choice') return humanize(property.value);
+  if (property.type === 'choice') return optionName(property, property.value);
   return property.levelText;
 };
+
+/** Questions refer to state fields in backticks (`subject`); show those as field chips. */
+const QuestionText = ({ text }: { text: string }) => (
+  <p className="ask-ai-question">
+    {text.split(/`([^`\n]+)`/).map((part, index) => (
+      index % 2 ? <code key={index} className="ask-ai-field-ref">{part}</code> : part
+    ))}
+  </p>
+);
 
 const PropertyCard = ({ property }: { property: JevProperty }) => (
   <section className="ask-ai-property" data-type={property.type}>
@@ -197,7 +207,7 @@ const PropertyCard = ({ property }: { property: JevProperty }) => (
         conf {property.confidence.toFixed(2)}
       </span>
     </header>
-    <p className="ask-ai-question">{property.question}</p>
+    <QuestionText text={property.question} />
     <div className="ask-ai-value">
       <strong>{formatValue(property)}</strong>
     </div>

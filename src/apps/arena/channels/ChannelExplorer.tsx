@@ -11,6 +11,16 @@ import {
   normalizeArenaFileViewState,
 } from '../components/arenaFileViewState';
 import { useArenaChannelBrowsing } from './useArenaChannelBrowsing';
+import { Images, Play } from 'lucide-react';
+import { RetroButton } from '@/components/ui/RetroButton';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { MEDIA_PLAYER_TYPE, createMediaRequest } from '@/apps/media/mediaLibrary';
+import {
+  arenaBlockToMediaItem,
+  formatArenaReference,
+  getArenaImage,
+  getArenaPlayableMedia,
+} from '../utils/arenaLinks';
 
 interface ChannelViewState {
   fileState: ArenaFileViewState;
@@ -97,6 +107,7 @@ export const ChannelExplorer: React.FC<ChannelExplorerProps> = ({
   });
   const contentViewportRef = useRef<HTMLDivElement>(null);
   const openApplication = useApplicationLauncher();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (stateLoading) return;
@@ -141,12 +152,64 @@ export const ChannelExplorer: React.FC<ChannelExplorerProps> = ({
       return;
     }
 
+    // Audio and video go straight to the player, the way images open in the viewer.
+    const media = arenaBlockToMediaItem(item);
+    if (media) {
+      openApplication(MEDIA_PLAYER_TYPE, { props: { request: createMediaRequest([media]) } });
+      return;
+    }
+
     openApplication('BlockViewer', {
       title: item.title || 'Block Details',
       iconType: item.kind === 'image' ? 'image' : item.kind === 'link' ? 'link' : 'text',
       props: { blockId: item.id, initialConnection: item.connection },
     });
   };
+
+  // The loaded page decides whether the actions show; the apps then read the whole channel.
+  const hasPlayable = useMemo(() => browsing.contents.some((item) => getArenaPlayableMedia(item)), [browsing.contents]);
+  const hasImages = useMemo(() => browsing.contents.some((item) => getArenaImage(item)), [browsing.contents]);
+  const channelReference = channelSlug ? formatArenaReference({ type: 'channel', slug: channelSlug }) : null;
+
+  const playAll = () => {
+    if (!channelReference) return;
+    openApplication(MEDIA_PLAYER_TYPE, {
+      props: { request: createMediaRequest([], true, { arena: channelReference }) },
+    });
+  };
+
+  const openGallery = () => {
+    if (!channelReference) return;
+    const selected = browsing.selectedItem && getArenaImage(browsing.selectedItem) ? browsing.selectedItem.id : undefined;
+    openApplication('ImageViewer', {
+      props: { arena: channelReference, startBlockId: selected },
+    });
+  };
+
+  const footerActions = channelReference && (hasPlayable || hasImages) ? (
+    <>
+      {hasPlayable && (
+        <RetroButton
+          className="gap-1"
+          onClick={playAll}
+          title="Queue every audio and video block in the Media Player"
+          aria-label="Play all"
+        >
+          <Play className="h-3 w-3" />{!isMobile && ' Play all'}
+        </RetroButton>
+      )}
+      {hasImages && (
+        <RetroButton
+          className="gap-1"
+          onClick={openGallery}
+          title="Page through this channel's images in the Image Viewer"
+          aria-label="Gallery"
+        >
+          <Images className="h-3 w-3" />{!isMobile && ' Gallery'}
+        </RetroButton>
+      )}
+    </>
+  ) : null;
 
   const preview = browsing.selectedItem ? (
     <ArenaDetailPanel
@@ -178,6 +241,7 @@ export const ChannelExplorer: React.FC<ChannelExplorerProps> = ({
       previewMode={viewState.previewMode}
       onPreviewModeChange={(previewMode) => setViewState((current) => ({ ...current, previewMode }))}
       contentViewportRef={contentViewportRef}
+      footerActions={footerActions}
     />
   );
 };

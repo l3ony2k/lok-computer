@@ -17,12 +17,8 @@ import { RetroButton } from "@/components/ui/RetroButton";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { useApplicationLauncher } from "@/hooks/useApplicationLauncher";
-import {
-  MEDIA_PLAYER_TYPE,
-  createMediaItem,
-  createMediaRequest,
-  inferMediaKind,
-} from "@/apps/media/mediaLibrary";
+import { MEDIA_PLAYER_TYPE, createMediaRequest } from "@/apps/media/mediaLibrary";
+import { arenaBlockToMediaItem, getArenaPlayableMedia } from "../utils/arenaLinks";
 
 interface ArenaDetailPanelProps {
   item?: ArenaItem | null;
@@ -71,20 +67,6 @@ const getSourceActionUrl = (block: ArenaBlock) => {
   if (block.kind === "image") return block.image?.original.src || null;
   if (block.kind === "attachment") return block.attachment?.url || null;
   return block.source?.url || block.embed?.url || null;
-};
-
-/** Audio or video the Media Player can stream: attachments first, then direct file links. */
-const getPlayableMedia = (block: ArenaBlock) => {
-  if (block.kind === "attachment" && block.attachment?.url) {
-    const kind = inferMediaKind(block.attachment.url, block.attachment.contentType);
-    if (kind) return { src: block.attachment.url, kind, title: block.title || block.attachment.fileName || undefined };
-  }
-  const linked = block.source?.url;
-  if (linked) {
-    const kind = inferMediaKind(linked);
-    if (kind) return { src: linked, kind, title: block.title || undefined };
-  }
-  return null;
 };
 
 const getVisibilityClass = (visibility?: string) => {
@@ -279,20 +261,13 @@ const BlockContent = ({ block, onOpenImage }: {
 }) => {
   const openApplication = useApplicationLauncher();
   const imageUrl = getBestImageSource(block);
-  const playable = getPlayableMedia(block);
+  const playable = getArenaPlayableMedia(block);
 
   if (playable) {
-    const play = () => openApplication(MEDIA_PLAYER_TYPE, {
-      props: {
-        request: createMediaRequest([createMediaItem(playable.src, {
-          title: playable.title,
-          artist: block.owner?.name ? `${block.owner.name} · Are.na` : "Are.na",
-          kind: playable.kind,
-          sourceUrl: block.arenaUrl,
-          origin: "app",
-        })]),
-      },
-    });
+    const play = () => {
+      const item = arenaBlockToMediaItem(block);
+      if (item) openApplication(MEDIA_PLAYER_TYPE, { props: { request: createMediaRequest([item]) } });
+    };
     return (
       <div className="arena-detail-media">
         {imageUrl && <img src={imageUrl} alt={block.image?.altText || block.title || "Are.na block"} />}

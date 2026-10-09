@@ -226,21 +226,40 @@ export async function getAllChannelContents(
   return [...firstPage.items, ...remainingPages.flatMap((page) => page.items)];
 }
 
+/** One block without UI side effects; callers report failures themselves. */
+export async function fetchBlock(blockId: number | string, signal?: AbortSignal): Promise<ArenaBlock> {
+  const rawBlock = await fetchArenaJson<RawBlock>(
+    `/blocks/${blockId}`,
+    undefined,
+    {
+      signal,
+      cacheKey: `${ARENA_CACHE_PREFIX}:block:${blockId}`,
+      ttlMs: CACHE_TTL.ARENA_BLOCK,
+    }
+  );
+  return normalizeBlock(rawBlock);
+}
+
+/** Channel metadata without the follower count `getChannelPreview` adds. */
+export async function getChannelDetails(channelSlug: string, signal?: AbortSignal): Promise<ArenaChannel> {
+  const rawChannel = await fetchArenaJson<RawChannel>(
+    `/channels/${channelSlug}`,
+    undefined,
+    {
+      signal,
+      cacheKey: `${ARENA_CACHE_PREFIX}:channel:${channelSlug}:detail`,
+      ttlMs: CACHE_TTL.ARENA_CHANNEL,
+    }
+  );
+  return normalizeChannel(rawChannel);
+}
+
 export async function getBlock(
   blockId: number | string,
   initialBlock?: ArenaBlock | null
 ): Promise<ArenaBlock> {
   try {
-    const rawBlock = await fetchArenaJson<RawBlock>(
-      `/blocks/${blockId}`,
-      undefined,
-      {
-        cacheKey: `${ARENA_CACHE_PREFIX}:block:${blockId}`,
-        ttlMs: CACHE_TTL.ARENA_BLOCK,
-      }
-    );
-
-    return mergeBlockConnection(normalizeBlock(rawBlock), initialBlock?.connection ?? null);
+    return mergeBlockConnection(await fetchBlock(blockId), initialBlock?.connection ?? null);
   } catch (error) {
     console.error(`[Arena API] Error fetching block ${blockId}:`, error);
     toast.error(`Failed to load block: ${blockId}`);

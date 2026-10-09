@@ -92,6 +92,16 @@ openApplication(MEDIA_PLAYER_TYPE, {
 
 The player is single-instance; explicit launch props reach a running player, which applies each request id once.
 
+An Are.na channel or block can be handed over as a link instead of items. The player reads every playable block (up to 200) and the Image Viewer pages through the images:
+
+```tsx
+import { formatArenaReference } from '@/apps/arena/utils/arenaLinks';
+
+const arena = formatArenaReference({ type: 'channel', slug });
+openApplication(MEDIA_PLAYER_TYPE, { props: { request: createMediaRequest([], true, { arena }) } });
+openApplication('ImageViewer', { props: { arena, startBlockId } });
+```
+
 ## Theme coverage
 
 Shared chrome lives in `src/index.css`. Styles used by a single app can live beside it (for example `src/apps/media/media-player.css`) and be imported by the app module, so they ship with the lazy chunk instead of the render-blocking entry stylesheet. Either way, use the shared tokens (`--text-color`, `--detail-bg`, `--internal-border`, `--block-bg`, and so on), so classic themes recolor them automatically. Reuse `RetroButton`, `.search-input`, `.app-toolbar-row`, `.app-footer-row`, and `.app-readout`: `src/themes/classic.css` restyles those hooks for 98, XP, and 7. Add app-specific classic overrides to `classic.css` only when a surface needs a different shape, and check the app in every theme.

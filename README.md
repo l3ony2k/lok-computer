@@ -89,6 +89,7 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 *   [x] Develop `Talk to AI` app module (chat interface with dummy responses).
 *   [x] Rebuild `Talk to AI` as `Ask AI` on TypeSafe's Jev decision model: a fast LLM plans typed questions, Jev answers, and the result is JSON keyed by the requested properties.
 *   [x] Develop `Media` app module (audio and video player with playlist, spectrum analyzer, Media Session controls, and hand-off from Are.na and the fediverse reader).
+*   [x] Media and Images accept Are.na links: a channel queues its audio and video blocks or opens as an image gallery, audio and video blocks open straight in Media, and Images is on the desktop.
 *   [x] Add desktop themes: `lok`, plus `98`, `XP`, and `7` after 98.css, XP.css, and 7.css, with a classic taskbar layout.
 
 ### Phase 4: Persistence & Polish
@@ -101,6 +102,15 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 *   [ ] Configure deployment (e.g., using Netlify, Vercel).
 
 ## Development Log
+
+### Session: 3.0.2 — fixes: wallpapers, scrollbars, taskbar, boot type, planner (2026-10-08)
+
+*   XP and 7 now actually paint Bliss and Harmony on the desktop (the stylesheets still used the gradient stand-ins); desktop pictures position through `--desktop-pattern-position` and `--desktop-pattern-repeat`.
+*   Fixed the Ask AI double scrollbar: screen-reader-only text anchored to the window body and made it overflow. `WindowLayout` content areas are now positioned, which fixes it for every app.
+*   The taskbar scrolls again instead of squeezing buttons into ellipses, and keeps the active window's button in view.
+*   Boot, reboot, and kernel panic screens keep one monospace face at fixed sizes in every theme.
+*   Ask AI plans with `gpt-6-luna`. The planner writes in the question's language, adds `as_of` for questions about the present (with a server-side backstop), and adds sharper supporting questions. Option names keep their casing, state references render as field chips, and Jev gateway errors are retried.
+*   About, Bsky, and Fedi icons were remade from the favicon and the official Bluesky and GoToSocial artwork.
 
 ### Session: 3.0.1 — four more themes, pixel icons, question-first Ask AI (2026-10-08)
 

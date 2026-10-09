@@ -29,12 +29,15 @@ import {
   createMediaItem,
   formatMediaTime,
   inferMediaKind,
+  mergeIntoPlaylist,
   normalizeMediaUrl,
   normalizePlayerState,
   pickNextIndex,
   type MediaItem,
   type MediaPlayerState,
 } from './mediaLibrary';
+import { arenaBlockToMediaItem, parseArenaReference, type ArenaReference } from '@/apps/arena/utils/arenaLinks';
+import { collectFromArena, describeArenaError, isAbortError } from '@/apps/arena/utils/arenaImport';
 import { SpectrumAnalyzer } from './SpectrumAnalyzer';
 import { useAudioGraph } from './useAudioGraph';
 import './media-player.css';
@@ -43,6 +46,8 @@ interface IncomingRequest {
   id?: unknown;
   play?: unknown;
   items?: unknown;
+  /** An Are.na channel or block link to import. */
+  arena?: unknown;
 }
 
 interface MediaPlayerAppProps {
@@ -57,6 +62,8 @@ const STORAGE_KEY = 'app:media-player';
 const PLAYBACK_RATES = [1, 1.25, 1.5, 2, 0.5, 0.75];
 const SEEK_STEP = 5;
 const POSITION_SAVE_INTERVAL_MS = 5000;
+/** Playable blocks taken from one Are.na channel. */
+const ARENA_IMPORT_LIMIT = 200;
 
 const describeMediaError = (element: HTMLMediaElement | null) => {
   switch (element?.error?.code) {
@@ -120,6 +127,7 @@ export const MediaPlayerApp: React.FC<MediaPlayerAppProps> = ({ request, onProps
   const [urlInput, setUrlInput] = useState('');
   const [urlInvalid, setUrlInvalid] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [importing, setImporting] = useState(false);
 
   const stageRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -128,6 +136,10 @@ export const MediaPlayerApp: React.FC<MediaPlayerAppProps> = ({ request, onProps
   const restoredRef = useRef(false);
   const objectUrlsRef = useRef(new Set<string>());
   const dragDepthRef = useRef(0);
+  const importRef = useRef<AbortController | null>(null);
+  /** Latest state for async work (Are.na imports) that outlives the render it began in. */
+  const stateRef = useRef(state);
+  stateRef.current = state;
 
   const { playlist, currentId, volume, muted, repeat, shuffle, rate, showPlaylist } = state;
   const currentIndex = playlist.findIndex((item) => item.id === currentId);
@@ -224,6 +236,63 @@ export const MediaPlayerApp: React.FC<MediaPlayerAppProps> = ({ request, onProps
     setState((prev) => ({ ...prev, currentId: id, position: 0 }));
   }, [currentId, mediaElement, setState, startPlayback]);
 
+  // Reads an Are.na channel or block in the background and queues what plays.
+  const playItemRef = useRef(playItem);
+  playItemRef.current = playItem;
+  const importFromArena = useCallback(async (reference: ArenaReference, autoplay: boolean) => {
+    importRef.current?.abort();
+    const controller = new AbortController();
+    importRef.current = controller;
+    const toastId = 'media-arena-import';
+    const noun = reference.type === 'channel' ? 'channel' : 'block';
+    setImporting(true);
+    toast.loading(`Reading the Are.na ${noun}…`, { id: toastId });
+    try {
+      const result = await collectFromArena(reference, arenaBlockToMediaItem, {
+        limit: ARENA_IMPORT_LIMIT,
+        signal: controller.signal,
+        onProgress: ({ scanned, total, found }) => {
+          toast.loading(`Reading Are.na… ${scanned} of ${total} blocks, ${found} playable`, { id: toastId });
+        },
+      });
+      if (controller.signal.aborted) return;
+      if (!result.items.length) {
+        toast.error(reference.type === 'channel'
+          ? `“${result.title}” has no audio or video blocks.`
+          : `“${result.title}” isn’t audio or video.`, { id: toastId });
+        return;
+      }
+
+      const { firstId, added } = mergeIntoPlaylist(stateRef.current.playlist, result.items);
+      setState((prev) => ({ ...prev, playlist: mergeIntoPlaylist(prev.playlist, result.items).playlist }));
+      if (firstId && (autoplay || !stateRef.current.currentId)) playItemRef.current(firstId, autoplay);
+
+      const count = result.items.length;
+      const what = `${count} ${count === 1 ? 'item' : 'items'}`;
+      const from = reference.type === 'channel' ? ` from “${result.title}”` : '';
+      toast.success(added === 0
+        ? `Already in the playlist: ${what}${from}.`
+        : `Added ${added === count ? what : `${added} of ${what}`}${from}${result.truncated ? ` (first ${count})` : ''}.`, { id: toastId });
+    } catch (error) {
+      if (isAbortError(error) || controller.signal.aborted) {
+        toast.dismiss(toastId);
+        return;
+      }
+      console.warn('[App:Media] Are.na import failed:', error);
+      toast.error(describeArenaError(error, reference), { id: toastId });
+    } finally {
+      if (importRef.current === controller) {
+        importRef.current = null;
+        setImporting(false);
+      }
+    }
+  }, [setState]);
+  const importFromArenaRef = useRef(importFromArena);
+  importFromArenaRef.current = importFromArena;
+
+  // An import belongs to this window; stop reading when it closes.
+  useEffect(() => () => importRef.current?.abort(), []);
+
   // Apply launch requests exactly once, even across window restores.
   useEffect(() => {
     if (stateLoading || !request || typeof request.id !== 'string') return;
@@ -233,18 +302,8 @@ export const MediaPlayerApp: React.FC<MediaPlayerAppProps> = ({ request, onProps
     const incoming = sanitizeRequestItems(request.items);
     const wantsPlay = request.play !== false && incoming.length > 0;
     const target = incoming.length ? state.playlist.find((item) => item.src === incoming[0].src) : undefined;
-    let firstId: string | null = null;
     setState((prev) => {
-      const nextPlaylist = [...prev.playlist];
-      for (const item of incoming) {
-        const existing = nextPlaylist.find((candidate) => candidate.src === item.src);
-        if (existing) {
-          firstId ??= existing.id;
-        } else {
-          nextPlaylist.push(item);
-          firstId ??= item.id;
-        }
-      }
+      const { playlist: nextPlaylist, firstId } = mergeIntoPlaylist(prev.playlist, incoming);
       return {
         ...prev,
         playlist: nextPlaylist,
@@ -253,6 +312,8 @@ export const MediaPlayerApp: React.FC<MediaPlayerAppProps> = ({ request, onProps
         handledRequests: [...prev.handledRequests, requestId].slice(-20),
       };
     });
+    const arenaReference = typeof request.arena === 'string' ? parseArenaReference(request.arena) : null;
+    if (arenaReference) void importFromArenaRef.current(arenaReference, request.play !== false);
     if (!wantsPlay) return;
     resumeAtRef.current = null;
     playIntentRef.current = true;
@@ -341,10 +402,16 @@ export const MediaPlayerApp: React.FC<MediaPlayerAppProps> = ({ request, onProps
   }, [addItems, idle]);
 
   const addUrl = useCallback((value: string) => {
+    const arenaReference = parseArenaReference(value);
+    if (arenaReference) {
+      setUrlInvalid(false);
+      void importFromArena(arenaReference, idle);
+      return true;
+    }
     const url = normalizeMediaUrl(value);
     if (!url) {
       setUrlInvalid(true);
-      toast.error('Enter a valid http(s) address for the media file.');
+      toast.error('Enter a media file address or an Are.na channel or block link.');
       return false;
     }
     setUrlInvalid(false);
@@ -355,7 +422,7 @@ export const MediaPlayerApp: React.FC<MediaPlayerAppProps> = ({ request, onProps
     }
     addItems([createMediaItem(url, { origin: 'url' })], idle);
     return true;
-  }, [addItems, idle, playItem, playlist]);
+  }, [addItems, idle, importFromArena, playItem, playlist]);
 
   const removeItem = useCallback((id: string) => {
     const item = playlist.find((candidate) => candidate.id === id);
@@ -588,13 +655,19 @@ export const MediaPlayerApp: React.FC<MediaPlayerAppProps> = ({ request, onProps
                   setUrlInput(event.target.value);
                   setUrlInvalid(false);
                 }}
-                placeholder="Paste an audio or video URL"
-                aria-label="Media URL"
+                placeholder="Media URL or Are.na channel"
+                aria-label="Media URL or Are.na link"
                 aria-invalid={urlInvalid || undefined}
                 className="search-input text-xs"
               />
-              <RetroButton type="submit" size="sm" className="gap-1" title="Add to playlist">
-                <Plus className="h-3.5 w-3.5" /> Add
+              <RetroButton
+                type="submit"
+                size="sm"
+                className="gap-1"
+                title="Add to playlist. Are.na channel and block links queue their audio and video."
+                disabled={importing}
+              >
+                <Plus className="h-3.5 w-3.5" /> {importing ? 'Reading…' : 'Add'}
               </RetroButton>
             </form>
             <RetroButton size="sm" className="gap-1" title="Open local audio or video files" onClick={() => fileInputRef.current?.click()}>
@@ -851,7 +924,7 @@ export const MediaPlayerApp: React.FC<MediaPlayerAppProps> = ({ request, onProps
             ) : (
               <div className="media-player-empty">
                 <strong>No media loaded</strong>
-                <span>Paste a URL, open files, or drop them here.</span>
+                <span>Paste a media URL or an Are.na channel, open files, or drop them here.</span>
                 <RetroButton size="sm" onClick={restoreLibrary}>Load the starter library</RetroButton>
               </div>
             )}
@@ -881,7 +954,7 @@ export const MediaPlayerApp: React.FC<MediaPlayerAppProps> = ({ request, onProps
                 </span>
               </header>
               {playlist.length === 0 ? (
-                <p className="media-player-playlist-empty">Drop audio or video files here.</p>
+                <p className="media-player-playlist-empty">Drop audio or video files or Are.na links here.</p>
               ) : (
                 <ol
                   className="media-player-tracks"

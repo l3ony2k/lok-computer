@@ -22,6 +22,8 @@
  */
 
 export const JEV_ENDPOINT = 'https://api.typesafe.ai/v1/systemone';
+/** Rate limits, overload, and gateway errors: retried with backoff, then reported as busy. */
+const JEV_TRANSIENT_STATUSES = new Set([429, 502, 503, 504, 529]);
 export const DEFAULT_JEV_MODEL = 'jev-latest';
 /** Appended to the primary choice's key for the reversed-order duplicate. */
 export const ORDER_CHECK_SUFFIX = '__reordered';
@@ -106,15 +108,16 @@ Choosing the answer type:
 Writing questions (Jev reads literally and never sees keys or labels):
 - "instructions" states the exact condition in full. Refer to state fields in backticks, e.g. \`email.body\`.
 - One judgment about one thing per question. Never ask about "each" of several items in one question; compare them in a choice instead.
-- Supporting questions are judgments that bear on the answer: a deciding factor, a risk, a counterpoint, or a related condition. Each must be answerable from the state and general knowledge alone. Never restate the answer question, never ask whether information is known or available, never ask about the person's own circumstances unless they gave them, and never ask about dates, years, counts, or amounts. Fewer, sharper questions beat more: return an empty "analytics" list rather than a weak question.
+- Supporting questions are judgments that bear on the answer: a deciding factor, a risk, a counterpoint, or a related condition. Each must be answerable from the state and general knowledge alone. Never restate the answer question, never ask whether information is known or available, never ask about the person's own circumstances unless they gave them, and never ask about dates, years, counts, or amounts. Add 1-2 when a deciding factor, risk, or counterpoint would show why the answer leans the way it does; return an empty "analytics" list only when no such question would add information, and never pad with a weak one.
 - Criteria say what an option or level means. They never argue for an option or contain the verdict, and they never contradict the instructions.
-- Write instructions and criteria in English. Write summary, rationale, message, labels, and placeholders in the person's language.
+- Language: write summary, rationale, message, labels, and placeholders in the language the QUESTION is written in; an English question gets English. Write instructions, criteria, and state descriptions in English. Material the person supplied stays verbatim.
 
 The state:
 - When SUPPLIED STATE is given, Jev receives it as the state. Set "state" to null, or to an object holding only extra background the judgment needs; never repeat the supplied material.
 - When the person pastes material into the question itself, copy that material verbatim into the state.
 - For general-knowledge questions, describe the subject neutrally, e.g. {"subject": "Pluto, the trans-Neptunian object"}. Add background facts only when a reader needs them to understand the question, and never state the answer, a verdict, or an opinion.
-- The state holds material only: no questions, no instructions, and no dates unless the question is about timing.
+- Jev has no clock. When the answer depends on the present (who holds an office now, the latest version, whether something is still the case, "today", "this year"), add "as_of": "<TODAY>" to the state and say "as of \`as_of\`" in the instructions. Otherwise leave dates out.
+- The state holds material only: no questions and no instructions.
 
 Examples (abridged):
 Q: Is Pluto a planet?
@@ -148,6 +151,21 @@ export const toPropertyName = (value) => {
 export const humanizeKey = (key) => {
   const text = String(key ?? '').replace(/_+/g, ' ').trim();
   return text ? text[0].toUpperCase() + text.slice(1) : '';
+};
+
+const escapeRegExp = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/**
+ * Names an option with the casing its description uses, so proper nouns
+ * survive snake_case keys: "donald_trump" + "The president is Donald Trump."
+ * → "Donald Trump". Falls back to humanizeKey.
+ */
+export const optionLabel = (key, description) => {
+  const words = String(key ?? '').split(/_+/).filter(Boolean);
+  if (!words.length || typeof description !== 'string') return humanizeKey(key);
+  const match = description.match(new RegExp(`(?<![\\p{L}\\p{N}])${words.map(escapeRegExp).join('[\\s_-]+')}(?![\\p{L}\\p{N}])`, 'iu'));
+  if (!match) return humanizeKey(key);
+  return match[0][0].toUpperCase() + match[0].slice(1);
 };
 
 const clipText = (value, max = LIMITS.textChars) => {
@@ -534,6 +552,7 @@ export const formResult = (plan, answers) => {
         confidence: round(confidence),
         probabilities: sortedDistribution(probabilities),
         options: question.criteria,
+        optionLabels: Object.fromEntries(Object.entries(question.criteria).map(([option, text]) => [option, optionLabel(option, text)])),
         ...(orderCheck ? { orderCheck } : {}),
       };
     } else if (question.type === 'score' && Number.isFinite(Number(answer.score))) {
@@ -570,17 +589,18 @@ export const formResult = (plan, answers) => {
         notes.push({ tone: 'warn', text: `Close to a coin flip: p(yes) = ${primary.probability.toFixed(2)}.` });
       }
     } else if (primary.type === 'choice') {
-      answerText = humanizeKey(primary.value);
+      const name = (option) => primary.optionLabels?.[option] ?? humanizeKey(option);
+      answerText = name(primary.value);
       detail = primary.options?.[primary.value] ?? null;
       probability = primary.probabilities[primary.value] ?? 0;
       const [first, second] = topTwo(primary.probabilities);
       if (second && second[1] >= 0.15 && second[1] >= first[1] * 0.6) {
-        notes.push({ tone: 'warn', text: `Close call: ${humanizeKey(first[0])} ${percentText(first[1])} vs ${humanizeKey(second[0])} ${percentText(second[1])}.` });
+        notes.push({ tone: 'warn', text: `Close call: ${name(first[0])} ${percentText(first[1])} vs ${name(second[0])} ${percentText(second[1])}.` });
       }
       if (primary.orderCheck) {
         notes.push(primary.orderCheck.consistent
           ? { tone: 'ok', text: 'Same answer with the options listed in reverse order.' }
-          : { tone: 'warn', text: `The answer changed when the options were reversed (${humanizeKey(primary.orderCheck.listed.choice)} vs ${humanizeKey(primary.orderCheck.reversed.choice)}), so it is less settled than the numbers suggest.` });
+          : { tone: 'warn', text: `The answer changed when the options were reversed (${name(primary.orderCheck.listed.choice)} vs ${name(primary.orderCheck.reversed.choice)}), so it is less settled than the numbers suggest.` });
       }
     } else {
       answerText = primary.levelText;
@@ -673,7 +693,7 @@ export const askJev = async (request, env, fetchImpl = (...args) => fetch(...arg
 
     if (response.ok) return readUpstreamJson(response, 'Jev');
 
-    if ((response.status === 429 || response.status === 529) && attempt < 2) {
+    if (JEV_TRANSIENT_STATUSES.has(response.status) && attempt < 2) {
       const retryAfter = Number(response.headers.get('retry-after'));
       await sleep(Math.min(4000, Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : 400 * 2 ** attempt));
       continue;
@@ -682,14 +702,14 @@ export const askJev = async (request, env, fetchImpl = (...args) => fetch(...arg
     const message = await readUpstreamError(response);
     if (response.status === 422 || response.status === 400) throw new JevError(`Jev rejected the questions: ${message}`, 422);
     if (response.status === 401 || response.status === 403) throw new JevError('Jev rejected the server credentials.', 502);
-    if (response.status === 429 || response.status === 529) throw new JevError('Jev is busy right now. Try again in a moment.', 503);
+    if (JEV_TRANSIENT_STATUSES.has(response.status)) throw new JevError('Jev is busy right now. Try again in a moment.', 503, { details: message });
     throw new JevError(`Jev request failed (${response.status}).`, 502, { details: message });
   }
   throw new JevError('Jev is busy right now. Try again in a moment.', 503);
 };
 
 const buildPlannerMessages = ({ question, suppliedState, answerAnyway, today }, feedback) => {
-  const parts = [`TODAY (for judging what is current; not part of the state): ${today}`, `QUESTION:\n${question}`];
+  const parts = [`TODAY: ${today} (Jev does not know it; put it in the state as "as_of" only when the answer depends on the present)`, `QUESTION:\n${question}`];
   if (suppliedState !== null) parts.push(`${SUPPLIED_STATE_NOTE}\n${JSON.stringify(suppliedState, null, 2)}`);
   if (answerAnyway) parts.push(ANSWER_ANYWAY_NOTE);
   const messages = [
@@ -748,6 +768,22 @@ const readQuestion = (body) => {
   return question;
 };
 
+/** Questions about the present that Jev, which has no clock, can only judge with a date. */
+const PRESENT_PATTERN = /\b(right now|now|current(ly)?|today|tonight|this (year|month|week)|at the moment|presently|latest|newest|incumbent|as of)\b/i;
+const DATE_KEY_PATTERN = /^(as_of|date|today|current_date)$/i;
+
+/**
+ * Backstop for the planner: a present-tense question gets `as_of` in an object
+ * state when no date field is there, so Jev does not answer from its training
+ * cutoff. String states are left alone because instructions refer to them whole.
+ */
+export const withAsOfDate = (plan, question, today) => {
+  if (!PRESENT_PATTERN.test(question)) return plan;
+  if (plan.state !== null && !isPlainObject(plan.state)) return plan;
+  if (Object.keys(plan.state ?? {}).some((key) => DATE_KEY_PATTERN.test(key))) return plan;
+  return { ...plan, state: { ...(plan.state ?? {}), as_of: today } };
+};
+
 /**
  * Plans a question: returns a plan, a request for more input, or a refusal.
  * Malformed replies get one corrective retry with the validation error.
@@ -763,7 +799,8 @@ export const planQuestions = async (body, env, fetchImpl = (...args) => fetch(..
     const reply = await callPlanner(buildPlannerMessages(context, feedback), env, fetchImpl, true);
     try {
       const outcome = normalizePlannerReply(extractJsonObject(reply.content), { suppliedState, answerAnyway });
-      return { ...outcome, plannerModel: reply.model };
+      const plan = outcome.kind === 'plan' ? { plan: withAsOfDate(outcome.plan, question, context.today) } : {};
+      return { ...outcome, ...plan, plannerModel: reply.model };
     } catch (error) {
       // Malformed replies get one corrective retry; other failures surface as-is.
       if (attempt === 1 || !(error instanceof JevError) || error.code !== 'invalid_plan') throw error;

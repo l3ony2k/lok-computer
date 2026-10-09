@@ -127,10 +127,13 @@ account_id = "your-account-id"
 AI_MODEL = "gemini-2.5-flash-lite"
 AI_TEMPERATURE = "0.8"
 JEV_MODEL = "jev-latest"
+JEV_PLANNER_MODEL = "gpt-6-luna"
 FEDI_INSTANCE = "https://rex.cat"
 ```
 
-`JEV_PLANNER_MODEL` optionally overrides the planner model (defaults to `AI_MODEL`). `JEV_PLANNER_REASONING_EFFORT` sets the planner's `reasoning_effort` (default `none`, which cuts gemini-2.5-flash-lite from about 13s to 3-5s; set it to an empty string to omit the field). Providers that reject it, or JSON mode, get one retry without both.
+`JEV_PLANNER_MODEL` sets the Ask AI planner (`gpt-6-luna` on HyprLab; defaults to `AI_MODEL` when unset). `JEV_PLANNER_REASONING_EFFORT` sets the planner's `reasoning_effort` (default `none`: planning is a short structured task, and gpt-6-luna plans in about 3-5s without hidden reasoning; set it to an empty string to omit the field). Providers that reject it, or JSON mode, get one retry without both.
+
+Jev has no clock, so plans for questions about the present ("right now", "current", "latest") carry `"as_of": "<today>"` in the state; the planner is told to add it, and `withAsOfDate` in `jev.js` adds it when the planner forgets.
 
 ### Production Secrets
 

@@ -12,6 +12,7 @@ import {
   ArenaFileViewMode,
   ArenaFileViewState,
 } from "./arenaFileViewState";
+import { getArenaPlayableMedia } from "../utils/arenaLinks";
 
 interface ArenaFileViewProps {
   items: ArenaItem[];
@@ -33,6 +34,8 @@ interface ArenaFileViewProps {
   previewMode?: "off" | "horizontal" | "vertical";
   onPreviewModeChange?: (mode: "off" | "horizontal" | "vertical") => void;
   contentViewportRef?: React.RefObject<HTMLDivElement>;
+  /** Channel-level actions shown beside Load more and Preview. */
+  footerActions?: React.ReactNode;
 }
 
 const FILE_SIZES: ArenaFileSize[] = ["small", "medium", "large"];
@@ -91,14 +94,18 @@ const getChannelVisibilityLabel = (visibility?: string) => {
   return "Closed Channel";
 };
 
-const getFallbackLabel = (item: ArenaItem) => ({
-  text: "TXT",
-  link: "URL",
-  attachment: "FILE",
-  embed: "EMB",
-  channel: "CH",
-  image: "IMG",
-}[item.kind]);
+const getFallbackLabel = (item: ArenaItem) => {
+  const playable = getArenaPlayableMedia(item);
+  if (playable) return playable.kind === "video" ? "VID" : "AUD";
+  return {
+    text: "TXT",
+    link: "URL",
+    attachment: "FILE",
+    embed: "EMB",
+    channel: "CH",
+    image: "IMG",
+  }[item.kind];
+};
 
 const PreviewImage = ({ item }: { item: ArenaItem }) => {
   const [failed, setFailed] = useState(false);
@@ -544,6 +551,7 @@ export const ArenaFileView = ({
   previewMode = "off",
   onPreviewModeChange,
   contentViewportRef,
+  footerActions,
 }: ArenaFileViewProps) => {
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const visibleItems = useMemo(() => sortAndFilterItems(items, state), [items, state]);
@@ -638,6 +646,7 @@ export const ArenaFileView = ({
         <div className="arena-file-footer">
           <span>{countLabel}</span>
           <div className="arena-file-footer-actions">
+            {footerActions}
             {hasMore && items.length > 0 && onLoadMore && (
               <RetroButton onClick={onLoadMore} disabled={loadingMore}>
                 {error ? "Retry" : loadingMore ? "Loading..." : "Load more"}

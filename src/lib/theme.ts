@@ -166,7 +166,7 @@ export const THEMES: Readonly<Record<ThemeId, ThemeDefinition>> = {
     startLabel: 'Menu',
     credit: { label: 'cs16.css by Samuel Breznjak', url: 'https://github.com/ekmas/cs16.css', license: 'MIT' },
     loadStyles: () => Promise.all([import('@/themes/classic.css'), import('@/themes/cs16/theme.css')]),
-    fonts: ['16px ArialPixel'],
+    fonts: ['16px ArialPixel', '11px "Pixelated MS Sans Serif"'],
     wallpaper: new URL('../themes/cs16/background.webp', import.meta.url).href,
   },
 };

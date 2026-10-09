@@ -70,15 +70,14 @@ html[data-theme="xp"][data-layout]:not(#_) {
     --selection-bg: #316ac5;
     --selection-fg: #ffffff;
     --desktop-bg: #5a8fd8;
+    /* Bliss over a sky-and-hill gradient that stands in until the picture decodes. */
     --desktop-pattern:
+        url("./bliss.webp"),
         radial-gradient(ellipse 150% 58% at 32% 112%, #74bb4a 0 47%, #62a83b 57%, transparent 58%),
-        radial-gradient(ellipse 90% 46% at 95% 104%, #4f9a33 0 50%, transparent 51%),
-        radial-gradient(ellipse 22% 9% at 24% 30%, rgba(255, 255, 255, 0.85), transparent 72%),
-        radial-gradient(ellipse 30% 8% at 31% 27%, rgba(255, 255, 255, 0.6), transparent 70%),
-        radial-gradient(ellipse 20% 6% at 72% 18%, rgba(255, 255, 255, 0.65), transparent 70%),
-        radial-gradient(ellipse 14% 5% at 82% 24%, rgba(255, 255, 255, 0.5), transparent 70%),
         linear-gradient(180deg, #1d5fc6 0%, #3f7fd8 30%, #7fb2ec 62%, #c8e1fa 100%);
-    --desktop-pattern-size: 100% 100%;
+    --desktop-pattern-size: cover, 100% 100%, 100% 100%;
+    --desktop-pattern-position: center;
+    --desktop-pattern-repeat: no-repeat;
     --desktop-label-color: #ffffff;
     --desktop-label-edge: transparent;
     --desktop-icon-drop-shadow: transparent;
@@ -89,9 +88,10 @@ html[data-theme="xp"][data-layout]:not(#_) {
 
     --c-face: #ece9d8;
     --c-font-size: 11px;
-    --c-text-xs: 11px;
-    --c-text-sm: 11px;
-    --c-text-base: 12px;
+    --c-text-small: 10px;
+    --c-text-body: 12px;
+    --c-text-heading: 18px;
+    --c-font-heading: "Trebuchet MS", Tahoma, "Segoe UI", sans-serif;
     --c-title-font: "Trebuchet MS", Tahoma, "Segoe UI", sans-serif;
     --c-title-size: 13px;
     --c-title-weight: 700;

@@ -18,6 +18,14 @@
     src: url("./fonts/ArialPixel.woff2") format("woff2");
 }
 
+@font-face {
+    font-family: "Pixelated MS Sans Serif";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("../98/fonts/ms_sans_serif.woff2") format("woff2");
+}
+
 html[data-theme="cs16"][data-layout]:not(#_) {
     --cs-bg: #4a5942;
     --cs-bg-2: #3e4637;
@@ -96,6 +104,8 @@ html[data-theme="cs16"][data-layout]:not(#_) {
     --desktop-bg: #1b2433;
     --desktop-pattern: url("./background.webp");
     --desktop-pattern-size: cover;
+    --desktop-pattern-position: center;
+    --desktop-pattern-repeat: no-repeat;
     --desktop-label-color: var(--cs-text);
     --desktop-label-edge: transparent;
     --desktop-icon-drop-shadow: rgba(0, 0, 0, 0.6);
@@ -108,9 +118,11 @@ html[data-theme="cs16"][data-layout]:not(#_) {
     /* Component tokens */
     --c-face: var(--cs-bg);
     --c-font-size: 16px;
-    --c-text-xs: 16px;
-    --c-text-sm: 16px;
-    --c-text-base: 16px;
+    --c-task-width: 200px;
+    --c-text-heading: 32px;
+    /* Small text drops to the 11px VGUI dialog face, the same MS Sans Serif strike 98 uses. */
+    --c-text-small: 11px;
+    --c-font-small: "Pixelated MS Sans Serif", Tahoma, sans-serif;
     --c-title-font: var(--font-ui);
     --c-title-size: 16px;
     --c-title-weight: 400;
@@ -260,18 +272,14 @@ html[data-theme="cs16"][data-layout]:not(#_) {
 
 /* ---------- Type ---------- */
 
-/* ArialPixel is drawn on a 16px grid; other sizes blur. */
+/* ArialPixel is drawn on a 16px grid; other sizes blur, so headings double it. */
 html[data-theme="cs16"][data-layout]:not(#_) body :not(svg, svg *, .weather-output, .weather-output *, .console-layout, .console-layout *) {
-    font-size: 16px;
+    font-size: var(--c-type-size, var(--c-text-body));
 }
 
 html[data-theme="cs16"][data-layout]:not(#_) :where(h1, h2, h3, h4, h5, h6, strong, b, th) {
     font-weight: 400;
     color: #ffffff;
-}
-
-html[data-theme="cs16"][data-layout]:not(#_) :where(.text-lg, .text-xl, .text-2xl, h1, h2) {
-    font-size: 16px;
 }
 
 html[data-theme="cs16"][data-layout]:not(#_) a {
@@ -289,11 +297,6 @@ html[data-theme="cs16"][data-layout]:not(#_) ::selection {
 }
 
 /* ---------- Desktop ---------- */
-
-html[data-theme="cs16"][data-layout]:not(#_) .desktop-container:not(.has-wallpaper) {
-    background-position: center;
-    background-repeat: no-repeat;
-}
 
 html[data-theme="cs16"][data-layout]:not(#_) .desktop-icon-label {
     padding: 1px 4px;
@@ -375,7 +378,7 @@ html[data-theme="cs16"][data-layout]:not(#_) :where(
     justify-content: flex-start;
 }
 
-html[data-theme="cs16"][data-layout]:not(#_) :where(.retro-button, button.arena-toolbar-control, .arena-detail-action):hover:not(:disabled) {
+html[data-theme="cs16"][data-layout]:not(#_) :where(.retro-button, button.arena-toolbar-control, .arena-detail-action):hover:not(:disabled, [data-active="true"], [aria-pressed="true"]) {
     color: #ffffff;
 }
 

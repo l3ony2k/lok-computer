@@ -234,6 +234,15 @@
     line-height: 1.4;
 }
 
+.ask-ai-field-ref {
+    padding: 0 3px;
+    color: var(--text-color);
+    background: var(--block-bg);
+    border: 1px solid var(--block-border);
+    font-family: var(--font-code);
+    font-size: inherit;
+}
+
 .ask-ai-value {
     display: flex;
     flex-wrap: wrap;

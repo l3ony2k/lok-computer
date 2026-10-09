@@ -27,8 +27,11 @@ export const WindowLayout = ({
         <div className={cn("app-window-layout flex flex-col h-full min-h-0 select-none", className)}>
             {toolbar && <div className="window-toolbar">{toolbar}</div>}
 
+            {/* `relative` makes the scroller the containing block for absolutely
+                positioned descendants (sr-only text, popovers); otherwise they
+                anchor to the window body and give it a second scrollbar. */}
             <div className={cn(
-                "window-content-area flex-1 min-h-0",
+                "window-content-area relative flex-1 min-h-0",
                 isScrollable && "overflow-auto scrollable-area",
                 hasPadding && "p-2"
             )}>

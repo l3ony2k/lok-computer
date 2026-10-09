@@ -103,9 +103,7 @@ html[data-theme="386"][data-layout]:not(#_) {
     /* Component tokens */
     --c-face: var(--dos-gray);
     --c-font-size: 16px;
-    --c-text-xs: 16px;
-    --c-text-sm: 16px;
-    --c-text-base: 16px;
+    --c-text-heading: 32px;
     --c-title-font: var(--font-ui);
     --c-title-size: 16px;
     --c-title-weight: 400;
@@ -260,8 +258,9 @@ html[data-theme="386"][data-layout]:not(#_) {
 
 /* ---------- Type ---------- */
 
+/* Fixedsys sits on a 16px grid; headings double it. */
 html[data-theme="386"][data-layout]:not(#_) body :not(svg, svg *) {
-    font-size: 16px;
+    font-size: var(--c-type-size, var(--c-text-body));
 }
 
 html[data-theme="386"][data-layout]:not(#_) *,
@@ -275,8 +274,7 @@ html[data-theme="386"][data-layout]:not(#_) :where(h1, h2, h3, h4, h5, h6, stron
 }
 
 html[data-theme="386"][data-layout]:not(#_) :where(.text-lg, .text-xl, .text-2xl, h1, h2, h3) {
-    font-size: 16px;
-    line-height: 19px;
+    line-height: 1.1875;
 }
 
 html[data-theme="386"][data-layout]:not(#_) :where(h1, h2, h3) {
@@ -464,7 +462,6 @@ html[data-theme="386"][data-layout]:not(#_) :where(
     .oobe-choice,
     .oobe-oneko-options button,
     .config-oneko-option,
-    .system-kernel-retry,
     [data-sonner-toast] [data-button]
 ):not(.window-control) {
     gap: 4px;
@@ -478,7 +475,6 @@ html[data-theme="386"][data-layout]:not(#_) :where(
     .arena-detail-action,
     .oobe-segmented button,
     .oobe-choice,
-    .system-kernel-retry,
     [data-sonner-toast] [data-button]
 ):not(.window-control, [aria-label])::before {
     content: "<";
@@ -492,7 +488,6 @@ html[data-theme="386"][data-layout]:not(#_) :where(
     .arena-detail-action,
     .oobe-segmented button,
     .oobe-choice,
-    .system-kernel-retry,
     [data-sonner-toast] [data-button]
 ):not(.window-control, [aria-label])::after {
     content: ">";

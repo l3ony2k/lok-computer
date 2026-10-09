@@ -77,6 +77,8 @@ export interface ChoiceProperty extends BaseProperty {
   value: string;
   probabilities: Record<string, number>;
   options: Record<string, string | null>;
+  /** Display names that keep the casing of each option's description ("Donald Trump"). */
+  optionLabels?: Record<string, string>;
   /** The primary choice is also asked with its options reversed. */
   orderCheck?: {
     consistent: boolean;

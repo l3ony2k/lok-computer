@@ -77,12 +77,13 @@ html[data-theme="7"][data-layout]:not(#_) {
     --selection-bg: #3399ff;
     --selection-fg: #ffffff;
     --desktop-bg: #0f62ae;
+    /* Harmony over a matching blue glow that stands in until the picture decodes. */
     --desktop-pattern:
-        radial-gradient(ellipse 34% 22% at 70% 42%, rgba(255, 255, 255, 0.55), rgba(170, 225, 255, 0.25) 45%, transparent 75%),
-        conic-gradient(from 205deg at 70% 42%, transparent 0deg, rgba(150, 215, 255, 0.28) 18deg, transparent 36deg, rgba(110, 195, 255, 0.2) 70deg, transparent 95deg, rgba(160, 225, 255, 0.18) 140deg, transparent 170deg, transparent 360deg),
-        radial-gradient(ellipse 50% 30% at 18% 88%, rgba(80, 180, 255, 0.35), transparent 70%),
+        url("./harmony.webp"),
         radial-gradient(ellipse 120% 95% at 68% 40%, #2d9be2 0%, #1576c6 30%, #0b4f8a 62%, #062e5a 100%);
-    --desktop-pattern-size: 100% 100%;
+    --desktop-pattern-size: cover, 100% 100%;
+    --desktop-pattern-position: center;
+    --desktop-pattern-repeat: no-repeat;
     --desktop-label-color: #ffffff;
     --desktop-label-edge: transparent;
     --desktop-icon-drop-shadow: transparent;
@@ -93,9 +94,9 @@ html[data-theme="7"][data-layout]:not(#_) {
 
     --c-face: #f0f0f0;
     --c-font-size: 12px;
-    --c-text-xs: 11px;
-    --c-text-sm: 12px;
-    --c-text-base: 13px;
+    --c-text-small: 11px;
+    --c-text-body: 12px;
+    --c-text-heading: 18px;
     --c-title-size: 12px;
     --c-title-weight: 400;
     --c-title-text-shadow: 0 0 10px #ffffff, 0 0 10px #ffffff, 0 0 8px #ffffff, 0 0 6px #ffffff;

@@ -71,18 +71,28 @@ export const ROUTES: RouteConfig[] = [
         getTitle: (props) => `Block #${props.blockId}`,
     },
 
-    // Image Viewer (URL encoded in query param)
+    // Image Viewer: one image (`url`) or an Are.na channel gallery (`arena`, page `i`).
     {
         pattern: 'image',
         componentType: 'ImageViewer',
-        extractProps: (_, query) => ({
-            imageUrl: query.get('url') || '',
-        }),
+        extractProps: (_, query) => {
+            const arena = query.get('arena');
+            if (arena) {
+                const index = Number(query.get('i'));
+                return { arena, index: Number.isInteger(index) && index > 0 ? index - 1 : 0 };
+            }
+            return { imageUrl: query.get('url') || undefined };
+        },
         generateUrl: (props) => {
+            if (props.arena) {
+                const params = new URLSearchParams({ arena: String(props.arena) });
+                if (typeof props.index === 'number' && props.index > 0) params.set('i', String(props.index + 1));
+                return `/image?${params.toString()}`;
+            }
             if (!props.imageUrl) return '/image';
             return `/image?url=${encodeURIComponent(String(props.imageUrl))}`;
         },
-        getTitle: () => 'Image',
+        getTitle: (props) => (props.imageUrl ? 'Image' : 'Images'),
     },
 
     // Static apps (single instance, no dynamic props)
@@ -157,18 +167,21 @@ export const ROUTES: RouteConfig[] = [
         getTitle: () => 'Ask AI',
     },
 
-    // Media Player. `src` enqueues and plays a URL; `nowPlaying` is the shareable state.
+    // Media Player. `src` enqueues and plays a URL, `arena` imports a channel or
+    // block's audio and video; `nowPlaying` is the shareable state.
     {
         pattern: 'media',
         componentType: 'MediaPlayer',
         extractProps: (_, query) => {
             const src = query.get('src');
-            if (!src) return {};
+            const arena = query.get('arena');
+            if (!src && !arena) return {};
             return {
                 request: {
                     id: `route-${Date.now()}`,
                     play: true,
-                    items: [{ src, title: query.get('title') || undefined }],
+                    items: src ? [{ src, title: query.get('title') || undefined }] : [],
+                    ...(arena ? { arena } : {}),
                 },
             };
         },

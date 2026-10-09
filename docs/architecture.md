@@ -87,7 +87,7 @@ The shared layout uses project-specific `lok-reader-*` CSS hooks. Keep these hoo
 
 ### Media hand-off
 
-`src/apps/media/mediaLibrary.ts` is a dependency-free module other apps import to hand audio or video to the Media Player: `openApplication(MEDIA_PLAYER_TYPE, { props: { request: createMediaRequest([createMediaItem(url)]) } })`. The player applies each request id once, even across window restores.
+`src/apps/media/mediaLibrary.ts` is a dependency-free module other apps import to hand audio or video to the Media Player: `openApplication(MEDIA_PLAYER_TYPE, { props: { request: createMediaRequest([createMediaItem(url)]) } })`. The player applies each request id once, even across window restores. A request may instead carry `arena`, an Are.na channel or block link; the player then reads that channel's audio and video blocks itself (`src/apps/arena/utils/arenaImport.ts`) and queues them. The Image Viewer reads the same links into a gallery.
 
 ### Ask AI (Jev)
 

@@ -205,12 +205,13 @@ export const APPLICATIONS = defineApplications({
   },
   ImageViewer: {
     componentType: 'ImageViewer',
-    name: 'Image Viewer',
+    name: 'Images',
     iconType: 'image',
     component: ImageViewerApp,
     loader: APP_MODULE_LOADERS.ImageViewer,
     defaultWidth: 800,
     defaultHeight: 600,
+    showOnDesktop: true,
   },
 });
 

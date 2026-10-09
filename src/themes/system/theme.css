@@ -116,9 +116,8 @@ html[data-theme="system"][data-layout]:not(#_) {
     --c-face: #ffffff;
     /* The bitmap fonts sit on a 16px grid: 16px Chicago_12 is the 12pt Chicago, 16px Geneva_9 is Geneva 9. */
     --c-font-size: 16px;
-    --c-text-xs: 16px;
-    --c-text-sm: 16px;
-    --c-text-base: 16px;
+    --c-text-heading: 32px;
+    --c-font-small: var(--font-small);
     --c-title-font: var(--font-ui);
     --c-title-size: 16px;
     --c-title-weight: 400;
@@ -270,12 +269,12 @@ html[data-theme="system"][data-layout]:not(#_) {
 
 /* ---------- Type ---------- */
 
-/* Bitmap type has one size: 16px is Chicago 12 and Geneva 9 on their pixel grid. */
+/* Bitmap type sits on a 16px grid (Chicago 12, Geneva 9); headings double it. */
 html[data-theme="system"][data-layout]:not(#_) body :not(svg, svg *, .weather-output, .weather-output *, .console-layout, .console-layout *) {
-    font-size: 16px;
+    font-size: var(--c-type-size, var(--c-text-body));
 }
 
-html[data-theme="system"][data-layout]:not(#_) :where(.desktop-icon-label, .taskbar-clock, .app-footer-row, .arena-file-footer, .theme-picker-tagline, .config-help-text, .media-player-track-text small) {
+html[data-theme="system"][data-layout]:not(#_) :where(.desktop-icon-label, .taskbar-clock, .app-footer-row, .arena-file-footer, .config-help-text, .media-player-track-text small) {
     font-family: var(--font-small);
     font-size: 16px;
 }
@@ -479,7 +478,6 @@ html[data-theme="system"][data-layout]:not(#_) :where(
     .oobe-choice,
     .oobe-oneko-options button,
     .config-oneko-option,
-    .system-kernel-retry,
     [data-sonner-toast] [data-button]
 ):not(.window-control) {
     border-image: url("./icons/button.svg") 4 fill / 4px / 0 stretch;
@@ -495,7 +493,6 @@ html[data-theme="system"][data-layout]:not(#_) :where(
     .oobe-choice,
     .oobe-oneko-options button,
     .config-oneko-option,
-    .system-kernel-retry,
     [data-sonner-toast] [data-button]
 ):not(.window-control):is(:active:not(:disabled), [data-active="true"], [aria-pressed="true"]) {
     color: #ffffff;
