@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { onRequest } from "./[[path]]";
+import { onRequest, isKnownUiPath } from "./[[path]]";
+import { ROUTES } from "../src/config/routes";
 
 const shell = `<!doctype html><html><head><title>lok.computer</title></head><body><div id="root"></div><noscript id="agent-static-content"><main>old fallback</main></noscript></body></html>`;
 
@@ -88,8 +89,16 @@ describe("agent-facing Pages routing", () => {
     expect(getNextCalls()).toBe(0);
   });
 
+  test("knows every route the desktop can open", () => {
+    for (const { pattern } of ROUTES) {
+      const path = "/" + pattern.split("/")[0];
+      expect(isKnownUiPath(path), `${pattern} is not a known UI path`).toBeTrue();
+    }
+    expect(isKnownUiPath("/open")).toBeTrue();
+  });
+
   test("preserves static and dynamic desktop deep links", async () => {
-    for (const path of ["/arena", "/explorer/example-channel", "/block/123"]) {
+    for (const path of ["/arena", "/explorer/example-channel", "/block/123", "/media", "/open"]) {
       const { context, getNextCalls } = createContext(path, {
         headers: { Accept: "text/html" },
       });

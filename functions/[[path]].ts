@@ -25,6 +25,8 @@ const UI_PATHS = new Set([
   "/guestbook",
   "/image",
   "/links",
+  "/media",
+  "/open",
   "/privacy",
   "/shelf",
   "/weather",
