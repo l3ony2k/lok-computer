@@ -91,7 +91,7 @@ describe("agent-facing Pages routing", () => {
 
   test("knows every route the desktop can open", () => {
     for (const { pattern } of ROUTES) {
-      const path = "/" + pattern.split("/")[0];
+      const path = "/" + pattern.replace(/:[a-zA-Z]+/g, "example");
       expect(isKnownUiPath(path), `${pattern} is not a known UI path`).toBeTrue();
     }
     expect(isKnownUiPath("/open")).toBeTrue();
