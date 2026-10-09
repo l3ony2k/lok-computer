@@ -11,6 +11,7 @@ import {
   normalizeMediaUrl,
   normalizePlayerState,
   pickNextIndex,
+  shouldLoopShortVideo,
   titleFromSource,
 } from './mediaLibrary';
 
@@ -126,5 +127,31 @@ describe('playlist requests', () => {
     expect(merged.added).toBe(1);
 
     expect(mergeIntoPlaylist([], [])).toEqual({ playlist: [], firstId: null, added: 0 });
+  });
+});
+
+describe('one-shot requests and short clips', () => {
+  test('a single item plays once; a channel import keeps going', () => {
+    const item = createMediaItem('https://a.test/clip.mp4', { origin: 'app' });
+    expect(createMediaRequest([item]).once).toBeTrue();
+    expect(createMediaRequest([item, item]).once).toBeFalse();
+    expect(createMediaRequest([], true, { arena: 'https://www.are.na/lok/audio' }).once).toBeFalse();
+    expect(createMediaRequest([item], true, { once: false }).once).toBeFalse();
+  });
+
+  test('short videos loop like a GIF; audio and long videos do not', () => {
+    expect(shouldLoopShortVideo('video', 4)).toBeTrue();
+    expect(shouldLoopShortVideo('video', 15)).toBeTrue();
+    expect(shouldLoopShortVideo('video', 15.5)).toBeFalse();
+    expect(shouldLoopShortVideo('audio', 4)).toBeFalse();
+    expect(shouldLoopShortVideo('video', undefined)).toBeFalse();
+    expect(shouldLoopShortVideo('video', Number.NaN)).toBeFalse();
+  });
+
+  test('a hold survives a reload only while its item is still queued', () => {
+    const [first] = DEFAULT_LIBRARY;
+    expect(normalizePlayerState({ ...DEFAULT_PLAYER_STATE, holdId: first.id }).holdId).toBe(first.id);
+    expect(normalizePlayerState({ ...DEFAULT_PLAYER_STATE, holdId: 'gone' }).holdId).toBeNull();
+    expect(normalizePlayerState({ ...DEFAULT_PLAYER_STATE, holdId: 7 }).holdId).toBeNull();
   });
 });

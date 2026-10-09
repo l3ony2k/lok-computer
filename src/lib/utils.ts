@@ -120,3 +120,58 @@ export function adjustWindowToViewport(
 
   return { x: adjX, y: adjY, width: adjWidth, height: adjHeight, changed };
 }
+
+type ScrollAlignment = 'start' | 'end' | 'nearest';
+
+/** Nearest ancestor that actually scrolls on the given axis. */
+const findScrollParent = (node: HTMLElement, axis: 'x' | 'y'): HTMLElement | null => {
+  let parent = node.parentElement;
+  while (parent) {
+    const style = getComputedStyle(parent);
+    const overflow = axis === 'y' ? style.overflowY : style.overflowX;
+    const overflows = axis === 'y'
+      ? parent.scrollHeight > parent.clientHeight
+      : parent.scrollWidth > parent.clientWidth;
+    if ((overflow === 'auto' || overflow === 'scroll') && overflows) return parent;
+    parent = parent.parentElement;
+  }
+  return null;
+};
+
+const alignedOffset = (align: ScrollAlignment, start: number, end: number, current: number, size: number) => {
+  if (align === 'start') return start;
+  if (align === 'end') return end - size;
+  if (start < current) return start;
+  if (end > current + size) return end - size;
+  return current;
+};
+
+/**
+ * Scrolls only the nearest scroll container on each requested axis to bring
+ * `node` into view. `element.scrollIntoView` walks every ancestor, hidden ones
+ * included, so a window near the desktop's edge (or a viewport taller than the
+ * visible area) makes it scroll the desktop itself and shift every window.
+ * The desktop and body are `overflow: clip` as a backstop; app code should
+ * still use this instead of `scrollIntoView` for anything inside a window.
+ */
+export const scrollIntoViewWithin = (
+  node: HTMLElement | null | undefined,
+  options: { block?: ScrollAlignment; inline?: ScrollAlignment } = { block: 'nearest' },
+) => {
+  if (!node) return;
+  const nodeRect = node.getBoundingClientRect();
+  if (options.block) {
+    const scroller = findScrollParent(node, 'y');
+    if (scroller) {
+      const top = nodeRect.top - scroller.getBoundingClientRect().top + scroller.scrollTop;
+      scroller.scrollTop = alignedOffset(options.block, top, top + nodeRect.height, scroller.scrollTop, scroller.clientHeight);
+    }
+  }
+  if (options.inline) {
+    const scroller = findScrollParent(node, 'x');
+    if (scroller) {
+      const left = nodeRect.left - scroller.getBoundingClientRect().left + scroller.scrollLeft;
+      scroller.scrollLeft = alignedOffset(options.inline, left, left + nodeRect.width, scroller.scrollLeft, scroller.clientWidth);
+    }
+  }
+};

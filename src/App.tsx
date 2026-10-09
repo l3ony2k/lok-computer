@@ -6,11 +6,16 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { UserSettingsProvider } from "./hooks/useUserSettings";
 import { ThemeProvider } from "./hooks/useTheme";
+import { isOfflineError } from "./lib/cachedRequest";
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 1,
+      // Loaders consult the persistent cache first, so they run even offline
+      // and can serve a saved copy; a genuine miss offline fails once, quietly,
+      // and refetches when the connection returns.
+      networkMode: "offlineFirst",
+      retry: (failureCount, error) => failureCount < 1 && navigator.onLine && !isOfflineError(error),
       refetchOnWindowFocus: false,
     },
   },

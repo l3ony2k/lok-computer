@@ -233,7 +233,8 @@
     }
 
     body {
-        @apply bg-background text-foreground overflow-hidden;
+        @apply bg-background text-foreground;
+        overflow: clip;
         color: var(--text-color);
         font-family: var(--font-ui);
         font-size: 14px;
@@ -266,26 +267,42 @@
         color: var(--selection-fg);
     }
 
-    /* Desktop background with custom wallpaper */
+    /* Desktop: the theme's pattern or colour, with any picture on its own layer above it */
     .desktop-container {
-        @apply flex-1 relative overflow-hidden;
+        @apply flex-1 relative;
+        /* clip, not hidden: a hidden box still scrolls when something inside calls scrollIntoView or focus */
+        overflow: clip;
+        isolation: isolate;
         background-color: var(--desktop-bg);
-    }
-
-    /* Add wallpaper as background when provided */
-    .desktop-container.has-wallpaper {
-        background-image: var(--wallpaper-url);
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-    }
-
-    /* Fallback when no wallpaper or wallpaper fails to load */
-    .desktop-container:not(.has-wallpaper) {
         background-image: var(--desktop-pattern);
         background-size: var(--desktop-pattern-size);
         background-position: var(--desktop-pattern-position, 0 0);
         background-repeat: var(--desktop-pattern-repeat, repeat);
+    }
+
+    /* Holds every window; clip so nothing inside a window can scroll it */
+    .window-layer {
+        overflow: clip;
+    }
+
+    /*
+     * A wallpaper is an <img> rather than a background so it decodes
+     * synchronously and lives on one compositor layer: dragging a window over
+     * it never re-rasterises the picture, and returning to the tab never
+     * flashes the stand-in while the picture decodes again.
+     */
+    .desktop-wallpaper {
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+        pointer-events: none;
+        user-select: none;
+        contain: strict;
+        will-change: transform;
     }
 
 }
@@ -451,6 +468,23 @@
     }
 
     .start-button,
+    .system-offline {
+        padding: 0 4px;
+        border: 1px solid currentColor;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        line-height: 14px;
+    }
+
+    .taskbar-tray .system-offline {
+        margin-right: 6px;
+    }
+
+    .app-header .system-offline {
+        margin-right: 10px;
+    }
+
     .taskbar-clock {
         flex: 0 0 auto;
         height: var(--control-height);
@@ -626,6 +660,19 @@
         outline: 0;
     }
 
+    /* Shown in place of an app that could not load or crashed */
+    .window-crash {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        height: 100%;
+        padding: 16px;
+        text-align: center;
+        font-size: 12px;
+    }
+
     .draggable-window {
         visibility: visible;
         opacity: 1;
@@ -635,8 +682,10 @@
             transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
     }
 
+    /* A window being dragged or resized composites on its own layer. */
     .draggable-window.is-interacting {
         transition: none;
+        will-change: transform;
     }
 
     .draggable-window.is-minimized,
@@ -1036,6 +1085,12 @@
 
     .arena-file-skeleton-line-muted {
         opacity: 0.65;
+    }
+
+    /* Offline, a placeholder is not about to fill in; stop it pulsing. */
+    html[data-offline] .arena-file-skeleton-fill,
+    html[data-offline] .arena-file-skeleton-line {
+        animation: none;
     }
 
     @keyframes arena-file-skeleton-pulse {

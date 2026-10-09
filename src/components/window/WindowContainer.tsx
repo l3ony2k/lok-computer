@@ -8,7 +8,7 @@ export const WindowContainer = () => {
   const { isWindowTransitioning } = useWindowTransitions();
   
   return (
-    <div className="h-full w-full relative overflow-hidden">
+    <div className="window-layer h-full w-full relative">
       {windows.map((window) => (
         <DraggableWindow 
           key={window.id} 

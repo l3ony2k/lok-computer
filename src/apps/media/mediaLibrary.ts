@@ -31,7 +31,19 @@ export interface MediaRequest {
   play: boolean;
   /** An Are.na channel or block link the player imports its audio and video from. */
   arena?: string;
+  /** Play the requested item and stop afterwards instead of continuing down the queue. */
+  once?: boolean;
 }
+
+/**
+ * Videos this short are GIF stand-ins (Are.na is full of them) and loop like
+ * one would; anything longer plays through once.
+ */
+export const SHORT_LOOP_SECONDS = 15;
+
+export const shouldLoopShortVideo = (kind: MediaKind | undefined, duration: number | undefined) => (
+  kind === 'video' && typeof duration === 'number' && Number.isFinite(duration) && duration > 0 && duration <= SHORT_LOOP_SECONDS
+);
 
 export const MEDIA_PLAYER_TYPE = 'MediaPlayer';
 
@@ -176,15 +188,21 @@ export const createMediaItem = (
 });
 
 /** Builds the launch props payload other apps pass to the player. */
+/**
+ * A request handed over from another app. One item plays once by default, so a
+ * clip opened from a channel or a feed never runs on into whatever happens to
+ * sit next in the queue; a channel import (`arena`) is a queue and keeps going.
+ */
 export const createMediaRequest = (
   items: MediaItem[],
   play = true,
-  options: Pick<MediaRequest, 'arena'> = {},
+  options: Pick<MediaRequest, 'arena' | 'once'> = {},
 ): MediaRequest => ({
   id: createMediaId('request'),
   items,
   play,
   ...(options.arena ? { arena: options.arena } : {}),
+  once: options.once ?? (items.length === 1 && !options.arena),
 });
 
 /**
@@ -221,6 +239,8 @@ export interface MediaPlayerState {
   position: number;
   /** Requests already applied, so a restored window does not enqueue twice. */
   handledRequests: string[];
+  /** Item that ends playback instead of advancing; set by one-shot requests. */
+  holdId: string | null;
 }
 
 export const DEFAULT_PLAYER_STATE: MediaPlayerState = {
@@ -234,6 +254,7 @@ export const DEFAULT_PLAYER_STATE: MediaPlayerState = {
   showPlaylist: true,
   position: 0,
   handledRequests: [],
+  holdId: null,
 };
 
 const isMediaItem = (value: unknown): value is MediaItem => {
@@ -273,6 +294,7 @@ export const normalizePlayerState = (stored: unknown, fallback: MediaPlayerState
     handledRequests: Array.isArray(value.handledRequests)
       ? value.handledRequests.filter((id): id is string => typeof id === 'string').slice(-20)
       : [],
+    holdId: typeof value.holdId === 'string' && playlist.some((item) => item.id === value.holdId) ? value.holdId : null,
   };
 };
 

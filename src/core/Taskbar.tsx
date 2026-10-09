@@ -1,9 +1,10 @@
 import { useRef, useEffect } from 'react';
+import { scrollIntoViewWithin } from '@/lib/utils';
 import { useWindowActions, useWindowState } from '@/hooks/useWindowManager';
 import { CustomIcon } from '@/components/window/CustomIcon';
 import { useWindowTransitions } from '@/hooks/useWindowTransitions';
 import type { DesktopLayout } from '@/lib/theme';
-import { SystemClock, SystemMenuButton } from './SystemMenu';
+import { OfflineReadout, SystemClock, SystemMenuButton } from './SystemMenu';
 
 export const Taskbar = ({ layout = 'lok' }: { layout?: DesktopLayout }) => {
   const { windows, activeWindow } = useWindowState();
@@ -36,9 +37,10 @@ export const Taskbar = ({ layout = 'lok' }: { layout?: DesktopLayout }) => {
   // The strip scrolls rather than squeezing titles, so keep the active task in view.
   useEffect(() => {
     if (!activeWindow) return;
-    tasksRef.current
-      ?.querySelector<HTMLElement>(`[data-taskbar-window-id="${CSS.escape(activeWindow)}"]`)
-      ?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    scrollIntoViewWithin(
+      tasksRef.current?.querySelector<HTMLElement>(`[data-taskbar-window-id="${CSS.escape(activeWindow)}"]`),
+      { inline: 'nearest' },
+    );
   }, [activeWindow]);
 
   // Alt+1..9 brings the Nth task forward, as Turbo Vision's status line advertises.
@@ -105,6 +107,7 @@ export const Taskbar = ({ layout = 'lok' }: { layout?: DesktopLayout }) => {
 
       {isClassic && (
         <div className="taskbar-tray flex items-center">
+          <OfflineReadout />
           <SystemClock placement="bottom" />
         </div>
       )}

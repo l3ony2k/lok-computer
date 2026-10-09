@@ -11,6 +11,10 @@ const DISMISSED_UPDATE_KEY = "lok-computer:dismissed-update";
 
 export const SystemUpdateMonitor = () => {
   const checkForUpdate = useCallback(async (manual = false) => {
+    if (!navigator.onLine) {
+      if (manual) toast.error("You're offline; the update check waits for a connection.");
+      return;
+    }
     try {
       const manifest = await fetchSystemVersion();
       const updateAvailable = compareSystemVersions(manifest.version) > 0;

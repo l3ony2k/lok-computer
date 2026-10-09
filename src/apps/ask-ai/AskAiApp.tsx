@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { scrollIntoViewWithin } from '@/lib/utils';
 import { ArrowRight, Copy, Pencil, Play, RotateCcw, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { WindowLayout } from '@/components/window/WindowLayout';
@@ -49,11 +50,16 @@ const MAX_RUNS = 20;
 const COMPOSER_MAX_HEIGHT = 120;
 
 const EXAMPLES = [
-  'Is Pluto a planet?',
-  'Is this email a phishing attempt?',
-  'Should I learn Rust or Go first for backend work?',
-  'How formal is this message: "hey, quick q — got a sec?"',
+  'Is Sisyphus happy?',
+  'Is an iPad a computer?',
+  'Tabs or spaces?',
+  'Vim or Emacs?',
+  'Is a hot dog a sandwich?',
 ];
+
+const HELP_TEXT = 'This is a thinking machine. It reads your question, works out what kind of answer it needs, '
+  + 'and asks Jev, a model that answers with probabilities instead of prose. You get the best answer and how sure it is. '
+  + 'Powered by Jev and GPT.';
 
 const STATUS_TEXT: Record<RunStatus, string> = {
   planning: 'Planning',
@@ -307,7 +313,7 @@ const FollowUpForm = ({ run, request, disabled, focusFirst, onSubmit, onAnswerAn
     const active = document.activeElement;
     const surface = form.closest('[data-window-surface-id]');
     if (!active || active === document.body || surface?.contains(active)) {
-      form.querySelector<HTMLElement>('input, textarea')?.focus();
+      form.querySelector<HTMLElement>('input, textarea')?.focus({ preventScroll: true });
     }
   }, [focusFirst]);
 
@@ -367,6 +373,7 @@ export const AskAiApp: React.FC = () => {
   const [latestRunId, setLatestRunId] = useState<string | null>(null);
   const [editing, setEditing] = useState<{ runId: string; text: string; error?: string } | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const transcriptRef = useRef<HTMLDivElement>(null);
   const transcriptEndRef = useRef<HTMLDivElement>(null);
@@ -378,7 +385,7 @@ export const AskAiApp: React.FC = () => {
     if (!input) return;
     const active = document.activeElement;
     const surface = input.closest('[data-window-surface-id]');
-    if (!active || active === document.body || surface?.contains(active)) input.focus();
+    if (!active || active === document.body || surface?.contains(active)) input.focus({ preventScroll: true });
   }, []);
 
   const runs = state.runs;
@@ -404,7 +411,7 @@ export const AskAiApp: React.FC = () => {
     const node = settled
       ? transcriptRef.current?.querySelector(`[data-run-id="${latestId}"]`)
       : transcriptEndRef.current;
-    node?.scrollIntoView({ block: settled ? 'start' : 'end' });
+    scrollIntoViewWithin(node as HTMLElement | null, { block: settled ? 'start' : 'end' });
   }, [latestId, latestStatus]);
 
   // Grow the composer with its content; it scrolls only past the cap.
@@ -487,7 +494,7 @@ export const AskAiApp: React.FC = () => {
 
   const fillQuestion = (text: string) => {
     setQuestion(text);
-    setTimeout(() => promptRef.current?.focus(), 0);
+    setTimeout(() => promptRef.current?.focus({ preventScroll: true }), 0);
   };
 
   const continueRun = (run: AskRun, inputs: Record<string, string>, answerAnyway = false) => {
@@ -552,8 +559,18 @@ export const AskAiApp: React.FC = () => {
       hasPadding={false}
       toolbar={(
         <div className="app-toolbar-row ask-ai-toolbar">
-          <span className="app-readout ask-ai-badge" title="Answers come from TypeSafe's Jev decision model">JEV</span>
-          <span className="ask-ai-tagline">Ask a question, get a calibrated answer</span>
+          <RetroButton
+            size="sm"
+            className="ask-ai-help-button"
+            onClick={() => setHelpOpen((open) => !open)}
+            aria-expanded={helpOpen}
+            aria-controls="ask-ai-help"
+            aria-label="How this works"
+            title="How this works"
+          >
+            ?
+          </RetroButton>
+          <span className="ask-ai-tagline">Robots make mistakes. Take the answer as a joke.</span>
           <RetroButton
             size="sm"
             className="gap-1"
@@ -582,7 +599,7 @@ export const AskAiApp: React.FC = () => {
                     submit();
                   }
                 }}
-                placeholder={busy ? 'Waiting for Jev…' : 'Ask a question'}
+                placeholder={busy ? 'Waiting for Jev…' : 'Type your question here…'}
                 aria-label="Question"
                 maxLength={2000}
               />
@@ -596,24 +613,23 @@ export const AskAiApp: React.FC = () => {
     >
       <p className="sr-only" aria-live="polite">{announcement}</p>
       <div ref={transcriptRef} className="ask-ai-transcript">
-        {runs.length === 0 && (
-          <section className="ask-ai-intro">
-            <h2>Ask a question. Get a calibrated answer.</h2>
+        {helpOpen && (
+          <section id="ask-ai-help" className="ask-ai-help" role="note">
             <p>
-              A fast language model decides what kind of question it is, asks you for anything it needs, and writes
-              the request for{' '}
-              <a href="https://docs.typesafe.ai/introduction" target="_blank" rel="noopener noreferrer">Jev</a>,
-              a decision model that answers with probabilities instead of prose. You get the best answer, how sure Jev
-              is, and the evidence behind it. Paste any text your question is about right into the question.
+              {HELP_TEXT}{' '}
+              <a href="https://docs.typesafe.ai/introduction" target="_blank" rel="noopener noreferrer">About Jev</a>
             </p>
-            <div className="ask-ai-examples">
-              {EXAMPLES.map((example) => (
-                <RetroButton key={example} size="sm" onClick={() => fillQuestion(example)}>
-                  {example}
-                </RetroButton>
-              ))}
-            </div>
           </section>
+        )}
+
+        {runs.length === 0 && (
+          <div className="ask-ai-starters" aria-label="Example questions">
+            {EXAMPLES.map((example) => (
+              <RetroButton key={example} size="sm" onClick={() => fillQuestion(example)}>
+                {example}
+              </RetroButton>
+            ))}
+          </div>
         )}
 
         {runs.map((run) => {

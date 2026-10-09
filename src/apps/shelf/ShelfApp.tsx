@@ -4,6 +4,7 @@ import { WindowLayout } from '@/components/window/WindowLayout';
 import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/hover-card';
 import { RetroButton } from '@/components/ui/RetroButton';
 import { StateMessage } from '@/components/ui/StateMessage';
+import { LoadFailure } from '@/components/ui/LoadFailure';
 import { useApplicationLauncher } from '@/hooks/useApplicationLauncher';
 import { APP_CONFIG } from '@/config/constants';
 import { CACHE_TTL } from '@/lib/storage';
@@ -136,12 +137,7 @@ const ShelfContent: React.FC<ShelfContentProps> = ({ type, page, onDataLoaded })
     }
 
     if (isError) {
-        return (
-            <div className="text-red-500 p-4 text-center">
-                <p className="text-sm">Error: {error instanceof Error ? error.message : 'Unknown error'}</p>
-                <RetroButton onClick={() => refetch()} className="mt-2">Retry</RetroButton>
-            </div>
-        );
+        return <LoadFailure error={error} what="the shelf" onRetry={() => void refetch()} />;
     }
 
     if (!data || data.data.length === 0) {

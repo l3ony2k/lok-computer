@@ -35,6 +35,7 @@ import {
   pickNextIndex,
   type MediaItem,
   type MediaPlayerState,
+  shouldLoopShortVideo,
 } from './mediaLibrary';
 import { arenaBlockToMediaItem, parseArenaReference, type ArenaReference } from '@/apps/arena/utils/arenaLinks';
 import { collectFromArena, describeArenaError, isAbortError } from '@/apps/arena/utils/arenaImport';
@@ -48,6 +49,8 @@ interface IncomingRequest {
   items?: unknown;
   /** An Are.na channel or block link to import. */
   arena?: unknown;
+  /** Stop after the requested item instead of continuing down the queue. */
+  once?: unknown;
 }
 
 interface MediaPlayerAppProps {
@@ -141,7 +144,7 @@ export const MediaPlayerApp: React.FC<MediaPlayerAppProps> = ({ request, onProps
   const stateRef = useRef(state);
   stateRef.current = state;
 
-  const { playlist, currentId, volume, muted, repeat, shuffle, rate, showPlaylist } = state;
+  const { playlist, currentId, volume, muted, repeat, shuffle, rate, showPlaylist, holdId } = state;
   const currentIndex = playlist.findIndex((item) => item.id === currentId);
   const current = currentIndex >= 0 ? playlist[currentIndex] : null;
   const usesCors = Boolean(current && !current.src.startsWith('blob:') && !plainSources[current.id]);
@@ -233,7 +236,8 @@ export const MediaPlayerApp: React.FC<MediaPlayerAppProps> = ({ request, onProps
       if (autoplay) startPlayback();
       return;
     }
-    setState((prev) => ({ ...prev, currentId: id, position: 0 }));
+    // Choosing another item lifts a one-shot request's hold on the queue.
+    setState((prev) => ({ ...prev, currentId: id, position: 0, holdId: prev.holdId === id ? prev.holdId : null }));
   }, [currentId, mediaElement, setState, startPlayback]);
 
   // Reads an Are.na channel or block in the background and queues what plays.
@@ -309,6 +313,7 @@ export const MediaPlayerApp: React.FC<MediaPlayerAppProps> = ({ request, onProps
         playlist: nextPlaylist,
         currentId: wantsPlay && firstId ? firstId : prev.currentId,
         position: wantsPlay && firstId ? 0 : prev.position,
+        holdId: wantsPlay && firstId ? (request.once === true ? firstId : null) : prev.holdId,
         handledRequests: [...prev.handledRequests, requestId].slice(-20),
       };
     });
@@ -630,6 +635,8 @@ export const MediaPlayerApp: React.FC<MediaPlayerAppProps> = ({ request, onProps
   const bufferedPercent = duration > 0 ? Math.min(100, (buffered / duration) * 100) : 0;
   const VolumeIcon = muted || volume === 0 ? VolumeX : volume < 0.5 ? Volume1 : Volume2;
   const RepeatIcon = repeat === 'one' ? Repeat1 : Repeat;
+  const loopsShort = shouldLoopShortVideo(current?.kind, duration);
+  const playsOnce = Boolean(current) && holdId === current?.id;
   const statusGlyph = errorMessage ? '!' : isPlaying ? '▶' : loadState === 'loading' && playIntentRef.current ? '…' : '❚❚';
 
   return (
@@ -833,6 +840,7 @@ export const MediaPlayerApp: React.FC<MediaPlayerAppProps> = ({ request, onProps
                 crossOrigin={usesCors ? 'anonymous' : undefined}
                 preload="metadata"
                 playsInline
+                loop={loopsShort}
                 onClick={togglePlayback}
                 onLoadedMetadata={(event) => {
                   const element = event.currentTarget;
@@ -871,6 +879,12 @@ export const MediaPlayerApp: React.FC<MediaPlayerAppProps> = ({ request, onProps
                   if (repeat === 'one' && mediaElement) {
                     mediaElement.currentTime = 0;
                     startPlayback();
+                    return;
+                  }
+                  // A clip opened from another app ends here; nobody asked for the rest of the queue.
+                  if (holdId === current.id) {
+                    if (mediaElement) mediaElement.currentTime = 0;
+                    savePosition(0);
                     return;
                   }
                   step(1, true);
@@ -912,13 +926,21 @@ export const MediaPlayerApp: React.FC<MediaPlayerAppProps> = ({ request, onProps
                     )}
                   </small>
                 </span>
-                <span
-                className="media-player-lcd-meta"
-                title={current.kind === 'audio' && isPlaying && !analyzerAvailable
-                  ? 'This host does not allow audio analysis (no CORS), so the spectrum is off.'
-                  : 'Playback speed'}
-              >
-                  {current.kind === 'audio' && isPlaying && !analyzerAvailable ? 'NO SCOPE' : `${rate}×`}
+                <span className="media-player-lcd-readouts">
+                  {loopsShort && (
+                    <span className="media-player-lcd-meta" title="Clips this short loop, like a GIF">LOOP</span>
+                  )}
+                  {!loopsShort && playsOnce && (
+                    <span className="media-player-lcd-meta" title="Opened from another app: plays once, then stops">ONCE</span>
+                  )}
+                  <span
+                    className="media-player-lcd-meta"
+                    title={current.kind === 'audio' && isPlaying && !analyzerAvailable
+                      ? 'This host does not allow audio analysis (no CORS), so the spectrum is off.'
+                      : 'Playback speed'}
+                  >
+                    {current.kind === 'audio' && isPlaying && !analyzerAvailable ? 'NO SCOPE' : `${rate}×`}
+                  </span>
                 </span>
               </div>
             ) : (

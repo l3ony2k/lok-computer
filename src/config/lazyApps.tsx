@@ -5,14 +5,28 @@
  * Every app is code-split into its own chunk and only downloaded the first
  * time a window for it is opened. Window content renders inside the Suspense
  * boundary in DraggableWindow, which shows a lightweight fallback while the
- * chunk loads.
+ * chunk loads; a chunk that fails to download (offline) renders a retry.
  *
  * All consumers (APP_LIST, the component registry, TopBar, Desktop) must use
  * these instead of importing app components directly — a static import would
  * pull the app back into the entry bundle.
  */
 
-import { lazy } from 'react';
+import { lazy as reactLazy, type ComponentType } from 'react';
+import { ChunkRetry, type LazyModule } from '@/components/window/ChunkRetry';
+
+/**
+ * `React.lazy` that survives a failed download. A lazy component remembers a
+ * rejection for the rest of the session, so the failure resolves to a retry
+ * view instead, and the real module is fetched again from there.
+ */
+const lazy = <P extends object>(load: () => Promise<LazyModule<P>>) => reactLazy(() =>
+    load().catch((error: unknown) => {
+        console.warn('[App] Module failed to load:', error);
+        const Fallback = (props: P) => <ChunkRetry load={load} props={props} />;
+        return { default: Fallback as ComponentType<P> };
+    }),
+);
 
 /**
  * The loader map is the single source of truth for app chunks. Lazy rendering

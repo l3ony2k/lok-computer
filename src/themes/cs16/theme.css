@@ -102,10 +102,8 @@ html[data-theme="cs16"][data-layout]:not(#_) {
     --selection-bg: var(--cs-accent-2);
     --selection-fg: #ffffff;
     --desktop-bg: #1b2433;
-    --desktop-pattern: url("./background.webp");
-    --desktop-pattern-size: cover;
-    --desktop-pattern-position: center;
-    --desktop-pattern-repeat: no-repeat;
+    /* The menu art is painted by the wallpaper layer (see theme.ts). */
+    --desktop-pattern: none;
     --desktop-label-color: var(--cs-text);
     --desktop-label-edge: transparent;
     --desktop-icon-drop-shadow: rgba(0, 0, 0, 0.6);

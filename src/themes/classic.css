@@ -53,7 +53,7 @@ html[data-chrome="classic"]:not(#_) body {
 
 html[data-chrome="classic"]:not(#_) :where(
     h1, h2, .text-lg, .text-xl, .text-2xl, .arena-channel-card-title, .arena-detail-header h2,
-    .ask-ai-best-answer strong, .ask-ai-intro h2, .ask-ai-value strong, .oobe-brand strong,
+    .ask-ai-best-answer strong, .ask-ai-value strong, .oobe-brand strong,
     .oobe-crt-preview > strong, .oobe-page h1
 ) {
     --c-type-size: var(--c-text-heading);
@@ -95,8 +95,7 @@ html[data-chrome="classic"]:not(#_) :where(
     .arena-address-label, .arena-detail-comment-header span, .arena-detail-connection > span:last-child,
     .arena-file-card-small .arena-file-grid-preview, .arena-file-card-small .arena-file-item-meta,
     .arena-file-fallback-preview > span, .arena-file-footer, .arena-file-item-meta,
-    .arena-file-list-thumbnail span, .arena-file-table-small, .ask-ai-analytics > summary, .ask-ai-badge,
-    .ask-ai-best-stats, .ask-ai-confidence, .ask-ai-content, .ask-ai-editor label, .ask-ai-editor textarea,
+    .arena-file-list-thumbnail span, .arena-file-table-small, .ask-ai-analytics > summary, .ask-ai-best-stats, .ask-ai-confidence, .ask-ai-content, .ask-ai-editor label, .ask-ai-editor textarea,
     .ask-ai-editor-error, .ask-ai-field, .ask-ai-json > summary, .ask-ai-meta, .ask-ai-noul small,
     .ask-ai-noul-scale, .ask-ai-notes, .ask-ai-options li, .ask-ai-progress, .ask-ai-question,
     .ask-ai-rationale, .ask-ai-score-labels, .ask-ai-score-readout, .ask-ai-suggestion > span, .ask-ai-tag,
@@ -1115,7 +1114,7 @@ html[data-chrome="classic"]:not(#_) .ask-ai-property {
 }
 
 /* Example and suggested questions can wrap; their buttons grow with the text. */
-html[data-chrome="classic"]:not(#_) :where(.ask-ai-examples, .ask-ai-suggestion) .retro-button {
+html[data-chrome="classic"]:not(#_) :where(.ask-ai-starters, .ask-ai-suggestion) .retro-button {
     height: auto;
     min-height: var(--c-control-height);
     padding-top: 2px;

@@ -40,16 +40,8 @@ export const Desktop = () => {
     windowsRef.current = windows;
     const windowIdentity = windows.map((window) => window.id).join('|');
 
-    // Apply the wallpaper as a CSS variable if it exists
-    useEffect(() => {
-        const rootElement = document.documentElement;
-
-        if (settings.wallpaper) {
-            rootElement.style.setProperty('--wallpaper-url', `url("${settings.wallpaper}")`);
-        } else {
-            rootElement.style.removeProperty('--wallpaper-url');
-        }
-    }, [settings.wallpaper]);
+    // A chosen wallpaper wins over the theme's own picture.
+    const wallpaper = settings.wallpaper || definition.wallpaper;
 
     // Apply CRT effect based on settings
     useEffect(() => {
@@ -130,7 +122,18 @@ export const Desktop = () => {
         <div className="h-screen w-screen flex flex-col">
             {!isClassicLayout && <TopBar />}
 
-            <div ref={desktopContainerRef} className={`desktop-container relative overflow-hidden ${settings.wallpaper ? 'has-wallpaper' : ''}`}>
+            <div ref={desktopContainerRef} className="desktop-container relative">
+                {wallpaper && (
+                    <img
+                        key={wallpaper}
+                        className="desktop-wallpaper"
+                        src={wallpaper}
+                        alt=""
+                        aria-hidden="true"
+                        decoding="sync"
+                        draggable={false}
+                    />
+                )}
                 <WindowContainer />
                 <DesktopIcons />
             </div>

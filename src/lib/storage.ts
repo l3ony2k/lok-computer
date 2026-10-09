@@ -210,10 +210,14 @@ export const deleteAppState = async (key: string): Promise<void> => {
 // API Cache Operations
 // ============================================
 
+/** Expired entries stay this long as an offline fallback before a read discards them. */
+const STALE_GRACE_MS = 7 * 24 * 60 * 60 * 1000;
+
 /**
- * Get cached data if it exists and hasn't expired
+ * Get cached data if it exists and hasn't expired. With `allowStale`, an
+ * expired entry still counts, so a request can fall back to it offline.
  */
-export const getCachedData = async <T>(key: string): Promise<T | null> => {
+export const getCachedData = async <T>(key: string, options: { allowStale?: boolean } = {}): Promise<T | null> => {
     try {
         const cached = await getFromStore<CachedData<T>>(STORES.API_CACHE, key);
 
@@ -223,11 +227,17 @@ export const getCachedData = async <T>(key: string): Promise<T | null> => {
         }
 
         const now = Date.now();
-        const isExpired = now - cached.timestamp > cached.ttl;
+        const age = now - cached.timestamp;
 
-        if (isExpired) {
-            // Clean up expired entry
+        if (age > cached.ttl + STALE_GRACE_MS) {
+            // Too old to be worth keeping even as a fallback
             await deleteFromStore(STORES.API_CACHE, key);
+            await incrementCacheMiss();
+            cacheDebugLog(`[Storage] Cache discarded for key "${key}"`);
+            return null;
+        }
+
+        if (age > cached.ttl && !options.allowStale) {
             await incrementCacheMiss();
             cacheDebugLog(`[Storage] Cache expired for key "${key}"`);
             return null;

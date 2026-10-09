@@ -77,11 +77,10 @@ html[data-theme="7"][data-layout]:not(#_) {
     --selection-bg: #3399ff;
     --selection-fg: #ffffff;
     --desktop-bg: #0f62ae;
-    /* Harmony over a matching blue glow that stands in until the picture decodes. */
+    /* Blue glow stand-in under the wallpaper layer, which paints Harmony (see theme.ts). */
     --desktop-pattern:
-        url("./harmony.webp"),
         radial-gradient(ellipse 120% 95% at 68% 40%, #2d9be2 0%, #1576c6 30%, #0b4f8a 62%, #062e5a 100%);
-    --desktop-pattern-size: cover, 100% 100%;
+    --desktop-pattern-size: 100% 100%;
     --desktop-pattern-position: center;
     --desktop-pattern-repeat: no-repeat;
     --desktop-label-color: #ffffff;

@@ -2,6 +2,7 @@ import React, { type ReactNode, useEffect, useRef } from 'react';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { WindowLayout } from '@/components/window/WindowLayout';
 import { StateMessage } from '@/components/ui/StateMessage';
+import { LoadFailure } from '@/components/ui/LoadFailure';
 import { RetroButton } from '@/components/ui/RetroButton';
 import { useApplicationLauncher } from '@/hooks/useApplicationLauncher';
 import { MEDIA_PLAYER_TYPE, createMediaItem, createMediaRequest } from '@/apps/media/mediaLibrary';
@@ -124,8 +125,6 @@ export const SocialFeedApp = ({ adapter }: { adapter: SocialFeedAdapter }) => {
     return () => observer.disconnect();
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
-  const profileError = profileQuery.error instanceof Error ? profileQuery.error.message : 'Unknown error';
-  const feedError = feedQuery.error instanceof Error ? feedQuery.error.message : 'Unknown error';
 
   return (
     <WindowLayout hasPadding={false} isScrollable={false} className="lok-reader-window">
@@ -170,14 +169,14 @@ export const SocialFeedApp = ({ adapter }: { adapter: SocialFeedAdapter }) => {
               </div>
             </div>
           ) : profileQuery.isError ? (
-            <div className="text-red-500 p-4 text-center"><p className="text-sm">Error loading profile: {profileError}</p><RetroButton className="mt-2" onClick={() => void profileQuery.refetch()}>Retry</RetroButton></div>
+            <LoadFailure error={profileQuery.error} what="the profile" onRetry={() => void profileQuery.refetch()} />
           ) : <StateMessage>Loading profile...</StateMessage>}
         </aside>
 
         <section ref={postsPaneRef} className="lok-reader-entries-pane">
           <div className="lok-reader-entries-inner">
             {feedQuery.isLoading ? <StateMessage>Loading posts...</StateMessage> : feedQuery.isError ? (
-              <div className="text-red-500 p-4 text-center"><p className="text-sm">Error loading posts: {feedError}</p><RetroButton className="mt-2" onClick={() => void feedQuery.refetch()}>Retry</RetroButton></div>
+              <LoadFailure error={feedQuery.error} what="posts" onRetry={() => void feedQuery.refetch()} />
             ) : (
               <div className="lok-reader-entry-list">
                 {feedQuery.data?.pages.flatMap((page) => page.posts).map((post) => (

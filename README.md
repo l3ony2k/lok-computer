@@ -103,6 +103,15 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 
 ## Development Log
 
+### Session: 3.0.3 — media holds, wallpaper layer, Ask AI trims, offline mode (2026-10-09)
+
+*   Media: a clip opened from Are.na, a feed, the Console, or a shared link plays once and stops (`once` on the request, `holdId` in player state) instead of running on into the queue; videos of 15 s or less loop like a GIF. The LCD shows ONCE or LOOP.
+*   Wallpapers are an `<img decoding="sync">` layer on the desktop rather than a `background-image`, so a window drag never re-rasterises the picture and returning to the tab never flashes the stand-in gradient. Dragged windows composite on their own layer (`will-change: transform`).
+*   Ask AI: the intro text is gone; the empty state is just starter questions that fit the site. The toolbar's JEV badge became a `?` button with a short note on how the machine works, and the composer says "Robots make mistakes. Take the answer as a joke."
+*   Fixed the desktop shifting when Ask AI submitted a question: `scrollIntoView` scrolled the window layer (an `overflow: hidden` box still scrolls programmatically), moving every window 10 px until the answer scrolled it back. App code now scrolls only the nearest scroller (`scrollIntoViewWithin`) and focuses with `preventScroll`; the body, desktop, and window layer are `overflow: clip`, which cannot scroll at all.
+*   Ask AI toolbar reads `? · Robots make mistakes. Take the answer as a joke. · Clear`; the composer placeholder is "Type your question here…".
+*   Offline mode: `cachedRequest` serves an expired copy when offline or when the network fails (entries are kept for 7 days past their TTL); React Query runs loaders offline-first and does not retry offline; feeds, Weather, and Shelf show a calm "Offline" state instead of red errors; an OFFLINE readout sits beside the clock; the update check and skeleton animations rest; an app whose chunk did not download shows a retry instead of a blank window, and a crash inside one window no longer unmounts the desktop.
+
 ### Session: 3.0.2 — fixes: wallpapers, scrollbars, taskbar, boot type, planner (2026-10-08)
 
 *   XP and 7 now actually paint Bliss and Harmony on the desktop (the stylesheets still used the gradient stand-ins); desktop pictures position through `--desktop-pattern-position` and `--desktop-pattern-repeat`.

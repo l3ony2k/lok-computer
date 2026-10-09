@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { WindowLayout } from '@/components/window/WindowLayout';
 import { StateMessage } from '@/components/ui/StateMessage';
+import { LoadFailure } from '@/components/ui/LoadFailure';
 import { RetroButton } from '@/components/ui/RetroButton';
 import { APP_CONFIG } from '@/config/constants';
 import { CACHE_TTL } from '@/lib/storage';
@@ -151,11 +152,10 @@ export const WeatherApp: React.FC = () => {
     });
   };
 
-  const { data: weatherData, isLoading, error } = useQuery({
+  const { data: weatherData, isLoading, error, refetch } = useQuery({
     queryKey: ['weather', 'text-v4', query],
     queryFn: () => fetchWeather(query),
     staleTime: CACHE_TTL.WEATHER,
-    retry: 1,
   });
 
   // Handle search form submission
@@ -199,9 +199,7 @@ export const WeatherApp: React.FC = () => {
           Loading weather data...
         </StateMessage>
       ) : error ? (
-        <div className="text-red-500 p-4 text-sm">
-          <p>{error instanceof Error ? error.message : 'Failed to fetch weather data. Please try again.'}</p>
-        </div>
+        <LoadFailure error={error} what="the weather" onRetry={() => void refetch()} />
       ) : (
         <div className="weather-output-layout">
           <pre className="weather-output"><WeatherText text={weatherData || ''} /></pre>

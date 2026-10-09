@@ -124,6 +124,12 @@
     text-decoration: underline;
 }
 
+.media-player-lcd-readouts {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
 .media-player-lcd-meta {
     padding: 1px 4px;
     border: 1px solid currentColor;

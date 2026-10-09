@@ -78,6 +78,8 @@ App chunks remain code-split but are warmed during `SystemStartup`, along with b
 
 Use `usePersistedState` for persisted view state and `cachedRequest` for remote reads. Do not reproduce cache lookup, request accounting, fetch, and cache write in app modules.
 
+Offline, `cachedRequest` serves an expired entry and only throws `OfflineError` when nothing is saved; render failed loads with `LoadFailure` so the offline case stays calm. Do not add retry loops or polling: React Query is configured offline-first with retries off while offline.
+
 ### Version And Updates
 
 `package.json` is the only version source. Vite injects it into the boot HTML and generates `/system-version.json`. To test an update, leave an older client open, bump `package.json`, and use Config > System > Check for updates.

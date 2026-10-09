@@ -182,6 +182,8 @@ export const ROUTES: RouteConfig[] = [
                     play: true,
                     items: src ? [{ src, title: query.get('title') || undefined }] : [],
                     ...(arena ? { arena } : {}),
+                    // A shared link plays its one clip and stops; a channel link is a queue.
+                    once: Boolean(src) && !arena,
                 },
             };
         },

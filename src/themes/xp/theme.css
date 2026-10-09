@@ -70,12 +70,11 @@ html[data-theme="xp"][data-layout]:not(#_) {
     --selection-bg: #316ac5;
     --selection-fg: #ffffff;
     --desktop-bg: #5a8fd8;
-    /* Bliss over a sky-and-hill gradient that stands in until the picture decodes. */
+    /* Sky-and-hill stand-in under the wallpaper layer, which paints Bliss (see theme.ts). */
     --desktop-pattern:
-        url("./bliss.webp"),
         radial-gradient(ellipse 150% 58% at 32% 112%, #74bb4a 0 47%, #62a83b 57%, transparent 58%),
         linear-gradient(180deg, #1d5fc6 0%, #3f7fd8 30%, #7fb2ec 62%, #c8e1fa 100%);
-    --desktop-pattern-size: cover, 100% 100%, 100% 100%;
+    --desktop-pattern-size: 100% 100%, 100% 100%;
     --desktop-pattern-position: center;
     --desktop-pattern-repeat: no-repeat;
     --desktop-label-color: #ffffff;

@@ -1,4 +1,5 @@
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { scrollIntoViewWithin } from "@/lib/utils";
 import { CustomIcon } from "@/components/window/CustomIcon";
 import { Window, useWindowActions } from "@/hooks/useWindowManager";
 import { WindowTransitionContext, type WindowTransitionContextType } from "@/hooks/useWindowTransitions";
@@ -89,7 +90,7 @@ export const WindowTransitionProvider = ({ children }: { children: ReactNode }) 
       return;
     }
 
-    taskbarButton.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "auto" });
+    scrollIntoViewWithin(taskbarButton, { inline: "nearest" });
     requestAnimationFrame(() => {
       runTransition(window, toViewportRect(source), toViewportRect(taskbarButton), () => minimizeWindow(window.id));
     });
@@ -104,7 +105,7 @@ export const WindowTransitionProvider = ({ children }: { children: ReactNode }) 
       return;
     }
 
-    taskbarButton.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "auto" });
+    scrollIntoViewWithin(taskbarButton, { inline: "nearest" });
     requestAnimationFrame(() => {
       const destination = desktop ?? toViewportRect(destinationElement!);
       runTransition(window, toViewportRect(taskbarButton), destination, () => focusWindow(window.id));

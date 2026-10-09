@@ -244,6 +244,8 @@ await setTheme('98');        // loads stylesheet, fonts, and wallpaper, then swa
 setAppearance('dark');       // light | dark | system; only lok has two schemes
 ```
 
+A theme's picture is registered as `wallpaper` in `theme.ts` and painted by `Desktop.tsx` as an `<img class="desktop-wallpaper" decoding="sync">` layer, not as a CSS background. Keep `--desktop-pattern` for the cheap colour or gradient that shows under it; a `url()` there would be rasterised again on every window drag and could checkerboard after a tab switch.
+
 How it fits together:
 
 | Layer | File | Role |
@@ -253,7 +255,7 @@ How it fits together:
 | Provider | `src/hooks/useTheme.tsx` | State, OS scheme tracking, cross-tab sync |
 | Base tokens | `src/index.css` `:root` / `.dark` | lok values for every token |
 | Classic components | `src/themes/classic.css` | Bevels, title bars, menu bar, taskbar, menus, fields, and controls drawn from `--c-*` component tokens |
-| Theme skins | `src/themes/<id>/theme.css` | Token values, caption glyphs, scrollbars, fonts, wallpaper |
+| Theme skins | `src/themes/<id>/theme.css` | Token values, caption glyphs, scrollbars, fonts, desktop stand-in |
 
 Two root attributes describe a theme. `data-layout` is the desktop arrangement: `lok` keeps the top bar (system menu, frontmost window name, clock) and a bottom task strip; `classic` merges start menu, tasks, and tray into one taskbar. `data-chrome` picks the component layer: `classic` loads `classic.css` under either layout, which is how System, TUI, and 386 pair classic controls with a top menu bar.
 

@@ -1,4 +1,5 @@
 import { memo, Suspense, useCallback, useState } from 'react';
+import { WindowErrorBoundary } from './WindowErrorBoundary';
 import { Window } from '@/hooks/useWindowManager.ts';
 import { useWindowActions } from '@/hooks/useWindowManager.ts';
 import { X, Minimize, Maximize } from 'lucide-react';
@@ -308,15 +309,17 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
 
           {/* Content area - with direct overflow styling */}
           <div className="window-content-area flex-1 overflow-auto" style={{ position: 'relative' }}>
-            <Suspense
-              fallback={
-                <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
-                  Loading...
-                </div>
-              }
-            >
-              {windowProps.content}
-            </Suspense>
+            <WindowErrorBoundary>
+              <Suspense
+                fallback={
+                  <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
+                    Loading...
+                  </div>
+                }
+              >
+                {windowProps.content}
+              </Suspense>
+            </WindowErrorBoundary>
           </div>
         </div>
       </Rnd>

@@ -54,11 +54,21 @@ Launching a single-instance Application with explicit `props` delivers them to t
 
 1. read IndexedDB TTL cache
 2. emit optional cache debug output
-3. count a remote request on miss
-4. call the source loader
-5. persist the result
+3. offline: serve an expired entry if one exists, else throw `OfflineError` (no network call)
+4. count a remote request on miss
+5. call the source loader
+6. on failure: serve an expired entry if one exists, else rethrow
+7. persist the result
 
-Are.na, Bsky, Fedi, Shelf, and Weather retain only source-specific URL, status, and decoding knowledge.
+Expired entries are kept for seven days past their TTL so there is something to show offline. Are.na, Bsky, Fedi, Shelf, and Weather retain only source-specific URL, status, and decoding knowledge.
+
+### Offline
+
+- React Query (`src/App.tsx`) runs loaders `offlineFirst` and does not retry while offline or on an `OfflineError`; it refetches on reconnect.
+- `LoadFailure` (`src/components/ui/LoadFailure.tsx`) renders a failed load: a calm "Offline" note when the browser is offline or nothing is saved, a red message with Retry otherwise.
+- `ConnectivityMonitor` sets `html[data-offline]` (skeleton animations rest under it) and toasts each transition; `OfflineReadout` shows OFFLINE beside the clock; `useOnlineStatus` is the hook behind both.
+- `lazyApps.tsx` wraps `React.lazy`: a chunk that fails to download resolves to `ChunkRetry`, which fetches the module again on demand, because a rejected lazy stays rejected for the session.
+- `WindowErrorBoundary` keeps a crash inside its window instead of unmounting the desktop.
 
 ### Persisted view state
 

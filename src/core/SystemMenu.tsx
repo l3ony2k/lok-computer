@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { AppMenu, type AppMenuItem, type MenuPlacement } from '@/components/menu/AppMenu';
 import { Calendar } from '@/components/calendar/Calendar';
 import { CustomIcon } from '@/components/window/CustomIcon';
@@ -112,6 +113,13 @@ export const SystemMenuButton: React.FC<{ placement: MenuPlacement }> = React.me
     </>
   );
 });
+
+/** Sits beside the clock while the browser reports no connection. */
+export const OfflineReadout: React.FC = () => {
+  const online = useOnlineStatus();
+  if (online) return null;
+  return <span className="system-offline" role="status" title="No connection">OFFLINE</span>;
+};
 
 const formatTime = (date: Date) => date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
 const formatDate = (date: Date) => date.toISOString().split('T')[0];
