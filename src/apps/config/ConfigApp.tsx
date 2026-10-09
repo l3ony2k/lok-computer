@@ -18,7 +18,7 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useUserSettings } from "@/hooks/useUserSettings";
+import { DEFAULT_CRT_SETTINGS, useUserSettings, type CrtSettings } from "@/hooks/useUserSettings";
 import { useTheme } from "@/hooks/useTheme";
 import { THEMES } from "@/lib/theme";
 import { AppearancePicker, ThemePicker } from "@/components/system/ThemePicker";
@@ -223,15 +223,9 @@ export const ConfigApp: React.FC = () => {
     setDebugOutlines(nextValue);
   };
 
-  const updateCrt = (update: Partial<NonNullable<typeof settings.crt>>) => {
-    updateSetting("crt", {
-      enabled: settings.crt?.enabled ?? false,
-      scanlines: settings.crt?.scanlines ?? 50,
-      flicker: settings.crt?.flicker ?? 10,
-      rgbOffset: settings.crt?.rgbOffset ?? 50,
-      curvature: settings.crt?.curvature ?? 20,
-      ...update,
-    });
+  const crt = { ...DEFAULT_CRT_SETTINGS, ...settings.crt };
+  const updateCrt = (update: Partial<CrtSettings>) => {
+    updateSetting("crt", { ...crt, ...update });
   };
 
   const updateOneko = (update: Partial<NonNullable<typeof settings.oneko>>) => {
@@ -396,16 +390,16 @@ export const ConfigApp: React.FC = () => {
                 <label className="config-checkbox-row">
                   <input
                     type="checkbox"
-                    checked={settings.crt?.enabled ?? false}
+                    checked={crt.enabled}
                     onChange={(event) => updateCrt({ enabled: event.target.checked })}
                   />
                   Enable CRT effect
                 </label>
 
-                <RangeSetting label="Scanlines" value={settings.crt?.scanlines ?? 0} onChange={(scanlines) => updateCrt({ scanlines })} />
-                <RangeSetting label="Flicker" value={settings.crt?.flicker ?? 0} onChange={(flicker) => updateCrt({ flicker })} />
-                <RangeSetting label="RGB offset" value={settings.crt?.rgbOffset ?? 0} onChange={(rgbOffset) => updateCrt({ rgbOffset })} />
-                <RangeSetting label="Curvature" value={settings.crt?.curvature ?? 0} onChange={(curvature) => updateCrt({ curvature })} />
+                <RangeSetting label="Scanlines" value={crt.scanlines} onChange={(scanlines) => updateCrt({ scanlines })} />
+                <RangeSetting label="Flicker" value={crt.flicker} onChange={(flicker) => updateCrt({ flicker })} />
+                <RangeSetting label="RGB offset" value={crt.rgbOffset} onChange={(rgbOffset) => updateCrt({ rgbOffset })} />
+                <RangeSetting label="Curvature" value={crt.curvature} onChange={(curvature) => updateCrt({ curvature })} />
               </ConfigSection>
             </div>
           )}

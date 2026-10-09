@@ -19,6 +19,15 @@ export interface CrtSettings {
   curvature: number; // 0-100 intensity
 }
 
+/** Off by default; a light touch on every slider once someone turns it on. */
+export const DEFAULT_CRT_SETTINGS: CrtSettings = {
+  enabled: false,
+  scanlines: 10,
+  flicker: 10,
+  rgbOffset: 10,
+  curvature: 10,
+};
+
 export interface DebugSettings {
   verboseCacheLogging: boolean;
 }

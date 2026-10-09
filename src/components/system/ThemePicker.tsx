@@ -50,6 +50,7 @@ export const ThemePicker = ({ onPick }: { onPick?: (theme: ThemeId) => void }) =
             role="radio"
             aria-checked={active}
             className="theme-picker-option"
+            title={definition.tagline}
             data-active={active || undefined}
             data-pending={pending || undefined}
             onPointerEnter={() => prefetchTheme(id)}
@@ -61,7 +62,6 @@ export const ThemePicker = ({ onPick }: { onPick?: (theme: ThemeId) => void }) =
               <strong>{definition.name}</strong>
               {pending ? <Loader2 className="h-3 w-3 animate-spin" /> : active ? <Check className="h-3 w-3" /> : null}
             </span>
-            <span className="theme-picker-tagline">{definition.tagline}</span>
           </button>
         );
       })}

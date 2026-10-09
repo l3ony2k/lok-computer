@@ -5,7 +5,7 @@ import { THEMES, type Appearance, type ThemeId } from "@/lib/theme";
 import { AppearancePicker, ThemePicker } from "@/components/system/ThemePicker";
 import { CustomIcon } from "@/components/window/CustomIcon";
 import { RetroButton } from "@/components/ui/RetroButton";
-import type { CrtSettings, OnekoSettings } from "@/hooks/useUserSettings";
+import { DEFAULT_CRT_SETTINGS, type CrtSettings, type OnekoSettings } from "@/hooks/useUserSettings";
 import onekoDefault from "@/assets/oneko.gif";
 import onekoDark from "@/assets/oneko-dark.gif";
 
@@ -38,11 +38,11 @@ export const OutOfBoxExperience = ({
   const [onekoEnabled, setOnekoEnabled] = useState(initialOneko?.enabled ?? false);
   const [onekoSpeed, setOnekoSpeed] = useState(initialOneko?.speed ?? 10);
   const [onekoVariant, setOnekoVariant] = useState<OnekoSettings["variant"]>(initialOneko?.variant ?? "default");
-  const [crtEnabled, setCrtEnabled] = useState(initialCrt?.enabled ?? false);
-  const [crtScanlines, setCrtScanlines] = useState(initialCrt?.scanlines ?? 50);
-  const [crtFlicker, setCrtFlicker] = useState(initialCrt?.flicker ?? 10);
-  const [crtRgbOffset, setCrtRgbOffset] = useState(initialCrt?.rgbOffset ?? 50);
-  const [crtCurvature, setCrtCurvature] = useState(initialCrt?.curvature ?? 20);
+  const [crtEnabled, setCrtEnabled] = useState(initialCrt?.enabled ?? DEFAULT_CRT_SETTINGS.enabled);
+  const [crtScanlines, setCrtScanlines] = useState(initialCrt?.scanlines ?? DEFAULT_CRT_SETTINGS.scanlines);
+  const [crtFlicker, setCrtFlicker] = useState(initialCrt?.flicker ?? DEFAULT_CRT_SETTINGS.flicker);
+  const [crtRgbOffset, setCrtRgbOffset] = useState(initialCrt?.rgbOffset ?? DEFAULT_CRT_SETTINGS.rgbOffset);
+  const [crtCurvature, setCrtCurvature] = useState(initialCrt?.curvature ?? DEFAULT_CRT_SETTINGS.curvature);
 
   const selection = useMemo<OobeSelection>(() => ({
     theme,
@@ -129,19 +129,6 @@ export const OutOfBoxExperience = ({
                   <button type="button" data-active={onekoEnabled || undefined} onClick={() => setOnekoEnabled(true)}>On</button>
                 </div>
 
-                <div className="oobe-live-preview oobe-oneko-preview" data-enabled={onekoEnabled || undefined}>
-                  {onekoEnabled ? (
-                    <span
-                      aria-hidden="true"
-                      style={{
-                        backgroundImage: `url(${onekoVariant === "dark" ? onekoDark : onekoDefault})`,
-                        backgroundPosition: "-96px -96px",
-                      }}
-                    />
-                  ) : <small>Cursor cat is off</small>}
-                  <small>{onekoEnabled ? "Move the pointer to preview the follower" : "Enable it to preview"}</small>
-                </div>
-
                 <label className="oobe-range-setting">
                   <span>Speed <output>{onekoSpeed}</output></span>
                   <input type="range" min={1} max={20} value={onekoSpeed} onChange={(event) => setOnekoSpeed(Number(event.target.value))} />
@@ -171,7 +158,11 @@ export const OutOfBoxExperience = ({
               <section className="oobe-page">
                 <div className="oobe-heading">
                   <Monitor className="h-5 w-5" />
-                  <div><h1>Display effect</h1><p>Apply the CRT treatment to the desktop.</p></div>
+                  <div>
+                    <h1>Display effect</h1>
+                    <p>Apply the CRT treatment to the desktop.</p>
+                    <p>This may increase power and battery usage.</p>
+                  </div>
                 </div>
                 <div className="oobe-segmented" role="group" aria-label="CRT effect">
                   <button type="button" data-active={!crtEnabled || undefined} onClick={() => setCrtEnabled(false)}>Off</button>
