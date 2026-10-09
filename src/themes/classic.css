@@ -322,6 +322,19 @@ html[data-chrome="classic"]:not(#_) :where(.retro-button, button.arena-toolbar-c
     padding: 0 8px;
 }
 
+/*
+ * Toolbar buttons are block boxes with a fixed line-height in the base
+ * stylesheet. Skins with thick (border-image) edges leave a content box
+ * shorter than that line box, which then hangs out of the bottom; centring
+ * the line box as a flex item keeps the label in the middle whatever the
+ * border width.
+ */
+html[data-chrome="classic"]:not(#_) button.arena-toolbar-control {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
 /* Hover skips selected controls, which keep their on-state under the pointer. */
 html[data-chrome="classic"]:not(#_) :where(
     .retro-button,

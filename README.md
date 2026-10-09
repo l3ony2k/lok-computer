@@ -103,6 +103,12 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 
 ## Development Log
 
+### Session: 3.0.4 — grid tracks, System buttons and code size (2026-10-09)
+
+*   Are.na grids use `auto-fill` instead of `auto-fit`, so a single filtered result keeps its S/M/L card size instead of stretching across the row.
+*   Classic-skin toolbar buttons centre their labels as flex items; with System's 4px border-image edges the fixed 22px line box used to hang out of the 14px content box, pushing the text to the bottom.
+*   System renders the Console, Weather, `pre`, `code`, `kbd`, and `samp` in Monaco at 12px (its classic 9pt) rather than the 16px UI grid.
+
 ### Session: 3.0.3 — media holds, wallpaper layer, Ask AI trims, offline mode (2026-10-09)
 
 *   Media: a clip opened from Are.na, a feed, the Console, or a shared link plays once and stops (`once` on the request, `holdId` in player state) instead of running on into the queue; videos of 15 s or less loop like a GIF. The LCD shows ONCE or LOOP.

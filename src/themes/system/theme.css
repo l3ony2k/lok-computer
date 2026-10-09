@@ -687,9 +687,10 @@ html[data-theme="system"][data-layout]:not(#_) .config-sidebar .config-category-
     border-image: none;
 }
 
-html[data-theme="system"][data-layout]:not(#_) .console-layout,
-html[data-theme="system"][data-layout]:not(#_) .console-layout * {
+/* Monaco at its classic 9pt; the 16px UI grid is far too big for a terminal or a code block. */
+html[data-theme="system"][data-layout]:not(#_) :is(.console-layout, .console-layout *, .weather-output, .weather-output *, pre, pre *, code, kbd, samp) {
     font-family: var(--font-code);
+    font-size: 12px;
 }
 
 /* One bit: wttr.in's ANSI colors become black ink. */

@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "lok.computer Public API",
-    "version": "3.0.3",
+    "version": "3.0.4",
     "description": "Public REST endpoints used by the lok.computer browser desktop. Most operations read public data through an upstream provider. No caller API key is currently required. Upstream-dependent operations can fail independently of the credential-free status endpoint.",
     "contact": {
       "name": "Lok",
