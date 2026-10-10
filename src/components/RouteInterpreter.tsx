@@ -11,6 +11,7 @@ import { useWindowState } from '@/hooks/useWindowManager';
 import { useApplicationLauncher } from '@/hooks/useApplicationLauncher';
 import { matchRoute, parseWindowSpec, ROUTES } from '@/config/routes';
 import { THEME_QUERY_PARAM } from '@/lib/theme';
+import { trackPageview } from '@/lib/analytics';
 
 interface RouteInterpreterProps {
     /** Called when route interpretation is complete */
@@ -78,6 +79,8 @@ export const RouteInterpreter = ({ onComplete }: RouteInterpreterProps) => {
         const processRoute = async () => {
             const path = location.pathname;
             const searchParams = new URLSearchParams(location.search);
+            // The arrival URL is the only pageview a visit gets; it resets to `/` below.
+            trackPageview(path + location.search);
 
             // Check for multi-window URL format: /open?w=app1,app2/param,app3
             if (path === '/open' || path === '/open/') {

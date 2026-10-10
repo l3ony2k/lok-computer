@@ -10,6 +10,7 @@ import {
   Monitor,
   Palette,
   Power,
+  LayoutGrid,
   RefreshCw,
   ServerCog,
   Sparkles,
@@ -19,6 +20,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DEFAULT_CRT_SETTINGS, useUserSettings, type CrtSettings } from "@/hooks/useUserSettings";
+import { DESKTOP_ICON_ORDER_RESET_EVENT } from "@/lib/desktopIconOrder";
 import { useTheme } from "@/hooks/useTheme";
 import { THEMES } from "@/lib/theme";
 import { AppearancePicker, ThemePicker } from "@/components/system/ThemePicker";
@@ -420,9 +422,13 @@ export const ConfigApp: React.FC = () => {
                   <RetroButton onClick={() => void rebootSystem("manual system reboot from Config")}>
                     <Power className="h-4 w-4" /> Reboot system
                   </RetroButton>
+                  <RetroButton onClick={() => window.dispatchEvent(new Event(DESKTOP_ICON_ORDER_RESET_EVENT))}>
+                    <LayoutGrid className="h-4 w-4" /> Reset icon layout
+                  </RetroButton>
                 </div>
                 <p className="config-help-text">
-                  Reboot clears browser Cache Storage, unregisters service workers, and reloads the latest system code through the boot screen.
+                  Reboot clears browser Cache Storage, unregisters service workers, and reloads the latest system code through the boot screen. Reset icon layout puts the desktop icons back in
+                  their original order after you have dragged them around.
                 </p>
               </ConfigSection>
             </div>

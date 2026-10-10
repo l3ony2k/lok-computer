@@ -103,6 +103,12 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 
 ## Development Log
 
+### Session: 3.0.6 — rearrangeable icons, changelog, analytics (2026-10-10)
+
+*   Desktop icons can be dragged into any order (mouse: move 4 px; touch: hold 300 ms). The order is a list of application types in IndexedDB (`desktop:icon-order`), normalised against the catalog so new apps append and removed apps drop out. Config › System has "Reset icon layout".
+*   About › About this ends with a collapsed Changelog (`src/apps/about/changelog.ts`, newest first, with dates); the running version is highlighted. The "made with" line now lists the Claude 4.8/5.0/5.5, Fable 5/5.1 and DeepSeek V4/V4.1 Flash models.
+*   Self-hosted Umami tag in `index.html` with automatic pageviews off; `src/lib/analytics.ts` reports one pageview per visit (the arrival URL, before it resets to `/`) and `open-app` / `theme` events. Blocked or missing tracker is a no-op.
+
 ### Session: 3.0.5 — Worker trimmed to what the desktop uses (2026-10-09)
 
 *   Removed `/api/chat` and `/api/bsky/feed` from the Worker, OpenAPI, and docs. The Bsky app has read the public Bluesky API directly for a while, and Ask AI replaced the chat proxy. `@atproto/api` is no longer a dependency, which shrinks the Worker bundle.

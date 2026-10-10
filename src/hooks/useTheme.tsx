@@ -10,6 +10,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { trackEvent } from '@/lib/analytics';
 import {
   THEMES,
   THEME_STORAGE_KEY,
@@ -114,6 +115,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       return next;
     });
     console.info(`[Theme] ${THEMES[theme].name} applied`);
+    trackEvent('theme', { theme });
   }, []);
 
   const setAppearance = useCallback((appearance: Appearance) => {

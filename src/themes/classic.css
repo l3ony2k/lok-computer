@@ -92,6 +92,7 @@ html[data-chrome="classic"]:not(#_) .text-sm {
 }
 
 html[data-chrome="classic"]:not(#_) :where(
+    .about-changelog-entry time, .about-changelog-version,
     .arena-address-label, .arena-detail-comment-header span, .arena-detail-connection > span:last-child,
     .arena-file-card-small .arena-file-grid-preview, .arena-file-card-small .arena-file-item-meta,
     .arena-file-fallback-preview > span, .arena-file-footer, .arena-file-item-meta,

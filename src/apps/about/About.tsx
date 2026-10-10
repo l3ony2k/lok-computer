@@ -4,6 +4,7 @@ import { RetroButton } from "@/components/ui/RetroButton";
 import { usePersistedState } from "@/hooks/useStorage";
 import { SYSTEM_VERSION } from "@/lib/system";
 import { THEMES, THEME_IDS } from "@/lib/theme";
+import { CHANGELOG } from "./changelog";
 
 // Import local 88x31 button images
 import omglolButton from "@/assets/buttons/omglol.png";
@@ -59,7 +60,10 @@ const AboutThis = () => {
           , it's amazing.
         </p>
 
-        <p className="mb-4">Made with Claude (3.7|4.0|4.5) Sonnet, Claude 4.5 Opus, Gemini (2.5|3.0) Pro, Cline, Kilo Code, Windsurf, Claude Code, Codex CLI, Opencode and Antigravity.</p>
+        <p className="mb-4">
+          Made with Claude Sonnet (3.7|4.0|4.5|4.8|5.0|5.5), Claude Opus (4.5|5.0|5.5), Claude Fable (5|5.1), Gemini Pro (2.5|3.0), DeepSeek (V4|V4.1 Flash), Cline, Kilo Code, Windsurf, Claude Code,
+          Codex CLI, Opencode and Antigravity.
+        </p>
 
         <p>
           thank you to:{" "}
@@ -115,10 +119,39 @@ const AboutThis = () => {
           ))}
           .
         </p>
+
+        <Changelog />
       </div>
     </div>
   );
 };
+
+// ============================================
+// Changelog (collapsed at the end of About this)
+// ============================================
+const Changelog = () => (
+  <details className="about-changelog mt-6">
+    <summary>
+      <span>Changelog</span>
+    </summary>
+    <ol className="about-changelog-list">
+      {CHANGELOG.map((entry) => (
+        <li key={`${entry.version}-${entry.date}`} className="about-changelog-entry" data-current={entry.version === SYSTEM_VERSION || undefined}>
+          <header>
+            <span className="about-changelog-version">{entry.version === "early" ? "pre-release" : `v${entry.version}`}</span>
+            <strong>{entry.title}</strong>
+            <time dateTime={entry.date}>{entry.date}</time>
+          </header>
+          <ul>
+            {entry.notes.map((note) => (
+              <li key={note}>{note}</li>
+            ))}
+          </ul>
+        </li>
+      ))}
+    </ol>
+  </details>
+);
 
 // ============================================
 // About Me Section

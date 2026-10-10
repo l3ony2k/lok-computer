@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { createApplicationElement, getApplicationDefinition } from '@/config/apps';
 import { WINDOW_DEFAULTS } from '@/config/window';
 import { useWindowActions, useWindowLaunchActions } from '@/hooks/useWindowManager';
+import { trackEvent } from '@/lib/analytics';
 
 export interface ApplicationLaunchOptions {
   title?: string;
@@ -43,6 +44,7 @@ export const useApplicationLauncher = () => {
     };
     const content = createApplicationElement(componentType, props, onPropsChange);
     if (!content) return null;
+    trackEvent('open-app', { app: application.componentType });
 
     windowId = addOrFocusWindow({
       title: options.title ?? application.name,

@@ -97,6 +97,14 @@ The Are.na app (`src/apps/arena/`) fetches channel/block data from the Are.na v3
 
 Use `ARENA_WINDOW_DEFAULTS` in the Application catalog. `useArenaChannelBrowsing` owns remote/in-memory pagination, ordering, cancellation, dedupe, and selection restoration.
 
+### Desktop Icons
+
+`src/components/desktop/DesktopIcons.tsx` renders `APP_LIST` in a persisted order (`desktop:icon-order`, helpers and tests in `src/lib/desktopIconOrder.ts`). Icons rearrange with pointer events (mouse after 4 px, touch after a 300 ms hold), so `.desktop-icon-button` has `touch-action: none`; Config's "Reset icon layout" dispatches `DESKTOP_ICON_ORDER_RESET_EVENT`.
+
+### Analytics
+
+Self-hosted Umami, tag in `index.html` with `data-auto-pageview="false"`. `src/lib/analytics.ts` sends one pageview per visit (the arrival URL from `RouteInterpreter`, before it resets to `/`) and `open-app` / `theme` events; it is a no-op when the tracker is blocked. Do not add pageviews elsewhere, and never send anything that identifies a person.
+
 ### Versioning
 
-`package.json` is the only version source. Vite injects it into boot HTML and generates `/system-version.json`; do not duplicate version strings elsewhere.
+`package.json` is the only version source. Vite injects it into boot HTML and generates `/system-version.json`; do not duplicate version strings elsewhere (the OpenAPI document's `info.version` is bumped by hand). When the version changes, add an entry to `src/apps/about/changelog.ts` (shown in About › Changelog) and the README development log.

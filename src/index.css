@@ -660,6 +660,40 @@
         outline: 0;
     }
 
+    /* Rearranging: icons are dragged with pointer events, so the browser must not claim touches for panning. */
+    .desktop-icon-button {
+        touch-action: none;
+    }
+
+    .desktop-icon-button[data-dragging="true"] {
+        opacity: 0.35;
+    }
+
+    .desktop-icon-button[data-drop-target="true"] .desktop-icon-image {
+        border-color: hsl(var(--accent));
+        box-shadow: inset 0 0 0 1px hsl(var(--accent));
+    }
+
+    [data-rearranging="true"] .desktop-icon-button {
+        cursor: grabbing;
+    }
+
+    /* The icon that follows the pointer while rearranging. */
+    .desktop-icon-ghost {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 9999;
+        pointer-events: none;
+        color: var(--text-color);
+        opacity: 0.9;
+        will-change: transform;
+    }
+
+    .desktop-icon-ghost .desktop-icon-image img {
+        filter: drop-shadow(2px 4px 3px var(--desktop-icon-drop-shadow));
+    }
+
     /* Shown in place of an app that could not load or crashed */
     .window-crash {
         display: flex;
@@ -4221,4 +4255,87 @@ a:hover .animate-marquee-if-overflow {
     .system-boot-cursor {
         animation: none;
     }
+}
+
+/* About › Changelog: collapsed release notes at the end of "About this". */
+.about-changelog {
+    border: 1px solid var(--internal-border);
+}
+
+.about-changelog > summary {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 6px 8px;
+    font-weight: 700;
+    list-style: none;
+}
+
+.about-changelog > summary::-webkit-details-marker {
+    display: none;
+}
+
+.about-changelog > summary > span::before {
+    content: "▸ ";
+}
+
+.about-changelog[open] > summary > span::before {
+    content: "▾ ";
+}
+
+.about-changelog[open] > summary {
+    border-bottom: 1px solid var(--internal-border);
+}
+
+.about-changelog-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.about-changelog-entry {
+    padding: 8px;
+}
+
+.about-changelog-entry + .about-changelog-entry {
+    border-top: 1px solid var(--internal-border);
+}
+
+.about-changelog-entry header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 8px;
+    margin-bottom: 4px;
+}
+
+.about-changelog-version {
+    padding: 0 4px;
+    border: 1px solid var(--internal-border);
+    font-family: var(--font-code);
+    font-size: 11px;
+}
+
+.about-changelog-entry[data-current="true"] .about-changelog-version {
+    color: hsl(var(--accent-foreground));
+    background: hsl(var(--accent));
+    border-color: hsl(var(--accent));
+}
+
+.about-changelog-entry time {
+    margin-left: auto;
+    font-family: var(--font-code);
+    font-size: 11px;
+    opacity: 0.7;
+}
+
+.about-changelog-entry ul {
+    margin: 0;
+    padding-left: 1.2em;
+    list-style: square;
+}
+
+.about-changelog-entry li + li {
+    margin-top: 2px;
 }

@@ -1,0 +1,159 @@
+/**
+ * Release notes shown at the end of About › About this.
+ *
+ * Newest first. Versions before 2.0.7 were never numbered, so the early
+ * entries carry the era instead of a number. Dates are the commit dates.
+ * Add an entry here when package.json's version changes.
+ */
+export interface ChangelogEntry {
+  version: string;
+  date: string;
+  title: string;
+  notes: string[];
+}
+
+export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '3.0.6',
+    date: '2026-10-10',
+    title: 'Move things around',
+    notes: [
+      'Desktop icons can be dragged into any order; the order is remembered.',
+      'This changelog, at the bottom of About.',
+      'Self-hosted analytics: one pageview per visit and app-open counts, nothing personal.',
+    ],
+  },
+  {
+    version: '3.0.5',
+    date: '2026-10-09',
+    title: 'Worker on a diet',
+    notes: [
+      'Dropped the unused chat and Bluesky proxies; the Worker went from 1.8 MB to 47 KB.',
+      'Ask AI needs its planner model set explicitly, no silent fallback.',
+    ],
+  },
+  {
+    version: '3.0.4',
+    date: '2026-10-09',
+    title: 'Grid manners',
+    notes: [
+      'A lone filtered Are.na block keeps its card size instead of filling the row.',
+      'System theme: toolbar labels centred, code text at a proper 9 pt Monaco.',
+    ],
+  },
+  {
+    version: '3.0.3',
+    date: '2026-10-09',
+    title: 'Holds, loops and going offline',
+    notes: [
+      'A clip opened from Are.na or a feed plays once and stops; short videos loop like GIFs.',
+      'Wallpapers moved to their own layer, so dragging windows no longer flickers.',
+      'The desktop stopped nudging every window when Ask AI answered.',
+      'Offline mode: feeds and weather show their last copy, an OFFLINE readout sits by the clock.',
+    ],
+  },
+  {
+    version: '3.0.2',
+    date: '2026-10-09',
+    title: 'Bliss, actually',
+    notes: [
+      'XP and 7 finally paint Bliss and Harmony on the real desktop.',
+      'Media and Images accept Are.na channels and blocks; double-click a clip to play it.',
+      'Ask AI plans with gpt-6-luna, answers in your language, and knows what day it is.',
+      'Taskbar scrolls again; boot screens stay monospace in every theme.',
+    ],
+  },
+  {
+    version: '3.0.1',
+    date: '2026-10-08',
+    title: 'Eight skins',
+    notes: [
+      'Four more themes: System (one-bit Mac), TUI, 386 and Counter-Strike 1.6.',
+      'Every app icon redrawn as pixel art from one script.',
+      'Ask AI became one question in, one calibrated answer out.',
+    ],
+  },
+  {
+    version: '3.0.0',
+    date: '2026-10-08',
+    title: 'The big one',
+    notes: [
+      'A theme engine with Windows 98, XP and 7 skins, taskbar and Start menu included.',
+      'Media: a cassette-deck player with a spectrum analyser and a public-domain library.',
+      'Ask AI rebuilt on TypeSafe Jev: typed questions, probabilities, confidence.',
+    ],
+  },
+  {
+    version: '2.0.10',
+    date: '2026-07-27',
+    title: 'One catalog to rule them all',
+    notes: [
+      'Every app is described once: identity, loader, defaults, deep link, restore.',
+      'Bluesky and Fediverse share one feed renderer.',
+    ],
+  },
+  {
+    version: '2.0.7',
+    date: '2026-07-22',
+    title: 'Boot sequence',
+    notes: [
+      'TTY boot screen, first-run setup, update checks, reboot and kernel panic.',
+      'The whole desktop adopted the Are.na Blocks Canvas look, light and dark.',
+      'Windows minimise with a measured animation and come back where they were.',
+    ],
+  },
+  {
+    version: 'early',
+    date: '2026-03-12',
+    title: 'Are.na v3 and more buttons',
+    notes: [
+      'Moved to the Are.na v3 API.',
+      'Deep links for every window, a context menu, and a share-URL that follows what you view.',
+      'More 88×31 buttons than anyone asked for.',
+    ],
+  },
+  {
+    version: 'early',
+    date: '2026-01-05',
+    title: 'CRT glow',
+    notes: [
+      'A configurable CRT effect: scanlines, flicker, RGB offset, curvature.',
+      'Images zoom, pan and auto-fit.',
+    ],
+  },
+  {
+    version: 'early',
+    date: '2025-12-25',
+    title: 'IndexedDB and a cat',
+    notes: [
+      'App state and API caches moved into IndexedDB.',
+      'Oneko follows the cursor; Buttons app; NeoDB shelf; Swatch Internet Time on the calendar.',
+    ],
+  },
+  {
+    version: 'early',
+    date: '2025-11-26',
+    title: 'Fediverse',
+    notes: [
+      'Fedi app with profile and feed, Bluesky profile header, Are.na preview panel and link thumbnails.',
+    ],
+  },
+  {
+    version: 'early',
+    date: '2025-06-09',
+    title: 'Apps galore',
+    notes: [
+      'Weather, Bsky, Browser, Console, Links and Guestbook, one after another.',
+      'Single-instance apps, the app menu and the calendar flyout.',
+    ],
+  },
+  {
+    version: 'early',
+    date: '2025-04-27',
+    title: 'Hello, world',
+    notes: [
+      'Draggable windows, desktop icons, an Are.na browser and a wallpaper picker.',
+      'A computer within a computer.',
+    ],
+  },
+];
