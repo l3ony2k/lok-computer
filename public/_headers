@@ -7,6 +7,9 @@
 /system-version.json
   Cache-Control: no-cache, no-store, must-revalidate
 
+/sw.js
+  Cache-Control: no-cache, no-store, must-revalidate
+
 /llms.txt
   Cache-Control: public, max-age=300
   Content-Type: text/plain; charset=utf-8

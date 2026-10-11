@@ -7,6 +7,7 @@ import { useApplicationLauncher } from '@/hooks/useApplicationLauncher';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { usePersistedState } from '@/hooks/useStorage';
 import { DEFAULT_DESKTOP_SETTINGS, useUserSettings } from '@/hooks/useUserSettings';
+import { useTheme } from '@/hooks/useTheme';
 import { APP_LIST, type AppConfig } from '@/config/apps';
 import { generateShareUrl } from '@/config/routes';
 import {
@@ -156,9 +157,11 @@ export const DesktopIcons: React.FC = React.memo(() => {
   const isMobile = useIsMobile();
   const openApplication = useApplicationLauncher();
   const { settings } = useUserSettings();
+  const { definition } = useTheme();
   const desktop = { ...DEFAULT_DESKTOP_SETTINGS, ...settings.desktop };
   const cell: IconCell = ICON_CELLS[desktop.iconSize];
-  const free = !desktop.snapToGrid;
+  // The palm layout is an app grid; dropped coordinates would not fit its screen.
+  const free = !desktop.snapToGrid && definition.layout !== 'palm';
 
   const [selectedApp, setSelectedApp] = useState<string | null>(null);
   const [order, setOrder] = usePersistedState<string[]>({

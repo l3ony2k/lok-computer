@@ -11,6 +11,7 @@ import { ContextMenu } from '@/components/menu/ContextMenu';
 import { generateShareUrl } from '@/config/routes';
 import { toast } from 'sonner';
 import { useWindowTransitions } from '@/hooks/useWindowTransitions';
+import { useTheme } from '@/hooks/useTheme';
 import { pointerFromDragEvent, resolveSnapZone, snapZoneRect, type SnapRect, type SnapZone } from '@/lib/windowSnap';
 import { buildWindowMenu } from './windowMenu';
 
@@ -36,6 +37,9 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
     updateWindowPosition, updateWindowDimensions, updateWindowBounds,
   } = useWindowActions();
   const { minimizeWithTransition } = useWindowTransitions();
+  const { definition } = useTheme();
+  // The palm layout shows one window at a time, each filling the screen.
+  const fillsScreen = windowProps.maximized || definition.layout === 'palm';
   const [isInteracting, setIsInteracting] = useState(false);
   const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | null>(null);
   // Snapping: the zone under the pointer during a drag, and the rectangle previewed for it.
@@ -209,7 +213,7 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
   const calculatedWidth = typeof windowProps.width === 'number' ? windowProps.width : WINDOW_DEFAULTS.DEFAULT_WIDTH;
   const calculatedHeight = typeof windowProps.height === 'number' ? windowProps.height : WINDOW_DEFAULTS.DEFAULT_HEIGHT;
   // Shaded: the frame is as tall as its title bar (the content area is display: none).
-  const size = windowProps.maximized
+  const size = fillsScreen
     ? { width: '100%', height: shaded ? 'auto' : '100%' }
     : { width: calculatedWidth, height: shaded ? 'auto' : calculatedHeight };
 
@@ -218,6 +222,7 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
       <Rnd
         className={cn(
           "draggable-window",
+          isActive && "is-active",
           isInteracting && "is-interacting",
           windowProps.maximized && "is-maximized",
           windowProps.minimized && "is-minimized",
@@ -225,7 +230,7 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
           isTransitioning && "is-transitioning",
         )}
         size={size}
-        position={windowProps.maximized ?
+        position={fillsScreen ?
           { x: 0, y: 0 } :
           { x: windowProps.x ?? 50, y: windowProps.y ?? 50 }
         }
@@ -241,8 +246,8 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
         onDragStop={handleDragStop}
         onResizeStart={handleInteractionStartFocus}
         onResizeStop={handleResizeStop}
-        disableDragging={windowProps.maximized}
-        enableResizing={!windowProps.maximized && !shaded}
+        disableDragging={fillsScreen}
+        enableResizing={!fillsScreen && !shaded}
         dragHandleClassName="window-titlebar"
         cancel={WINDOW_DRAG_CANCEL}
       >

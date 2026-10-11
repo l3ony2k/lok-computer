@@ -104,6 +104,14 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 
 ## Development Log
 
+### Session: 3.1.4 — service worker, Palm layout (2026-10-11)
+
+Last of the four 3.1 releases.
+
+*   **Service worker** (`src/sw/service-worker.js`, built into `/sw.js` by the `lok-service-worker` plugin in `vite.config.ts`): the plugin fills in the version, the shell to precache (`/`, the entry chunk and its stylesheet, the manifest and icons) and the list of every hashed asset of the build. Navigations are network-first with the cached shell as the offline fallback; `/assets/*` is cache-first (hashed and immutable; a new worker prunes files its build no longer ships); `/api/*`, `/system-version.json` and `/sw.js` are never cached, so the update monitor sees the real version and `rebootSystem` (which already unregistered workers and cleared caches) always starts clean. The boot screen's warm-up of every app chunk and local asset now fills the cache, so one visit makes the whole desktop available offline; `src/lib/serviceWorker.ts` registers it in production only. The Pages function lists `/sw.js` as a static path and `_headers` marks it `no-store`. Checked in headless Chromium against `vite preview`: registered, shell and assets cached, the desktop booted offline and Calculator opened from the cache.
+*   **PWA**: the manifest gains `id`, `start_url`, `scope`, a description, `any` and `maskable` icons; `index.html` gets the `apple-mobile-web-app-capable` and status-bar metas so iOS opens the home-screen app full-screen.
+*   **Palm theme and layout** (`src/themes/palm/theme.css`, `src/core/PalmBar.tsx`): `DesktopLayout` gains `palm`. One window at a time: `DraggableWindow` sizes every window to the screen and disables dragging and resizing when the layout is palm (the same path as maximize), inactive windows are hidden by CSS, only Close stays on the title strip. `PalmBar` (top) carries the system menu, the window on screen, search and the clock; `PalmTabBar` (bottom) has Home (every window steps aside, revealing the app grid) and one tab per open window, with the taskbar ids so minimize animations still land. The desktop icons flow as a grid and ignore free placement. On a screen at least 600×600 the `.desktop-root` sits in a 392×760 frame with a bezel on a dark page. One-bit Palm OS chrome on the grey-green LCD, black title strips, rounded buttons, the 98 theme's pixel sans. The theme swatch, `index.html`'s pre-paint maps, `THEME_IDS`, and the kernel panic map (the Fatal Exception dialog) include it; a skin without an upstream project needs no credit.
+
 ### Session: 3.1.3 — BeOS, themed kernel panics, real POST, BIOS setup (2026-10-11)
 
 Third of the four 3.1 releases.

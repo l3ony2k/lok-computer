@@ -5,6 +5,7 @@ import { WindowContainer } from "@/components/window/WindowContainer";
 import { Taskbar } from "./Taskbar";
 import { DesktopIcons } from "@/components/desktop/DesktopIcons";
 import { TopBar } from "./TopBar";
+import { PalmBar, PalmTabBar } from "./PalmBar";
 import { DEFAULT_DESKTOP_SETTINGS, useUserSettings, type DesktopSettings } from "@/hooks/useUserSettings";
 import { useTheme } from "@/hooks/useTheme";
 import { useApplicationLauncher } from "@/hooks/useApplicationLauncher";
@@ -25,7 +26,7 @@ export const Desktop = () => {
     const { settings, updateSetting, isLoading } = useUserSettings();
     const { definition } = useTheme();
     const openApplication = useApplicationLauncher();
-    const isClassicLayout = definition.layout === 'classic';
+    const layout = definition.layout;
     const [desktopMenu, setDesktopMenu] = useState<{ x: number; y: number } | null>(null);
 
     // The legacy prompt flag migrates existing users past the new first-run flow.
@@ -163,8 +164,9 @@ export const Desktop = () => {
 
     // Dynamic viewport height: on phones the plain vh unit runs behind the browser toolbar and nothing can scroll it into view.
     return (
-        <div className="h-dvh w-screen flex flex-col">
-            {!isClassicLayout && <TopBar />}
+        <div className="desktop-root h-dvh w-screen flex flex-col">
+            {layout === 'lok' && <TopBar />}
+            {layout === 'palm' && <PalmBar />}
 
             <div
                 ref={desktopContainerRef}
@@ -187,7 +189,7 @@ export const Desktop = () => {
                 <DesktopIcons />
             </div>
 
-            <Taskbar layout={definition.layout} />
+            {layout === 'palm' ? <PalmTabBar /> : <Taskbar layout={layout} />}
 
             <KeyboardLauncher />
 

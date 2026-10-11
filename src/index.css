@@ -2957,6 +2957,46 @@ a:hover .animate-marquee-if-overflow {
     box-shadow: inset 0 1px #ffffff, 0 -1px #606060;
 }
 
+/* Palm */
+.theme-swatch[data-swatch="palm"] {
+    --swatch-desktop: #c5cfbd;
+}
+
+.theme-swatch[data-swatch="palm"] .theme-swatch-window {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background: #e4ebdc;
+    box-shadow: inset 0 0 0 1px #000000;
+}
+
+.theme-swatch[data-swatch="palm"] .theme-swatch-titlebar {
+    background: #000000;
+}
+
+.theme-swatch[data-swatch="palm"] .theme-swatch-titlebar > span {
+    background: #c5cfbd;
+}
+
+.theme-swatch[data-swatch="palm"] .theme-swatch-titlebar > i {
+    display: none;
+}
+
+.theme-swatch[data-swatch="palm"] .theme-swatch-button,
+.theme-swatch[data-swatch="palm"] .theme-swatch-taskbar > span {
+    background: #c5cfbd;
+    box-shadow: inset 0 0 0 1px #000000;
+}
+
+.theme-swatch[data-swatch="palm"] .theme-swatch-line {
+    background: #000000;
+}
+
+.theme-swatch[data-swatch="palm"] .theme-swatch-taskbar {
+    background: #c5cfbd;
+    box-shadow: inset 0 1px #000000;
+}
+
 /* XP */
 .theme-swatch[data-swatch="xp"] {
     --swatch-desktop: #5a8fd8;

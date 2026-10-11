@@ -163,6 +163,17 @@ kdebug> bt
   </main>
 );
 
+/** Palm: the fatal exception dialog. */
+const PalmFatal = () => (
+  <main className="panic-screen panic-palm" aria-label="Fatal exception">
+    <div className="panic-palm-dialog" role="alertdialog" aria-labelledby="panic-palm-title">
+      <p id="panic-palm-title" className="panic-palm-title">Fatal Exception</p>
+      <p>MemoryMgr.c, Line:3579, NULL handle (rm -rf /)</p>
+      <button type="button" onClick={retry}>Reset</button>
+    </div>
+  </main>
+);
+
 const SCREENS: Record<ThemeId, () => JSX.Element> = {
   lok: LinuxPanic,
   "98": BlueScreen98,
@@ -173,6 +184,7 @@ const SCREENS: Record<ThemeId, () => JSX.Element> = {
   "386": DosError,
   cs16: HostError,
   beos: KernelDebuggingLand,
+  palm: PalmFatal,
 };
 
 /** The screen after `rm -rf /`, in the style of the running theme; every way out plays the song. */

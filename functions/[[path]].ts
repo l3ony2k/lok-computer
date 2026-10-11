@@ -56,6 +56,7 @@ const STATIC_PATHS = new Set([
   "/robots.txt",
   "/site.webmanifest",
   "/sitemap.xml",
+  "/sw.js",
   "/system-version.json",
   "/web-app-manifest-192x192.png",
   "/web-app-manifest-512x512.png",

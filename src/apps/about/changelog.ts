@@ -14,6 +14,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '3.1.4',
+    date: '2026-10-11',
+    title: 'Install it, and a handheld',
+    notes: [
+      'lok.computer installs as an app: a service worker keeps the shell and everything the boot screen warms, so after one visit the desktop opens with no connection at all, and iPhones add it to the home screen full-screen.',
+      'A Palm theme: one app fills the screen, a tab bar below switches between them, and on a big screen the desktop sits in a phone-sized frame in the middle.',
+      'rm -rf / on a Palm ends in the Fatal Exception dialog.',
+    ],
+  },
+  {
     version: '3.1.3',
     date: '2026-10-11',
     title: 'BeOS, panics and a BIOS',

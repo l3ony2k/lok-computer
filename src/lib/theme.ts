@@ -12,12 +12,15 @@
  * ids in sync with that script; `theme.test.ts` enforces it.
  */
 
-export type ThemeId = 'lok' | '98' | 'xp' | '7' | 'system' | 'tui' | '386' | 'cs16' | 'beos';
+export type ThemeId = 'lok' | '98' | 'xp' | '7' | 'system' | 'tui' | '386' | 'cs16' | 'beos' | 'palm';
 export type Appearance = 'light' | 'dark' | 'system';
 export type ColorScheme = 'light' | 'dark';
 
-/** `lok` keeps the top menu bar; `classic` merges start menu, tasks, and tray into one taskbar. */
-export type DesktopLayout = 'lok' | 'classic';
+/**
+ * `lok` keeps the top menu bar; `classic` merges start menu, tasks, and tray
+ * into one taskbar; `palm` shows one window at a time with a tab bar below.
+ */
+export type DesktopLayout = 'lok' | 'classic' | 'palm';
 
 /**
  * Which component layer draws windows, controls, and menus. `classic` loads
@@ -182,10 +185,23 @@ export const THEMES: Readonly<Record<ThemeId, ThemeDefinition>> = {
     credit: { label: 'beos-css by mtechnic', url: 'https://beta.mtechnic.me/' },
     loadStyles: () => Promise.all([import('@/themes/classic.css'), import('@/themes/beos/theme.css')]),
   },
+  palm: {
+    id: 'palm',
+    name: 'Palm',
+    tagline: 'A handheld, one app at a time',
+    description: 'A handheld: one window fills the screen, a tab bar below, Palm OS grey-green and one-bit chrome. On a large screen the desktop sits in a phone-sized frame.',
+    layout: 'palm',
+    chrome: 'classic',
+    schemes: ['light'],
+    themeColor: { light: '#c5cfbd' },
+    menuLabel: 'lok',
+    loadStyles: () => Promise.all([import('@/themes/classic.css'), import('@/themes/palm/theme.css')]),
+    fonts: ['11px "Pixelated MS Sans Serif"', 'bold 11px "Pixelated MS Sans Serif"'],
+  },
 };
 
 /** Display order. Not derived from THEMES: integer-like keys ('7', '98') would sort first. */
-export const THEME_IDS: readonly ThemeId[] = ['lok', '98', 'xp', '7', 'system', 'tui', '386', 'cs16', 'beos'];
+export const THEME_IDS: readonly ThemeId[] = ['lok', '98', 'xp', '7', 'system', 'tui', '386', 'cs16', 'beos', 'palm'];
 export const APPEARANCES: readonly Appearance[] = ['light', 'dark', 'system'];
 
 export const isThemeId = (value: unknown): value is ThemeId => (
