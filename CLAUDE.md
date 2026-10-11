@@ -14,6 +14,8 @@ bun test         # Run architecture and behavior tests
 
 Run all four before finishing a change.
 
+Cloudflare Pages builds the frontend on every push to `main` with `bun install --frozen-lockfile` under **bun 1.2.15**. Never commit a `bun.lockb` written by a newer bun: 1.2.15 cannot parse it and the build fails. Regenerate the lockfile with that exact release (download `bun-v1.2.15` from GitHub and run its `bun install`), or set `BUN_VERSION` on the Pages project first. The Worker is deployed by hand with `bunx wrangler deploy`, before the push when `worker.js`, `jev.js` or `wrangler.toml` changed.
+
 Path alias `@/` maps to `./src/`.
 
 ## Style Rules
