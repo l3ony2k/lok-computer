@@ -1,4 +1,4 @@
-import { memo, Suspense, useCallback, useState } from 'react';
+import { memo, Suspense, useCallback, useRef, useState } from 'react';
 import { WindowErrorBoundary } from './WindowErrorBoundary';
 import { useWindowActions, type DesktopWindow } from '@/hooks/useWindowManager';
 import { X, Minimize, Maximize } from 'lucide-react';
@@ -7,15 +7,19 @@ import { Rnd, RndDragCallback, RndResizeCallback } from 'react-rnd';
 import { cn } from '@/lib/utils';
 import { adjustWindowToViewport, type WindowDimensions, type ViewportDimensions } from '@/lib/utils';
 import { WINDOW_DEFAULTS } from '@/config/window';
-import { ContextMenu, type ContextMenuItem } from '@/components/menu/ContextMenu';
+import { ContextMenu } from '@/components/menu/ContextMenu';
 import { generateShareUrl } from '@/config/routes';
 import { toast } from 'sonner';
 import { useWindowTransitions } from '@/hooks/useWindowTransitions';
+import { pointerFromDragEvent, resolveSnapZone, snapZoneRect, type SnapRect, type SnapZone } from '@/lib/windowSnap';
+import { buildWindowMenu } from './windowMenu';
 
 interface DraggableWindowProps {
   window: DesktopWindow;
   isActive: boolean;
   isTransitioning: boolean;
+  /** Double-click on the title bar: maximize or shade, by the Config setting. */
+  onTitleDoubleClick: (window: DesktopWindow) => void;
 }
 
 /**
@@ -26,14 +30,18 @@ interface DraggableWindowProps {
  */
 const WINDOW_DRAG_CANCEL = '.window-menu-button, .window-controls';
 
-export const DraggableWindow = memo(function DraggableWindow({ window: windowProps, isActive, isTransitioning }: DraggableWindowProps) {
-  const { closeWindow, focusWindow, maximizeWindow, restoreWindow, updateWindowPosition, updateWindowDimensions } = useWindowActions();
+export const DraggableWindow = memo(function DraggableWindow({ window: windowProps, isActive, isTransitioning, onTitleDoubleClick }: DraggableWindowProps) {
+  const {
+    closeWindow, focusWindow, maximizeWindow, restoreWindow, toggleWindowShade,
+    updateWindowPosition, updateWindowDimensions, updateWindowBounds,
+  } = useWindowActions();
   const { minimizeWithTransition } = useWindowTransitions();
   const [isInteracting, setIsInteracting] = useState(false);
-
-  // Context menu state
-  const [contextMenuOpen, setContextMenuOpen] = useState(false);
-  const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
+  const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | null>(null);
+  // Snapping: the zone under the pointer during a drag, and the rectangle previewed for it.
+  const [snapPreview, setSnapPreview] = useState<SnapRect | null>(null);
+  const snapZoneRef = useRef<SnapZone | null>(null);
+  const shaded = Boolean(windowProps.shaded);
 
   const handleMinimize = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -54,13 +62,24 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
     closeWindow(windowProps.id);
   };
 
-  // Handle app icon click to show context menu
+  // The icon button drops the window menu below itself; a right-click on the title bar opens it at the pointer.
   const handleIconClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    setContextMenuPosition({ x: rect.left, y: rect.bottom });
-    setContextMenuOpen(true);
+    setMenuPosition({ x: rect.left, y: rect.bottom });
+  };
+
+  const handleTitleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isActive) focusWindow(windowProps.id);
+    setMenuPosition({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleTitleDoubleClick = (e: React.MouseEvent) => {
+    if ((e.target as Element).closest(WINDOW_DRAG_CANCEL)) return;
+    onTitleDoubleClick(windowProps);
   };
 
   // The link reopens this window as it is shown: apps report their view through onPropsChange.
@@ -74,58 +93,40 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
     }
   };
 
-  // Build context menu items
-  const getContextMenuItems = (): ContextMenuItem[] => {
+  const getContextMenuItems = () => {
     const shareUrl = generateShareUrl(windowProps.componentType || '', windowProps.props);
-    const windowSubItems: ContextMenuItem[] = [
-      {
-        type: 'item',
-        label: 'Restore',
-        icon: 'maximize',
-        action: () => restoreWindow(windowProps.id),
-        disabled: !windowProps.maximized, // Only enabled when maximized
-      },
-      {
-        type: 'item',
-        label: 'Minimize',
-        icon: 'minimize',
-        action: () => minimizeWithTransition(windowProps),
-      },
-      {
-        type: 'item',
-        label: 'Maximize',
-        icon: 'maximize',
-        action: () => maximizeWindow(windowProps.id),
-        disabled: windowProps.maximized, // Disabled when already maximized
-      },
-      { type: 'divider' },
-      {
-        type: 'item',
-        label: 'Close',
-        icon: 'close',
-        action: () => closeWindow(windowProps.id),
-      },
-    ];
-
-    return [
-      {
-        type: 'item',
-        label: 'Window',
-        subItems: windowSubItems,
-      },
-      {
-        type: 'item',
-        label: 'Share Window',
-        disabled: !shareUrl,
-        action: () => {
-          if (shareUrl) void copyShareUrl(shareUrl);
-        },
-      },
-    ];
+    return buildWindowMenu(windowProps, {
+      minimize: () => minimizeWithTransition(windowProps),
+      unminimize: () => focusWindow(windowProps.id),
+      maximize: () => maximizeWindow(windowProps.id),
+      restore: () => restoreWindow(windowProps.id),
+      toggleShade: () => toggleWindowShade(windowProps.id),
+      close: () => closeWindow(windowProps.id),
+      share: shareUrl ? () => void copyShareUrl(shareUrl) : null,
+    });
   };
+
+  // Alt (Option) while dragging previews a half or quarter by pointer position;
+  // reaching the desktop's left or right edge does the same without it.
+  const handleDrag = useCallback<RndDragCallback>((e, data) => {
+    if (windowProps.maximized) return;
+    const layer = data.node.parentElement;
+    const pointer = pointerFromDragEvent(e as unknown as Event);
+    if (!layer || !pointer) return;
+    const layerRect = layer.getBoundingClientRect();
+    const area = { width: layer.clientWidth, height: layer.clientHeight };
+    const modifier = 'altKey' in e && Boolean((e as { altKey?: boolean }).altKey);
+    const zone = resolveSnapZone({ x: pointer.clientX - layerRect.left, y: pointer.clientY - layerRect.top }, area, modifier);
+    if (zone === snapZoneRef.current) return;
+    snapZoneRef.current = zone;
+    setSnapPreview(zone ? snapZoneRect(zone, area) : null);
+  }, [windowProps.maximized]);
 
   const handleDragStop = useCallback<RndDragCallback>((_e, data) => {
     setIsInteracting(false);
+    const zone = snapZoneRef.current;
+    snapZoneRef.current = null;
+    setSnapPreview(null);
     if (windowProps.maximized) return;
 
     const parentElement = data.node.parentElement;
@@ -138,17 +139,28 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
       width: parentElement.clientWidth,
       height: parentElement.clientHeight,
     };
+    const minWidth = windowProps.minWidth ?? WINDOW_DEFAULTS.MIN_WIDTH;
+    const minHeight = windowProps.minHeight ?? WINDOW_DEFAULTS.MIN_HEIGHT;
+
+    if (zone) {
+      const target = snapZoneRect(zone, viewport);
+      const adjusted = adjustWindowToViewport({ ...target, minWidth, minHeight }, viewport);
+      updateWindowBounds(windowProps.id, { x: adjusted.x, y: adjusted.y, width: adjusted.width, height: adjusted.height });
+      return;
+    }
+
     const currentWindowData: WindowDimensions = {
       x: data.x,
       y: data.y,
       width: windowProps.width ?? WINDOW_DEFAULTS.DEFAULT_WIDTH,
-      height: windowProps.height ?? WINDOW_DEFAULTS.DEFAULT_HEIGHT,
-      minWidth: windowProps.minWidth ?? WINDOW_DEFAULTS.MIN_WIDTH,
-      minHeight: windowProps.minHeight ?? WINDOW_DEFAULTS.MIN_HEIGHT,
+      // A shaded window is only as tall as its title bar; clamping with its full height would push it up.
+      height: shaded ? data.node.offsetHeight : (windowProps.height ?? WINDOW_DEFAULTS.DEFAULT_HEIGHT),
+      minWidth,
+      minHeight: shaded ? 0 : minHeight,
     };
     const adjusted = adjustWindowToViewport(currentWindowData, viewport);
     updateWindowPosition(windowProps.id, adjusted.x, adjusted.y);
-  }, [windowProps.id, windowProps.maximized, windowProps.width, windowProps.height, windowProps.minWidth, windowProps.minHeight, updateWindowPosition]);
+  }, [windowProps.id, windowProps.maximized, windowProps.width, windowProps.height, windowProps.minWidth, windowProps.minHeight, shaded, updateWindowPosition, updateWindowBounds]);
 
   const handleResizeStop = useCallback<RndResizeCallback>((_e, _direction, ref, _delta, position) => {
     setIsInteracting(false);
@@ -172,9 +184,8 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
       minHeight: windowProps.minHeight ?? WINDOW_DEFAULTS.MIN_HEIGHT,
     };
     const adjusted = adjustWindowToViewport(currentWindowData, viewport);
-    updateWindowDimensions(windowProps.id, adjusted.width, adjusted.height);
-    updateWindowPosition(windowProps.id, adjusted.x, adjusted.y);
-  }, [windowProps.id, windowProps.minWidth, windowProps.minHeight, updateWindowDimensions, updateWindowPosition]);
+    updateWindowBounds(windowProps.id, { x: adjusted.x, y: adjusted.y, width: adjusted.width, height: adjusted.height });
+  }, [windowProps.id, windowProps.minWidth, windowProps.minHeight, updateWindowDimensions, updateWindowPosition, updateWindowBounds]);
 
   // Focus on press. The title bar itself focuses through onDragStart; its
   // buttons are excluded from dragging (WINDOW_DRAG_CANCEL), so they focus here
@@ -197,6 +208,10 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
 
   const calculatedWidth = typeof windowProps.width === 'number' ? windowProps.width : WINDOW_DEFAULTS.DEFAULT_WIDTH;
   const calculatedHeight = typeof windowProps.height === 'number' ? windowProps.height : WINDOW_DEFAULTS.DEFAULT_HEIGHT;
+  // Shaded: the frame is as tall as its title bar (the content area is display: none).
+  const size = windowProps.maximized
+    ? { width: '100%', height: shaded ? 'auto' : '100%' }
+    : { width: calculatedWidth, height: shaded ? 'auto' : calculatedHeight };
 
   return (
     <>
@@ -206,29 +221,28 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
           isInteracting && "is-interacting",
           windowProps.maximized && "is-maximized",
           windowProps.minimized && "is-minimized",
+          shaded && "is-shaded",
           isTransitioning && "is-transitioning",
         )}
-        size={windowProps.maximized ?
-          { width: '100%', height: '100%' } :
-          { width: calculatedWidth, height: calculatedHeight }
-        }
+        size={size}
         position={windowProps.maximized ?
           { x: 0, y: 0 } :
           { x: windowProps.x ?? 50, y: windowProps.y ?? 50 }
         }
         minWidth={WINDOW_DEFAULTS.MIN_WIDTH}
-        minHeight={WINDOW_DEFAULTS.MIN_HEIGHT}
+        minHeight={shaded ? 0 : WINDOW_DEFAULTS.MIN_HEIGHT}
         bounds="parent"
         style={{
           zIndex: windowProps.zIndex,
         }}
         onMouseDown={handleMouseDownFocus}
         onDragStart={handleInteractionStartFocus}
+        onDrag={handleDrag}
         onDragStop={handleDragStop}
         onResizeStart={handleInteractionStartFocus}
         onResizeStop={handleResizeStop}
         disableDragging={windowProps.maximized}
-        enableResizing={!windowProps.maximized}
+        enableResizing={!windowProps.maximized && !shaded}
         dragHandleClassName="window-titlebar"
         cancel={WINDOW_DRAG_CANCEL}
       >
@@ -236,21 +250,21 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
           data-window-surface-id={windowProps.id}
           data-active={isActive || undefined}
           data-maximized={windowProps.maximized || undefined}
+          data-shaded={shaded || undefined}
           className="window-surface flex flex-col w-full h-full overflow-hidden"
         >
           {/* Title bar - fixed height */}
           <div
             className="window-titlebar"
-            onDoubleClick={() => windowProps.maximized
-              ? restoreWindow(windowProps.id)
-              : maximizeWindow(windowProps.id)}
+            onDoubleClick={handleTitleDoubleClick}
+            onContextMenu={handleTitleContextMenu}
           >
             <button
               onClick={handleIconClick}
               className="window-menu-button flex items-center justify-center"
               title="Window menu"
               aria-haspopup="menu"
-              aria-expanded={contextMenuOpen}
+              aria-expanded={menuPosition !== null}
             >
               <CustomIcon iconType={windowProps.iconType} className="w-4 h-4" />
             </button>
@@ -317,12 +331,20 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
         </div>
       </Rnd>
 
-      {/* Title bar context menu */}
+      {snapPreview && (
+        <div
+          className="window-snap-preview"
+          style={{ left: snapPreview.x, top: snapPreview.y, width: snapPreview.width, height: snapPreview.height }}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Window menu: from the title-bar icon or a right-click on the title bar */}
       <ContextMenu
-        items={getContextMenuItems()}
-        isOpen={contextMenuOpen}
-        position={contextMenuPosition}
-        onClose={() => setContextMenuOpen(false)}
+        items={menuPosition ? getContextMenuItems() : []}
+        isOpen={menuPosition !== null}
+        position={menuPosition ?? { x: 0, y: 0 }}
+        onClose={() => setMenuPosition(null)}
       />
     </>
   );

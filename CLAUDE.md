@@ -108,7 +108,14 @@ lok marks image-heavy channels with `🜳` in the title (`IMAGE_CHANNEL_MARK` in
 
 ### Desktop Icons
 
-`src/components/desktop/DesktopIcons.tsx` renders `APP_LIST` in a persisted order (`desktop:icon-order`, helpers and tests in `src/lib/desktopIconOrder.ts`). Icons rearrange with pointer events (mouse after 4 px, touch after a 300 ms hold), so `.desktop-icon-button` has `touch-action: none`; Config's "Reset icon layout" dispatches `DESKTOP_ICON_ORDER_RESET_EVENT`.
+`src/components/desktop/DesktopIcons.tsx` renders `APP_LIST` in a persisted order (`desktop:icon-order`, helpers and tests in `src/lib/desktopIconOrder.ts`). Icons rearrange with pointer events (mouse after 4 px, touch after a 300 ms hold), so `.desktop-icon-button` has `touch-action: none`. `DesktopSettings` (`useUserSettings`) holds the icon size (`s`/`m`/`l`, CSS variables on `.desktop-container[data-icon-size]`), visibility, and snapping; with snapping off each icon keeps coordinates (`desktop:icon-positions`) and icons without one take the slot the column flow would give them (`src/lib/desktopIconLayout.ts` mirrors the CSS geometry, tested). "Tidy up" (desktop menu, Config › Desktop) dispatches `DESKTOP_ICON_ORDER_RESET_EVENT`, which restores the catalog order and clears positions.
+
+### Menus, Launcher, Snapping, Shade
+
+- **One menu model**: `src/components/menu/menuModel.ts` (`MenuEntry`: label, icon, shortcut hint, `checked`, disabled, dividers, submenus) rendered by `MenuItems.tsx`; `AppMenu` (system menu) and `ContextMenu` (portaled, at a point) both use it. Never build a menu with another component. Window menus come from `buildWindowMenu` in `src/components/window/windowMenu.ts` (title-bar icon, title-bar right-click, taskbar right-click). The desktop's own right-click menu lives in `Desktop.tsx`, the icon menu in `DesktopIcons.tsx`.
+- **Keyboard launcher**: `src/components/launcher/KeyboardLauncher.tsx` (Cmd/Ctrl+K, the `SearchButton` beside the clock, `openLauncher()` from `src/lib/launcher.ts`). Searches `APP_LIST`, lok's channels (`getUserChannels`) and system commands with `src/lib/fuzzyMatch.ts`. Recent items come from `src/lib/recentApps.ts`; `useApplicationLauncher` records every open there.
+- **Snapping**: `src/lib/windowSnap.ts` (pure, tested) resolves the zone from the pointer position in the window layer (Alt: halves and quarters by position; no modifier: the layer's left/right edges and corners). `DraggableWindow` previews it and applies `updateWindowBounds` on drop.
+- **Shade**: `DesktopWindow.shaded`; the Rnd gets `height: 'auto'`, the content area is hidden with CSS and stays mounted. `WindowContainer` decides what a title-bar double-click does from `WindowSettings.titleDoubleClick` and shows the one-time hint toast, whose button opens Config with `initialCategory`/`focusSetting` props (Config scrolls to `data-setting` and outlines it).
 
 ### Analytics
 

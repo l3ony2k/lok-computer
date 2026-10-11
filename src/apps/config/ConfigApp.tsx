@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
+  AppWindow,
   Bell,
   Bug,
   Cat,
@@ -18,8 +19,17 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { DEFAULT_CRT_SETTINGS, useUserSettings, type CrtSettings } from "@/hooks/useUserSettings";
+import { cn, scrollIntoViewWithin } from "@/lib/utils";
+import {
+  DEFAULT_CRT_SETTINGS,
+  DEFAULT_DESKTOP_SETTINGS,
+  DEFAULT_WINDOW_SETTINGS,
+  useUserSettings,
+  type CrtSettings,
+  type DesktopSettings,
+  type WindowSettings,
+} from "@/hooks/useUserSettings";
+import { launcherShortcutLabel } from "@/lib/launcher";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { DESKTOP_ICON_ORDER_RESET_EVENT } from "@/lib/desktopIconOrder";
 import { useTheme } from "@/hooks/useTheme";
@@ -39,7 +49,7 @@ import { rebootSystem, requestSystemUpdateCheck, SYSTEM_VERSION } from "@/lib/sy
 import onekoDefault from "@/assets/oneko.gif";
 import onekoDark from "@/assets/oneko-dark.gif";
 
-type ConfigCategory = "style" | "effect" | "system" | "debug";
+type ConfigCategory = "style" | "desktop" | "effect" | "system" | "debug";
 
 const CONFIG_CATEGORIES: Array<{
   id: ConfigCategory;
@@ -47,10 +57,26 @@ const CONFIG_CATEGORIES: Array<{
   icon: React.ComponentType<{ className?: string }>;
 }> = [
   { id: "style", label: "Style", icon: Palette },
+  { id: "desktop", label: "Desktop", icon: AppWindow },
   { id: "effect", label: "Effect", icon: Sparkles },
   { id: "system", label: "System", icon: ServerCog },
   { id: "debug", label: "Debug", icon: Bug },
 ];
+
+const isConfigCategory = (value: unknown): value is ConfigCategory => (
+  CONFIG_CATEGORIES.some((category) => category.id === value)
+);
+
+/** How long a setting opened from elsewhere (a toast, the desktop menu) stays outlined. */
+const HIGHLIGHT_MS = 1800;
+
+interface ConfigAppProps {
+  /** Category to open; the share link carries it as `?tab=`. */
+  initialCategory?: string;
+  /** A section id (`data-setting`) to scroll to and outline briefly. */
+  focusSetting?: string;
+  onPropsChange?: (props: Record<string, unknown>) => void;
+}
 
 const DEFAULT_WALLPAPERS = [
   {
@@ -75,18 +101,50 @@ const ConfigSection = ({
   title,
   icon: Icon,
   children,
+  id,
+  highlighted = false,
 }: {
   title: string;
   icon: React.ComponentType<{ className?: string }>;
   children: React.ReactNode;
+  /** Lets a toast or menu open Config scrolled to this section. */
+  id?: string;
+  highlighted?: boolean;
 }) => (
-  <section className="config-section">
+  <section className="config-section" data-setting={id} data-highlight={highlighted || undefined}>
     <h2 className="config-section-title">
       <Icon className="h-4 w-4" />
       {title}
     </h2>
     <div className="config-section-body">{children}</div>
   </section>
+);
+
+/** A row of exclusive choices, drawn as joined buttons. */
+const ChoiceSetting = <T extends string>({ label, value, options, onChange }: {
+  label: string;
+  value: T;
+  options: Array<{ id: T; label: string; title?: string }>;
+  onChange: (value: T) => void;
+}) => (
+  <div className="config-choice">
+    <span className="config-choice-label">{label}</span>
+    <div className="config-segmented" role="radiogroup" aria-label={label}>
+      {options.map((option) => (
+        <RetroButton
+          key={option.id}
+          size="sm"
+          role="radio"
+          aria-checked={value === option.id}
+          active={value === option.id}
+          title={option.title}
+          onClick={() => onChange(option.id)}
+        >
+          {option.label}
+        </RetroButton>
+      ))}
+    </div>
+  </div>
 );
 
 const RangeSetting = ({
@@ -116,11 +174,39 @@ const RangeSetting = ({
   </label>
 );
 
-export const ConfigApp: React.FC = () => {
+export const ConfigApp: React.FC<ConfigAppProps> = ({ initialCategory, focusSetting, onPropsChange }) => {
   const { theme, appearance, colorScheme } = useTheme();
   const { settings, updateSetting } = useUserSettings();
   const online = useOnlineStatus();
-  const [activeCategory, setActiveCategory] = useState<ConfigCategory>("style");
+  const [activeCategory, setActiveCategory] = useState<ConfigCategory>(() => (
+    isConfigCategory(initialCategory) ? initialCategory : "style"
+  ));
+  const [highlighted, setHighlighted] = useState<string | null>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  // A running Config receives new launch props when opened again from a toast or menu.
+  useEffect(() => {
+    if (isConfigCategory(initialCategory)) setActiveCategory(initialCategory);
+  }, [initialCategory]);
+
+  useEffect(() => {
+    onPropsChange?.({ initialCategory: activeCategory, focusSetting: undefined });
+  }, [activeCategory, onPropsChange]);
+
+  useEffect(() => {
+    if (!focusSetting) return;
+    const frame = requestAnimationFrame(() => {
+      const section = contentRef.current?.querySelector<HTMLElement>(`[data-setting="${CSS.escape(focusSetting)}"]`);
+      if (!section) return;
+      scrollIntoViewWithin(section, { block: "start" });
+      setHighlighted(focusSetting);
+    });
+    const timer = setTimeout(() => setHighlighted(null), HIGHLIGHT_MS);
+    return () => {
+      cancelAnimationFrame(frame);
+      clearTimeout(timer);
+    };
+  }, [focusSetting, activeCategory]);
   const [customWallpaperUrl, setCustomWallpaperUrl] = useState("");
   const [customError, setCustomError] = useState("");
   const [stats, setStats] = useState<UsageStats | null>(null);
@@ -232,6 +318,16 @@ export const ConfigApp: React.FC = () => {
     updateSetting("crt", { ...crt, ...update });
   };
 
+  const windowPrefs: WindowSettings = { ...DEFAULT_WINDOW_SETTINGS, ...settings.windows };
+  const updateWindows = (update: Partial<WindowSettings>) => {
+    updateSetting("windows", { ...windowPrefs, ...update });
+  };
+
+  const desktop: DesktopSettings = { ...DEFAULT_DESKTOP_SETTINGS, ...settings.desktop };
+  const updateDesktop = (update: Partial<DesktopSettings>) => {
+    updateSetting("desktop", { ...desktop, ...update });
+  };
+
   const updateOneko = (update: Partial<NonNullable<typeof settings.oneko>>) => {
     updateSetting("oneko", {
       enabled: settings.oneko?.enabled ?? false,
@@ -267,7 +363,7 @@ export const ConfigApp: React.FC = () => {
           ))}
         </nav>
 
-        <div className="config-content scrollable-area">
+        <div ref={contentRef} className="config-content scrollable-area">
           {activeCategory === "style" && (
             <div className="config-category-content">
               <ConfigSection title="Theme" icon={Palette}>
@@ -290,7 +386,7 @@ export const ConfigApp: React.FC = () => {
                 <AppearancePicker />
               </ConfigSection>
 
-              <ConfigSection title="Wallpaper" icon={Image}>
+              <ConfigSection title="Wallpaper" icon={Image} id="wallpaper" highlighted={highlighted === "wallpaper"}>
                 <div className="config-setting-heading">
                   <span>Current wallpaper</span>
                   {settings.wallpaper && (
@@ -341,6 +437,64 @@ export const ConfigApp: React.FC = () => {
                   </div>
                   {customError && <small className="config-error">{customError}</small>}
                 </label>
+              </ConfigSection>
+            </div>
+          )}
+
+          {activeCategory === "desktop" && (
+            <div className="config-category-content">
+              <ConfigSection title="Windows" icon={AppWindow} id="title-double-click" highlighted={highlighted === "title-double-click"}>
+                <ChoiceSetting
+                  label="Double-click on a title bar"
+                  value={windowPrefs.titleDoubleClick}
+                  options={[
+                    { id: "maximize", label: "Maximize", title: "Fill the desktop; double-click again to restore" },
+                    { id: "shade", label: "Shade", title: "Roll the window up to its title bar" },
+                  ]}
+                  onChange={(titleDoubleClick) => updateWindows({ titleDoubleClick })}
+                />
+                <p className="config-help-text">
+                  Shade rolls a window up to its title bar; double-click again to unroll it. The window menu (the title-bar icon, or a right-click on the title bar or taskbar) offers both either way.
+                  Drag a window to the desktop's edge, or hold Alt while dragging, to snap it to a half or a quarter of the screen.
+                </p>
+              </ConfigSection>
+
+              <ConfigSection title="Desktop icons" icon={LayoutGrid} id="desktop-icons" highlighted={highlighted === "desktop-icons"}>
+                <ChoiceSetting
+                  label="Icon size"
+                  value={desktop.iconSize}
+                  options={[
+                    { id: "s", label: "Small" },
+                    { id: "m", label: "Medium" },
+                    { id: "l", label: "Large" },
+                  ]}
+                  onChange={(iconSize) => updateDesktop({ iconSize })}
+                />
+                <label className="config-checkbox-row">
+                  <input
+                    type="checkbox"
+                    checked={desktop.showIcons}
+                    onChange={(event) => updateDesktop({ showIcons: event.target.checked })}
+                  />
+                  Show desktop icons
+                </label>
+                <label className="config-checkbox-row">
+                  <input
+                    type="checkbox"
+                    checked={desktop.snapToGrid}
+                    onChange={(event) => updateDesktop({ snapToGrid: event.target.checked })}
+                  />
+                  Snap to grid
+                </label>
+                <div className="config-action-stack">
+                  <RetroButton onClick={() => window.dispatchEvent(new Event(DESKTOP_ICON_ORDER_RESET_EVENT))}>
+                    <LayoutGrid className="h-4 w-4" /> Tidy up
+                  </RetroButton>
+                </div>
+                <p className="config-help-text">
+                  With snapping off, icons stay wherever you drop them. Tidy up puts them back in their original order.
+                  Hidden icons are still a right-click on the desktop, the system menu, or {launcherShortcutLabel()} away.
+                </p>
               </ConfigSection>
             </div>
           )}
@@ -424,13 +578,9 @@ export const ConfigApp: React.FC = () => {
                   <RetroButton onClick={() => void rebootSystem("manual system reboot from Config")}>
                     <Power className="h-4 w-4" /> Reboot system
                   </RetroButton>
-                  <RetroButton onClick={() => window.dispatchEvent(new Event(DESKTOP_ICON_ORDER_RESET_EVENT))}>
-                    <LayoutGrid className="h-4 w-4" /> Reset icon layout
-                  </RetroButton>
                 </div>
                 <p className="config-help-text">
-                  Reboot clears browser Cache Storage, unregisters service workers, and reloads the latest system code through the boot screen. Reset icon layout puts the desktop icons back in
-                  their original order after you have dragged them around.
+                  Reboot clears browser Cache Storage, unregisters service workers, and reloads the latest system code through the boot screen.
                 </p>
               </ConfigSection>
             </div>

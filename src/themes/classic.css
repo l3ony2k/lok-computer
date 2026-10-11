@@ -975,6 +975,63 @@ html[data-layout="classic"]:not(#_) .app-menu-banner {
     flex: 0 0 auto;
 }
 
+/* ---------- Launcher, snapping, search ---------- */
+
+html[data-chrome="classic"]:not(#_) .taskbar-search,
+html[data-chrome="classic"]:not(#_) .taskbar-search:hover {
+    width: auto;
+    height: 100%;
+    margin: 0;
+    padding: 0 4px;
+    color: inherit;
+    background: transparent;
+    border: 0;
+}
+
+html[data-chrome="classic"]:not(#_) .app-header-search {
+    width: auto;
+}
+
+html[data-chrome="classic"]:not(#_) .launcher-input {
+    font-family: var(--font-ui);
+    font-size: var(--c-text-body);
+}
+
+html[data-chrome="classic"]:not(#_) .launcher-item {
+    border: 1px solid transparent;
+    border-radius: var(--c-hl-radius);
+    font-size: var(--c-font-size);
+}
+
+html[data-chrome="classic"]:not(#_) .launcher-item:hover:not([data-active]) {
+    color: inherit;
+    background: transparent;
+    border-color: transparent;
+}
+
+html[data-chrome="classic"]:not(#_) .launcher-item[data-active],
+html[data-chrome="classic"]:not(#_) .launcher-item[data-active]:hover {
+    color: var(--c-hl-fg);
+    background: var(--c-hl-bg);
+    border: var(--c-hl-border);
+}
+
+html[data-chrome="classic"]:not(#_) .launcher-group-title,
+html[data-chrome="classic"]:not(#_) .launcher-item-group {
+    font-size: var(--c-text-small);
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+html[data-chrome="classic"]:not(#_) .window-snap-preview {
+    border: 2px dashed var(--c-hl-bg);
+    background: color-mix(in srgb, var(--c-hl-bg) 22%, transparent);
+}
+
+html[data-chrome="classic"]:not(#_) .config-section[data-highlight] {
+    outline: 2px dotted var(--c-hl-bg);
+}
+
 /* ---------- Dialogs, toasts, setup ---------- */
 
 /* Sonner sets --width inline; wide-type themes need a wider toaster. */

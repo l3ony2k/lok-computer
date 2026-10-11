@@ -398,12 +398,161 @@
         opacity: 0.38;
     }
 
+    /* Nested lists open beside their item; a list that would leave the viewport opens to the left instead. */
+    .menu-submenu {
+        left: calc(100% + 5px);
+        top: -1px;
+        z-index: 1;
+    }
+
+    .menu-submenu[data-flip="left"] {
+        left: auto;
+        right: calc(100% + 5px);
+    }
+
     .app-submenu {
         width: min(260px, calc(100vw - 235px));
         min-width: 180px;
         max-height: min(420px, calc(100dvh - 60px));
         overflow-y: auto;
         overscroll-behavior: contain;
+    }
+
+    .context-submenu {
+        min-width: 160px;
+    }
+
+    .menu-item-shortcut {
+        flex: 0 0 auto;
+        opacity: 0.55;
+        font-size: 0.85em;
+        letter-spacing: 0.02em;
+    }
+
+    .menu-item-check {
+        flex: 0 0 auto;
+    }
+
+    .menu-divider {
+        margin: 4px 0;
+    }
+
+    /* Search button beside the clock. */
+    .app-header-search {
+        width: var(--control-height);
+        padding: 0;
+    }
+
+    .taskbar-search {
+        flex: 0 0 auto;
+        width: var(--control-height);
+        height: var(--control-height);
+        margin-right: 6px;
+        color: var(--text-color);
+        background: var(--button-bg);
+        border: 1px solid hsl(var(--border));
+    }
+
+    .taskbar-search:hover {
+        background: var(--button-hover);
+    }
+
+    /* Keyboard launcher (Cmd/Ctrl+K). */
+    .launcher-scrim {
+        background: color-mix(in srgb, var(--block-border) 14%, transparent);
+    }
+
+    .launcher-panel {
+        position: absolute;
+        top: 16%;
+        left: 50%;
+        display: flex;
+        flex-direction: column;
+        width: min(560px, calc(100vw - 32px));
+        max-height: min(60dvh, 520px);
+        transform: translateX(-50%);
+    }
+
+    .launcher-field {
+        flex: 0 0 auto;
+        gap: 8px;
+        padding: 8px 10px;
+        border-bottom: 1px solid var(--internal-border);
+    }
+
+    .launcher-field-icon {
+        flex: 0 0 auto;
+        opacity: 0.6;
+    }
+
+    .launcher-input {
+        flex: 1 1 auto;
+        min-width: 0;
+        color: var(--text-color);
+        background: transparent;
+        border: 0;
+        outline: 0;
+        font: inherit;
+        font-size: 16px;
+    }
+
+    .launcher-shortcut {
+        flex: 0 0 auto;
+        padding: 0 4px;
+        border: 1px solid currentColor;
+        font: inherit;
+        font-size: 10px;
+        line-height: 16px;
+        opacity: 0.5;
+    }
+
+    .launcher-results {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        padding: 4px;
+    }
+
+    .launcher-group-title {
+        padding: 6px 8px 2px;
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        opacity: 0.55;
+    }
+
+    .launcher-item {
+        width: 100%;
+        gap: 8px;
+    }
+
+    /* The highlight follows the keyboard and the pointer through data-active, never a second hover shade. */
+    .launcher-item:hover:not(:disabled) {
+        background: transparent;
+    }
+
+    .launcher-item[data-active],
+    .launcher-item[data-active]:hover {
+        background: var(--button-hover);
+    }
+
+    .launcher-item-icon {
+        flex: 0 0 auto;
+        width: 20px;
+        height: 20px;
+    }
+
+    .launcher-item-group {
+        flex: 0 0 auto;
+        font-size: 10px;
+        opacity: 0.55;
+    }
+
+    .launcher-empty {
+        padding: 16px;
+        text-align: center;
+        font-size: 12px;
+        opacity: 0.6;
     }
 
     /* Long menu labels scroll on hover; AppMenu sets the distance and duration. */
@@ -578,7 +727,40 @@
         box-shadow: var(--menu-shadow);
     }
 
+    /* Icon sizes (Config › Desktop, or the desktop's right-click menu); the JS flow layout mirrors these. */
+    .desktop-container {
+        --desktop-icon-cell-w: 96px;
+        --desktop-icon-cell-h: 76px;
+        --desktop-icon-image: 42px;
+        --desktop-icon-glyph: 32px;
+    }
+
+    .desktop-container[data-icon-size="s"] {
+        --desktop-icon-cell-w: 80px;
+        --desktop-icon-cell-h: 64px;
+        --desktop-icon-image: 32px;
+        --desktop-icon-glyph: 24px;
+    }
+
+    .desktop-container[data-icon-size="l"] {
+        --desktop-icon-cell-w: 120px;
+        --desktop-icon-cell-h: 100px;
+        --desktop-icon-image: 60px;
+        --desktop-icon-glyph: 48px;
+    }
+
+    /* The layer spans the desktop (free placement), so only the icons take the pointer. */
+    .desktop-icons-layer {
+        pointer-events: none;
+    }
+
+    .desktop-icons-layer > .desktop-icon-button {
+        pointer-events: auto;
+    }
+
     .desktop-icon-button {
+        width: var(--desktop-icon-cell-w);
+        height: var(--desktop-icon-cell-h);
         color: var(--text-color);
         background: transparent;
         border: 0;
@@ -586,11 +768,16 @@
     }
 
     .desktop-icon-image {
-        width: 42px;
-        height: 42px;
+        width: var(--desktop-icon-image);
+        height: var(--desktop-icon-image);
         border: 1px solid transparent;
         background: transparent;
         box-shadow: none;
+    }
+
+    .desktop-icon-glyph {
+        width: var(--desktop-icon-glyph);
+        height: var(--desktop-icon-glyph);
     }
 
     .desktop-icon-image img {
@@ -703,6 +890,26 @@
     .draggable-window.is-transitioning {
         visibility: hidden;
         pointer-events: none;
+    }
+
+    /* Window shade: the frame is as tall as its title bar; the app stays mounted underneath. */
+    .draggable-window.is-shaded .window-surface {
+        height: auto;
+    }
+
+    .draggable-window.is-shaded .window-surface > .window-content-area {
+        display: none;
+    }
+
+    /* Where a dragged window lands when dropped (Alt held, or the pointer at the desktop's edge). */
+    .window-snap-preview {
+        position: absolute;
+        z-index: 100000;
+        box-sizing: border-box;
+        border: 2px dashed var(--block-border);
+        background: color-mix(in srgb, var(--button-hover) 55%, transparent);
+        pointer-events: none;
+        transition: left 90ms ease-out, top 90ms ease-out, width 90ms ease-out, height 90ms ease-out;
     }
 
     .app-window-layout {
@@ -1630,6 +1837,33 @@
 
     .arena-detail-clickable-image:hover {
         opacity: 0.9;
+    }
+
+    /* Block pictures show a placeholder until they decode (see DetailImage). */
+    .arena-detail-image {
+        position: relative;
+        display: block;
+        max-width: 100%;
+    }
+
+    .arena-detail-image:not([data-loaded]) {
+        min-height: 72px;
+    }
+
+    .arena-detail-image:not([data-loaded]) > img {
+        visibility: hidden;
+        position: absolute;
+        inset: 0;
+    }
+
+    .arena-detail-image-loading {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--log-muted);
+        font-size: 12px;
     }
 
     .arena-detail-rich-text {
@@ -3366,6 +3600,42 @@ a:hover .animate-marquee-if-overflow {
     font-size: 12px;
 }
 
+/* Exclusive choices as joined buttons. */
+.config-choice {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.config-choice-label {
+    font-size: 12px;
+}
+
+.config-segmented {
+    display: inline-flex;
+    width: fit-content;
+}
+
+.config-segmented .retro-button {
+    min-width: 84px;
+}
+
+.config-segmented .retro-button + .retro-button {
+    border-left: 0;
+}
+
+/* A section opened from a toast or menu is outlined until it has been seen. */
+.config-section[data-highlight] {
+    outline: 2px solid hsl(var(--accent));
+    outline-offset: 3px;
+    animation: config-highlight 1.8s ease-out forwards;
+}
+
+@keyframes config-highlight {
+    0%, 60% { outline-color: hsl(var(--accent)); }
+    100% { outline-color: transparent; }
+}
+
 .config-oneko-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -4126,6 +4396,19 @@ a:hover .animate-marquee-if-overflow {
     .system-boot-screen,
     .system-boot-progress span {
         transition: none;
+    }
+
+    /* The CRT flicker is a full-screen strobe; the still effects stay. */
+    .crt-effect.crt-flicker-active {
+        animation: none;
+    }
+
+    .window-snap-preview {
+        transition: none;
+    }
+
+    .config-section[data-highlight] {
+        animation: none;
     }
 
     .arena-file-skeleton-fill,

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useWindowState } from '@/hooks/useWindowManager';
-import { OfflineReadout, SystemClock, SystemMenuButton } from './SystemMenu';
+import { OfflineReadout, SearchButton, SystemClock, SystemMenuButton } from './SystemMenu';
 
 /** Name of the frontmost window, shown like an application menu by menu-bar themes. */
 const ActiveWindowName: React.FC = () => {
@@ -20,6 +20,7 @@ export const TopBar: React.FC = React.memo(() => (
 
     <div className="ml-auto flex items-center gap-2 text-sm select-none">
       <OfflineReadout />
+      <SearchButton placement="top" />
       <SystemClock placement="top" />
     </div>
   </div>

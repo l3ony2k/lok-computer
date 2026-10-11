@@ -24,6 +24,7 @@ export interface SerializableWindowData {
   height?: number;
   minimized?: boolean;
   maximized?: boolean;
+  shaded?: boolean;
   zIndex: number;
   props?: Record<string, unknown>; // Component-specific props (channelSlug, blockId, etc.)
 }
@@ -51,6 +52,8 @@ export interface DesktopWindow {
   minHeight?: number;
   minimized?: boolean;
   maximized?: boolean;
+  /** Rolled up to its title bar (window shade). */
+  shaded?: boolean;
   wasMaximized?: boolean;
   zIndex: number;
   iconType?: string;
@@ -66,14 +69,25 @@ export interface WindowManagerStateContextType {
   isSessionRestored: boolean;
 }
 
+export interface WindowBounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 export interface WindowManagerActionsContextType {
   closeWindow: (id: string) => void;
   minimizeWindow: (id: string) => void;
   maximizeWindow: (id: string) => void;
   restoreWindow: (id: string) => void;
+  /** Rolls the window up to its title bar, or back down. */
+  toggleWindowShade: (id: string) => void;
   focusWindow: (id: string) => void;
   updateWindowPosition: (id: string, x: number, y: number) => void;
   updateWindowDimensions: (id: string, width: number, height: number) => void;
+  /** Position and size in one update (snapping), leaving maximized and shaded states. */
+  updateWindowBounds: (id: string, bounds: Partial<WindowBounds>) => void;
   updateWindowProps: (id: string, props: Record<string, unknown>) => void;
 }
 
@@ -199,6 +213,7 @@ export const useWindowManagerController = (): WindowManagerController => {
             height: savedWindow.height || application.defaultHeight,
             minimized: savedWindow.minimized || false,
             maximized: savedWindow.maximized || false,
+            shaded: savedWindow.shaded || false,
             wasMaximized: false,
             zIndex: savedWindow.zIndex,
             minWidth: WINDOW_DEFAULTS.MIN_WIDTH,
@@ -250,6 +265,7 @@ export const useWindowManagerController = (): WindowManagerController => {
             height: w.height,
             minimized: w.minimized,
             maximized: w.maximized,
+            shaded: w.shaded,
             zIndex: w.zIndex,
             props: w.props,
           }));
@@ -372,7 +388,16 @@ export const useWindowManagerController = (): WindowManagerController => {
   const maximizeWindow = useCallback((id: string) => {
     setWindows((prev) =>
       prev.map((w) =>
-        w.id === id ? { ...w, maximized: true, minimized: false } : w
+        w.id === id ? { ...w, maximized: true, minimized: false, shaded: false } : w
+      )
+    );
+    focusWindow(id);
+  }, [focusWindow]);
+
+  const toggleWindowShade = useCallback((id: string) => {
+    setWindows((prev) =>
+      prev.map((w) =>
+        w.id === id ? { ...w, shaded: !w.shaded, minimized: false } : w
       )
     );
     focusWindow(id);
@@ -381,7 +406,7 @@ export const useWindowManagerController = (): WindowManagerController => {
   const restoreWindow = useCallback((id: string) => {
     setWindows((prev) =>
       prev.map((w) =>
-        w.id === id ? { ...w, maximized: false, minimized: false } : w
+        w.id === id ? { ...w, maximized: false, minimized: false, shaded: false } : w
       )
     );
     focusWindow(id);
@@ -399,6 +424,14 @@ export const useWindowManagerController = (): WindowManagerController => {
     setWindows((prev) =>
       prev.map((w) =>
         w.id === id ? { ...w, width, height } : w
+      )
+    );
+  }, []);
+
+  const updateWindowBounds = useCallback((id: string, bounds: Partial<WindowBounds>) => {
+    setWindows((prev) =>
+      prev.map((w) =>
+        w.id === id ? { ...w, ...bounds } : w
       )
     );
   }, []);
@@ -422,18 +455,22 @@ export const useWindowManagerController = (): WindowManagerController => {
     minimizeWindow,
     maximizeWindow,
     restoreWindow,
+    toggleWindowShade,
     focusWindow,
     updateWindowPosition,
     updateWindowDimensions,
+    updateWindowBounds,
     updateWindowProps,
   }), [
     closeWindow,
     minimizeWindow,
     maximizeWindow,
     restoreWindow,
+    toggleWindowShade,
     focusWindow,
     updateWindowPosition,
     updateWindowDimensions,
+    updateWindowBounds,
     updateWindowProps,
   ]);
 

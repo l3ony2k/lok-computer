@@ -255,6 +255,26 @@ const CommentsSection = ({ block }: { block: ArenaBlock }) => {
   );
 };
 
+/**
+ * A block picture with a loading state. The element is keyed by its address,
+ * so selecting another block never leaves the previous picture on screen while
+ * the new one downloads; the placeholder shows instead.
+ */
+const DetailImage = ({ src, alt, className, onClick }: {
+  src: string;
+  alt: string;
+  className?: string;
+  onClick?: () => void;
+}) => {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    <span className="arena-detail-image" data-loaded={loaded || undefined}>
+      {!loaded && <span className="arena-detail-image-loading" role="status">Loading image…</span>}
+      <img src={src} alt={alt} className={className} onClick={onClick} onLoad={() => setLoaded(true)} onError={() => setLoaded(true)} />
+    </span>
+  );
+};
+
 const BlockContent = ({ block, onOpenImage }: {
   block: ArenaBlock;
   onOpenImage?: (imageUrl: string, title: string) => void;
@@ -270,7 +290,7 @@ const BlockContent = ({ block, onOpenImage }: {
     };
     return (
       <div className="arena-detail-media">
-        {imageUrl && <img src={imageUrl} alt={block.image?.altText || block.title || "Are.na block"} />}
+        {imageUrl && <DetailImage key={imageUrl} src={imageUrl} alt={block.image?.altText || block.title || "Are.na block"} />}
         <div className="arena-detail-media-actions">
           <RetroButton variant="primary" onClick={play}>
             ▶ Play in Media
@@ -285,10 +305,11 @@ const BlockContent = ({ block, onOpenImage }: {
 
   if (imageUrl) {
     return (
-      <img
+      <DetailImage
+        key={imageUrl}
         src={imageUrl}
         alt={block.image?.altText || block.title || "Are.na block"}
-        className={onOpenImage ? "arena-detail-clickable-image" : ""}
+        className={onOpenImage ? "arena-detail-clickable-image" : undefined}
         onClick={() => onOpenImage?.(imageUrl, block.title || "Image")}
       />
     );
@@ -362,7 +383,7 @@ export const ArenaDetailPanel = ({ item: initialItem, blockId, initialConnection
                   {item.descriptionHtml && <div className="arena-detail-rich-text" dangerouslySetInnerHTML={{ __html: item.descriptionHtml }} />}
                   {onOpenChannel && <RetroButton className="arena-detail-action arena-detail-action-primary" variant="primary" onClick={() => onOpenChannel(item)}>→ Open Channel</RetroButton>}
                 </div>
-                {getBestImageSource(item) && <img src={getBestImageSource(item)!} alt={`${item.title} channel cover`} />}
+                {getBestImageSource(item) && <DetailImage key={getBestImageSource(item)!} src={getBestImageSource(item)!} alt={`${item.title} channel cover`} />}
               </div>
             ) : (
               <div className="arena-detail-content"><BlockContent block={item} onOpenImage={onOpenImage} /></div>

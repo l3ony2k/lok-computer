@@ -290,17 +290,20 @@ export const ImageViewerApp: React.FC<ImageViewerAppProps> = ({
     if (gallery) goTo(gallery.index + direction);
   }, [gallery, goTo]);
 
-  // Load image to get natural dimensions and auto-fit on first load
+  // Measure the picture, then show it fitted to the window. The previous
+  // picture leaves the stage at once: a reused <img> keeps painting the old
+  // bitmap until the new one decodes, which read as "Next did nothing" while
+  // the counter had already moved on.
   useEffect(() => {
     setImageFailed(false);
-    if (!currentUrl) {
-      setNaturalSize(null);
-      return;
-    }
+    setNaturalSize(null);
+    if (!currentUrl) return;
     let active = true;
+    let measured = false;
     const img = new Image();
-    img.onload = () => {
-      if (!active) return;
+    const measure = () => {
+      if (!active || measured) return;
+      measured = true;
       const natWidth = img.naturalWidth;
       const natHeight = img.naturalHeight;
       setNaturalSize({ width: natWidth, height: natHeight });
@@ -325,12 +328,16 @@ export const ImageViewerApp: React.FC<ImageViewerAppProps> = ({
         }
       });
     };
+    img.onload = measure;
     img.onerror = () => {
       if (!active) return;
       setNaturalSize(null);
       setImageFailed(true);
     };
     img.src = currentUrl;
+    // A cached (or preloaded neighbour) picture is complete at once; measuring
+    // it in the same tick means no loading frame at all.
+    if (img.complete && img.naturalWidth) measure();
     return () => {
       active = false;
     };
@@ -550,6 +557,13 @@ export const ImageViewerApp: React.FC<ImageViewerAppProps> = ({
         </div>
       );
     }
+    if (currentUrl && !naturalSize) {
+      return (
+        <div className="image-viewer-message" role="status">
+          <span>Loading image…</span>
+        </div>
+      );
+    }
     return null;
   };
 
@@ -712,6 +726,7 @@ export const ImageViewerApp: React.FC<ImageViewerAppProps> = ({
             }}
           >
             <img
+              key={currentUrl}
               src={currentUrl}
               alt={currentImage?.title || 'Viewed content'}
               draggable={false}

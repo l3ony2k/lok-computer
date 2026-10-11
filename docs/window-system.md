@@ -103,6 +103,12 @@ The catalog marks single-instance Applications. The launch module focuses the ex
 - global fallback/minimum dimensions: `src/config/window.ts`
 - Are.na dimension constants: `src/config/arenaWindows.ts`, consumed by the catalog
 
-## Title-bar context menu
+## Window menu
 
-`DraggableWindow` uses `ContextMenu` for restore, minimize, maximize, share, and close commands. `generateShareUrl` maps the window's Application identity and current props back to a route.
+`buildWindowMenu` (`src/components/window/windowMenu.ts`) produces the window menu: Minimize (or Restore for a minimized window), Maximize/Restore, Shade (checked while shaded), Share Window, Close. `DraggableWindow` shows it from the title-bar icon and on a right-click of the title bar; the taskbar shows the same menu on a right-click of a task button. `generateShareUrl` maps the window's Application identity and current props back to a route.
+
+## Shade and snapping
+
+`DesktopWindow.shaded` rolls a window up to its title bar: the Rnd takes `height: 'auto'` and `minHeight: 0`, resizing is disabled, and the content area is `display: none` so the app stays mounted. `maximizeWindow` and `restoreWindow` clear it. `WindowContainer` owns the title-bar double-click policy (`WindowSettings.titleDoubleClick`, maximize by default).
+
+Dragging with Alt held, or dragging the pointer to the window layer's left or right edge, previews a half or quarter of the layer (`src/lib/windowSnap.ts`); dropping applies it through `updateWindowBounds`, one state update for position and size.

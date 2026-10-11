@@ -1,12 +1,17 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Search } from 'lucide-react';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
-import { AppMenu, type AppMenuItem, type MenuPlacement } from '@/components/menu/AppMenu';
+import { AppMenu, type MenuPlacement } from '@/components/menu/AppMenu';
+import type { MenuEntry } from '@/components/menu/MenuItems';
 import { Calendar } from '@/components/calendar/Calendar';
 import { CustomIcon } from '@/components/window/CustomIcon';
 import { useApplicationLauncher } from '@/hooks/useApplicationLauncher';
 import { useTheme } from '@/hooks/useTheme';
 import { APP_LIST } from '@/config/apps';
 import { getUserChannels } from '@/lib/api';
+import { launcherShortcutLabel, openLauncher } from '@/lib/launcher';
+import { clearRecent, useRecentApps } from '@/lib/recentApps';
+import { rebootSystem, requestSystemUpdateCheck } from '@/lib/system';
 import type { ArenaChannel } from '@/types/arena';
 
 interface LinkAppItem {
@@ -18,9 +23,13 @@ interface LinkAppItem {
 
 const arenaUsername = APP_LIST.find((app) => app.name === 'Are.na')?.props?.username;
 
-/** Application menu entries, including Are.na channel and link submenus. */
+/**
+ * System menu entries: Applications (with Are.na channels and links nested),
+ * Recent, search, About, Config, and the system commands.
+ */
 const useSystemMenuItems = () => {
   const openApplication = useApplicationLauncher();
+  const recent = useRecentApps();
   const [arenaChannels, setArenaChannels] = useState<ArenaChannel[]>([]);
 
   useEffect(() => {
@@ -36,42 +45,66 @@ const useSystemMenuItems = () => {
     return () => { cancelled = true; };
   }, []);
 
-  return useMemo<AppMenuItem[]>(() => APP_LIST.map((app) => {
-    const baseItem: AppMenuItem = {
-      name: app.name,
-      iconType: app.iconType,
+  const applications = useMemo<MenuEntry[]>(() => APP_LIST.map((app) => {
+    const item: MenuEntry = {
+      label: app.name,
+      icon: app.iconType,
       action: () => openApplication(app.componentType),
-      subItems: [],
     };
 
     const username = typeof app.props?.username === 'string' ? app.props.username : undefined;
-    if (app.name === 'Are.na' && username) {
-      baseItem.subItems = arenaChannels.map((channel) => ({
-        name: channel.title,
-        iconType: 'folder',
+    if (app.name === 'Are.na' && username && arenaChannels.length) {
+      item.subItems = arenaChannels.map((channel) => ({
+        label: channel.title,
+        icon: 'folder',
         action: () => openApplication('ChannelExplorer', {
           title: channel.title,
           iconType: 'folder',
           props: { channelSlug: channel.slug, username },
         }),
       }));
+      item.action = undefined;
     }
 
-    if (app.name === 'Links' && app.props?.items) {
-      baseItem.subItems = (app.props.items as LinkAppItem[]).map((item) => ({
-        name: item.title,
-        iconType: 'link',
+    if (app.name === 'Links' && Array.isArray(app.props?.items)) {
+      item.subItems = (app.props.items as LinkAppItem[]).map((link) => ({
+        label: link.title,
+        icon: 'link',
         action: () => openApplication('Web', {
-          title: item.title,
+          title: link.title,
           iconType: 'link',
-          props: { initialUrl: item.source.url },
+          props: { initialUrl: link.source.url },
         }),
       }));
+      item.action = undefined;
     }
 
-    if (baseItem.subItems?.length) baseItem.action = undefined;
-    return baseItem;
+    return item;
   }), [arenaChannels, openApplication]);
+
+  return useMemo<MenuEntry[]>(() => {
+    const recentItems: MenuEntry[] = recent.map((entry) => ({
+      label: entry.title,
+      icon: entry.iconType,
+      action: () => openApplication(entry.componentType, { title: entry.title, iconType: entry.iconType, props: entry.props }),
+    }));
+    if (recentItems.length) {
+      recentItems.push({ type: 'divider' }, { label: 'Clear Recent', action: clearRecent });
+    }
+
+    return [
+      { label: 'Applications', icon: 'folder', subItems: applications },
+      { label: 'Recent', icon: 'folder', subItems: recentItems, disabled: recentItems.length === 0 },
+      { type: 'divider' },
+      { label: 'Search…', shortcut: launcherShortcutLabel(), action: openLauncher },
+      { type: 'divider' },
+      { label: 'About lok.computer', icon: 'about', action: () => openApplication('About') },
+      { label: 'Config…', icon: 'config', action: () => openApplication('Config') },
+      { type: 'divider' },
+      { label: 'Check for updates', action: requestSystemUpdateCheck },
+      { label: 'Restart', action: () => void rebootSystem('restart from the system menu') },
+    ];
+  }, [applications, openApplication, recent]);
 };
 
 /**
@@ -111,6 +144,26 @@ export const SystemMenuButton: React.FC<{ placement: MenuPlacement }> = React.me
         onClose={() => setIsOpen(false)}
       />
     </>
+  );
+});
+
+/** Opens the keyboard launcher; sits beside the clock in both layouts. */
+export const SearchButton: React.FC<{ placement: MenuPlacement }> = React.memo(({ placement }) => {
+  const isTray = placement === 'bottom';
+  const shortcut = launcherShortcutLabel();
+  return (
+    <button
+      type="button"
+      onClick={openLauncher}
+      className={isTray
+        ? 'taskbar-search flex items-center justify-center select-none'
+        : 'app-header-button app-header-search flex items-center justify-center select-none'}
+      title={`Search (${shortcut})`}
+      aria-label={`Search, ${shortcut}`}
+      aria-keyshortcuts={shortcut === '⌘K' ? 'Meta+K' : 'Control+K'}
+    >
+      <Search className="w-4 h-4" aria-hidden="true" />
+    </button>
   );
 });
 

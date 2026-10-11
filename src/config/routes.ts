@@ -118,8 +118,13 @@ export const ROUTES: RouteConfig[] = [
     {
         pattern: 'config',
         componentType: 'Config',
-        extractProps: () => ({}),
-        generateUrl: () => '/config',
+        extractProps: (_, query) => ({
+            initialCategory: query.get('tab') || undefined,
+        }),
+        generateUrl: (props) => {
+            if (props.initialCategory) return `/config?tab=${encodeURIComponent(String(props.initialCategory))}`;
+            return '/config';
+        },
         getTitle: () => 'Config',
     },
 

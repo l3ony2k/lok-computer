@@ -14,6 +14,21 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '3.1.1',
+    date: '2026-10-11',
+    title: 'A desktop that behaves like one',
+    notes: [
+      'Windows snap to a half or a quarter of the desktop: hold Alt while dragging, or drag the pointer to the desktop\'s edge.',
+      'Window shade rolls a window up to its title bar, from the window menu or on double-click (Config › Desktop).',
+      'Search (⌘K / Ctrl+K) finds apps and Are.na channels; the magnifier beside the clock opens it too.',
+      'Right-click the desktop for icon size, snapping, hiding icons and tidy up; icons, title bars and taskbar buttons have menus as well.',
+      'Desktop icons come in three sizes and can sit anywhere once snapping is off.',
+      'The system menu groups Applications and Recent, with Search, About, Config, Check for updates and Restart beside them.',
+      'Images and the Are.na preview say "Loading image…" instead of showing the previous picture while the next one downloads.',
+      'The CRT flicker stays off for anyone who asked their system for reduced motion.',
+    ],
+  },
+  {
     version: '3.0.7',
     date: '2026-10-10',
     title: 'Spring cleaning',

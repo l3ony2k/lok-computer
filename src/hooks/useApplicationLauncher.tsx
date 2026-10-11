@@ -3,6 +3,7 @@ import { createApplicationElement, getApplicationDefinition } from '@/config/app
 import { WINDOW_DEFAULTS } from '@/config/window';
 import { useWindowActions, useWindowLaunchActions } from '@/hooks/useWindowManager';
 import { trackEvent } from '@/lib/analytics';
+import { recordRecent } from '@/lib/recentApps';
 
 export interface ApplicationLaunchOptions {
   title?: string;
@@ -45,12 +46,15 @@ export const useApplicationLauncher = () => {
     const content = createApplicationElement(componentType, props, onPropsChange);
     if (!content) return null;
     trackEvent('open-app', { app: application.componentType });
+    const title = options.title ?? application.name;
+    const iconType = options.iconType ?? application.iconType;
+    recordRecent({ componentType: application.componentType, title, iconType, props });
 
     windowId = addOrFocusWindow({
-      title: options.title ?? application.name,
+      title,
       content,
       componentType: application.componentType,
-      iconType: options.iconType ?? application.iconType,
+      iconType,
       width: options.width ?? application.defaultWidth ?? WINDOW_DEFAULTS.DEFAULT_WIDTH,
       height: options.height ?? application.defaultHeight ?? WINDOW_DEFAULTS.DEFAULT_HEIGHT,
       minWidth: WINDOW_DEFAULTS.MIN_WIDTH,

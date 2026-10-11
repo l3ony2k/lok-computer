@@ -36,12 +36,43 @@ export interface OobeSettings {
   completed: boolean;
 }
 
+export type TitleDoubleClickAction = 'maximize' | 'shade';
+
+export interface WindowSettings {
+  /** What a double-click on a title bar does. */
+  titleDoubleClick: TitleDoubleClickAction;
+  /** The one-time toast that mentions window shade has been shown. */
+  shadeHintShown: boolean;
+}
+
+export const DEFAULT_WINDOW_SETTINGS: WindowSettings = {
+  titleDoubleClick: 'maximize',
+  shadeHintShown: false,
+};
+
+export type DesktopIconSize = 's' | 'm' | 'l';
+
+export interface DesktopSettings {
+  iconSize: DesktopIconSize;
+  showIcons: boolean;
+  /** Off: icons sit wherever they were dropped (per-icon coordinates). */
+  snapToGrid: boolean;
+}
+
+export const DEFAULT_DESKTOP_SETTINGS: DesktopSettings = {
+  iconSize: 'm',
+  showIcons: true,
+  snapToGrid: true,
+};
+
 export interface UserSettings {
   wallpaper?: string;
   oneko?: OnekoSettings;
   crt?: CrtSettings;
   debug?: DebugSettings;
   oobe?: OobeSettings;
+  windows?: WindowSettings;
+  desktop?: DesktopSettings;
 }
 
 // Default settings to use if nothing is stored

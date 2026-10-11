@@ -1,24 +1,32 @@
 // src/core/Desktop.tsx
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useWindowActions, useWindowState } from "@/hooks/useWindowManager";
 import { WindowContainer } from "@/components/window/WindowContainer";
 import { Taskbar } from "./Taskbar";
 import { DesktopIcons } from "@/components/desktop/DesktopIcons";
 import { TopBar } from "./TopBar";
-import { useUserSettings } from "@/hooks/useUserSettings";
+import { DEFAULT_DESKTOP_SETTINGS, useUserSettings, type DesktopSettings } from "@/hooks/useUserSettings";
 import { useTheme } from "@/hooks/useTheme";
+import { useApplicationLauncher } from "@/hooks/useApplicationLauncher";
 import { adjustWindowToViewport, type WindowDimensions, type ViewportDimensions } from "@/lib/utils";
 import { WINDOW_DEFAULTS } from "@/config/window";
 import { Oneko } from "@/components/oneko/Oneko";
 import { CrtFilter } from "@/components/effects/CrtFilter";
 import { OutOfBoxExperience, type OobeSelection } from "@/components/system/OutOfBoxExperience";
+import { KeyboardLauncher } from "@/components/launcher/KeyboardLauncher";
+import { ContextMenu } from "@/components/menu/ContextMenu";
+import type { MenuEntry } from "@/components/menu/MenuItems";
+import { DESKTOP_ICON_ORDER_RESET_EVENT } from "@/lib/desktopIconOrder";
+import { launcherShortcutLabel, openLauncher } from "@/lib/launcher";
 
 export const Desktop = () => {
     const { windows } = useWindowState();
     const { updateWindowPosition, updateWindowDimensions } = useWindowActions();
     const { settings, updateSetting, isLoading } = useUserSettings();
     const { definition } = useTheme();
+    const openApplication = useApplicationLauncher();
     const isClassicLayout = definition.layout === 'classic';
+    const [desktopMenu, setDesktopMenu] = useState<{ x: number; y: number } | null>(null);
 
     // The legacy prompt flag migrates existing users past the new first-run flow.
     const showOobe = !isLoading && !settings.oobe?.completed && !settings.oneko?.hasBeenAsked;
@@ -43,6 +51,10 @@ export const Desktop = () => {
 
     // A chosen wallpaper wins over the theme's own picture.
     const wallpaper = settings.wallpaper || definition.wallpaper;
+    const desktop: DesktopSettings = { ...DEFAULT_DESKTOP_SETTINGS, ...settings.desktop };
+    const updateDesktop = useCallback((patch: Partial<DesktopSettings>) => {
+        updateSetting('desktop', { ...DEFAULT_DESKTOP_SETTINGS, ...settings.desktop, ...patch });
+    }, [settings.desktop, updateSetting]);
 
     // Apply CRT effect based on settings
     useEffect(() => {
@@ -119,12 +131,47 @@ export const Desktop = () => {
         fitWindowsToViewport();
     }, [fitWindowsToViewport, windowIdentity, definition.layout]);
 
+    // Right-click on the desktop itself; windows and icons bring their own menus.
+    const handleContextMenu = (event: React.MouseEvent) => {
+        const target = event.target as Element;
+        if (target.closest('.draggable-window, .desktop-icon-button, .window-snap-preview')) return;
+        event.preventDefault();
+        setDesktopMenu({ x: event.clientX, y: event.clientY });
+    };
+
+    const desktopMenuItems: MenuEntry[] = [
+        {
+            label: 'View',
+            subItems: [
+                { label: 'Small icons', checked: desktop.iconSize === 's', action: () => updateDesktop({ iconSize: 's' }) },
+                { label: 'Medium icons', checked: desktop.iconSize === 'm', action: () => updateDesktop({ iconSize: 'm' }) },
+                { label: 'Large icons', checked: desktop.iconSize === 'l', action: () => updateDesktop({ iconSize: 'l' }) },
+                { type: 'divider' },
+                { label: 'Snap to grid', checked: desktop.snapToGrid, action: () => updateDesktop({ snapToGrid: !desktop.snapToGrid }) },
+                { label: 'Show desktop icons', checked: desktop.showIcons, action: () => updateDesktop({ showIcons: !desktop.showIcons }) },
+            ],
+        },
+        { label: 'Tidy up', action: () => window.dispatchEvent(new Event(DESKTOP_ICON_ORDER_RESET_EVENT)) },
+        { type: 'divider' },
+        { label: 'Search…', shortcut: launcherShortcutLabel(), action: openLauncher },
+        { type: 'divider' },
+        { label: 'Change wallpaper…', action: () => openApplication('Config', { props: { initialCategory: 'style', focusSetting: 'wallpaper' } }) },
+        { label: 'Desktop settings…', action: () => openApplication('Config', { props: { initialCategory: 'desktop' } }) },
+        { type: 'divider' },
+        { label: 'About lok.computer', icon: 'about', action: () => openApplication('About') },
+    ];
+
     // Dynamic viewport height: on phones the plain vh unit runs behind the browser toolbar and nothing can scroll it into view.
     return (
         <div className="h-dvh w-screen flex flex-col">
             {!isClassicLayout && <TopBar />}
 
-            <div ref={desktopContainerRef} className="desktop-container relative">
+            <div
+                ref={desktopContainerRef}
+                className="desktop-container relative"
+                data-icon-size={desktop.iconSize}
+                onContextMenu={handleContextMenu}
+            >
                 {wallpaper && (
                     <img
                         key={wallpaper}
@@ -141,6 +188,15 @@ export const Desktop = () => {
             </div>
 
             <Taskbar layout={definition.layout} />
+
+            <KeyboardLauncher />
+
+            <ContextMenu
+                items={desktopMenuItems}
+                isOpen={desktopMenu !== null}
+                position={desktopMenu ?? { x: 0, y: 0 }}
+                onClose={() => setDesktopMenu(null)}
+            />
 
             {/* Oneko cat */}
             <Oneko />

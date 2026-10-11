@@ -1,16 +1,19 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { scrollIntoViewWithin } from '@/lib/utils';
 import { useWindowActions, useWindowState } from '@/hooks/useWindowManager';
 import { CustomIcon } from '@/components/window/CustomIcon';
+import { ContextMenu } from '@/components/menu/ContextMenu';
+import { buildWindowMenu } from '@/components/window/windowMenu';
 import { useWindowTransitions } from '@/hooks/useWindowTransitions';
 import type { DesktopLayout } from '@/lib/theme';
-import { OfflineReadout, SystemClock, SystemMenuButton } from './SystemMenu';
+import { OfflineReadout, SearchButton, SystemClock, SystemMenuButton } from './SystemMenu';
 
 export const Taskbar = ({ layout = 'lok' }: { layout?: DesktopLayout }) => {
   const { windows, activeWindow } = useWindowState();
-  const { focusWindow } = useWindowActions();
+  const { focusWindow, maximizeWindow, restoreWindow, toggleWindowShade, closeWindow } = useWindowActions();
   const { minimizeWithTransition, restoreWithTransition } = useWindowTransitions();
   const tasksRef = useRef<HTMLDivElement>(null);
+  const [taskMenu, setTaskMenu] = useState<{ id: string; x: number; y: number } | null>(null);
   const isClassic = layout === 'classic';
 
   useEffect(() => {
@@ -63,6 +66,17 @@ export const Taskbar = ({ layout = 'lok' }: { layout?: DesktopLayout }) => {
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [focusWindow, restoreWithTransition]);
 
+  // Right-click on a task: the same menu as the window's title bar.
+  const menuWindow = taskMenu ? windows.find((candidate) => candidate.id === taskMenu.id) : undefined;
+  const taskMenuItems = menuWindow ? buildWindowMenu(menuWindow, {
+    minimize: () => minimizeWithTransition(menuWindow),
+    unminimize: () => restoreWithTransition(menuWindow),
+    maximize: () => maximizeWindow(menuWindow.id),
+    restore: () => restoreWindow(menuWindow.id),
+    toggleShade: () => toggleWindowShade(menuWindow.id),
+    close: () => closeWindow(menuWindow.id),
+  }) : [];
+
   const handleTaskbarClick = (windowId: string) => {
     const window = windows.find((candidate) => candidate.id === windowId);
     if (!window) return;
@@ -96,6 +110,10 @@ export const Taskbar = ({ layout = 'lok' }: { layout?: DesktopLayout }) => {
             className="taskbar-button flex items-center"
             data-taskbar-window-id={window.id}
             onClick={() => handleTaskbarClick(window.id)}
+            onContextMenu={(event) => {
+              event.preventDefault();
+              setTaskMenu({ id: window.id, x: event.clientX, y: event.clientY });
+            }}
             aria-pressed={activeWindow === window.id}
             title={index < 9 ? `${window.title} (Alt+${index + 1})` : window.title}
           >
@@ -108,9 +126,17 @@ export const Taskbar = ({ layout = 'lok' }: { layout?: DesktopLayout }) => {
       {isClassic && (
         <div className="taskbar-tray flex items-center">
           <OfflineReadout />
+          <SearchButton placement="bottom" />
           <SystemClock placement="bottom" />
         </div>
       )}
+
+      <ContextMenu
+        items={taskMenuItems}
+        isOpen={taskMenu !== null && menuWindow !== undefined}
+        position={taskMenu ?? { x: 0, y: 0 }}
+        onClose={() => setTaskMenu(null)}
+      />
     </div>
   );
 };

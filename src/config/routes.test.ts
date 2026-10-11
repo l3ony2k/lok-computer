@@ -46,8 +46,10 @@ describe('share links', () => {
       .toEqual({ arena: 'things-i-created', index: 0 });
   });
 
-  it('keep the About tab, the Shelf page, and the Web page', () => {
+  it('keep the About tab, the Config tab, the Shelf page, and the Web page', () => {
     expect(reopen(generateSharePath('About', { initialTab: 'projects' })!).props).toEqual({ initialTab: 'projects' });
+    expect(reopen(generateSharePath('Config', { initialCategory: 'desktop' })!).props).toEqual({ initialCategory: 'desktop' });
+    expect(generateSharePath('Config', {})).toBe('/config');
     expect(reopen(generateSharePath('Shelf', { initialTab: 'complete', initialPage: 3 })!).props)
       .toEqual({ initialTab: 'complete', initialPage: 3 });
     expect(generateSharePath('Shelf', { initialTab: 'complete', initialPage: 1 })).toBe('/shelf?tab=complete');
