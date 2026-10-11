@@ -7,5 +7,7 @@ export const APP_CONFIG = {
     BSKY_PROFILE_URL: 'https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=did:plc:2p3gp2g2teuwpuv4skhiik3i',
     FEDI_INSTANCE: 'https://rex.cat',
     FEDI_USERNAME: 'lok',
+    /** The Are.na account the desktop browses, warms at boot, and deep-links to by default. */
+    ARENA_USERNAME: 'lok',
     NEODB_SHELF_ENDPOINT: '/api/neodb/shelf',
 };

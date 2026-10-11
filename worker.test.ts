@@ -87,3 +87,34 @@ describe("public Worker discovery", () => {
     expect(await response.json()).toEqual({ error: "Not Found" });
   });
 });
+
+describe("proxy rate limiting", () => {
+  const proxyPaths = ["/api/fedi/account?username=lok", "/api/fedi/statuses?accountId=1", "/api/neodb/shelf"];
+
+  test("answers 429 from the proxy budget before reading configuration", async () => {
+    const keys: string[] = [];
+    const limiter = { limit: async ({ key }: { key: string }) => { keys.push(key); return { success: false }; } };
+    for (const path of proxyPaths) {
+      const response = await worker.fetch(new Request(`https://lok.computer${path}`, {
+        headers: { "CF-Connecting-IP": "203.0.113.7" },
+      }), { PROXY_RATE_LIMITER: limiter }, {});
+
+      expect(response.status).toBe(429);
+      expect(await response.json()).toEqual({ error: "Too many requests. Try again in a minute." });
+    }
+    expect(keys).toEqual(["203.0.113.7", "203.0.113.7", "203.0.113.7"]);
+  });
+
+  test("lets requests through on budget and ignores the Ask AI limiter", async () => {
+    const env = {
+      PROXY_RATE_LIMITER: { limit: async () => ({ success: true }) },
+      JEV_RATE_LIMITER: { limit: async () => ({ success: false }) },
+    };
+    for (const path of proxyPaths) {
+      const response = await worker.fetch(new Request(`https://lok.computer${path}`), env, {});
+
+      // No upstream credentials in tests: the route reaches its configuration check.
+      expect(response.status).toBe(500);
+    }
+  });
+});

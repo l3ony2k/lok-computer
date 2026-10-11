@@ -1,4 +1,5 @@
 import { type ReactNode, useEffect, useMemo, useState } from "react";
+import { APP_CONFIG } from "@/config/constants";
 import { APP_MODULE_COUNT, preloadAppModules } from "@/config/preloadApps";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { useTheme } from "@/hooks/useTheme";
@@ -9,8 +10,11 @@ import { consumeBootMode, consumeBootReason, SYSTEM_VERSION } from "@/lib/system
 
 const RICK_ROLL_URL = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
 
+// Raster assets ship as hashed files (vite.config.ts keeps them out of the JS),
+// so warming them here fills the HTTP cache before the desktop paints.
+// The one SVG under assets is the icon script's vector source, not a runtime asset.
 const bundledAssetModules = import.meta.glob(
-  "/src/assets/**/*.{png,gif,jpg,jpeg,webp,avif,svg}",
+  "/src/assets/**/*.{png,gif,jpg,jpeg,webp,avif}",
   { eager: true, query: "?url", import: "default" },
 ) as Record<string, string>;
 
@@ -111,7 +115,7 @@ export const SystemStartup = ({ children }: { children: ReactNode }) => {
         });
       });
 
-      const cacheTask = withTimeout(getUserChannels("lok"), 5000)
+      const cacheTask = withTimeout(getUserChannels(APP_CONFIG.ARENA_USERNAME), 5000)
         .then((channels) => {
           if (!cancelled) updateStage("cache", {
             detail: channels ? `Are.na index cached (${channels.length} channels)` : "Are.na index deferred",

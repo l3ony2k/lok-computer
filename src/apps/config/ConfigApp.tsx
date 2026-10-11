@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DEFAULT_CRT_SETTINGS, useUserSettings, type CrtSettings } from "@/hooks/useUserSettings";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { DESKTOP_ICON_ORDER_RESET_EVENT } from "@/lib/desktopIconOrder";
 import { useTheme } from "@/hooks/useTheme";
 import { THEMES } from "@/lib/theme";
@@ -118,6 +119,7 @@ const RangeSetting = ({
 export const ConfigApp: React.FC = () => {
   const { theme, appearance, colorScheme } = useTheme();
   const { settings, updateSetting } = useUserSettings();
+  const online = useOnlineStatus();
   const [activeCategory, setActiveCategory] = useState<ConfigCategory>("style");
   const [customWallpaperUrl, setCustomWallpaperUrl] = useState("");
   const [customError, setCustomError] = useState("");
@@ -201,7 +203,7 @@ export const ConfigApp: React.FC = () => {
     version: SYSTEM_VERSION,
     theme: { theme, appearance, colorScheme },
     viewport: `${window.innerWidth}x${window.innerHeight}`,
-    online: navigator.onLine,
+    online,
     indexedDB: isStorageAvailable(),
     openCacheStats: stats,
     verboseCacheLogging: settings.debug?.verboseCacheLogging ?? false,
@@ -412,7 +414,7 @@ export const ConfigApp: React.FC = () => {
                 <dl className="config-system-info">
                   <div><dt>Version</dt><dd>v{SYSTEM_VERSION}</dd></div>
                   <div><dt>Update channel</dt><dd>stable</dd></div>
-                  <div><dt>Connection</dt><dd>{navigator.onLine ? "online" : "offline"}</dd></div>
+                  <div><dt>Connection</dt><dd>{online ? "online" : "offline"}</dd></div>
                 </dl>
 
                 <div className="config-action-stack">

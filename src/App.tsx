@@ -1,9 +1,6 @@
 import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
 import { UserSettingsProvider } from "./hooks/useUserSettings";
 import { ThemeProvider } from "./hooks/useTheme";
 import { isOfflineError } from "./lib/cachedRequest";
@@ -21,19 +18,13 @@ const queryClient = new QueryClient({
   },
 });
 
+// The desktop is one page; RouteInterpreter reads the arrival URL for deep links.
 const App = () => (
   <UserSettingsProvider>
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster position="top-center" />
-          <BrowserRouter>
-            <Routes>
-              {/* All paths render Index - RouteInterpreter handles deep links */}
-              <Route path="/*" element={<Index />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
+        <Toaster position="top-center" />
+        <Index />
       </QueryClientProvider>
     </ThemeProvider>
   </UserSettingsProvider>

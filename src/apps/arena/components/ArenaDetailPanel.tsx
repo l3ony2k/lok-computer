@@ -328,7 +328,7 @@ export const ArenaDetailPanel = ({ item: initialItem, blockId, initialConnection
         } else {
           const id = target?.id ?? blockId;
           if (id === undefined) throw new Error("Missing block ID");
-          const block = await getBlock(id, target?.kind !== "channel" ? target : null);
+          const block = await getBlock(id, target ?? null);
           if (active) {
             setItem(!block.connection && initialConnection ? { ...block, connection: initialConnection } : block);
           }
@@ -365,7 +365,7 @@ export const ArenaDetailPanel = ({ item: initialItem, blockId, initialConnection
                 {getBestImageSource(item) && <img src={getBestImageSource(item)!} alt={`${item.title} channel cover`} />}
               </div>
             ) : (
-              <div className="arena-detail-content"><BlockContent block={block} onOpenImage={onOpenImage} /></div>
+              <div className="arena-detail-content"><BlockContent block={item} onOpenImage={onOpenImage} /></div>
             )}
           </div>
         </ResizablePanel>

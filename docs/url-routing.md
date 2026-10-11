@@ -1,6 +1,6 @@
 # URL Routing and Deep Links
 
-React Router is an interpreter. It matches a URL, launches one or more Applications after session restoration, then replaces the URL with `/`.
+`RouteInterpreter` matches the arrival URL, launches one or more Applications after session restoration, then replaces the URL with `/` through `history.replaceState`. There is no routing library and no client-side navigation.
 
 ## URL forms
 
@@ -44,13 +44,15 @@ Icon, dimensions, lazy view, default props, and single-instance behavior come fr
 
 ## Route interpreter
 
-`RouteInterpreter`:
+`RouteInterpreter` (`src/components/RouteInterpreter.tsx`):
 
 1. waits for `isSessionRestored`
-2. parses the single or multi-window URL
+2. reads `window.location` and parses the single or multi-window URL
 3. matches route definitions
 4. calls `useApplicationLauncher`
 5. replaces the URL with `/`
+
+Unknown paths never reach it in production: the Pages function (`functions/[[path]].ts`) answers them with a 404.
 
 Deep-linked windows append to the restored Window session.
 

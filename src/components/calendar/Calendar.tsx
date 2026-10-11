@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { createPortal } from 'react-dom';
 import type { MenuPlacement } from '@/components/menu/AppMenu';
 
@@ -31,29 +31,15 @@ const getSwatchBeats = (date: Date): string => {
   return `${wholeBeats}.${centibeats}`;
 };
 
+/** Calendar and analog clock flyout. `date` ticks from the clock that opens it. */
 export const Calendar: React.FC<CalendarProps> = ({
   isOpen,
   onClose,
   date = new Date(),
   placement = 'top',
 }) => {
-  const [clockTime, setClockTime] = useState(new Date());
-
-  // Update clock time every second
-  useEffect(() => {
-    if (!isOpen) return;
-
-    // Immediately update to current time when opened
-    setClockTime(new Date());
-
-    const timer = setInterval(() => {
-      setClockTime(new Date());
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [isOpen]);
-
   if (!isOpen) return null;
+  const clockTime = date;
 
   const handleOutsideClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {

@@ -56,7 +56,7 @@ lok-computer/
 │   ├── core/           # Desktop, TopBar, Taskbar
 │   ├── hooks/          # Custom React hooks
 │   ├── lib/            # Utilities, API, storage
-│   ├── pages/          # Route pages (Index, NotFound)
+│   ├── pages/          # Index (the desktop shell)
 │   └── types/          # TypeScript type definitions
 ├── public/             # Static assets
 ├── worker.js           # Cloudflare Worker
@@ -105,3 +105,5 @@ Production secrets are set via Cloudflare dashboard.
 | `FEDI_INSTANCE` | Mastodon/GtS instance URL |
 | `FEDI_ACCESS_TOKEN` | Fedi access token |
 | `NEODB_ACCESS_TOKEN` | NeoDB access token |
+
+Two rate-limit bindings in `wrangler.toml` budget each client IP: `JEV_RATE_LIMITER` for Ask AI (20 calls per minute) and `PROXY_RATE_LIMITER` for the Fedi and NeoDB proxies (60 requests per minute).

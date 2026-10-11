@@ -1,4 +1,3 @@
-import React from 'react';
 import { APP_CONFIG } from '@/config/constants';
 import { CACHE_TTL } from '@/lib/storage';
 import { cachedRequest } from '@/lib/cachedRequest';

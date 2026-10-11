@@ -1,4 +1,8 @@
-
+/**
+ * A snapshot of lok's Are.na channels. The live list comes from the API
+ * (`getUserChannels`, cached at boot); this one stands in when Are.na cannot be
+ * reached, and seeds the Images app's suggestions until the live list arrives.
+ */
 export const FEATURED_CHANNELS = [
   { slug: 'journaling-and-healing', title: 'journaling and healing' },
   { slug: 'things-i-created', title: 'things i created' },
@@ -17,11 +21,13 @@ export const FEATURED_CHANNELS = [
   { slug: 'alternative-mini-web', title: 'alternative / mini web' },
   { slug: 'info-ddy8zqnskta', title: 'info' },
   { slug: 'frutiger-aero-fmtmkflqhq8', title: 'frutiger aero' },
-
 ];
 
-// Default user/channel for initial browse
-export const DEFAULT_USERNAME = "lok";
+/** lok marks image-heavy channels with this symbol in the title; the Images app suggests those. */
+export const IMAGE_CHANNEL_MARK = '🜳';
 
-// Configure whether to use the API for channel list or the static list above
-export const USE_STATIC_CHANNELS = false;
+export const isImageChannel = (channel: { title: string }) => channel.title.includes(IMAGE_CHANNEL_MARK);
+
+/** The channel title without the mark, for a button label. */
+export const imageChannelLabel = (channel: { title: string }) => channel.title.replace(IMAGE_CHANNEL_MARK, '').trim();
+

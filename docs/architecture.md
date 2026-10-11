@@ -1,6 +1,6 @@
 # Architecture
 
-lok.computer is a single-page React desktop. React Router interprets a deep link, launches Applications, then returns the browser URL to `/`.
+lok.computer is a single-page React desktop. `RouteInterpreter` reads the arrival URL once, launches Applications, then returns the browser URL to `/` (no routing library is involved).
 
 ## Deep modules
 

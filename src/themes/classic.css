@@ -52,7 +52,7 @@ html[data-chrome="classic"]:not(#_) body {
 }
 
 html[data-chrome="classic"]:not(#_) :where(
-    h1, h2, .text-lg, .text-xl, .text-2xl, .arena-channel-card-title, .arena-detail-header h2,
+    h1, h2, .text-lg, .text-xl, .text-2xl, .arena-channel-card-title,
     .ask-ai-best-answer strong, .ask-ai-value strong, .oobe-brand strong,
     .oobe-crt-preview > strong, .oobe-page h1
 ) {
@@ -93,7 +93,7 @@ html[data-chrome="classic"]:not(#_) .text-sm {
 
 html[data-chrome="classic"]:not(#_) :where(
     .about-changelog-entry time, .about-changelog-version,
-    .arena-address-label, .arena-detail-comment-header span, .arena-detail-connection > span:last-child,
+    .arena-detail-comment-header span, .arena-detail-connection > span:last-child,
     .arena-file-card-small .arena-file-grid-preview, .arena-file-card-small .arena-file-item-meta,
     .arena-file-fallback-preview > span, .arena-file-footer, .arena-file-item-meta,
     .arena-file-list-thumbnail span, .arena-file-table-small, .ask-ai-analytics > summary, .ask-ai-best-stats, .ask-ai-confidence, .ask-ai-content, .ask-ai-editor label, .ask-ai-editor textarea,
@@ -269,9 +269,6 @@ html[data-chrome="classic"]:not(#_) .window-surface > .flex-1 {
     border: var(--c-client-border);
 }
 
-html[data-chrome="classic"]:not(#_) .window-content {
-    border-top: 0;
-}
 
 html[data-chrome="classic"]:not(#_) .window-transition-ghost {
     padding: var(--c-window-padding);
@@ -300,7 +297,6 @@ html[data-chrome="classic"]:not(#_) :where(
     button.arena-toolbar-control,
     .arena-detail-action,
     .oobe-segmented button,
-    .oobe-choice,
     .oobe-oneko-options button,
     .config-oneko-option,
     .theme-picker-option,
@@ -342,7 +338,6 @@ html[data-chrome="classic"]:not(#_) :where(
     button.arena-toolbar-control,
     .arena-detail-action,
     .oobe-segmented button,
-    .oobe-choice,
     .oobe-oneko-options button,
     .config-oneko-option,
     .theme-picker-option,
@@ -359,7 +354,6 @@ html[data-chrome="classic"]:not(#_) :where(
     button.arena-toolbar-control,
     .arena-detail-action,
     .oobe-segmented button,
-    .oobe-choice,
     .oobe-oneko-options button,
     .config-oneko-option,
     .theme-picker-option,
@@ -374,7 +368,6 @@ html[data-chrome="classic"]:not(#_) :where(
     .retro-button,
     button.arena-toolbar-control,
     .oobe-segmented button,
-    .oobe-choice,
     .oobe-oneko-options button,
     .config-oneko-option,
     .theme-picker-option
@@ -393,7 +386,7 @@ html[data-chrome="classic"]:not(#_) :where(.retro-button[data-variant="primary"]
     font-weight: 700;
 }
 
-html[data-chrome="classic"]:not(#_) :where(.retro-button, button.arena-toolbar-control, .oobe-segmented button, .oobe-choice):disabled {
+html[data-chrome="classic"]:not(#_) :where(.retro-button, button.arena-toolbar-control, .oobe-segmented button):disabled {
     color: var(--c-btn-fg-disabled);
     background: var(--c-btn-bg-disabled, var(--c-btn-bg));
     border: var(--c-btn-border-disabled, var(--c-btn-border));
@@ -785,10 +778,6 @@ html[data-chrome="classic"]:not(#_) .arena-file-contents {
     background: var(--block-bg);
 }
 
-html[data-chrome="classic"]:not(#_) .arena-detail-header {
-    border-bottom: var(--c-toolbar-border);
-    background: var(--c-face);
-}
 
 html[data-chrome="classic"]:not(#_) .resizable-divider {
     background: var(--c-face);

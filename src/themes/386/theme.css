@@ -459,7 +459,6 @@ html[data-theme="386"][data-layout]:not(#_) :where(
     button.arena-toolbar-control,
     .arena-detail-action,
     .oobe-segmented button,
-    .oobe-choice,
     .oobe-oneko-options button,
     .config-oneko-option,
     [data-sonner-toast] [data-button]
@@ -474,7 +473,6 @@ html[data-theme="386"][data-layout]:not(#_) :where(
     button.arena-toolbar-control,
     .arena-detail-action,
     .oobe-segmented button,
-    .oobe-choice,
     [data-sonner-toast] [data-button]
 ):not(.window-control, [aria-label])::before {
     content: "<";
@@ -487,7 +485,6 @@ html[data-theme="386"][data-layout]:not(#_) :where(
     button.arena-toolbar-control,
     .arena-detail-action,
     .oobe-segmented button,
-    .oobe-choice,
     [data-sonner-toast] [data-button]
 ):not(.window-control, [aria-label])::after {
     content: ">";

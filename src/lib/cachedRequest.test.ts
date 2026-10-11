@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, mock } from 'bun:test';
 
-const getCachedData = mock(async () => null as unknown);
+const getCachedData = mock(async (_key: string, _options?: { allowStale?: boolean }): Promise<unknown> => null);
 const incrementRequestCount = mock(async () => undefined);
 const setCachedData = mock(async () => undefined);
 const cacheDebugLog = mock(() => undefined);
@@ -69,7 +69,7 @@ describe('cachedRequest', () => {
     getCachedData.mockImplementation(async (_key: string, options?: { allowStale?: boolean }) => (
       options?.allowStale ? { value: 'stale' } : null
     ));
-    const load = mock(async () => { throw new Error('boom'); });
+    const load = mock(async (): Promise<{ value: string }> => { throw new Error('boom'); });
 
     const result = await cachedRequest({ cacheKey: 'example:stale', ttlMs: 1000, source: 'example', load });
 

@@ -5,6 +5,8 @@
  * Used by RouteInterpreter to open windows from URLs.
  */
 
+import { APP_CONFIG } from '@/config/constants';
+
 export interface RouteConfig {
     /** URL path pattern, e.g., 'explorer/:channelSlug' */
     pattern: string;
@@ -29,7 +31,7 @@ export const ROUTES: RouteConfig[] = [
         componentType: 'ChannelExplorer',
         extractProps: (params, query) => ({
             channelSlug: params.channelSlug,
-            username: query.get('user') || 'lok',
+            username: query.get('user') || APP_CONFIG.ARENA_USERNAME,
             initialGridSize: query.get('size') as 'S' | 'M' | 'L' || undefined,
             initialIsListView: query.get('view') === 'list',
             initialPreviewMode: query.get('preview') as 'off' | 'horizontal' | 'vertical' || undefined,
@@ -39,6 +41,10 @@ export const ROUTES: RouteConfig[] = [
             if (!props.channelSlug) return null;
             let url = `/explorer/${encodeURIComponent(String(props.channelSlug))}`;
             const queryParts: string[] = [];
+            // Someone else's channel needs its owner; lok's channels are the default.
+            if (props.username && props.username !== APP_CONFIG.ARENA_USERNAME) {
+                queryParts.push(`user=${encodeURIComponent(String(props.username))}`);
+            }
             // Include view state
             if (props.initialIsListView) queryParts.push('view=list');
             // Include grid size
@@ -120,7 +126,7 @@ export const ROUTES: RouteConfig[] = [
     {
         pattern: 'arena',
         componentType: 'Are.na',
-        extractProps: () => ({ username: 'lok' }),
+        extractProps: () => ({ username: APP_CONFIG.ARENA_USERNAME }),
         generateUrl: () => '/arena',
         getTitle: () => 'Are.na',
     },
@@ -306,27 +312,25 @@ export function parseWindowSpec(spec: string): { path: string; query: URLSearchP
 }
 
 /**
- * Generate a shareable URL from a window's componentType and props
- * Returns null if the componentType is not found or doesn't have a generateUrl function
- * 
- * @param componentType - The component type key (e.g., 'About', 'ChannelExplorer')
- * @param props - Optional props to include in the URL
- * @returns Full shareable URL or null if generation fails
+ * The deep-link path that reopens a window: its Application's route applied to
+ * the window's props. Apps keep those props current through `onPropsChange`,
+ * so the path describes the window as it is shown. Null when the Application
+ * has no route or the props cannot make one.
  */
-export function generateShareUrl(
+export function generateSharePath(
     componentType: string,
     props?: Record<string, unknown>
 ): string | null {
     const route = ROUTES.find(r => r.componentType === componentType);
+    if (!route?.generateUrl) return null;
+    return route.generateUrl(props || {});
+}
 
-    if (!route || !route.generateUrl) {
-        return null;
-    }
-
-    const path = route.generateUrl(props || {});
-    if (!path) {
-        return null;
-    }
-
-    return `https://lok.computer${path}`;
+/** The share path on the current origin, so a link copied in dev stays in dev. */
+export function generateShareUrl(
+    componentType: string,
+    props?: Record<string, unknown>
+): string | null {
+    const path = generateSharePath(componentType, props);
+    return path ? `${window.location.origin}${path}` : null;
 }

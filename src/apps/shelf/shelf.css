@@ -1,0 +1,11 @@
+/*
+ * Shelf styles, code-split with the app chunk. Noto Emoji is only used for
+ * the category glyphs here, so the font request starts when Shelf opens
+ * instead of blocking the entry stylesheet.
+ */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Emoji:wght@400&display=swap');
+
+/* Noto Emoji - grayscale for coherent color style */
+.noto-emoji {
+    font-family: 'Noto Emoji', sans-serif;
+}

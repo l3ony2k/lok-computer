@@ -429,11 +429,6 @@
     pointer-events: none;
 }
 
-.media-player-stage:fullscreen {
-    width: 100vw;
-    height: 100vh;
-}
-
 @container (min-width: 640px) {
     .media-player-body[data-playlist] {
         grid-template-rows: minmax(0, 1fr);

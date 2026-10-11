@@ -1,12 +1,15 @@
 import React, { useEffect, useMemo, useRef } from 'react';
+import { APP_CONFIG } from '@/config/constants';
 import { ArenaChannel, ArenaItem } from '@/types/arena';
 import { useApplicationLauncher } from '@/hooks/useApplicationLauncher';
 import { usePersistedState } from '@/hooks/useStorage';
+import { scrollIntoViewWithin } from '@/lib/utils';
 import { ArenaDetailPanel } from '../components/ArenaDetailPanel';
 import { ArenaFileView } from '../components/ArenaFileView';
 import {
   ArenaFileSize,
   ArenaFileViewState,
+  StoredArenaFileViewState,
   createArenaFileViewState,
   normalizeArenaFileViewState,
 } from '../components/arenaFileViewState';
@@ -28,7 +31,11 @@ interface ChannelViewState {
   selectedBlockId?: number;
 }
 
-interface LegacyChannelViewState extends Partial<ChannelViewState> {
+/** A stored view state, possibly from before fileState existed (flat gridSize/isListView). */
+interface StoredChannelViewState {
+  fileState?: StoredArenaFileViewState;
+  previewMode?: unknown;
+  selectedBlockId?: unknown;
   gridSize?: 'S' | 'M' | 'L';
   isListView?: boolean;
 }
@@ -58,7 +65,7 @@ const sizeToRoute = (size: ArenaFileSize): 'S' | 'M' | 'L' => ({
 
 export const ChannelExplorer: React.FC<ChannelExplorerProps> = ({
   channelSlug,
-  username = 'lok',
+  username = APP_CONFIG.ARENA_USERNAME,
   items,
   initialGridSize = 'S',
   initialIsListView = false,
@@ -84,7 +91,7 @@ export const ChannelExplorer: React.FC<ChannelExplorerProps> = ({
     debounceMs: 300,
     normalize: (stored, fallback) => {
       if (!stored || typeof stored !== 'object') return fallback;
-      const saved = stored as LegacyChannelViewState;
+      const saved = stored as StoredChannelViewState;
       return {
         fileState: normalizeArenaFileViewState(
           saved.fileState ?? { gridSize: saved.gridSize, isListView: saved.isListView },
@@ -119,12 +126,14 @@ export const ChannelExplorer: React.FC<ChannelExplorerProps> = ({
     });
   }, [onPropsChange, stateLoading, viewState]);
 
+  // Scroll only the file list, never the window layer (see scrollIntoViewWithin).
   useEffect(() => {
     if (!browsing.selectedItem || browsing.loading) return;
     const timeout = setTimeout(() => {
-      contentViewportRef.current
-        ?.querySelector(`[data-item-id="${browsing.selectedItem?.id}"]`)
-        ?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      scrollIntoViewWithin(
+        contentViewportRef.current?.querySelector<HTMLElement>(`[data-item-id="${browsing.selectedItem?.id}"]`),
+        { block: 'nearest' },
+      );
     }, 50);
     return () => clearTimeout(timeout);
   }, [browsing.loading, browsing.selectedItem, viewState.fileState.view]);

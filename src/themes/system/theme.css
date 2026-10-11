@@ -475,7 +475,6 @@ html[data-theme="system"][data-layout]:not(#_) :where(
     button.arena-toolbar-control,
     .arena-detail-action,
     .oobe-segmented button,
-    .oobe-choice,
     .oobe-oneko-options button,
     .config-oneko-option,
     [data-sonner-toast] [data-button]
@@ -490,7 +489,6 @@ html[data-theme="system"][data-layout]:not(#_) :where(
     button.arena-toolbar-control,
     .arena-detail-action,
     .oobe-segmented button,
-    .oobe-choice,
     .oobe-oneko-options button,
     .config-oneko-option,
     [data-sonner-toast] [data-button]

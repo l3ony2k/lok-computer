@@ -146,36 +146,23 @@ export const AppMenu: React.FC<AppMenuProps> = ({
 
   // Portaled so the taskbar's stacking context cannot trap the menu below windows.
   return createPortal(
-    <>
-      <style>
-        {`
-          @keyframes marquee {
-            0%, 15% { transform: translateX(0); }
-            85%, 100% { transform: translateX(var(--marquee-distance)); }
-          }
-          .animate-marquee {
-            animation: marquee var(--marquee-duration) linear infinite alternate;
-          }
-        `}
-      </style>
-      <div
-        className="fixed inset-0 z-[10000]"
-        onClick={handleOutsideClick}
-      >
-        <div className="menu-surface app-menu-panel min-w-[200px] select-none" data-placement={placement} role="menu">
-          {placement === 'bottom' && (
-            <div className="app-menu-banner" aria-hidden="true">
-              <span>lok<b>.computer</b></span>
-            </div>
-          )}
-          <div className="app-menu-items">
-            {items.map((item) => (
-              <MenuItem key={item.name} item={item} onClose={onClose} />
-            ))}
+    <div
+      className="fixed inset-0 z-[10000]"
+      onClick={handleOutsideClick}
+    >
+      <div className="menu-surface app-menu-panel min-w-[200px] select-none" data-placement={placement} role="menu">
+        {placement === 'bottom' && (
+          <div className="app-menu-banner" aria-hidden="true">
+            <span>lok<b>.computer</b></span>
           </div>
+        )}
+        <div className="app-menu-items">
+          {items.map((item) => (
+            <MenuItem key={item.name} item={item} onClose={onClose} />
+          ))}
         </div>
       </div>
-    </>,
+    </div>,
     document.body,
   );
 };

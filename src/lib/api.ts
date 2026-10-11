@@ -8,7 +8,8 @@ import {
   ArenaPagedResult,
 } from "@/types/arena";
 import { toast } from "sonner";
-import { DEFAULT_USERNAME, FEATURED_CHANNELS, USE_STATIC_CHANNELS } from "@/config/channels";
+import { FEATURED_CHANNELS } from "@/config/channels";
+import { APP_CONFIG } from "@/config/constants";
 import { CACHE_TTL } from "@/lib/storage";
 import { cachedRequest } from "@/lib/cachedRequest";
 import {
@@ -90,7 +91,7 @@ function createStaticOwner(username: string): RawOwner {
   };
 }
 
-function getStaticChannels(username: string = DEFAULT_USERNAME): ArenaChannel[] {
+function getStaticChannels(username: string = APP_CONFIG.ARENA_USERNAME): ArenaChannel[] {
   const owner = createStaticOwner(username);
 
   return FEATURED_CHANNELS.map((channel, index) =>
@@ -147,12 +148,8 @@ function mergeBlockConnection(block: ArenaBlock, fallbackConnection: ArenaBlock[
   };
 }
 
-export async function getUserChannels(username: string = DEFAULT_USERNAME): Promise<ArenaChannel[]> {
-  if (USE_STATIC_CHANNELS) {
-    console.log("[API:Arena] Using static channel list");
-    return getStaticChannels(username);
-  }
-
+/** Every channel of a user; falls back to the bundled snapshot when Are.na cannot be reached. */
+export async function getUserChannels(username: string = APP_CONFIG.ARENA_USERNAME): Promise<ArenaChannel[]> {
   try {
     const firstPage = await getUserChannelsPage(username, 1);
     const firstItems = firstPage.data.map(normalizeArenaItem).filter(isArenaChannel);

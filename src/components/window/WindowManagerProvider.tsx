@@ -1,10 +1,10 @@
+import type { ReactNode } from 'react';
 import {
   WindowManagerActionsContext,
   WindowManagerLaunchContext,
   WindowManagerStateContext,
   useWindowManagerController,
-} from '@/hooks/useWindowManager.ts';
-import { ReactNode } from 'react';
+} from '@/hooks/useWindowManager';
 
 export const WindowManagerProvider = ({ children }: { children: ReactNode }) => {
   const { state, actions, launchActions } = useWindowManagerController();

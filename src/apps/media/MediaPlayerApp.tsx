@@ -23,6 +23,7 @@ import { WindowLayout } from '@/components/window/WindowLayout';
 import { RetroButton } from '@/components/ui/RetroButton';
 import { usePersistedState } from '@/hooks/useStorage';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { scrollIntoViewWithin } from '@/lib/utils';
 import {
   DEFAULT_LIBRARY,
   DEFAULT_PLAYER_STATE,
@@ -572,7 +573,7 @@ export const MediaPlayerApp: React.FC<MediaPlayerAppProps> = ({ request, onProps
     event.preventDefault();
     event.stopPropagation();
     setSelectedId(playlist[next].id);
-    document.getElementById(trackOptionId(next))?.scrollIntoView({ block: 'nearest' });
+    scrollIntoViewWithin(document.getElementById(trackOptionId(next)), { block: 'nearest' });
   };
 
   const handleKeyDown = (event: React.KeyboardEvent) => {

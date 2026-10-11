@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { scrollIntoViewWithin } from '@/lib/utils';
 import { useWindowActions, useWindowState } from '@/hooks/useWindowManager';
 import { useApplicationLauncher } from '@/hooks/useApplicationLauncher';
 import { useTheme } from '@/hooks/useTheme';
@@ -102,7 +103,6 @@ export const ConsoleApp: React.FC = () => {
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [deletionProgress, setDeletionProgress] = useState(0);
   const consoleEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { windows } = useWindowState();
@@ -110,18 +110,15 @@ export const ConsoleApp: React.FC = () => {
   const openApplication = useApplicationLauncher();
   const { theme, appearance, colorScheme, setTheme, setAppearance } = useTheme();
 
-  // Add auto-focus effect
+  // Focus the prompt without scrolling: a bare focus() walks every ancestor and
+  // once clipped this window's title bar (see the README development log).
   useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
+    inputRef.current?.focus({ preventScroll: true });
   }, []);
 
-  // Scroll to bottom when logs change
+  // Follow the newest line, scrolling only the log pane.
   useEffect(() => {
-    if (consoleEndRef.current) {
-      consoleEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
+    scrollIntoViewWithin(consoleEndRef.current, { block: 'end' });
   }, [logs]);
 
   const commands: Record<string, Command> = {
@@ -292,6 +289,7 @@ export const ConsoleApp: React.FC = () => {
     const originalConsoleWarn = console.warn;
     const originalConsoleInfo = console.info;
 
+    const originals = { log: originalConsoleLog, error: originalConsoleError, warn: originalConsoleWarn, info: originalConsoleInfo };
     const captureLog = (type: LogEntry['type'], ...args: unknown[]) => {
       setLogs(prevLogs => [
         ...prevLogs,
@@ -303,7 +301,8 @@ export const ConsoleApp: React.FC = () => {
           expanded: false
         },
       ]);
-      originalConsoleLog.apply(console, [`[Captured for App Console - ${type}]`, ...args]);
+      // Keep the browser console's own level so errors still show as errors there.
+      originals[type].apply(console, args);
     };
 
     console.log = (...args) => captureLog('log', ...args);
@@ -351,7 +350,6 @@ export const ConsoleApp: React.FC = () => {
 
   const simulateSystemDeletion = () => {
     setIsDeleting(true);
-    setDeletionProgress(0);
 
     const criticalPaths = [
       '/system32',
@@ -380,7 +378,6 @@ export const ConsoleApp: React.FC = () => {
         return;
       }
       console.log(`Deleting ${criticalPaths[i]}...`);
-      setDeletionProgress(Math.round(((i + 1) / criticalPaths.length) * 100));
       i++;
     }, 500);
   };
@@ -448,7 +445,6 @@ export const ConsoleApp: React.FC = () => {
             placeholder="Type 'help' for available commands"
             className="console-command-input bg-transparent flex-1 focus:outline-none"
             disabled={isDeleting}
-            autoFocus
           />
         </div>
       }

@@ -1,6 +1,6 @@
-import { APPLICATIONS } from "@/config/apps";
+import { APPLICATION_LIST } from "@/config/apps";
 
-const loaders = Array.from(new Set(Object.values(APPLICATIONS).map((application) => application.loader)));
+const loaders = Array.from(new Set(APPLICATION_LIST.map((application) => application.loader)));
 
 export const APP_MODULE_COUNT = loaders.length;
 

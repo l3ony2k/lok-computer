@@ -1,4 +1,4 @@
-import React, { type ReactNode, useEffect, useRef } from 'react';
+import { type ReactNode, useEffect, useRef } from 'react';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { WindowLayout } from '@/components/window/WindowLayout';
 import { StateMessage } from '@/components/ui/StateMessage';

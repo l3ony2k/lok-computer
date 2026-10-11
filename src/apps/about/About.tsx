@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { WindowLayout } from "@/components/window/WindowLayout";
 import { RetroButton } from "@/components/ui/RetroButton";
 import { usePersistedState } from "@/hooks/useStorage";

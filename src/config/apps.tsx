@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components -- catalog module, not a refresh root */
 import React, { type ComponentType } from 'react';
+import { APP_CONFIG } from '@/config/constants';
 import {
   About,
   BlockViewer,
@@ -36,7 +37,6 @@ export interface ApplicationDefinition {
   showOnDesktop?: boolean;
 }
 
-const defineApplications = <T extends Record<string, ApplicationDefinition>>(definitions: T) => definitions;
 
 /**
  * Authoritative application catalog.
@@ -45,7 +45,7 @@ const defineApplications = <T extends Record<string, ApplicationDefinition>>(def
  * consume this metadata. Dynamic windows live beside desktop applications so
  * dimensions and restoration identity cannot drift between registries.
  */
-export const APPLICATIONS = defineApplications({
+export const APPLICATIONS = {
   'Are.na': {
     componentType: 'Are.na',
     name: 'Are.na',
@@ -54,7 +54,7 @@ export const APPLICATIONS = defineApplications({
     loader: APP_MODULE_LOADERS.ChannelBrowser,
     defaultWidth: ARENA_WINDOW_DEFAULTS.channelBrowser.width,
     defaultHeight: ARENA_WINDOW_DEFAULTS.channelBrowser.height,
-    defaultProps: { username: 'lok' },
+    defaultProps: { username: APP_CONFIG.ARENA_USERNAME },
     showOnDesktop: true,
   },
   Web: {
@@ -197,7 +197,8 @@ export const APPLICATIONS = defineApplications({
   BlockViewer: {
     componentType: 'BlockViewer',
     name: 'Block',
-    iconType: 'block',
+    // Launches pass the block's own kind; this covers deep links and restores without one.
+    iconType: 'text',
     component: BlockViewer,
     loader: APP_MODULE_LOADERS.BlockViewer,
     defaultWidth: ARENA_WINDOW_DEFAULTS.blockViewer.width,
@@ -213,15 +214,18 @@ export const APPLICATIONS = defineApplications({
     defaultHeight: 600,
     showOnDesktop: true,
   },
-});
+} satisfies Record<string, ApplicationDefinition>;
 
 export type ApplicationType = keyof typeof APPLICATIONS;
+
+/** The catalog as a plain list; `satisfies` keeps the literal keys above while this erases the per-entry shapes. */
+export const APPLICATION_LIST: ApplicationDefinition[] = Object.values(APPLICATIONS);
 
 export interface AppConfig extends ApplicationDefinition {
   props?: Record<string, unknown>;
 }
 
-export const APP_LIST: AppConfig[] = Object.values(APPLICATIONS)
+export const APP_LIST: AppConfig[] = APPLICATION_LIST
   .filter((application) => application.showOnDesktop)
   .map((application) => ({
     ...application,

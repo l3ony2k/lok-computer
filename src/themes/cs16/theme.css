@@ -368,7 +368,6 @@ html[data-theme="cs16"][data-layout]:not(#_) :where(
     button.arena-toolbar-control,
     .arena-detail-action,
     .oobe-segmented button,
-    .oobe-choice,
     .config-oneko-option,
     [data-sonner-toast] [data-button]
 ):not(.window-control) {

@@ -283,9 +283,9 @@ export const DesktopIcons: React.FC = React.memo(() => {
           key={app.componentType}
           app={app}
           onOpen={() => openApplication(app.componentType)}
-          isSelected={selectedApp === app.name}
-          onSelect={() => setSelectedApp(app.name)}
-          onDeselect={() => setSelectedApp((selected) => selected === app.name ? null : selected)}
+          isSelected={selectedApp === app.componentType}
+          onSelect={() => setSelectedApp(app.componentType)}
+          onDeselect={() => setSelectedApp((selected) => selected === app.componentType ? null : selected)}
           isMobile={isMobile}
           isDragging={drag?.type === app.componentType}
           isDropTarget={drag?.target === app.componentType}

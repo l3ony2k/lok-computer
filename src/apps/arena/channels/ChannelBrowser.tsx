@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { ArenaChannel, ArenaItem } from "@/types/arena";
 import { getUserChannels } from "@/lib/api";
+import { APP_CONFIG } from "@/config/constants";
 import { useApplicationLauncher } from "@/hooks/useApplicationLauncher";
 import { usePersistedState } from "@/hooks/useStorage";
 import {
@@ -8,6 +9,7 @@ import {
 } from "../components/ArenaFileView";
 import {
   ArenaFileViewState,
+  StoredArenaFileViewState,
   createArenaFileViewState,
   normalizeArenaFileViewState,
 } from "../components/arenaFileViewState";
@@ -19,7 +21,7 @@ const DEFAULT_FILE_STATE = createArenaFileViewState({
   listSize: "medium",
 });
 
-export const ChannelBrowser: React.FC<{ username?: string }> = ({ username = "lok" }) => {
+export const ChannelBrowser: React.FC<{ username?: string }> = ({ username = APP_CONFIG.ARENA_USERNAME }) => {
   const [channels, setChannels] = useState<ArenaChannel[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -29,10 +31,7 @@ export const ChannelBrowser: React.FC<{ username?: string }> = ({ username = "lo
     key: VIEW_STATE_KEY,
     defaultValue: DEFAULT_FILE_STATE,
     debounceMs: 300,
-    normalize: (stored) => normalizeArenaFileViewState(
-      stored as Partial<ArenaFileViewState> & { isListView?: boolean; gridSize?: "S" | "M" | "L" },
-      DEFAULT_FILE_STATE,
-    ),
+    normalize: (stored) => normalizeArenaFileViewState(stored as StoredArenaFileViewState, DEFAULT_FILE_STATE),
   });
   const openApplication = useApplicationLauncher();
 

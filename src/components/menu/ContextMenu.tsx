@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { CustomIcon } from '@/components/window/CustomIcon';
 import { ChevronRight } from 'lucide-react';
 
@@ -147,10 +147,18 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
         }
     }, [isOpen, handleOutsideClick, handleKeyDown]);
 
-    if (!isOpen) return null;
+    // Keep the menu inside the viewport once its size is known.
+    useLayoutEffect(() => {
+        const menu = menuRef.current;
+        if (!isOpen || !menu) return;
+        const rect = menu.getBoundingClientRect();
+        const left = Math.max(0, Math.min(position.x, window.innerWidth - rect.width));
+        const top = Math.max(0, Math.min(position.y, window.innerHeight - rect.height));
+        menu.style.left = `${left}px`;
+        menu.style.top = `${top}px`;
+    }, [isOpen, position.x, position.y]);
 
-    // Adjust position to prevent menu from going off-screen
-    const adjustedPosition = { ...position };
+    if (!isOpen) return null;
 
     return (
         <div
@@ -158,8 +166,8 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
             className="menu-surface fixed min-w-[160px] select-none z-[10000]"
             role="menu"
             style={{
-                left: adjustedPosition.x,
-                top: adjustedPosition.y,
+                left: position.x,
+                top: position.y,
             }}
         >
             {items.map((item, index) => (

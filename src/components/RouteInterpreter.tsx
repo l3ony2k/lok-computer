@@ -1,123 +1,80 @@
 /**
- * RouteInterpreter Component
+ * RouteInterpreter
  *
- * Interprets URL paths and opens corresponding windows.
- * Waits for session restore before processing to ensure windows append on top.
+ * Reads the URL the visitor arrived with, opens the matching window(s), and
+ * resets the address bar to `/`. It runs once, after the saved session has
+ * been restored so deep-linked windows land on top of it. The desktop has no
+ * client-side navigation beyond this, so it reads `window.location` directly
+ * instead of carrying a router.
  */
 
 import { useEffect, useRef } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
 import { useWindowState } from '@/hooks/useWindowManager';
 import { useApplicationLauncher } from '@/hooks/useApplicationLauncher';
-import { matchRoute, parseWindowSpec, ROUTES } from '@/config/routes';
+import { matchRoute, parseWindowSpec, type RouteConfig } from '@/config/routes';
 import { THEME_QUERY_PARAM } from '@/lib/theme';
 import { trackPageview } from '@/lib/analytics';
 
-interface RouteInterpreterProps {
-    /** Called when route interpretation is complete */
-    onComplete?: () => void;
-}
-
-export const RouteInterpreter = ({ onComplete }: RouteInterpreterProps) => {
-    const location = useLocation();
-    const navigate = useNavigate();
-    const { isSessionRestored } = useWindowState();
-    const openApplication = useApplicationLauncher();
-    const hasProcessed = useRef(false);
-
-    useEffect(() => {
-        // Only process once, and only after session is restored.
-        // The guard is set before any async work: opening windows changes the
-        // context value mid-processing, which re-runs this effect.
-        if (!isSessionRestored || hasProcessed.current) return;
-        hasProcessed.current = true;
-
-        /**
-         * Open a single window from route match
-         */
-        const openSingleWindow = async (
-            route: typeof ROUTES[0],
-            params: Record<string, string>,
-            query: URLSearchParams
-        ) => {
-            const props = route.extractProps(params, query);
-            const title = route.getTitle(props);
-
-            const windowId = openApplication(route.componentType, {
-                title,
-                props,
-            });
-
-            if (!windowId) return;
-
-            console.info(`[RouteInterpreter] Opened window: ${title} (${route.componentType})`);
-        };
-
-        /**
-         * Open multiple windows from comma-separated specs
-         * Format: "app1,app2/param,app3?query=value"
-         */
-        const openMultipleWindows = async (specs: string) => {
-            const windowSpecs = specs.split(',').map(s => s.trim()).filter(Boolean);
-
-            for (const spec of windowSpecs) {
-                const { path, query } = parseWindowSpec(spec);
-                const match = matchRoute('/' + path);
-
-                if (match) {
-                    // Merge query params from spec
-                    const fullQuery = new URLSearchParams(query);
-                    await openSingleWindow(match.route, match.params, fullQuery);
-                } else {
-                    console.warn(`[RouteInterpreter] Unknown window spec: ${spec}`);
-                }
-            }
-
-            console.info(`[RouteInterpreter] Opened ${windowSpecs.length} windows from URL`);
-        };
-
-        const processRoute = async () => {
-            const path = location.pathname;
-            const searchParams = new URLSearchParams(location.search);
-            // The arrival URL is the only pageview a visit gets; it resets to `/` below.
-            trackPageview(path + location.search);
-
-            // Check for multi-window URL format: /open?w=app1,app2/param,app3
-            if (path === '/open' || path === '/open/') {
-                const windowSpecs = searchParams.get('w');
-                if (windowSpecs) {
-                    await openMultipleWindows(windowSpecs);
-                }
-                navigate('/', { replace: true });
-                onComplete?.();
-                return;
-            }
-
-            // Check for single window route
-            const match = matchRoute(path);
-            if (match) {
-                await openSingleWindow(match.route, match.params, searchParams);
-                navigate('/', { replace: true });
-                onComplete?.();
-                return;
-            }
-
-            // No matching route, just mark as processed
-            if (path !== '/' && path !== '') {
-                console.warn(`[RouteInterpreter] No matching route for path: ${path}`);
-            }
-            // A shared `/?theme=` link has already been applied by the theme engine.
-            if (searchParams.has(THEME_QUERY_PARAM)) {
-                navigate('/', { replace: true });
-            }
-            onComplete?.();
-        };
-
-        processRoute();
-    }, [isSessionRestored, location.pathname, location.search, navigate, onComplete, openApplication]);
-
-    // This component doesn't render anything
-    return null;
+const resetUrl = () => {
+  if (window.location.pathname !== '/' || window.location.search || window.location.hash) {
+    window.history.replaceState(null, '', '/');
+  }
 };
 
-export default RouteInterpreter;
+export const RouteInterpreter = () => {
+  const { isSessionRestored } = useWindowState();
+  const openApplication = useApplicationLauncher();
+  const hasProcessed = useRef(false);
+
+  useEffect(() => {
+    // Only process once, and only after session is restored. The guard is set
+    // first: opening windows changes the context value, which re-runs this effect.
+    if (!isSessionRestored || hasProcessed.current) return;
+    hasProcessed.current = true;
+
+    const openWindow = (route: RouteConfig, params: Record<string, string>, query: URLSearchParams) => {
+      const props = route.extractProps(params, query);
+      const title = route.getTitle(props);
+      if (openApplication(route.componentType, { title, props })) {
+        console.info(`[RouteInterpreter] Opened window: ${title} (${route.componentType})`);
+      }
+    };
+
+    /** Multi-window format: `/open?w=app1,app2/param,app3?query=value` */
+    const openWindows = (specs: string) => {
+      const windowSpecs = specs.split(',').map((spec) => spec.trim()).filter(Boolean);
+      for (const spec of windowSpecs) {
+        const { path, query } = parseWindowSpec(spec);
+        const match = matchRoute('/' + path);
+        if (match) openWindow(match.route, match.params, query);
+        else console.warn(`[RouteInterpreter] Unknown window spec: ${spec}`);
+      }
+      console.info(`[RouteInterpreter] Opened ${windowSpecs.length} windows from URL`);
+    };
+
+    const { pathname, search } = window.location;
+    const searchParams = new URLSearchParams(search);
+    // The arrival URL is the only pageview a visit gets; it resets to `/` below.
+    trackPageview(pathname + search);
+
+    if (pathname === '/open' || pathname === '/open/') {
+      const specs = searchParams.get('w');
+      if (specs) openWindows(specs);
+      resetUrl();
+      return;
+    }
+
+    const match = matchRoute(pathname);
+    if (match) {
+      openWindow(match.route, match.params, searchParams);
+      resetUrl();
+      return;
+    }
+
+    if (pathname !== '/') console.warn(`[RouteInterpreter] No matching route for path: ${pathname}`);
+    // A shared `/?theme=` link has already been applied by the theme engine.
+    if (searchParams.has(THEME_QUERY_PARAM)) resetUrl();
+  }, [isSessionRestored, openApplication]);
+
+  return null;
+};

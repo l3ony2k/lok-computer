@@ -1,9 +1,9 @@
 import { createContext, useContext } from "react";
-import type { Window } from "@/hooks/useWindowManager";
+import type { DesktopWindow } from "@/hooks/useWindowManager";
 
 export interface WindowTransitionContextType {
-  minimizeWithTransition: (window: Window) => void;
-  restoreWithTransition: (window: Window) => void;
+  minimizeWithTransition: (window: DesktopWindow) => void;
+  restoreWithTransition: (window: DesktopWindow) => void;
   isWindowTransitioning: (id: string) => boolean;
 }
 

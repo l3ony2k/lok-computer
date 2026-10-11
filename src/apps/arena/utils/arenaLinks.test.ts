@@ -51,7 +51,7 @@ const image = (overrides: Partial<NonNullable<ArenaBlock['image']>> = {}): NonNu
 
 describe('parseArenaReference', () => {
   it('reads channel links in every are.na form', () => {
-    const expected = { type: 'channel', slug: 'physical-digital-surrealism' };
+    const expected = { type: 'channel', slug: 'physical-digital-surrealism' } as const;
     expect(parseArenaReference('https://www.are.na/lok/physical-digital-surrealism')).toEqual(expected);
     expect(parseArenaReference('are.na/lok/physical-digital-surrealism?sort=desc')).toEqual(expected);
     expect(parseArenaReference('https://are.na/channel/physical-digital-surrealism')).toEqual(expected);

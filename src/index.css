@@ -1,14 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Emoji:wght@400&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Noto Emoji - grayscale for coherent color style */
-.noto-emoji {
-    font-family: 'Noto Emoji', sans-serif;
-    /* filter: grayscale(100%); */
-}
 
 @layer base {
     :root {
@@ -76,9 +68,6 @@
         --background: 0 0% 94%;
         --foreground: 0 0% 20%;
 
-        --card: 0 0% 100%;
-        --card-foreground: 0 0% 10%;
-
         --popover: 0 0% 100%;
         --popover-foreground: 0 0% 10%;
 
@@ -102,17 +91,6 @@
         --input: 0 0% 77%;
         --ring: 0 0% 0%;
 
-        --radius: 0px;
-
-        /* Keep sidebar variables */
-        --sidebar-background: 0 0% 98%;
-        --sidebar-foreground: 240 5.3% 26.1%;
-        --sidebar-primary: 240 5.9% 10%;
-        --sidebar-primary-foreground: 0 0% 98%;
-        --sidebar-accent: 240 4.8% 95.9%;
-        --sidebar-accent-foreground: 240 5.9% 10%;
-        --sidebar-border: 220 13% 91%;
-        --sidebar-ring: 217.2 91.2% 59.8%;
     }
 
     .dark {
@@ -162,9 +140,6 @@
 
         --background: 0 0% 7%;
         --foreground: 0 0% 94%;
-
-        --card: 0 0% 15%;
-        --card-foreground: 0 0% 98%;
 
         --popover: 0 0% 15%;
         --popover-foreground: 0 0% 98%;
@@ -344,10 +319,6 @@
         opacity: 0.38;
     }
 
-    .thin-scrollbar {
-        @apply scrollable-area;
-    }
-
     .window-titlebar {
         @apply flex items-center border-b border-border text-sm select-none;
         min-height: 30px;
@@ -430,9 +401,19 @@
     .app-submenu {
         width: min(260px, calc(100vw - 235px));
         min-width: 180px;
-        max-height: min(420px, calc(100vh - 60px));
+        max-height: min(420px, calc(100dvh - 60px));
         overflow-y: auto;
         overscroll-behavior: contain;
+    }
+
+    /* Long menu labels scroll on hover; AppMenu sets the distance and duration. */
+    @keyframes menu-marquee {
+        0%, 15% { transform: translateX(0); }
+        85%, 100% { transform: translateX(var(--marquee-distance)); }
+    }
+
+    .animate-marquee {
+        animation: menu-marquee var(--marquee-duration) linear infinite alternate;
     }
 
     .menu-item-shell.has-submenu::after {
@@ -442,10 +423,6 @@
         left: 100%;
         width: 12px;
         height: calc(100% + 12px);
-    }
-
-    .window-content {
-        @apply bg-retro-window border-t border-border overflow-auto h-full;
     }
 
     .taskbar {
@@ -952,14 +929,6 @@
 
     .arena-address-group .arena-toolbar-control:last-child {
         width: 50px;
-    }
-
-    .arena-address-label {
-        flex: 0 0 auto;
-        font-size: 11px;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        opacity: 0.62;
     }
 
     .arena-file-search {
@@ -1633,45 +1602,6 @@
         overflow: hidden;
     }
 
-    .arena-detail-header {
-        min-height: 52px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-        padding: 0 10px;
-        background: var(--detail-header-bg);
-        border-bottom: 2px solid var(--detail-border);
-        flex: 0 0 auto;
-    }
-
-    .arena-detail-header h2 {
-        min-width: 0;
-        margin: 0;
-        overflow: hidden;
-        font-size: 1.5em;
-        font-weight: bold;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .arena-detail-header > a {
-        width: 40px;
-        height: 40px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        flex: 0 0 auto;
-        color: var(--icon-color);
-        font-size: 20px;
-        text-decoration: none;
-    }
-
-    .arena-detail-header > a:hover {
-        background: var(--button-hover);
-        text-decoration: none;
-    }
-
     .arena-detail-content-wrapper {
         width: 100%;
         height: 100%;
@@ -2032,17 +1962,7 @@
         .arena-channel-detail > img {
             width: 100%;
         }
-
-        .arena-detail-header h2 {
-            font-size: 1.2em;
-        }
-
     }
-}
-
-/* Universal accent ring color for focus:ring */
-.focus\:ring-accent:focus {
-    --tw-ring-color: hsl(var(--accent));
 }
 
 /*
@@ -2064,7 +1984,7 @@
     }
 }
 
-.dark * {
+.dark {
     color-scheme: dark;
 }
 
@@ -2265,6 +2185,7 @@
 }
 
 .lok-reader-media-item {
+    position: relative;
     height: 180px;
     width: auto;
     min-width: 120px;
@@ -2282,10 +2203,6 @@
     height: 100%;
     display: block;
     object-fit: contain;
-}
-
-.lok-reader-media-item {
-    position: relative;
 }
 
 .lok-reader-media-placeholder {
@@ -3608,8 +3525,10 @@ a:hover .animate-marquee-if-overflow {
 
 .oobe-window {
     width: min(820px, 100%);
-    height: min(620px, calc(100vh - 40px));
-    min-height: 360px;
+    /* Sized from the overlay (fixed, inset 0), which ends above a phone's browser
+       toolbar; the vh unit does not, and the body cannot scroll to reveal the footer. */
+    height: min(620px, 100%);
+    min-height: min(360px, 100%);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -3747,36 +3666,6 @@ a:hover .animate-marquee-if-overflow {
 .oobe-heading > svg {
     flex: 0 0 auto;
     margin-top: 2px;
-}
-
-.oobe-choice-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 6px;
-}
-
-.oobe-choice {
-    min-width: 0;
-    min-height: 96px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 10px;
-    border: 1px solid var(--internal-border);
-    color: var(--text-color);
-    background: var(--detail-meta-bg);
-}
-
-.oobe-choice:hover {
-    background: var(--button-hover);
-}
-
-.oobe-choice[data-active="true"] {
-    border-color: var(--header-border);
-    background: var(--button-bg);
-    box-shadow: inset 0 0 0 1px var(--header-border);
 }
 
 .oobe-segmented {
@@ -3946,6 +3835,7 @@ a:hover .animate-marquee-if-overflow {
 }
 
 .oobe-footer {
+    flex: 0 0 auto;
     min-height: 42px;
     display: grid;
     grid-template-columns: 90px minmax(0, 1fr) 90px;
@@ -3975,7 +3865,7 @@ a:hover .animate-marquee-if-overflow {
     }
 
     .oobe-window {
-        height: calc(100vh - 16px);
+        height: 100%;
     }
 
     .oobe-layout {
@@ -4007,15 +3897,6 @@ a:hover .animate-marquee-if-overflow {
 
     .oobe-content {
         padding: 18px;
-    }
-
-    .oobe-choice-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .oobe-choice {
-        min-height: 56px;
-        flex-direction: row;
     }
 }
 

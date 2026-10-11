@@ -1,7 +1,7 @@
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { scrollIntoViewWithin } from "@/lib/utils";
 import { CustomIcon } from "@/components/window/CustomIcon";
-import { Window, useWindowActions } from "@/hooks/useWindowManager";
+import { useWindowActions, type DesktopWindow } from "@/hooks/useWindowManager";
 import { WindowTransitionContext, type WindowTransitionContextType } from "@/hooks/useWindowTransitions";
 
 interface ViewportRect {
@@ -49,7 +49,7 @@ export const WindowTransitionProvider = ({ children }: { children: ReactNode }) 
     if (timerRef.current) clearTimeout(timerRef.current);
   }, []);
 
-  const runTransition = useCallback((window: Window, from: ViewportRect, to: ViewportRect, commit: () => void) => {
+  const runTransition = useCallback((window: DesktopWindow, from: ViewportRect, to: ViewportRect, commit: () => void) => {
     if (transitioningWindowRef.current) return;
 
     if (reducedMotionEnabled()) {
@@ -82,7 +82,7 @@ export const WindowTransitionProvider = ({ children }: { children: ReactNode }) 
     });
   }, []);
 
-  const minimizeWithTransition = useCallback((window: Window) => {
+  const minimizeWithTransition = useCallback((window: DesktopWindow) => {
     const source = getWindowElement(window.id);
     const taskbarButton = getTaskbarButton(window.id);
     if (!source || !taskbarButton) {
@@ -96,7 +96,7 @@ export const WindowTransitionProvider = ({ children }: { children: ReactNode }) 
     });
   }, [minimizeWindow, runTransition]);
 
-  const restoreWithTransition = useCallback((window: Window) => {
+  const restoreWithTransition = useCallback((window: DesktopWindow) => {
     const taskbarButton = getTaskbarButton(window.id);
     const destinationElement = getWindowElement(window.id);
     const desktop = window.wasMaximized ? getDesktopRect() : null;

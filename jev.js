@@ -18,7 +18,7 @@
  * - JEV_MODEL: Jev model or alias (default `jev-latest`)
  * - JEV_PLANNER_MODEL: planner model on AI_BASE_URL (required)
  * - JEV_PLANNER_REASONING_EFFORT: planner reasoning_effort (default "none"; "" omits it)
- * - AI_BASE_URL / AI_API_KEY: OpenAI-compatible endpoint shared with /api/chat
+ * - AI_BASE_URL / AI_API_KEY: OpenAI-compatible endpoint that serves the planner model
  */
 
 export const JEV_ENDPOINT = 'https://api.typesafe.ai/v1/systemone';

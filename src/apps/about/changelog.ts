@@ -14,6 +14,22 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '3.0.7',
+    date: '2026-10-10',
+    title: 'Spring cleaning',
+    notes: [
+      'The clock shows the local date again; it used to flip to the UTC date near midnight.',
+      'Console, channel and playlist scrolling stays inside its own window.',
+      'A lighter first load: the router and unused UI libraries are gone, and icons travel as files instead of inline data.',
+      'Window menus stay on screen, and settings sliders no longer write on every tick.',
+      'Share Window says when it has copied, and the link reopens the window as you left it.',
+      'Fedi and Shelf requests are rate limited per visitor, like Ask AI.',
+      'Window buttons and the title-bar menu answer a tap on phones.',
+      'Images suggests whichever channels carry the 🜳 mark on Are.na.',
+      'The setup screen fits a phone; its buttons used to hide behind the browser toolbar.',
+    ],
+  },
+  {
     version: '3.0.6',
     date: '2026-10-10',
     title: 'Move things around',

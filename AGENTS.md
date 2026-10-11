@@ -6,6 +6,7 @@
 bun dev          # Vite development server on http://localhost:8080
 bun run build    # Production build
 bun run lint     # ESLint
+bun run typecheck # tsc over src; the Vite build does not type-check
 bun test         # Architecture and behavior tests
 ```
 
@@ -18,11 +19,12 @@ Use the `@/` alias for `src/`. Do not start another dev server when port 8080 is
 - Keep corners square; do not add `rounded-*` styles.
 - Reuse the shared CSS variables and `RetroButton`/window chrome patterns in `src/index.css`.
 - Keep app modules lazy through `src/config/lazyApps.tsx`. Do not statically import app modules outside `src/apps/`.
-- Run `bun test`, `bun run build`, and `bun run lint` after implementation.
+- Run `bun test`, `bun run typecheck`, `bun run build`, and `bun run lint` after implementation.
+- Never call `element.scrollIntoView()` or a bare `focus()` from app code; use `scrollIntoViewWithin` from `src/lib/utils.ts` and `focus({ preventScroll: true })`.
 
 ## Architecture
 
-lok.computer is a single-page React desktop. React Router only interprets deep links, opens windows, and returns the URL to `/`.
+lok.computer is a single-page React desktop with no routing library. `RouteInterpreter` reads the arrival URL once, opens windows, and returns the URL to `/`.
 
 ### Window System
 

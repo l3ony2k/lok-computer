@@ -71,7 +71,6 @@ export const useTypo = (
 
         let buffer = '';
         let typoActive = false;
-        let realizationDelay = 0;
         let realizationDelayCounter = 0;
         let seed = 0;
 
@@ -98,7 +97,6 @@ export const useTypo = (
 
                     typoActive = true;
                     seed = numBetween(2, 5);
-                    realizationDelay = seed;
                     realizationDelayCounter = seed;
                 }
             }

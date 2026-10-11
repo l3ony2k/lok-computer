@@ -10,8 +10,10 @@ import { APP_CONFIG } from '@/config/constants';
 import { CACHE_TTL } from '@/lib/storage';
 import { usePersistedState } from '@/hooks/useStorage';
 import { cachedRequest } from '@/lib/cachedRequest';
+import './shelf.css';
 
 type ShelfType = 'wishlist' | 'progress' | 'complete' | 'dropped';
+const SHELF_TYPES: ShelfType[] = ['wishlist', 'progress', 'complete', 'dropped'];
 
 interface ShelfItem {
     shelf_type: string;
@@ -44,12 +46,10 @@ interface ShelfResponse {
     count: number;
 }
 
-const SHELF_TABS: { value: ShelfType; label: string }[] = [
-    { value: 'wishlist', label: 'Wishlist' },
-    { value: 'progress', label: 'Progress' },
-    { value: 'complete', label: 'Complete' },
-    { value: 'dropped', label: 'Dropped' },
-];
+const SHELF_TABS: { value: ShelfType; label: string }[] = SHELF_TYPES.map((value) => ({
+    value,
+    label: value[0].toUpperCase() + value.slice(1),
+}));
 
 const PAGE_SIZE = 50;
 
@@ -268,6 +268,13 @@ export const ShelfApp: React.FC<ShelfAppProps> = ({ initialTab, initialPage, onP
         key: APP_STATE_KEY,
         defaultValue: DEFAULT_STATE,
         debounceMs: 150,
+        normalize: (stored, fallback) => {
+            const saved = (stored && typeof stored === 'object' ? stored : {}) as Partial<ShelfAppState>;
+            return {
+                activeTab: SHELF_TYPES.includes(saved.activeTab as ShelfType) ? saved.activeTab as ShelfType : fallback.activeTab,
+                page: typeof saved.page === 'number' && Number.isInteger(saved.page) && saved.page > 0 ? saved.page : fallback.page,
+            };
+        },
     });
     const [paginationByTab, setPaginationByTab] = useState<Partial<Record<ShelfType, { pages: number; count: number }>>>({});
 

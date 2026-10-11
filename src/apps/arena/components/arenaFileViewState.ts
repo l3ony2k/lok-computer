@@ -14,7 +14,13 @@ export interface ArenaFileViewState {
   types: ArenaItem["kind"][];
 }
 
-interface LegacyArenaFileViewState {
+/** Anything a stored (possibly older) view state may contain. Sizes were once "S" | "M" | "L". */
+export interface StoredArenaFileViewState {
+  view?: unknown;
+  sort?: unknown;
+  direction?: unknown;
+  query?: unknown;
+  types?: unknown;
   isListView?: boolean;
   gridSize?: ArenaFileSize | "S" | "M" | "L";
   listSize?: ArenaFileSize | "S" | "M" | "L";
@@ -23,7 +29,7 @@ interface LegacyArenaFileViewState {
 const FILE_SIZES: ArenaFileSize[] = ["small", "medium", "large"];
 export const ARENA_FILE_SORTS: ArenaFileSort[] = ["default", "title", "type", "added", "updated"];
 
-const sizeFromLegacy = (size?: LegacyArenaFileViewState["gridSize"]): ArenaFileSize | undefined => {
+const sizeFromLegacy = (size?: StoredArenaFileViewState["gridSize"]): ArenaFileSize | undefined => {
   if (size === "S") return "small";
   if (size === "M") return "medium";
   if (size === "L") return "large";
@@ -43,7 +49,7 @@ export const createArenaFileViewState = (
 });
 
 export const normalizeArenaFileViewState = (
-  value: (Partial<ArenaFileViewState> & LegacyArenaFileViewState) | null | undefined,
+  value: StoredArenaFileViewState | null | undefined,
   defaults: ArenaFileViewState
 ): ArenaFileViewState => {
   if (!value) return defaults;
@@ -64,7 +70,7 @@ export const normalizeArenaFileViewState = (
     listSize,
     query: typeof value.query === "string" ? value.query : defaults.query,
     types: Array.isArray(value.types)
-      ? value.types.filter((type): type is ArenaItem["kind"] => ["image", "text", "link", "attachment", "embed", "channel"].includes(type))
+      ? value.types.filter((type): type is ArenaItem["kind"] => typeof type === "string" && ["image", "text", "link", "attachment", "embed", "channel"].includes(type))
       : defaults.types,
   };
 };

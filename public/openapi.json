@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "lok.computer Public API",
-    "version": "3.0.6",
+    "version": "3.0.7",
     "description": "Public REST endpoints used by the lok.computer browser desktop. Most operations read public data through an upstream provider. No caller API key is currently required. Upstream-dependent operations can fail independently of the credential-free status endpoint.",
     "contact": {
       "name": "Lok",
@@ -279,6 +279,16 @@
           "405": {
             "$ref": "#/components/responses/MethodNotAllowed"
           },
+          "429": {
+            "description": "This client exceeded the proxy budget of 60 requests per minute.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "500": {
             "$ref": "#/components/responses/UpstreamFailure"
           }
@@ -345,6 +355,16 @@
           "405": {
             "$ref": "#/components/responses/MethodNotAllowed"
           },
+          "429": {
+            "description": "This client exceeded the proxy budget of 60 requests per minute.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "500": {
             "$ref": "#/components/responses/UpstreamFailure"
           }
@@ -409,6 +429,16 @@
           },
           "405": {
             "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "429": {
+            "description": "This client exceeded the proxy budget of 60 requests per minute.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           },
           "500": {
             "$ref": "#/components/responses/UpstreamFailure"

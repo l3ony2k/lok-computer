@@ -1,7 +1,8 @@
 // src/core/Desktop.tsx
 import { useCallback, useEffect, useRef } from "react";
 import { useWindowActions, useWindowState } from "@/hooks/useWindowManager";
-import { WindowContainer, Taskbar } from "@/components/WindowManager";
+import { WindowContainer } from "@/components/window/WindowContainer";
+import { Taskbar } from "./Taskbar";
 import { DesktopIcons } from "@/components/desktop/DesktopIcons";
 import { TopBar } from "./TopBar";
 import { useUserSettings } from "@/hooks/useUserSettings";
@@ -118,8 +119,9 @@ export const Desktop = () => {
         fitWindowsToViewport();
     }, [fitWindowsToViewport, windowIdentity, definition.layout]);
 
+    // Dynamic viewport height: on phones the plain vh unit runs behind the browser toolbar and nothing can scroll it into view.
     return (
-        <div className="h-screen w-screen flex flex-col">
+        <div className="h-dvh w-screen flex flex-col">
             {!isClassicLayout && <TopBar />}
 
             <div ref={desktopContainerRef} className="desktop-container relative">

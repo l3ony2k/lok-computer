@@ -2,7 +2,8 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { ChevronLeft, ChevronRight, FolderOpen } from 'lucide-react';
 import { WindowLayout } from '@/components/window/WindowLayout';
 import { RetroButton } from '@/components/ui/RetroButton';
-import { FEATURED_CHANNELS } from '@/config/channels';
+import { FEATURED_CHANNELS, imageChannelLabel, isImageChannel } from '@/config/channels';
+import { getUserChannels } from '@/lib/api';
 import {
   formatArenaReference,
   getArenaImage,
@@ -54,12 +55,17 @@ const MIN_ZOOM = 0.1;
 const MAX_ZOOM = 10;
 const GALLERY_LIMIT = 500;
 
-/** Image-heavy channels from lok's Are.na, offered on the empty screen. */
-const SUGGESTED_CHANNELS = ['ephemeral-visions', 'physical-digital-surrealism', 'frutiger-aero-fmtmkflqhq8', 'it-s-really-cute']
-  .flatMap((slug) => {
-    const channel = FEATURED_CHANNELS.find((candidate) => candidate.slug === slug);
-    return channel ? [{ slug, title: channel.title.replace(/^[^\p{L}\p{N}]+/u, '') }] : [];
-  });
+interface SuggestedChannel {
+  slug: string;
+  title: string;
+}
+
+/** The 🜳-marked channels of a list, as buttons for the empty screen. */
+const toSuggestions = (channels: ReadonlyArray<{ slug: string; title: string }>): SuggestedChannel[] =>
+  channels.filter(isImageChannel).map((channel) => ({ slug: channel.slug, title: imageChannelLabel(channel) }));
+
+/** Shown until the live channel list (cached at boot) arrives; it also stands in offline. */
+const SNAPSHOT_SUGGESTIONS = toSuggestions(FEATURED_CHANNELS);
 
 const normalizeHttpUrl = (input: string) => {
   const trimmed = input.trim();
@@ -100,6 +106,7 @@ export const ImageViewerApp: React.FC<ImageViewerAppProps> = ({
   const [address, setAddress] = useState(() => arena ?? (imageUrl && !imageUrl.startsWith('blob:') ? imageUrl : ''));
   const [addressInvalid, setAddressInvalid] = useState(false);
   const [isDropping, setIsDropping] = useState(false);
+  const [suggestions, setSuggestions] = useState<SuggestedChannel[]>(SNAPSHOT_SUGGESTIONS);
 
   // Scale: 1.0 = 100% = image displayed at its natural pixel size
   const [scale, setScale] = useState<number>(1);
@@ -206,6 +213,20 @@ export const ImageViewerApp: React.FC<ImageViewerAppProps> = ({
     const reference = arena ? parseArenaReference(arena) : null;
     if (reference) void openArena(reference, { index: initialIndex, blockId: startBlockId });
   }, [arena, initialIndex, openArena, startBlockId]);
+
+  // Suggestions follow the live channel list: whatever lok marks with 🜳 now.
+  useEffect(() => {
+    let cancelled = false;
+    getUserChannels()
+      .then((channels) => {
+        const live = toSuggestions(channels);
+        if (!cancelled && live.length) setSuggestions(live);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Report what's open so the window restores and shares it. Local files can't be.
   useEffect(() => {
@@ -504,9 +525,9 @@ export const ImageViewerApp: React.FC<ImageViewerAppProps> = ({
         <div className="image-viewer-message">
           <strong>No image open</strong>
           <span>Paste an image URL or an Are.na channel above, open a file, or drop one here.</span>
-          {SUGGESTED_CHANNELS.length > 0 && (
+          {suggestions.length > 0 && (
             <div className="image-viewer-suggestions" aria-label="Galleries from lok's Are.na">
-              {SUGGESTED_CHANNELS.map((channel) => (
+              {suggestions.map((channel) => (
                 <RetroButton
                   key={channel.slug}
                   size="sm"

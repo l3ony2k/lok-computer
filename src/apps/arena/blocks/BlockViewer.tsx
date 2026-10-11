@@ -1,6 +1,7 @@
 import { ArenaBlock, ArenaChannel, ArenaConnection } from "@/types/arena";
+import { APP_CONFIG } from "@/config/constants";
 import { ArenaDetailPanel } from "../components/ArenaDetailPanel";
-import { ArenaWindowLayout } from "../components/ArenaWindowLayout";
+import { WindowLayout } from "@/components/window/WindowLayout";
 import { useApplicationLauncher } from "@/hooks/useApplicationLauncher";
 
 interface BlockViewerProps {
@@ -29,7 +30,7 @@ export const BlockViewer = ({
     openApplication('ChannelExplorer', {
       title: channel.title || "Channel",
       iconType: "other-channel",
-      props: { channelSlug: channel.slug, username: channel.owner?.slug || "lok" },
+      props: { channelSlug: channel.slug, username: channel.owner?.slug || APP_CONFIG.ARENA_USERNAME },
     });
   };
 
@@ -45,9 +46,6 @@ export const BlockViewer = ({
 
   if (mode === "embedded") return panel;
 
-  return (
-    <ArenaWindowLayout toolbar={null}>
-      {panel}
-    </ArenaWindowLayout>
-  );
+  // The detail panel manages its own padding and split scroll areas.
+  return <WindowLayout hasPadding={false}>{panel}</WindowLayout>;
 };

@@ -1,26 +1,33 @@
 import { memo, Suspense, useCallback, useState } from 'react';
 import { WindowErrorBoundary } from './WindowErrorBoundary';
-import { Window } from '@/hooks/useWindowManager.ts';
-import { useWindowActions } from '@/hooks/useWindowManager.ts';
+import { useWindowActions, type DesktopWindow } from '@/hooks/useWindowManager';
 import { X, Minimize, Maximize } from 'lucide-react';
 import { CustomIcon } from './CustomIcon';
 import { Rnd, RndDragCallback, RndResizeCallback } from 'react-rnd';
 import { cn } from '@/lib/utils';
-import { adjustWindowToViewport, type WindowDimensions, type ViewportDimensions, type AdjustedWindow } from '@/lib/utils';
+import { adjustWindowToViewport, type WindowDimensions, type ViewportDimensions } from '@/lib/utils';
 import { WINDOW_DEFAULTS } from '@/config/window';
 import { ContextMenu, type ContextMenuItem } from '@/components/menu/ContextMenu';
 import { generateShareUrl } from '@/config/routes';
+import { toast } from 'sonner';
 import { useWindowTransitions } from '@/hooks/useWindowTransitions';
 
 interface DraggableWindowProps {
-  window: Window;
+  window: DesktopWindow;
   isActive: boolean;
   isTransitioning: boolean;
-  onResizeStop: (id: string, width: number, height: number) => void;
 }
 
-export const DraggableWindow = memo(function DraggableWindow({ window: windowProps, isActive, isTransitioning, onResizeStop }: DraggableWindowProps) {
-  const { closeWindow, focusWindow, maximizeWindow, restoreWindow, updateWindowPosition } = useWindowActions();
+/**
+ * Buttons inside the drag handle. react-draggable calls preventDefault on
+ * touchstart anywhere in the handle, which cancels the tap's click; excluding
+ * the buttons lets them get an ordinary click on touch and mouse alike, and a
+ * press on them no longer starts a zero-length drag.
+ */
+const WINDOW_DRAG_CANCEL = '.window-menu-button, .window-controls';
+
+export const DraggableWindow = memo(function DraggableWindow({ window: windowProps, isActive, isTransitioning }: DraggableWindowProps) {
+  const { closeWindow, focusWindow, maximizeWindow, restoreWindow, updateWindowPosition, updateWindowDimensions } = useWindowActions();
   const { minimizeWithTransition } = useWindowTransitions();
   const [isInteracting, setIsInteracting] = useState(false);
 
@@ -28,12 +35,12 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
   const [contextMenuOpen, setContextMenuOpen] = useState(false);
   const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
 
-  const handleMinimize = (e: React.MouseEvent | React.TouchEvent) => {
+  const handleMinimize = (e: React.MouseEvent) => {
     e.stopPropagation();
     minimizeWithTransition(windowProps);
   };
 
-  const handleMaximizeRestore = (e: React.MouseEvent | React.TouchEvent) => {
+  const handleMaximizeRestore = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (windowProps.maximized) {
       restoreWindow(windowProps.id);
@@ -42,7 +49,7 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
     }
   };
 
-  const handleClose = (e: React.MouseEvent | React.TouchEvent) => {
+  const handleClose = (e: React.MouseEvent) => {
     e.stopPropagation();
     closeWindow(windowProps.id);
   };
@@ -56,8 +63,20 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
     setContextMenuOpen(true);
   };
 
+  // The link reopens this window as it is shown: apps report their view through onPropsChange.
+  const copyShareUrl = async (shareUrl: string) => {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast('Link copied to clipboard');
+    } catch (error) {
+      console.warn('[Window] Could not copy the share link:', error);
+      toast('Could not copy the link');
+    }
+  };
+
   // Build context menu items
   const getContextMenuItems = (): ContextMenuItem[] => {
+    const shareUrl = generateShareUrl(windowProps.componentType || '', windowProps.props);
     const windowSubItems: ContextMenuItem[] = [
       {
         type: 'item',
@@ -97,25 +116,9 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
       {
         type: 'item',
         label: 'Share Window',
+        disabled: !shareUrl,
         action: () => {
-          const shareUrl = generateShareUrl(
-            windowProps.componentType || '',
-            windowProps.props
-          );
-          if (shareUrl) {
-            navigator.clipboard.writeText(shareUrl).then(() => {
-              console.log('URL copied:', shareUrl);
-            });
-          } else {
-            console.log('Unable to generate share URL for this window');
-          }
-        },
-      },
-      {
-        type: 'item',
-        label: 'About',
-        action: () => {
-          // Placeholder - does nothing for now
+          if (shareUrl) void copyShareUrl(shareUrl);
         },
       },
     ];
@@ -123,72 +126,65 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
 
   const handleDragStop = useCallback<RndDragCallback>((_e, data) => {
     setIsInteracting(false);
-    if (!windowProps.maximized) {
-      const parentElement = data.node.parentElement;
-      if (parentElement) {
-        const viewport: ViewportDimensions = {
-          width: parentElement.clientWidth,
-          height: parentElement.clientHeight,
-        };
+    if (windowProps.maximized) return;
 
-        const currentWindowData: WindowDimensions = {
-          x: data.x,
-          y: data.y,
-          width: windowProps.width ?? WINDOW_DEFAULTS.DEFAULT_WIDTH,
-          height: windowProps.height ?? WINDOW_DEFAULTS.DEFAULT_HEIGHT,
-          minWidth: windowProps.minWidth ?? WINDOW_DEFAULTS.MIN_WIDTH,
-          minHeight: windowProps.minHeight ?? WINDOW_DEFAULTS.MIN_HEIGHT,
-        };
-
-        const adjusted = adjustWindowToViewport(currentWindowData, viewport);
-
-        updateWindowPosition(windowProps.id, adjusted.x, adjusted.y);
-      } else {
-        updateWindowPosition(windowProps.id, data.x, data.y);
-      }
+    const parentElement = data.node.parentElement;
+    if (!parentElement) {
+      updateWindowPosition(windowProps.id, data.x, data.y);
+      return;
     }
+
+    const viewport: ViewportDimensions = {
+      width: parentElement.clientWidth,
+      height: parentElement.clientHeight,
+    };
+    const currentWindowData: WindowDimensions = {
+      x: data.x,
+      y: data.y,
+      width: windowProps.width ?? WINDOW_DEFAULTS.DEFAULT_WIDTH,
+      height: windowProps.height ?? WINDOW_DEFAULTS.DEFAULT_HEIGHT,
+      minWidth: windowProps.minWidth ?? WINDOW_DEFAULTS.MIN_WIDTH,
+      minHeight: windowProps.minHeight ?? WINDOW_DEFAULTS.MIN_HEIGHT,
+    };
+    const adjusted = adjustWindowToViewport(currentWindowData, viewport);
+    updateWindowPosition(windowProps.id, adjusted.x, adjusted.y);
   }, [windowProps.id, windowProps.maximized, windowProps.width, windowProps.height, windowProps.minWidth, windowProps.minHeight, updateWindowPosition]);
 
   const handleResizeStop = useCallback<RndResizeCallback>((_e, _direction, ref, _delta, position) => {
     setIsInteracting(false);
     const parentElement = ref.parentElement;
-    if (parentElement) {
-      const viewport: ViewportDimensions = {
-        width: parentElement.clientWidth,
-        height: parentElement.clientHeight,
-      };
-
-      const currentWindowData: WindowDimensions = {
-        x: position.x,
-        y: position.y,
-        width: ref.offsetWidth,
-        height: ref.offsetHeight,
-        minWidth: windowProps.minWidth ?? WINDOW_DEFAULTS.MIN_WIDTH,
-        minHeight: windowProps.minHeight ?? WINDOW_DEFAULTS.MIN_HEIGHT,
-      };
-
-      const adjusted = adjustWindowToViewport(currentWindowData, viewport);
-
-      onResizeStop(windowProps.id, adjusted.width, adjusted.height);
-      updateWindowPosition(windowProps.id, adjusted.x, adjusted.y);
-    } else {
-      onResizeStop(windowProps.id, ref.offsetWidth, ref.offsetHeight);
+    if (!parentElement) {
+      updateWindowDimensions(windowProps.id, ref.offsetWidth, ref.offsetHeight);
       updateWindowPosition(windowProps.id, position.x, position.y);
+      return;
     }
-  }, [windowProps.id, windowProps.minWidth, windowProps.minHeight, onResizeStop, updateWindowPosition]);
 
-  // Focus handler for clicks outside the title bar
+    const viewport: ViewportDimensions = {
+      width: parentElement.clientWidth,
+      height: parentElement.clientHeight,
+    };
+    const currentWindowData: WindowDimensions = {
+      x: position.x,
+      y: position.y,
+      width: ref.offsetWidth,
+      height: ref.offsetHeight,
+      minWidth: windowProps.minWidth ?? WINDOW_DEFAULTS.MIN_WIDTH,
+      minHeight: windowProps.minHeight ?? WINDOW_DEFAULTS.MIN_HEIGHT,
+    };
+    const adjusted = adjustWindowToViewport(currentWindowData, viewport);
+    updateWindowDimensions(windowProps.id, adjusted.width, adjusted.height);
+    updateWindowPosition(windowProps.id, adjusted.x, adjusted.y);
+  }, [windowProps.id, windowProps.minWidth, windowProps.minHeight, updateWindowDimensions, updateWindowPosition]);
+
+  // Focus on press. The title bar itself focuses through onDragStart; its
+  // buttons are excluded from dragging (WINDOW_DRAG_CANCEL), so they focus here
+  // along with presses anywhere in the content. Runs for touch as well: Rnd
+  // forwards touchstart to onMouseDown before deciding whether to drag.
   const handleMouseDownFocus = useCallback((e: MouseEvent) => {
-    // Check if the click target is part of the title bar
-    const targetElement = e.target as Element;
-    const titleBar = targetElement.closest('.window-titlebar');
-
-    // Only focus if click is outside titlebar and window isn't already active
-    if (!titleBar && !isActive) {
-      focusWindow(windowProps.id);
-    }
-    // If click is on title bar, Rnd's drag handle logic will take over
-    // focus will be handled by onDragStart below.
+    if (isActive) return;
+    const target = e.target as Element;
+    const onDragHandle = target.closest('.window-titlebar') && !target.closest(WINDOW_DRAG_CANCEL);
+    if (!onDragHandle) focusWindow(windowProps.id);
   }, [focusWindow, windowProps.id, isActive]);
 
   // Generic handler to focus window on drag/resize start if not active
@@ -234,6 +230,7 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
         disableDragging={windowProps.maximized}
         enableResizing={!windowProps.maximized}
         dragHandleClassName="window-titlebar"
+        cancel={WINDOW_DRAG_CANCEL}
       >
         <div
           data-window-surface-id={windowProps.id}
@@ -263,7 +260,6 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
                 className="retro-button window-control"
                 data-window-control="minimize"
                 onClick={handleMinimize}
-                onTouchEnd={handleMinimize}
                 title="Minimize"
                 aria-label="Minimize"
               >
@@ -274,7 +270,6 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
                   className="retro-button window-control"
                   data-window-control="restore"
                   onClick={handleMaximizeRestore}
-                  onTouchEnd={handleMaximizeRestore}
                   title="Restore"
                   aria-label="Restore"
                 >
@@ -287,7 +282,6 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
                   className="retro-button window-control"
                   data-window-control="maximize"
                   onClick={handleMaximizeRestore}
-                  onTouchEnd={handleMaximizeRestore}
                   title="Maximize"
                   aria-label="Maximize"
                 >
@@ -298,7 +292,6 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
                 className="retro-button window-control"
                 data-window-control="close"
                 onClick={handleClose}
-                onTouchEnd={handleClose}
                 title="Close"
                 aria-label="Close"
               >

@@ -8,8 +8,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 bun dev          # Start dev server at localhost:8080
 bun run build    # Production build
 bun run lint     # Run ESLint
+bun run typecheck # tsc over src (the Vite build never type-checks)
 bun test         # Run architecture and behavior tests
 ```
+
+Run all four before finishing a change.
 
 Path alias `@/` maps to `./src/`.
 
@@ -17,20 +20,22 @@ Path alias `@/` maps to `./src/`.
 
 - **Never use Tailwind `gray-*` colors** — use `neutral-*` instead
 - **No rounded corners** — avoid `rounded-*` classes
+- **Never size a layer with `100vh` or `h-screen`** — on phones that is the height with the browser toolbar collapsed, and the body is `overflow: clip`, so anything in that strip is unreachable. Use `h-dvh`/`100dvh`, or a percentage of a fixed `inset: 0` parent (`src/lib/viewportUnits.test.ts` checks)
 
 ## Architecture
 
-lok.computer is a browser-based retro desktop environment. The entire UI is a single React app with no actual routing — `react-router-dom` is only used for deep-linking (URLs open specific windows on load, then the URL resets to `/`).
+lok.computer is a browser-based retro desktop environment. The entire UI is a single React app with no routing library: `RouteInterpreter` reads the arrival URL once, opens the matching windows, and resets the address bar to `/` with `history.replaceState`.
 
 ### Window System
 
 The core primitive is a floating, draggable/resizable window powered by `react-rnd`. Every app runs inside one.
 
-- **Window manager hooks** (`src/hooks/useWindowManager.ts`) — `useWindowState` exposes window state and `useWindowActions` exposes stable commands. The internal controller manages z-index stacking, minimize/maximize, and IndexedDB session persistence.
+- **Window manager hooks** (`src/hooks/useWindowManager.ts`) — `useWindowState` exposes window state and `useWindowActions` exposes stable commands. The internal controller manages z-index stacking, minimize/maximize, and IndexedDB session persistence. A live window is a `DesktopWindow` (never `Window`, which would shadow the global).
 - **`WindowManagerProvider`** / **`WindowContainer`** (`src/components/window/`) — the React provider and the component that renders all open windows.
 - **Application catalog** (`src/config/apps.tsx`) — authoritative identity, lazy loader, lazy view, defaults, and single-instance behavior for every restorable Application.
 - **Application launch** (`src/hooks/useApplicationLauncher.tsx`) — turns Application identity and domain props into a live, restorable window.
 - **Scrolling inside windows** — never call `element.scrollIntoView()` or bare `focus()` from app code: both walk every ancestor and scrolled the window layer (shifting every window). Use `scrollIntoViewWithin` from `src/lib/utils.ts` and `focus({ preventScroll: true })`. The body, desktop, and window layer are `overflow: clip` as a backstop.
+- **Buttons in the title bar** — the title bar is the drag handle, and react-draggable calls `preventDefault` on `touchstart` inside it, which cancels the tap's click. The controls and the icon menu button are excluded through react-rnd's `cancel` (`WINDOW_DRAG_CANCEL` in `DraggableWindow.tsx`), so they get an ordinary `onClick` on touch and mouse alike. Add any new title-bar button to that selector; never pair `onTouchEnd` with `onClick`.
 
 ### Adding a New App
 
@@ -64,14 +69,14 @@ Use `usePersistedState` for view-state lifecycle and `cachedRequest` for remote 
 
 A single Cloudflare Worker acts as an API proxy for everything that requires credentials (the Bsky app reads the public Bluesky API directly, so there is no Bluesky route):
 - `/api/jev/plan`, `/api/jev` — Ask AI: a fast planner LLM on an OpenAI-compatible endpoint (env: `AI_BASE_URL`, `AI_API_KEY`, required `JEV_PLANNER_MODEL`, `gpt-6-luna` in wrangler.toml; optional `JEV_PLANNER_REASONING_EFFORT`) compiles typed questions, TypeSafe Jev answers them (env: `TYPESAFE_API_KEY`, `JEV_MODEL`; per-IP `JEV_RATE_LIMITER`); logic in `jev.js`
-- `/api/fedi/account` and `/api/fedi/statuses` — Mastodon/GoToSocial proxy (env: `FEDI_INSTANCE`, `FEDI_ACCESS_TOKEN`)
-- `/api/neodb/shelf` — NeoDB reading shelf proxy (env: `NEODB_ACCESS_TOKEN`)
+- `/api/fedi/account` and `/api/fedi/statuses` — Mastodon/GoToSocial proxy (env: `FEDI_INSTANCE`, `FEDI_ACCESS_TOKEN`; per-IP `PROXY_RATE_LIMITER`, shared with NeoDB)
+- `/api/neodb/shelf` — NeoDB reading shelf proxy (env: `NEODB_ACCESS_TOKEN`; per-IP `PROXY_RATE_LIMITER`)
 
 Deploy/configure via `wrangler.toml`. Secrets are set in the Cloudflare dashboard, not in the toml.
 
 ### Deep Linking
 
-`RouteInterpreter` (`src/components/RouteInterpreter.tsx`) runs once on mount, reads the URL, opens the corresponding window(s), then replaces the URL with `/`. Supports single windows (`/explorer/channel-slug`) and multi-window specs (`/open?w=about,weather,explorer/my-channel`).
+`RouteInterpreter` (`src/components/RouteInterpreter.tsx`) runs once on mount, reads the URL, opens the corresponding window(s), then replaces the URL with `/`. Supports single windows (`/explorer/channel-slug`) and multi-window specs (`/open?w=about,weather,explorer/my-channel`). The title-bar icon menu's "Share Window" copies `generateShareUrl` (the route's path on the current origin); apps keep their window props current through `onPropsChange`, so the link reopens the window as shown. `src/config/routes.test.ts` round-trips every route.
 
 ### Themes
 
@@ -96,6 +101,8 @@ App icons are pixel art generated by `node scripts/pixel-icons.mjs` (ASCII grids
 The Are.na app (`src/apps/arena/`) fetches channel/block data from the Are.na v3 API directly (no proxy needed — public API). Block types include images, links, text, attachments, and media.
 
 Use `ARENA_WINDOW_DEFAULTS` in the Application catalog. `useArenaChannelBrowsing` owns remote/in-memory pagination, ordering, cancellation, dedupe, and selection restoration.
+
+lok marks image-heavy channels with `🜳` in the title (`IMAGE_CHANNEL_MARK` in `src/config/channels.ts`). The Images app suggests those from the live channel list (`getUserChannels`, cached at boot); `FEATURED_CHANNELS` is a snapshot that seeds the buttons and stands in when Are.na cannot be reached. The account name is `APP_CONFIG.ARENA_USERNAME`.
 
 ### Desktop Icons
 

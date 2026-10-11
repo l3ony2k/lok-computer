@@ -69,7 +69,7 @@ const useSystemMenuItems = () => {
       }));
     }
 
-    if (baseItem.subItems.length > 0) baseItem.action = undefined;
+    if (baseItem.subItems?.length) baseItem.action = undefined;
     return baseItem;
   }), [arenaChannels, openApplication]);
 };
@@ -122,7 +122,11 @@ export const OfflineReadout: React.FC = () => {
 };
 
 const formatTime = (date: Date) => date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-const formatDate = (date: Date) => date.toISOString().split('T')[0];
+// Local calendar date (toISOString would print the UTC date, which is off by one near midnight).
+const formatDate = (date: Date) => {
+  const pad = (part: number) => String(part).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+};
 
 /**
  * Clock and calendar. The ticking state lives here so the surrounding bar does

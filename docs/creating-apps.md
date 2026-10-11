@@ -147,4 +147,6 @@ const result = await cachedRequest({
 - [ ] persisted state uses `usePersistedState`
 - [ ] remote reads use `cachedRequest`
 - [ ] `bun run lint` passes
+- [ ] `bun run typecheck` passes
 - [ ] `bun run build` passes
+- [ ] nothing calls `scrollIntoView()` or a bare `focus()` (use `scrollIntoViewWithin` and `focus({ preventScroll: true })`)

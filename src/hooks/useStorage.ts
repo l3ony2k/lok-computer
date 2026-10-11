@@ -1,53 +1,9 @@
 /**
- * React hooks for IndexedDB storage
+ * Persisted view state backed by IndexedDB (see src/lib/storage.ts).
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
-import {
-    initStorage,
-    getAppState,
-    setAppState,
-    getUsageStats,
-    clearCache,
-    clearExpiredCache,
-    isStorageAvailable,
-    type UsageStats,
-} from '@/lib/storage';
+import { getAppState, setAppState } from '@/lib/storage';
 
-/**
- * Hook to initialize storage on app mount
- */
-export const useStorageInit = () => {
-    const [isReady, setIsReady] = useState(false);
-    const [error, setError] = useState<Error | null>(null);
-
-    useEffect(() => {
-        if (!isStorageAvailable()) {
-            console.warn('[Storage] IndexedDB not available, using fallback');
-            setIsReady(true);
-            return;
-        }
-
-        initStorage()
-            .then(() => {
-                setIsReady(true);
-            })
-            .catch((err) => {
-                console.error('[Storage] Failed to initialize:', err);
-                setError(err);
-                setIsReady(true); // Still mark as ready to allow app to function
-            });
-    }, []);
-
-    return { isReady, error };
-};
-
-/**
- * Hook for persisted state that syncs with IndexedDB
- * 
- * @param key - Storage key
- * @param defaultValue - Default value if nothing is stored
- * @returns [value, setValue, isLoading]
- */
 export interface PersistedStateOptions<T> {
     key: string;
     defaultValue: T;
@@ -57,6 +13,13 @@ export interface PersistedStateOptions<T> {
     onChange?: (value: T) => void;
 }
 
+/**
+ * State that survives reloads. Owns the initial-load protection (nothing is
+ * written back until the stored value has been read), key changes, optional
+ * normalization of legacy values, and debounced writes.
+ *
+ * @returns [value, setValue, isLoading]
+ */
 export const usePersistedState = <T>({
     key,
     defaultValue,
@@ -112,7 +75,7 @@ export const usePersistedState = <T>({
             }
         };
 
-        loadValue();
+        void loadValue();
 
         return () => {
             active = false;
@@ -153,45 +116,4 @@ export const usePersistedState = <T>({
     }, []);
 
     return [value, updateValue, isLoading];
-};
-
-/**
- * Hook for usage statistics
- */
-export const useUsageStats = () => {
-    const [stats, setStats] = useState<UsageStats | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-
-    const refresh = useCallback(async () => {
-        try {
-            const data = await getUsageStats();
-            setStats(data);
-        } catch (error) {
-            console.error('[Storage] Failed to get usage stats:', error);
-        } finally {
-            setIsLoading(false);
-        }
-    }, []);
-
-    useEffect(() => {
-        refresh();
-    }, [refresh]);
-
-    const handleClearCache = useCallback(async () => {
-        await clearCache();
-        await refresh();
-    }, [refresh]);
-
-    const handleClearExpired = useCallback(async () => {
-        await clearExpiredCache();
-        await refresh();
-    }, [refresh]);
-
-    return {
-        stats,
-        isLoading,
-        refresh,
-        clearCache: handleClearCache,
-        clearExpiredCache: handleClearExpired,
-    };
 };

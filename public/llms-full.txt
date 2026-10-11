@@ -16,7 +16,7 @@ Use lok.computer when a task needs public information about Lok, Lok's published
 
 `GET https://lok.computer/api/status` is a credential-free and side-effect-free connectivity check. `GET https://lok.computer/api` returns discovery links. The complete OpenAPI 3.1 document is at `https://lok.computer/openapi.json`.
 
-No caller API key is currently required. The server's upstream credentials are not exposed. The documented data endpoints are read-only, so there is no separate write sandbox. `/api/status` is the safe endpoint for tests. The AI operations submit content for processing: AI chat forwards recent messages to the configured model provider, and Ask AI (`POST /api/jev/plan`, `POST /api/jev`) sends a request and optional content to a fast planner model and to TypeSafe's Jev decision model, returning a JSON object keyed by the requested properties. Never send them secrets or sensitive personal data.
+No caller API key is currently required. The server's upstream credentials are not exposed. The documented data endpoints are read-only, so there is no separate write sandbox. `/api/status` is the safe endpoint for tests. The Ask AI operations (`POST /api/jev/plan`, `POST /api/jev`) submit content for processing: they send a question and optional content to a fast planner model and to TypeSafe's Jev decision model, returning a JSON object keyed by the requested properties. Never send them secrets or sensitive personal data.
 
 Some operations depend on Are.na, Bluesky, a fediverse server, NeoDB, a weather provider, or an AI model provider. An upstream outage, changed content, or expired server credential can cause an operation to fail even when `/api/status` is healthy. Clients should cache successful reads, keep request volume modest, and back off after transient failures. No service-level agreement is published.
 
@@ -28,7 +28,7 @@ Public material returned from another service remains attributable to that servi
 
 ## Privacy summary
 
-Cloudflare and upstream providers may process normal request information such as IP address, user agent, URL, timestamp, and security signals. Browser-local desktop state is not exposed through the public API. AI chat and Ask AI submissions are processed by the configured external model provider; Ask AI questions and content are also processed by TypeSafe (Jev). More detail is available at `https://lok.computer/privacy`.
+Cloudflare and upstream providers may process normal request information such as IP address, user agent, URL, timestamp, and security signals. Browser-local desktop state is not exposed through the public API. Ask AI submissions are processed by the configured external planner model and by TypeSafe (Jev). More detail is available at `https://lok.computer/privacy`.
 
 ## Resource index
 

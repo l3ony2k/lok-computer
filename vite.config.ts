@@ -50,7 +50,13 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     systemVersionPlugin(),
-  ].filter(Boolean),
+  ],
+  build: {
+    // Raster images stay files: the boot screen warms them into the HTTP cache,
+    // and they are reused across versions instead of being re-downloaded as
+    // base64 inside every new entry chunk. Small SVGs (theme glyphs) inline.
+    assetsInlineLimit: (filePath, content) => filePath.endsWith(".svg") && content.length < 4096,
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

@@ -13,7 +13,7 @@ import {
 
 describe('theme registry', () => {
   test('lists every theme once, with lok first', () => {
-    expect([...THEME_IDS].sort()).toEqual(Object.keys(THEMES).sort());
+    expect(Object.keys(THEMES).sort()).toEqual([...THEME_IDS].sort());
     expect(THEME_IDS[0]).toBe('lok');
   });
 

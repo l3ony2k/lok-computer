@@ -31,7 +31,7 @@ import { RetroButton } from '@/components/ui/RetroButton';
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `size` | `'sm' \| 'md' \| 'icon'` | `'md'` | Button size |
+| `size` | `'sm' \| 'md' \| 'icon'` | `'md'` | `sm` and `md` share the control height; `icon` is a square padded button |
 | `active` | `boolean` | `false` | Active/selected state |
 | `variant` | `'default' \| 'primary'` | `'default'` | Visual variant |
 
@@ -86,42 +86,6 @@ import { WindowLayout } from '@/components/window/WindowLayout';
 | `hasPadding` | `boolean` | `true` | Add padding to content |
 | `isScrollable` | `boolean` | `true` | Enable scrolling |
 | `children` | `ReactNode` | - | Main content |
-
----
-
-### PopupDialog
-
-Modal dialog matching window style.
-
-```tsx
-import { PopupDialog, PopupDialogButtons } from '@/components/ui/PopupDialog';
-
-<PopupDialog
-  title="Confirm"
-  iconType="config"
-  isOpen={showDialog}
-  onClose={() => setShowDialog(false)}
-  width={320}
-  intrusive={true}  // Modal with overlay
->
-  <p>Are you sure?</p>
-  <PopupDialogButtons>
-    <RetroButton onClick={handleConfirm}>Yes</RetroButton>
-    <RetroButton onClick={() => setShowDialog(false)}>No</RetroButton>
-  </PopupDialogButtons>
-</PopupDialog>
-```
-
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `title` | `string` | - | Dialog title |
-| `iconType` | `string` | `'config'` | Title bar icon |
-| `isOpen` | `boolean` | - | Show/hide dialog |
-| `onClose` | `() => void` | - | Close handler |
-| `width` | `number` | `320` | Dialog width |
-| `height` | `number` | - | Dialog height (auto if not set) |
-| `intrusive` | `boolean` | `false` | Modal with overlay |
-| `initialPosition` | `{x, y}` | - | Initial position |
 
 ---
 
@@ -185,21 +149,6 @@ import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/componen
 | `ResizablePanelGroup` | `direction`: `'horizontal' \| 'vertical'` |
 | `ResizablePanel` | `defaultSize`, `minSize`, `maxSize` (percentages) |
 | `ResizableHandle` | `withHandle`: show grip icon |
-
----
-
-### Tooltip
-
-Hover tooltip with delay.
-
-```tsx
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-
-<Tooltip>
-  <TooltipTrigger>Hover me</TooltipTrigger>
-  <TooltipContent>Tooltip text</TooltipContent>
-</Tooltip>
-```
 
 ---
 
@@ -375,11 +324,4 @@ settings.crt: {
 
 ## Typography
 
-Prose styling via `@tailwindcss/typography`:
-
-```tsx
-<div className="prose dark:prose-invert">
-  <h1>Heading</h1>
-  <p>Paragraph with <a href="#">links</a>.</p>
-</div>
-```
+Body text is 14px in the theme face (`--font-ui`); code surfaces use `--font-code` (`font-mono`). Rich HTML from Are.na or the fediverse is styled by the component's own classes (`.arena-detail-rich-text`, the `lok-reader-*` hooks); there is no prose plugin.

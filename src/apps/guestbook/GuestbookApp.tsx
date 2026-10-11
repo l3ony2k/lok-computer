@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { WindowLayout } from '@/components/window/WindowLayout';
 import { StateMessage } from '@/components/ui/StateMessage';
 import { RetroButton } from '@/components/ui/RetroButton';
+import { APP_CONFIG } from '@/config/constants';
 
 export const GuestbookApp: React.FC = () => {
 
@@ -10,7 +11,7 @@ export const GuestbookApp: React.FC = () => {
 
     // Create and load the guestbook script
     const script = document.createElement('script');
-    script.src = 'https://guestbooks.meadow.cafe/resources/js/embed_script/671/script.js';
+    script.src = APP_CONFIG.GUESTBOOK_SCRIPT_URL;
     script.async = true;
     script.onload = () => {
       console.log('[App:Guestbook] Script loaded');
@@ -39,7 +40,7 @@ export const GuestbookApp: React.FC = () => {
       footer={
         <div className="app-footer-row justify-end">
           <span id="guestbooks___guestbook-made-with" className="text-xs opacity-50 select-none">
-            Lovingly made with <a target="_blank" href="https://guestbooks.meadow.cafe/guestbook/671" className="underline hover:opacity-80">Guestbooks</a>
+            Lovingly made with <a target="_blank" rel="noopener noreferrer" href={APP_CONFIG.GUESTBOOK_URL} className="underline hover:opacity-80">Guestbooks</a>
           </span>
         </div>
       }
@@ -48,7 +49,7 @@ export const GuestbookApp: React.FC = () => {
         <section className="guestbook-composer-pane scrollable-area" aria-label="Sign the guestbook">
           <div className="guestbook-pane-inner">
             <div id="guestbooks___guestbook-form-container">
-              <form id="guestbooks___guestbook-form" action="https://guestbooks.meadow.cafe/guestbook/671/submit" method="post" className="space-y-3">
+              <form id="guestbooks___guestbook-form" action={APP_CONFIG.GUESTBOOK_SUBMIT_URL} method="post" className="space-y-3">
                 <div className="guestbooks___input-container">
                   <input
                     placeholder="Name"

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, createContext, useContext, ReactNode, useRef, useCallback } from "react";
+import React, { useState, useEffect, createContext, useContext, ReactNode, useCallback } from "react";
 import { getAppState, setAppState } from "@/lib/storage";
 
 /**
@@ -54,26 +54,23 @@ const DEFAULT_SETTINGS: UserSettings = {
 
 // Storage key for all user settings
 const STORAGE_KEY = 'userSettings';
+// Sliders (CRT, Oneko speed) fire on every pointer move; one write per pause is plenty.
+const SAVE_DEBOUNCE_MS = 150;
 
-// Create the context with a default value
 interface UserSettingsContextValue {
   settings: UserSettings;
   isLoading: boolean;
   updateSetting: <K extends keyof UserSettings>(key: K, value: UserSettings[K]) => void;
-  setWallpaper: (url: string) => void;
-  clearWallpaper: () => void;
 }
 
 const UserSettingsContext = createContext<UserSettingsContextValue | undefined>(undefined);
 
 /**
- * Provider component for user settings
- * Now uses IndexedDB via storage.ts for persistence
+ * Provider component for user settings, persisted to IndexedDB via storage.ts.
  */
 export function UserSettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
   const [isLoading, setIsLoading] = useState(true);
-  const isInitialLoad = useRef(true);
 
   // Load settings from IndexedDB on mount
   useEffect(() => {
@@ -81,61 +78,50 @@ export function UserSettingsProvider({ children }: { children: ReactNode }) {
 
     const loadSettings = async () => {
       try {
-        // Try IndexedDB first
         const stored = await getAppState<UserSettings>(STORAGE_KEY);
+        if (!mounted) return;
 
-        if (mounted) {
-          if (stored) {
-            setSettings({ ...DEFAULT_SETTINGS, ...stored });
-          } else {
-            // Migrate from localStorage if exists
-            try {
-              const legacyData = localStorage.getItem(STORAGE_KEY);
-              if (legacyData) {
-                const parsed = JSON.parse(legacyData);
-                setSettings({ ...DEFAULT_SETTINGS, ...parsed });
-                // Save to IndexedDB and clear localStorage
-                await setAppState(STORAGE_KEY, parsed);
-                localStorage.removeItem(STORAGE_KEY);
-                console.info('[UserSettings] Migrated from localStorage to IndexedDB');
-              }
-            } catch (e) {
-              console.warn('[UserSettings] Failed to migrate from localStorage:', e);
-            }
+        if (stored) {
+          setSettings({ ...DEFAULT_SETTINGS, ...stored });
+          return;
+        }
+
+        // Migrate from localStorage if exists
+        try {
+          const legacyData = localStorage.getItem(STORAGE_KEY);
+          if (legacyData) {
+            const parsed = JSON.parse(legacyData);
+            setSettings({ ...DEFAULT_SETTINGS, ...parsed });
+            await setAppState(STORAGE_KEY, parsed);
+            localStorage.removeItem(STORAGE_KEY);
+            console.info('[UserSettings] Migrated from localStorage to IndexedDB');
           }
+        } catch (e) {
+          console.warn('[UserSettings] Failed to migrate from localStorage:', e);
         }
       } catch (error) {
         console.error('[UserSettings] Failed to load settings:', error);
       } finally {
-        if (mounted) {
-          setIsLoading(false);
-          isInitialLoad.current = false;
-        }
+        if (mounted) setIsLoading(false);
       }
     };
 
-    loadSettings();
+    void loadSettings();
 
     return () => {
       mounted = false;
     };
   }, []);
 
-  // Save settings to IndexedDB whenever they change (skip initial load)
+  // Save settings to IndexedDB whenever they change (debounced; skipped until loaded)
   useEffect(() => {
-    if (isInitialLoad.current || isLoading) {
-      return;
-    }
-
-    const saveSettings = async () => {
-      try {
-        await setAppState(STORAGE_KEY, settings);
-      } catch (error) {
+    if (isLoading) return;
+    const timeout = setTimeout(() => {
+      setAppState(STORAGE_KEY, settings).catch((error) => {
         console.error('[UserSettings] Failed to save settings:', error);
-      }
-    };
-
-    saveSettings();
+      });
+    }, SAVE_DEBOUNCE_MS);
+    return () => clearTimeout(timeout);
   }, [settings, isLoading]);
 
   useEffect(() => {
@@ -144,9 +130,6 @@ export function UserSettingsProvider({ children }: { children: ReactNode }) {
     );
   }, [settings.debug?.verboseCacheLogging]);
 
-  /**
-   * Update a specific setting
-   */
   const updateSetting = useCallback(<K extends keyof UserSettings>(
     key: K,
     value: UserSettings[K]
@@ -157,27 +140,7 @@ export function UserSettingsProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
-  /**
-   * Set the wallpaper URL
-   */
-  const setWallpaper = useCallback((url: string) => {
-    updateSetting('wallpaper', url);
-  }, [updateSetting]);
-
-  /**
-   * Clear the wallpaper (reset to default)
-   */
-  const clearWallpaper = useCallback(() => {
-    updateSetting('wallpaper', '');
-  }, [updateSetting]);
-
-  const value = {
-    settings,
-    isLoading,
-    updateSetting,
-    setWallpaper,
-    clearWallpaper,
-  };
+  const value = React.useMemo(() => ({ settings, isLoading, updateSetting }), [settings, isLoading, updateSetting]);
 
   return React.createElement(
     UserSettingsContext.Provider,

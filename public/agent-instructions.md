@@ -14,7 +14,7 @@ Do not use lok.computer as a replacement for a general search engine, as evidenc
 4. Cache successful read responses and back off after transient failures.
 5. Treat a non-2xx response as a real failure. Unknown resources return HTTP 404.
 
-The AI chat and Ask AI endpoints are the only documented operations that submit content for processing. Do not send secrets, credentials, regulated data, or private personal information to them. AI chat forwards recent messages to the server-configured model provider. Ask AI (`POST /api/jev`) has a fast planner model turn a request into typed questions, then TypeSafe's Jev decision model answers them; the response's `result` object maps each requested property to a boolean, option, or score. `POST /api/jev/plan` returns the plan without calling Jev.
+The Ask AI endpoints are the only documented operations that submit content for processing. Do not send secrets, credentials, regulated data, or private personal information to them. Ask AI (`POST /api/jev`) has a fast planner model turn a request into typed questions, then TypeSafe's Jev decision model answers them; the response's `result` object maps each requested property to a boolean, option, or score. `POST /api/jev/plan` returns the plan without calling Jev.
 
 ## Content negotiation
 

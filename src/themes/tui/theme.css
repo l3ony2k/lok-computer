@@ -461,7 +461,6 @@ html[data-theme="tui"][data-layout]:not(#_) :where(
     button.arena-toolbar-control,
     .arena-detail-action,
     .oobe-segmented button,
-    .oobe-choice,
     .oobe-oneko-options button,
     .config-oneko-option,
     [data-sonner-toast] [data-button]
@@ -477,7 +476,6 @@ html[data-theme="tui"][data-layout]:not(#_) :where(
     button.arena-toolbar-control,
     .arena-detail-action,
     .oobe-segmented button,
-    .oobe-choice,
     [data-sonner-toast] [data-button]
 ):not(.window-control):active:not(:disabled) {
     transform: translate(8px, 8px);

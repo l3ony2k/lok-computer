@@ -18,6 +18,9 @@ import { JevError, planQuestions, runJevRequest } from './jev.js';
  *
  * NeoDB Configuration:
  * - NEODB_ACCESS_TOKEN: NeoDB access token
+ *
+ * Fedi and NeoDB proxies:
+ * - PROXY_RATE_LIMITER: rate limiting binding shared by the proxy routes (wrangler.toml)
  */
 
 // Helper to set CORS headers
@@ -55,13 +58,18 @@ const readJsonBody = async (request) => {
   }
 };
 
-// Every Ask AI call spends planner and Jev credits, so each client IP gets a budget.
-const checkJevRateLimit = async (request, env) => {
-  if (!env.JEV_RATE_LIMITER) return;
+// Each client IP gets a budget: Ask AI calls spend planner and Jev credits
+// (JEV_RATE_LIMITER); the Fedi and NeoDB proxies spend a personal token's API
+// quota (PROXY_RATE_LIMITER). Without the binding, as in tests, there is no limit.
+const isRateLimited = async (request, limiter) => {
+  if (!limiter) return false;
   const key = request.headers.get('CF-Connecting-IP') ?? 'anonymous';
-  const { success } = await env.JEV_RATE_LIMITER.limit({ key });
-  if (!success) throw new JevError('Too many requests. Try again in a minute.', 429);
+  const { success } = await limiter.limit({ key });
+  return !success;
 };
+
+const makeRateLimitedResponse = () =>
+  makeJsonResponse({ error: 'Too many requests. Try again in a minute.' }, 429);
 
 const makeJevErrorResponse = (error) => {
   if (error instanceof JevError) {
@@ -144,7 +152,7 @@ export default {
         return makeMethodNotAllowedResponse('POST');
       }
       try {
-        await checkJevRateLimit(request, env);
+        if (await isRateLimited(request, env.JEV_RATE_LIMITER)) return makeRateLimitedResponse();
         const started = Date.now();
         const body = await readJsonBody(request);
         // `kind` is "plan", "needs_input" (ask the person for more), or "refuse".
@@ -165,7 +173,7 @@ export default {
         return makeMethodNotAllowedResponse('POST');
       }
       try {
-        await checkJevRateLimit(request, env);
+        if (await isRateLimited(request, env.JEV_RATE_LIMITER)) return makeRateLimitedResponse();
         const body = await readJsonBody(request);
         return makeJsonResponse(await runJevRequest(body ?? {}, env));
       } catch (error) {
@@ -179,6 +187,7 @@ export default {
         if (request.method !== 'GET' && request.method !== 'HEAD') {
           return makeMethodNotAllowedResponse('GET, HEAD');
         }
+        if (await isRateLimited(request, env.PROXY_RATE_LIMITER)) return makeRateLimitedResponse();
 
         const fediInstance = env.FEDI_INSTANCE;
         const fediToken = env.FEDI_ACCESS_TOKEN;
@@ -192,7 +201,7 @@ export default {
           return makeJsonResponse({ error: 'Missing username parameter' }, 400);
         }
 
-        const upstreamUrl = `${fediInstance}/api/v1/accounts/lookup?acct=${username}`;
+        const upstreamUrl = `${fediInstance}/api/v1/accounts/lookup?acct=${encodeURIComponent(username)}`;
         const response = await fetch(upstreamUrl, {
           headers: {
             'Authorization': `Bearer ${fediToken}`,
@@ -220,6 +229,7 @@ export default {
         if (request.method !== 'GET' && request.method !== 'HEAD') {
           return makeMethodNotAllowedResponse('GET, HEAD');
         }
+        if (await isRateLimited(request, env.PROXY_RATE_LIMITER)) return makeRateLimitedResponse();
 
         const fediInstance = env.FEDI_INSTANCE;
         const fediToken = env.FEDI_ACCESS_TOKEN;
@@ -239,7 +249,7 @@ export default {
           return makeJsonResponse({ error: 'Missing accountId parameter' }, 400);
         }
 
-        const upstreamUrl = new URL(`${fediInstance}/api/v1/accounts/${accountId}/statuses`);
+        const upstreamUrl = new URL(`${fediInstance}/api/v1/accounts/${encodeURIComponent(accountId)}/statuses`);
         upstreamUrl.searchParams.append('limit', limit);
         if (maxId) {
           upstreamUrl.searchParams.append('max_id', maxId);
@@ -281,6 +291,7 @@ export default {
         if (request.method !== 'GET' && request.method !== 'HEAD') {
           return makeMethodNotAllowedResponse('GET, HEAD');
         }
+        if (await isRateLimited(request, env.PROXY_RATE_LIMITER)) return makeRateLimitedResponse();
 
         const neodbToken = env.NEODB_ACCESS_TOKEN;
 
@@ -298,7 +309,7 @@ export default {
           return makeJsonResponse({ error: 'Invalid shelf type. Must be: wishlist, progress, complete, or dropped' }, 400);
         }
 
-        const upstreamUrl = `https://neodb.social/api/user/lok/shelf/${shelfType}?page=${page}&page_size=${pageSize}`;
+        const upstreamUrl = `https://neodb.social/api/user/lok/shelf/${shelfType}?page=${encodeURIComponent(page)}&page_size=${encodeURIComponent(pageSize)}`;
         const response = await fetch(upstreamUrl, {
           headers: {
             'Authorization': `Bearer ${neodbToken}`,

@@ -31,7 +31,7 @@ const HOME: AgentDocument = {
     {
       heading: "When to use lok.computer",
       paragraphs: [
-        "Use lok.computer when a task calls for public information about Lok, Lok's curated links and media, public social posts, or the public API that supports this desktop. Prefer the OpenAPI description for structured API calls and llms.txt for navigation. Do not use the site as a general search engine, a source of private information, or a write-capable social API: the documented integration surface is read-only except for the public AI endpoints (chat and Ask AI).",
+        "Use lok.computer when a task calls for public information about Lok, Lok's curated links and media, public social posts, or the public API that supports this desktop. Prefer the OpenAPI description for structured API calls and llms.txt for navigation. Do not use the site as a general search engine, a source of private information, or a write-capable social API: the documented integration surface is read-only except for the public Ask AI endpoints.",
       ],
     },
   ],
@@ -131,7 +131,7 @@ const DEVELOPERS: AgentDocument = {
       heading: "Quickstart",
       paragraphs: [
         "Start with GET https://lok.computer/api/status. It is a credential-free, side-effect-free request suitable for connectivity checks and integration tests. Then read https://lok.computer/openapi.json for the authoritative OpenAPI 3.1 operation definitions, parameters, request bodies, response schemas, and operation identifiers. JSON is returned as application/json. Unknown API routes return HTTP 404 rather than a successful placeholder.",
-        "No client API key is currently issued or required for the documented public endpoints. Server-side credentials used to reach upstream services are never provided to callers. The API has no separate write sandbox because the documented data operations are read-only; use /api/status as the safe test endpoint. The AI operations are the exception to the read-only model: AI chat forwards supplied messages to a configured model, and Ask AI (planJevQuestions, askJev) sends a request and optional content to a planner model and to TypeSafe's Jev; neither should receive secrets or personal data.",
+        "No client API key is currently issued or required for the documented public endpoints. Server-side credentials used to reach upstream services are never provided to callers. The API has no separate write sandbox because the documented data operations are read-only; use /api/status as the safe test endpoint. The Ask AI operations (planJevQuestions, askJev) are the exception to the read-only model: they send a question and optional content to a planner model and to TypeSafe's Jev, and should never receive secrets or personal data.",
       ],
       links: [
         { label: "OpenAPI 3.1 JSON", href: "/openapi.json" },

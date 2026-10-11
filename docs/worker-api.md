@@ -91,6 +91,8 @@ NeoDB shelf items.
 /api/neodb/shelf?type=wishlist&page=1&page_size=20
 ```
 
+The three proxies share the `PROXY_RATE_LIMITER` binding in `wrangler.toml` (60 requests per minute per client IP, checked before configuration) and answer 429 `{ error }` once it is spent; without the binding, as in tests, there is no limit.
+
 ---
 
 ## Configuration
