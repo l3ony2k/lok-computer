@@ -1,0 +1,303 @@
+/*
+ * Theme-specific kernel panics. These sit above everything and keep their
+ * own palettes; the theme only picks which screen shows. The TTY boot tokens
+ * (--boot-*) are not used here: each screen is its own machine.
+ */
+
+.panic-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483000;
+    display: flex;
+    overflow: auto;
+    cursor: default;
+    user-select: none;
+    -webkit-font-smoothing: none;
+}
+
+.panic-cursor {
+    animation: panic-blink 0.9s steps(1) infinite;
+}
+
+@keyframes panic-blink {
+    50% { opacity: 0; }
+}
+
+/* ---------- 98, XP, 7: blue screens ---------- */
+
+.panic-bsod {
+    align-items: flex-start;
+    padding: 6vh 8vw;
+    color: #ffffff;
+    background: #0000aa;
+    font-family: "Lucida Console", "Perfect DOS VGA 437", Consolas, ui-monospace, monospace;
+    font-size: clamp(13px, 1.6vw, 18px);
+    line-height: 1.3;
+}
+
+.panic-bsod-body {
+    width: min(78ch, 100%);
+    margin: 0 auto;
+}
+
+.panic-bsod-body p {
+    margin: 0 0 1.3em;
+}
+
+.panic-bsod-98 {
+    align-items: center;
+}
+
+.panic-bsod-title {
+    text-align: center;
+}
+
+.panic-bsod-title span {
+    padding: 0 0.5ch;
+    color: #0000aa;
+    background: #aaaaaa;
+}
+
+.panic-bsod-center {
+    text-align: center;
+}
+
+/* ---------- System: the bomb ---------- */
+
+.panic-mac {
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: repeating-conic-gradient(#000000 0 25%, #ffffff 0 50%) 0 0 / 2px 2px;
+    font-family: Chicago_12, ChicagoFLF, "Geneva", "Helvetica Neue", Arial, sans-serif;
+    font-size: 16px;
+}
+
+.panic-mac-dialog {
+    display: flex;
+    gap: 20px;
+    width: min(440px, 100%);
+    padding: 20px 20px 16px;
+    color: #000000;
+    background: #ffffff;
+    border: 2px solid #000000;
+    box-shadow: 0 0 0 1px #ffffff, 2px 2px 0 1px #000000;
+}
+
+.panic-mac-dialog p {
+    margin: 0 0 12px;
+    line-height: 1.3;
+}
+
+.panic-mac-bomb {
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
+    image-rendering: pixelated;
+}
+
+.panic-mac-button {
+    margin-top: 6px;
+    padding: 2px 18px;
+    color: #000000;
+    background: #ffffff;
+    border: 1px solid #000000;
+    border-radius: 7px;
+    box-shadow: 0 0 0 3px #ffffff, 0 0 0 4px #000000;
+    font: inherit;
+}
+
+.panic-mac-button:active {
+    color: #ffffff;
+    background: #000000;
+}
+
+/* ---------- TUI: Guru Meditation ---------- */
+
+.panic-guru {
+    flex-direction: column;
+    padding: 12px;
+    background: #000000;
+    font-family: "Perfect DOS VGA 437", "Topaz", Consolas, ui-monospace, monospace;
+    font-size: clamp(14px, 2vw, 22px);
+}
+
+.panic-guru-box {
+    width: 100%;
+    padding: 10px 16px;
+    color: #ff2020;
+    border: 5px solid #ff2020;
+    text-align: center;
+    animation: panic-guru-flash 1.2s steps(1) infinite;
+}
+
+.panic-guru-box p {
+    margin: 0;
+    line-height: 1.6;
+}
+
+@keyframes panic-guru-flash {
+    50% { border-color: transparent; }
+}
+
+/* ---------- 386: DOS ---------- */
+
+.panic-dos {
+    padding: 8px;
+    color: #aaaaaa;
+    background: #000000;
+    font-family: Fixedsys500c, "Perfect DOS VGA 437", Consolas, ui-monospace, monospace;
+    font-size: clamp(14px, 2vw, 20px);
+}
+
+.panic-dos pre {
+    margin: 0;
+    font: inherit;
+    line-height: 1.2;
+    white-space: pre-wrap;
+}
+
+/* ---------- CS 1.6: VGUI ---------- */
+
+.panic-cs {
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: #4a5942;
+    font-family: ArialPixel, "Pixelated MS Sans Serif", Arial, sans-serif;
+    font-size: 16px;
+}
+
+.panic-cs-dialog {
+    width: min(420px, 100%);
+    color: #d8ded3;
+    background: #4a5942;
+    border: 1px solid #889180;
+    box-shadow: inset 1px 1px #5e6b55, inset -1px -1px #2f3a2b, 2px 2px 0 #1f261c;
+}
+
+.panic-cs-title {
+    margin: 0;
+    padding: 4px 8px;
+    color: #d8ded3;
+    background: #3e4a37;
+    border-bottom: 1px solid #889180;
+    font-weight: 700;
+}
+
+.panic-cs-dialog > p:not(.panic-cs-title) {
+    margin: 0;
+    padding: 18px 14px;
+    line-height: 1.4;
+}
+
+.panic-cs-actions {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0 10px 10px;
+}
+
+.panic-cs-actions button {
+    min-width: 72px;
+    padding: 3px 12px;
+    color: #d8ded3;
+    background: #4a5942;
+    border: 1px solid #889180;
+    box-shadow: inset 1px 1px #5e6b55, inset -1px -1px #2f3a2b;
+    font: inherit;
+}
+
+.panic-cs-actions button:active {
+    box-shadow: inset 1px 1px #2f3a2b, inset -1px -1px #5e6b55;
+}
+
+/* ---------- BeOS: Kernel Debugging Land ---------- */
+
+.panic-kdl {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 12px;
+    color: #ffffff;
+    background: #000000;
+    font-family: "ProFont", "Courier New", ui-monospace, monospace;
+    font-size: clamp(13px, 1.5vw, 16px);
+}
+
+.panic-kdl pre {
+    margin: 0;
+    font: inherit;
+    line-height: 1.35;
+    white-space: pre-wrap;
+}
+
+.panic-kdl-prompt {
+    margin: 0;
+    line-height: 1.35;
+}
+
+.panic-kdl-command {
+    margin: 0;
+    padding: 0;
+    color: #ffffff;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid #ffffff;
+    font: inherit;
+    cursor: pointer;
+}
+
+/* ---------- Palm: fatal exception ---------- */
+
+.panic-palm {
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: #c5cfbd;
+    font-family: "Pixelated MS Sans Serif", "MS Sans Serif", Arial, sans-serif;
+    font-size: 14px;
+}
+
+.panic-palm-dialog {
+    width: min(300px, 100%);
+    padding: 0 0 10px;
+    color: #000000;
+    background: #c5cfbd;
+    border: 2px solid #000000;
+    text-align: center;
+}
+
+.panic-palm-title {
+    margin: 0 0 10px;
+    padding: 2px 8px;
+    color: #c5cfbd;
+    background: #000000;
+    font-weight: 700;
+    text-align: left;
+}
+
+.panic-palm-dialog p:not(.panic-palm-title) {
+    margin: 0 10px 12px;
+    text-align: left;
+    line-height: 1.35;
+}
+
+.panic-palm-dialog button {
+    padding: 2px 16px;
+    color: #000000;
+    background: #c5cfbd;
+    border: 1px solid #000000;
+    border-radius: 6px;
+    font: inherit;
+}
+
+.panic-palm-dialog button:active {
+    color: #c5cfbd;
+    background: #000000;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .panic-cursor,
+    .panic-guru-box {
+        animation: none;
+    }
+}

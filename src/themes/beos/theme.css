@@ -1,0 +1,491 @@
+/*
+ * BeOS theme: BeOS R5 as beos-css recreates it (https://beta.mtechnic.me/,
+ * "BeOS R5, rebuilt in CSS" by mtechnic). Palette and geometry follow its
+ * tokens: a #d8d8d8 panel, the yellow window tab (#ffcb00, lit #ffff50,
+ * shaded #af7b00), #606060 frames, the #4566a8 Deskbar leaf, and the
+ * #5a8e8e desktop. Type is the Swiss 721 family BeOS shipped with, through
+ * the system's Helvetica/Arial.
+ *
+ * Layout: the lok layout's top bar becomes the Deskbar. Windows carry their
+ * title in a tab narrower than the frame, with the close box on the left and
+ * the zoom box on the right, and the tab alone is the drag handle.
+ *
+ * Scope: html[data-theme="beos"][data-layout]:not(#_) outranks classic.css.
+ */
+
+html[data-theme="beos"][data-layout]:not(#_) {
+    --be-panel: #d8d8d8;
+    --be-shine: #ffffff;
+    --be-darken-1: #b8b8b8;
+    --be-darken-2: #989898;
+    --be-darken-3: #808080;
+    --be-darken-4: #606060;
+    --be-frame: #606060;
+    --be-tab: #ffcb00;
+    --be-tab-lit: #ffff50;
+    --be-tab-shade: #af7b00;
+    --be-tab-inactive: #e8e8e8;
+    --be-tab-inactive-text: #505050;
+    --be-leaf: #4566a8;
+    --be-nav: #0000e5;
+    --be-control-highlight: #7378b8;
+    --be-raised: inset 1px 1px #ffffff, inset -1px -1px #989898;
+    --be-sunken: inset 1px 1px #989898, inset -1px -1px #ffffff;
+    --be-tab-bevel: inset 1px 1px var(--be-tab-lit), inset -1px 0 var(--be-tab-shade);
+
+    /* lok tokens */
+    --font-ui: "Swis721 BT", "Swiss 721", "Helvetica Neue", Helvetica, Arial, "Nimbus Sans L", sans-serif;
+    --font-code: "ProFont", "Courier New", ui-monospace, Menlo, monospace;
+    --retro-window: 0 0% 85%;
+    --retro-window-titlebar: 48 100% 50%;
+    --background: 0 0% 85%;
+    --foreground: 0 0% 0%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
+    --popover: 0 0% 85%;
+    --popover-foreground: 0 0% 0%;
+    --primary: 48 100% 50%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 85%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 0 0% 91%;
+    --muted-foreground: 0 0% 31%;
+    --accent: 224 42% 46%;
+    --accent-foreground: 0 0% 100%;
+    --border: 0 0% 38%;
+    --input: 0 0% 38%;
+    --ring: 240 100% 45%;
+    --header-bg: #d8d8d8;
+    --header-border: #606060;
+    --internal-border: #989898;
+    --internal-border-hover: #606060;
+    --scrollbar-thumb: #c8c8c8;
+    --scrollbar-thumb-hover: #b8b8b8;
+    --block-bg: #ffffff;
+    --block-border: #606060;
+    --button-bg: #e8e8e8;
+    --button-hover: #f0f0f0;
+    --text-color: #000000;
+    --link-color: #0000e5;
+    --detail-bg: #ffffff;
+    --detail-border: #989898;
+    --detail-header-bg: #d8d8d8;
+    --detail-meta-bg: #e8e8e8;
+    --icon-color: #000000;
+    --focus-color: #0000e5;
+    --vis-public-color: #00a000;
+    --vis-private-color: #d62828;
+    --loading-bg: #d8d8d8;
+    --loading-bar: #3296ff;
+    --log-bg: #ffffff;
+    --log-text: #000000;
+    --log-muted: #606060;
+    --log-error: #d62828;
+    --log-warn: #9a6a00;
+    --log-info: #0072ce;
+    --log-prefix-default: #606060;
+    --log-prefix-cache: #00a000;
+    --log-prefix-api: #0072ce;
+    --log-prefix-app: #9a6a00;
+    --log-prefix-session: #9646be;
+    --log-prefix-registry: #dc3c8c;
+    --selection-bg: #989898;
+    --selection-fg: #000000;
+    --desktop-bg: #5a8e8e;
+    --desktop-pattern: none;
+    --desktop-label-color: #ffffff;
+    --desktop-label-edge: transparent;
+    --desktop-icon-drop-shadow: rgba(0, 0, 0, 0.45);
+    --taskbar-height: 26px;
+    --media-stage-bg: #000000;
+    --media-stage-fg: #3296ff;
+    --media-accent: #4566a8;
+
+    /* Component tokens */
+    --c-face: #d8d8d8;
+    --c-font-size: 12px;
+    --c-text-heading: 18px;
+    --c-title-font: var(--font-ui);
+    --c-title-size: 12px;
+    --c-title-weight: 700;
+    --c-placeholder: #808080;
+    --c-focus-outline: 1px solid var(--be-nav);
+    --c-focus-offset: -3px;
+    --c-control-height: 21px;
+
+    --c-btn-fg: #000000;
+    --c-btn-bg: #e8e8e8;
+    --c-btn-border: 1px solid #606060;
+    --c-btn-radius: 3px;
+    --c-btn-shadow: inset 1px 1px #ffffff, inset -1px -1px #989898, inset -2px -2px #d8d8d8;
+    --c-btn-bg-hover: #f0f0f0;
+    --c-btn-border-hover: 1px solid #606060;
+    --c-btn-shadow-hover: inset 1px 1px #ffffff, inset -1px -1px #989898, inset -2px -2px #d8d8d8;
+    --c-btn-bg-active: #989898;
+    --c-btn-border-active: 1px solid #606060;
+    --c-btn-shadow-active: inset 1px 1px #808080;
+    --c-btn-bg-on: #b8b8b8;
+    --c-btn-fg-on: #000000;
+    --c-btn-border-on: 1px solid #606060;
+    --c-btn-shadow-on: inset 1px 1px #989898;
+    --c-btn-shadow-default: inset 0 0 0 1px #b8b8b8, inset 1px 1px #ffffff, inset -1px -1px #989898;
+    --c-btn-fg-disabled: #989898;
+    --c-btn-text-shadow-disabled: none;
+    --c-joined-gap: 2px;
+    --c-toast-width: 380px;
+    --c-toast-title-weight: 700;
+
+    --c-field-fg: #000000;
+    --c-field-bg: #ffffff;
+    --c-field-border: 1px solid #000000;
+    --c-field-radius: 0;
+    --c-field-shadow: inset 1px 1px #989898;
+    --c-field-height: 21px;
+    --c-field-bg-disabled: #e8e8e8;
+    --c-select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 5' shape-rendering='crispEdges'%3E%3Cpath d='M0 0h9L4.5 5z' fill='%23000'/%3E%3C/svg%3E");
+    --c-select-arrow-position: right 6px center;
+    --c-select-arrow-size: 9px 5px;
+    --c-readout-bg: #e8e8e8;
+    --c-readout-border: 1px solid #989898;
+    --c-readout-shadow: none;
+
+    --c-check-bg: #ffffff;
+    --c-check-border: 1px solid #606060;
+    --c-check-shadow: inset 1px 1px #989898;
+    --c-check-mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 7' shape-rendering='crispEdges'%3E%3Cg fill='%234566a8'%3E%3Crect x='0' y='0' width='2' height='1'/%3E%3Crect x='5' y='0' width='2' height='1'/%3E%3Crect x='0' y='1' width='3' height='1'/%3E%3Crect x='4' y='1' width='3' height='1'/%3E%3Crect x='1' y='2' width='5' height='1'/%3E%3Crect x='2' y='3' width='3' height='1'/%3E%3Crect x='1' y='4' width='5' height='1'/%3E%3Crect x='0' y='5' width='3' height='1'/%3E%3Crect x='4' y='5' width='3' height='1'/%3E%3Crect x='0' y='6' width='2' height='1'/%3E%3Crect x='5' y='6' width='2' height='1'/%3E%3C/g%3E%3C/svg%3E");
+    --c-radio-dot: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 6'%3E%3Ccircle cx='3' cy='3' r='3' fill='%234566a8'/%3E%3C/svg%3E");
+    --c-track-bg: #989898;
+    --c-track-height: 3px;
+    --c-track-shadow: 0 1px 0 #ffffff;
+    --c-thumb-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 11 14' shape-rendering='crispEdges'%3E%3Cpath d='M0 0h11v9l-5.5 5L0 9z' fill='%23e8e8e8' stroke='%23606060'/%3E%3C/svg%3E");
+    --c-thumb-width: 11px;
+    --c-thumb-height: 14px;
+
+    /* The frame belongs to the content area; the tab floats above it (see Windows). */
+    --c-window-bg: transparent;
+    --c-window-border: 0;
+    --c-window-radius: 0;
+    --c-window-padding: 0;
+    --c-window-shadow: none;
+    --c-client-gap: 0;
+    --c-client-bg: #d8d8d8;
+    --c-client-border: 3px solid #d8d8d8;
+    --c-title-height: 21px;
+    --c-title-padding: 0 4px 0 3px;
+    --c-title-radius: 0;
+    --c-title-fg: #000000;
+    --c-title-bg: var(--be-tab);
+    --c-title-fg-inactive: var(--be-tab-inactive-text);
+    --c-title-bg-inactive: var(--be-tab-inactive);
+    --c-controls-gap: 0;
+
+    --c-menu-bg: #d8d8d8;
+    --c-menu-border: 1px solid #606060;
+    --c-menu-radius: 0;
+    --c-menu-padding: 2px;
+    --c-menu-shadow: var(--be-raised), 2px 2px 0 rgba(0, 0, 0, 0.3);
+    --c-menu-divider: 1px solid #b8b8b8;
+    --c-menu-divider-light: 1px solid #ffffff;
+    --c-hl-bg: #989898;
+    --c-hl-fg: #000000;
+    --c-hl-border: 1px solid #989898;
+    --c-hl-radius: 0;
+    --c-hover-bg: transparent;
+
+    --c-menubar-height: 25px;
+    --c-menubar-bg: #d8d8d8;
+    --c-menubar-fg: #000000;
+    --c-menubar-border: 1px solid #606060;
+    --c-menubar-shadow: inset 1px 1px #ffffff, inset -1px -1px #989898;
+    --c-menubar-font: var(--font-ui);
+    --c-menubar-size: 12px;
+    --c-menubar-item-padding: 0 8px;
+    --c-menubar-hl-bg: #989898;
+    --c-menubar-hl-fg: #000000;
+    --c-menubar-active-weight: 700;
+    --c-menubar-menu-left: 2px;
+
+    --c-toolbar-bg: #d8d8d8;
+    --c-toolbar-border: 1px solid #989898;
+    --c-toolbar-shadow: inset 0 1px #ffffff;
+    --c-status-bg: #d8d8d8;
+    --c-status-shadow: inset 0 1px #ffffff, inset 0 2px #989898;
+    --c-status-padding: 2px 6px;
+    --c-tab-bg: #e8e8e8;
+    --c-tab-bg-on: #d8d8d8;
+    --c-tab-border: 1px solid #606060;
+    --c-tab-border-top-on: 1px solid #606060;
+    --c-tab-radius: 3px 3px 0 0;
+    --c-tab-shadow: inset 1px 1px #ffffff;
+    --c-tab-shadow-on: inset 1px 1px #ffffff;
+    --c-tab-panel-border: 1px solid #606060;
+    --c-tab-panel-shadow: inset 1px 1px #ffffff;
+    --c-group-border: 1px solid #989898;
+    --c-group-shadow: inset 1px 1px #ffffff;
+    --c-list-bg: #ffffff;
+    --c-list-shadow: inset 1px 1px #989898;
+    --c-header-bg: #d8d8d8;
+    --c-header-border: 1px solid #989898;
+    --c-header-shadow: var(--be-raised);
+    --c-header-shadow-active: var(--be-sunken);
+    --c-splitter-border: #989898;
+    --c-splitter-shadow: inset 1px 0 #ffffff;
+
+    --c-taskbar-bg: #d8d8d8;
+    --c-taskbar-fg: #000000;
+    --c-taskbar-border-top: 1px solid #606060;
+    --c-taskbar-shadow: inset 0 1px #ffffff;
+    --c-taskbar-padding: 2px 3px;
+    --c-task-height: 20px;
+    --c-task-width: 150px;
+    --c-task-fg: #000000;
+    --c-task-bg: #d8d8d8;
+    --c-task-border: 0;
+    --c-task-radius: 0;
+    --c-task-shadow: none;
+    --c-task-bg-hover: #c8c8c8;
+    --c-task-bg-on: #989898;
+    --c-task-fg-on: #000000;
+    --c-task-shadow-on: inset 1px 1px #808080;
+    --c-task-weight-on: 700;
+    --c-tray-bg: #d8d8d8;
+    --c-tray-border: 0;
+    --c-tray-shadow: inset 1px 1px #b8b8b8, inset -1px -1px #ffffff;
+
+    --c-scrollbar-thumb: #c8c8c8;
+    --c-scrollbar-track: #f0f0f0;
+    --c-desktop-label-shadow: 1px 1px 0 rgba(0, 0, 0, 0.6);
+    --c-desktop-label-selected-bg: #989898;
+    --c-desktop-label-selected-border: 0;
+    --c-desktop-icon-selected-filter: brightness(0.7);
+    --c-modal-backdrop: transparent;
+}
+
+/* ---------- Deskbar (the lok layout's top bar) ---------- */
+
+html[data-theme="beos"][data-layout]:not(#_) .system-menu-button {
+    margin: 2px 4px 2px 2px;
+    padding: 0 7px;
+    color: #ffffff;
+    background: var(--be-leaf);
+    border-radius: 2px;
+    font-weight: 700;
+    font-style: italic;
+    letter-spacing: 0;
+    box-shadow: inset 1px 1px rgba(255, 255, 255, 0.35), inset -1px -1px rgba(0, 0, 0, 0.35);
+}
+
+html[data-theme="beos"][data-layout]:not(#_) .system-menu-button:hover,
+html[data-theme="beos"][data-layout]:not(#_) .system-menu-button[aria-expanded="true"] {
+    color: #ffffff;
+    background: #2f4a80;
+}
+
+html[data-theme="beos"][data-layout]:not(#_) .app-header .app-header-button:not(.system-menu-button) {
+    gap: 8px;
+}
+
+html[data-theme="beos"][data-layout]:not(#_) .app-header-active {
+    padding-left: 4px;
+}
+
+/* ---------- Windows: the tab floats above a framed body ---------- */
+
+html[data-theme="beos"][data-layout]:not(#_) .window-surface {
+    overflow: visible;
+}
+
+html[data-theme="beos"][data-layout]:not(#_) .window-titlebar {
+    position: relative;
+    z-index: 1;
+    align-self: flex-start;
+    width: auto;
+    min-width: 150px;
+    max-width: calc(100% - 24px);
+    margin-bottom: -1px;
+    border: 1px solid var(--be-frame);
+    border-bottom: 0;
+    box-shadow: var(--be-tab-bevel);
+    gap: 4px;
+}
+
+html[data-theme="beos"][data-layout]:not(#_) .window-surface[data-window-surface-id]:not([data-active]) .window-titlebar {
+    box-shadow: inset 1px 1px #ffffff, inset -1px 0 #989898;
+}
+
+html[data-theme="beos"][data-layout]:not(#_) .draggable-window.is-maximized .window-titlebar {
+    max-width: calc(100% - 24px);
+}
+
+html[data-theme="beos"][data-layout]:not(#_) .window-title {
+    padding: 0 10px 0 4px;
+    text-align: left;
+}
+
+html[data-theme="beos"][data-layout]:not(#_) .window-surface > .window-content-area,
+html[data-theme="beos"][data-layout]:not(#_) .window-surface > .flex-1 {
+    outline: 1px solid var(--be-frame);
+    box-shadow: inset 1px 1px #ffffff, inset -1px -1px #989898, 2px 2px 0 rgba(0, 0, 0, 0.3);
+}
+
+html[data-theme="beos"][data-layout]:not(#_) .draggable-window.is-shaded .window-titlebar {
+    margin-bottom: 0;
+    border-bottom: 1px solid var(--be-frame);
+}
+
+html[data-theme="beos"][data-layout]:not(#_) .window-transition-ghost {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    padding: 0;
+}
+
+html[data-theme="beos"][data-layout]:not(#_) .window-transition-ghost-titlebar {
+    width: fit-content;
+    min-width: 150px;
+    border: 1px solid var(--be-frame);
+    box-shadow: var(--be-tab-bevel);
+}
+
+/* Close box on the left, zoom box on the right, as BeOS draws them; both are yellow bevelled squares. */
+html[data-theme="beos"][data-layout]:not(#_) .window-titlebar .window-controls {
+    display: contents;
+}
+
+html[data-theme="beos"][data-layout]:not(#_) .window-menu-button {
+    order: 1;
+}
+
+html[data-theme="beos"][data-layout]:not(#_) .window-title {
+    order: 2;
+}
+
+html[data-theme="beos"][data-layout]:not(#_) .window-control,
+html[data-theme="beos"][data-layout]:not(#_) .window-control:hover:not(:disabled) {
+    width: 14px;
+    height: 14px;
+    min-height: 14px;
+    flex: 0 0 auto;
+    padding: 0;
+    color: #000000;
+    background-color: var(--be-tab);
+    border: 1px solid var(--be-frame);
+    border-radius: 0;
+    box-shadow: inset 1px 1px var(--be-tab-lit), inset -1px -1px var(--be-tab-shade);
+}
+
+html[data-theme="beos"][data-layout]:not(#_) .window-surface:not([data-active]) .window-control {
+    background-color: var(--be-tab-inactive);
+    box-shadow: inset 1px 1px #ffffff, inset -1px -1px #989898;
+}
+
+html[data-theme="beos"][data-layout]:not(#_) .window-control:active:not(:disabled) {
+    background-color: var(--be-tab-shade);
+    box-shadow: inset 1px 1px #8a6000;
+}
+
+html[data-theme="beos"][data-layout]:not(#_) .window-control > svg {
+    display: block;
+    width: 9px;
+    height: 9px;
+}
+
+html[data-theme="beos"][data-layout]:not(#_) .window-control[data-window-control="close"] {
+    order: 0;
+    margin-right: 2px;
+}
+
+html[data-theme="beos"][data-layout]:not(#_) .window-control[data-window-control="close"] > svg {
+    display: none;
+}
+
+html[data-theme="beos"][data-layout]:not(#_) .window-control[data-window-control="minimize"] {
+    order: 3;
+    margin-left: auto;
+}
+
+html[data-theme="beos"][data-layout]:not(#_) .window-control:is([data-window-control="maximize"], [data-window-control="restore"]) {
+    order: 4;
+    margin-left: 2px;
+}
+
+/* ---------- Menus ---------- */
+
+html[data-theme="beos"][data-layout]:not(#_) .menu-item-button {
+    min-height: 20px;
+    padding: 2px 18px 2px 6px;
+}
+
+html[data-theme="beos"][data-layout]:not(#_) .app-menu-panel[data-placement="top"] {
+    top: calc(var(--c-menubar-height) + 1px);
+}
+
+/* ---------- Desktop and taskbar ---------- */
+
+html[data-theme="beos"][data-layout]:not(#_) .taskbar-button {
+    border-right: 1px solid #989898;
+    box-shadow: inset 1px 0 #ffffff;
+}
+
+html[data-theme="beos"][data-layout]:not(#_) .taskbar-button[aria-pressed="true"] {
+    box-shadow: inset 1px 1px #808080;
+}
+
+html[data-theme="beos"][data-layout]:not(#_) .desktop-icon-label {
+    font-weight: 400;
+}
+
+/* ---------- Scrollbars ---------- */
+
+html[data-theme="beos"][data-layout]:not(#_) ::-webkit-scrollbar {
+    width: 14px;
+    height: 14px;
+}
+
+html[data-theme="beos"][data-layout]:not(#_) ::-webkit-scrollbar-track {
+    background: #f0f0f0;
+    box-shadow: inset 0 0 0 1px #989898;
+}
+
+html[data-theme="beos"][data-layout]:not(#_) ::-webkit-scrollbar-thumb,
+html[data-theme="beos"][data-layout]:not(#_) ::-webkit-scrollbar-thumb:hover {
+    background:
+        repeating-linear-gradient(90deg, transparent 0 2px, #b8b8b8 2px 3px, #ffffff 3px 4px) center / 11px 4px no-repeat,
+        #c8c8c8;
+    border: 1px solid #989898;
+    border-radius: 0;
+    box-shadow: inset 1px 1px #ffffff;
+}
+
+html[data-theme="beos"][data-layout]:not(#_) ::-webkit-scrollbar-corner {
+    background: #d8d8d8;
+}
+
+/* ---------- Content ---------- */
+
+html[data-theme="beos"][data-layout]:not(#_) .app-window-layout {
+    background: #d8d8d8;
+}
+
+html[data-theme="beos"][data-layout]:not(#_) .app-window-layout > .window-content-area {
+    background: var(--detail-bg);
+    box-shadow: inset 1px 1px #989898;
+}
+
+html[data-theme="beos"][data-layout]:not(#_) .app-window-layout.console-layout > .window-content-area,
+html[data-theme="beos"][data-layout]:not(#_) .app-window-layout.config-window-layout > .window-content-area,
+html[data-theme="beos"][data-layout]:not(#_) .app-window-layout.chance-window > .window-content-area,
+html[data-theme="beos"][data-layout]:not(#_) .app-window-layout.notepad-window > .window-content-area {
+    box-shadow: none;
+}
+
+html[data-theme="beos"][data-layout]:not(#_) a {
+    color: var(--be-nav);
+}
+
+html[data-theme="beos"][data-layout]:not(#_) input:focus-visible,
+html[data-theme="beos"][data-layout]:not(#_) textarea:focus-visible,
+html[data-theme="beos"][data-layout]:not(#_) select:focus-visible {
+    outline: 1px solid var(--be-nav);
+    outline-offset: -1px;
+}

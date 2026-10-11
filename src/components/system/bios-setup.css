@@ -1,0 +1,154 @@
+/*
+ * The setup utility behind DEL during boot: the classic blue screen with
+ * grey bars, yellow values and an inverse highlight. Theme-independent, like
+ * the TTY boot screen; one monospace face at fixed sizes.
+ */
+
+.bios-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483000;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+    color: #ffffff;
+    background: #0000a8;
+    font-family: "Perfect DOS VGA 437", Fixedsys500c, ui-monospace, Menlo, Consolas, "Courier New", monospace;
+    font-size: clamp(13px, 1.5vw, 16px);
+    line-height: 1.35;
+    outline: 0;
+    user-select: none;
+    -webkit-font-smoothing: none;
+}
+
+.bios-title,
+.bios-keys {
+    display: flex;
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 4px 18px;
+    padding: 4px 14px;
+    color: #0000a8;
+    background: #a8a8a8;
+    font-weight: 700;
+}
+
+.bios-keys {
+    justify-content: center;
+    font-weight: 400;
+}
+
+.bios-keys b {
+    font-weight: 700;
+}
+
+.bios-body {
+    display: grid;
+    flex: 1 1 auto;
+    grid-template-columns: minmax(0, 2fr) minmax(220px, 1fr);
+    gap: 12px;
+    min-height: 0;
+    padding: 12px 14px;
+}
+
+.bios-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+    overflow-y: auto;
+    padding-right: 6px;
+}
+
+.bios-section-title {
+    margin: 0 0 4px;
+    color: #54fcfc;
+    font-size: inherit;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.bios-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 1px 6px;
+    cursor: pointer;
+    white-space: pre;
+}
+
+.bios-row-value {
+    color: #fcfc54;
+}
+
+.bios-row[data-selected] {
+    color: #0000a8;
+    background: #ffffff;
+}
+
+.bios-row[data-selected] .bios-row-value {
+    color: #0000a8;
+}
+
+.bios-row[data-disabled] {
+    color: #a8a8a8;
+    cursor: default;
+}
+
+.bios-row[data-disabled] .bios-row-value {
+    color: #a8a8a8;
+}
+
+.bios-row[data-selected][data-disabled] {
+    color: #0000a8;
+    background: #a8a8a8;
+}
+
+.bios-help {
+    align-self: start;
+    padding: 8px 10px;
+    border: 2px solid #a8a8a8;
+}
+
+.bios-help p {
+    margin: 0;
+    color: #fcfcfc;
+}
+
+.bios-buttons {
+    display: flex;
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 14px 12px;
+    background: #0000a8;
+}
+
+.bios-buttons button {
+    padding: 3px 12px;
+    color: #0000a8;
+    background: #a8a8a8;
+    border: 2px solid #fcfcfc;
+    font: inherit;
+    cursor: pointer;
+}
+
+.bios-buttons button:hover,
+.bios-buttons button:focus-visible {
+    color: #ffffff;
+    background: #0000a8;
+    outline: 0;
+}
+
+@media (max-width: 640px) {
+    .bios-body {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .bios-help {
+        order: -1;
+    }
+}

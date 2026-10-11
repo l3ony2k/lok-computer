@@ -12,7 +12,7 @@
  * ids in sync with that script; `theme.test.ts` enforces it.
  */
 
-export type ThemeId = 'lok' | '98' | 'xp' | '7' | 'system' | 'tui' | '386' | 'cs16';
+export type ThemeId = 'lok' | '98' | 'xp' | '7' | 'system' | 'tui' | '386' | 'cs16' | 'beos';
 export type Appearance = 'light' | 'dark' | 'system';
 export type ColorScheme = 'light' | 'dark';
 
@@ -40,8 +40,8 @@ export interface ThemeDefinition {
   startLabel?: string;
   /** System menu label in the top menu bar; defaults to the wordmark. */
   menuLabel?: string;
-  /** Upstream project the theme is built on, shown in Config and About. */
-  credit?: { label: string; url: string; license: string };
+  /** Upstream project the theme is built on, shown in Config and About; the license when the project states one. */
+  credit?: { label: string; url: string; license?: string };
   /** Default desktop picture, decoded before the theme switches so it never pops in. */
   wallpaper?: string;
   /** Lazily loads the scoped stylesheet; absent for the built-in theme. */
@@ -169,10 +169,23 @@ export const THEMES: Readonly<Record<ThemeId, ThemeDefinition>> = {
     fonts: ['16px ArialPixel', '11px "Pixelated MS Sans Serif"'],
     wallpaper: new URL('../themes/cs16/background.webp', import.meta.url).href,
   },
+  beos: {
+    id: 'beos',
+    name: 'BeOS',
+    tagline: 'Yellow tabs on gray',
+    description: 'BeOS R5: yellow window tabs, a gray Deskbar, bevelled gray controls, and a blue-green desktop.',
+    layout: 'lok',
+    chrome: 'classic',
+    schemes: ['light'],
+    themeColor: { light: '#5a8e8e' },
+    menuLabel: 'lok',
+    credit: { label: 'beos-css by mtechnic', url: 'https://beta.mtechnic.me/' },
+    loadStyles: () => Promise.all([import('@/themes/classic.css'), import('@/themes/beos/theme.css')]),
+  },
 };
 
 /** Display order. Not derived from THEMES: integer-like keys ('7', '98') would sort first. */
-export const THEME_IDS: readonly ThemeId[] = ['lok', '98', 'xp', '7', 'system', 'tui', '386', 'cs16'];
+export const THEME_IDS: readonly ThemeId[] = ['lok', '98', 'xp', '7', 'system', 'tui', '386', 'cs16', 'beos'];
 export const APPEARANCES: readonly Appearance[] = ['light', 'dark', 'system'];
 
 export const isThemeId = (value: unknown): value is ThemeId => (

@@ -104,6 +104,15 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 
 ## Development Log
 
+### Session: 3.1.3 — BeOS, themed kernel panics, real POST, BIOS setup (2026-10-11)
+
+Third of the four 3.1 releases.
+
+*   **BeOS theme** (`src/themes/beos/theme.css`, lok layout + classic chrome): palette and geometry from beos-css (beta.mtechnic.me, "BeOS R5, rebuilt in CSS" by mtechnic; credited in Config and About, which now cope with a credit that states no license). The signature window tab is real: the title bar is `align-self: flex-start` with its own frame and bevel, the surface is transparent, and the content area carries the #606060 frame, so the tab alone is the drag handle, as on BeOS; the close box sits left and the zoom boxes right as yellow bevelled squares (the lucide glyphs show inside them). The lok top bar becomes the Deskbar with the blue "lok" leaf as the system menu. The theme swatch draws the tab; `index.html`'s pre-paint maps and `THEME_IDS` list it.
+*   **Kernel panics per theme** (`src/components/system/KernelPanic.tsx`): `rm -rf /` still boots into `kernel-panic` mode, but the screen now follows the theme: the Linux panic for lok, the 98 fatal-exception and XP/7 stop-error blue screens (any key), the System bomb dialog, the Amiga Guru Meditation for TUI, DOS's "Abort, Retry, Fail?" for 386, a VGUI Host_Error for CS 1.6, and BeOS's Kernel Debugging Land. Every restart, retry, OK, continue or key press opens the same song; that is the joke, kept in every theme. Own stylesheet, own palettes; the boot tokens are not involved.
+*   **Real POST numbers**: the boot log reads the resource timing buffer after warming (`transferSize`, or `encodedBodySize` for cached responses): "N app modules cached (M files, X KB of script)", "N local assets cached, X KB"; the Are.na stage times `getUserChannels` and adds the cache hit rate from the usage counters; a new storage stage reports `navigator.storage.estimate()` and, where the browser offers it, the JS heap; the session stage counts the restored windows.
+*   **BIOS setup** (`src/components/system/BiosSetup.tsx`): DEL or F2 during the boot screen (or the DEL button in the prompt, for touch) opens a blue setup utility over the same stores as Config: theme (cycles and loads the stylesheet), color mode, wallpaper presets (`src/config/wallpapers.ts`, shared with Config), CRT and its four intensities, Oneko, icon size, icon visibility, snapping, title-bar double-click, verbose logging. Arrow keys move and change, Enter/Space toggle, F9 loads defaults, F10 saves and exits, Esc restores the snapshot taken when the screen opened. The desktop waits for the screen to close.
+
 ### Session: 3.1.2 — Notepad, Clock, Calculator, Chance (2026-10-11)
 
 Second of the four 3.1 releases. Four apps join the desktop, each code-split like the others (`src/apps/<name>/`, lazy loader in `lazyApps.tsx`, catalog entry, route, pixel icon), with their pure logic in tested modules.

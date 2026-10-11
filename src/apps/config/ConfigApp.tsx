@@ -30,6 +30,7 @@ import {
   type WindowSettings,
 } from "@/hooks/useUserSettings";
 import { launcherShortcutLabel } from "@/lib/launcher";
+import { WALLPAPER_PRESETS } from "@/config/wallpapers";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { DESKTOP_ICON_ORDER_RESET_EVENT } from "@/lib/desktopIconOrder";
 import { useTheme } from "@/hooks/useTheme";
@@ -78,24 +79,6 @@ interface ConfigAppProps {
   onPropsChange?: (props: Record<string, unknown>) => void;
 }
 
-const DEFAULT_WALLPAPERS = [
-  {
-    name: "by @1000bytes.bsky.social",
-    url: "https://d2w9rnfcy7mm78.cloudfront.net/36335972/original_8a4c77ea7ed077282b4653fad9183d57.jpg",
-  },
-  {
-    name: "Ocean Waves",
-    url: "https://images.unsplash.com/photo-1484387436194-cf7cb70800ce?w=1280&auto=format&fit=crop",
-  },
-  {
-    name: "Abstract Geometric",
-    url: "https://images.unsplash.com/photo-1605106702734-205df224ecce?w=1280&auto=format&fit=crop",
-  },
-  {
-    name: "Retro Computer",
-    url: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1280&auto=format&fit=crop",
-  },
-];
 
 const ConfigSection = ({
   title,
@@ -376,7 +359,7 @@ export const ConfigApp: React.FC<ConfigAppProps> = ({ initialCategory, focusSett
                       <a href={THEMES[theme].credit.url} target="_blank" rel="noopener noreferrer">
                         {THEMES[theme].credit.label}
                       </a>
-                      {" "}({THEMES[theme].credit.license}).
+                      {THEMES[theme].credit.license ? ` (${THEMES[theme].credit.license}).` : "."}
                     </>
                   )}
                 </p>
@@ -405,7 +388,7 @@ export const ConfigApp: React.FC<ConfigAppProps> = ({ initialCategory, focusSett
                 </div>
 
                 <div className="config-wallpaper-grid">
-                  {DEFAULT_WALLPAPERS.map((wallpaper) => (
+                  {WALLPAPER_PRESETS.map((wallpaper) => (
                     <button
                       key={wallpaper.url}
                       type="button"

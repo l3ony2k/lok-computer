@@ -14,6 +14,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '3.1.3',
+    date: '2026-10-11',
+    title: 'BeOS, panics and a BIOS',
+    notes: [
+      'A BeOS theme: yellow window tabs that are the drag handle, a gray Deskbar, bevelled controls and the blue-green desktop, after beos-css.',
+      'rm -rf / now ends the way each system would: a blue screen on 98, XP and 7, the bomb on System, a Guru Meditation on TUI, "Abort, Retry, Fail?" on 386, a Host_Error on CS 1.6, Kernel Debugging Land on BeOS. Every way out still plays the song.',
+      'The boot screen reports real numbers: script and asset bytes, the Are.na index latency and cache hit rate, browser storage and heap, and how many windows came back.',
+      'Hold DEL during boot (or press the DEL button) for a blue setup utility that edits the same settings as Config: theme, color mode, wallpaper, CRT, the cat, icons, double-click. F10 saves, Esc puts everything back.',
+    ],
+  },
+  {
     version: '3.1.2',
     date: '2026-10-11',
     title: 'Four new apps',

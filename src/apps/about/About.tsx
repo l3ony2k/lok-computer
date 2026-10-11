@@ -101,7 +101,7 @@ const AboutThis = () => {
               <a href={credit.url} className="underline text-blue-700 dark:text-blue-300">
                 {credit.label}
               </a>
-              {" "}({credit.license})
+              {credit.license && ` (${credit.license})`}
             </span>
           ))}
           .

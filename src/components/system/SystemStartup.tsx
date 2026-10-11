@@ -6,9 +6,10 @@ import { useTheme } from "@/hooks/useTheme";
 import { loadThemeStyles, THEMES } from "@/lib/theme";
 import { useWindowState } from "@/hooks/useWindowManager";
 import { getUserChannels } from "@/lib/api";
+import { getUsageStats } from "@/lib/storage";
 import { consumeBootMode, consumeBootReason, SYSTEM_VERSION } from "@/lib/system";
-
-const RICK_ROLL_URL = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+import { KernelPanic } from "./KernelPanic";
+import { BiosSetup } from "./BiosSetup";
 
 // Raster assets ship as hashed files (vite.config.ts keeps them out of the JS),
 // so warming them here fills the HTTP cache before the desktop paints.
@@ -34,9 +35,33 @@ const initialStages: BootStage[] = [
   { label: "assets", detail: "waiting for local assets", state: "waiting" },
   { label: "theme", detail: "waiting for theme", state: "waiting" },
   { label: "cache", detail: "warming application data", state: "waiting" },
+  { label: "storage", detail: "measuring storage", state: "waiting" },
   { label: "settings", detail: "mounting user settings", state: "waiting" },
   { label: "session", detail: "restoring window session", state: "waiting" },
 ];
+
+const formatBytes = (bytes: number) => (
+  bytes >= 1024 * 1024 ? `${(bytes / (1024 * 1024)).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`
+);
+
+/**
+ * Bytes the browser fetched for resources matching `pattern`, from the
+ * resource timing buffer. A cached response reports no transfer, so the
+ * encoded body size stands in; the POST numbers are real either way.
+ */
+const resourceBytes = (pattern: RegExp) => {
+  let bytes = 0;
+  let count = 0;
+  for (const entry of performance.getEntriesByType("resource") as PerformanceResourceTiming[]) {
+    if (!pattern.test(entry.name)) continue;
+    count += 1;
+    bytes += entry.transferSize || entry.encodedBodySize || 0;
+  }
+  return { bytes, count };
+};
+
+const SCRIPT_PATTERN = /\.(m?js|tsx?)(\?|$)/;
+const IMAGE_PATTERN = /\.(png|gif|jpe?g|webp|avif)(\?|$)/;
 
 const loadImage = (url: string) => new Promise<void>((resolve, reject) => {
   const image = new Image();
@@ -69,7 +94,7 @@ const withTimeout = async <T,>(promise: Promise<T>, milliseconds: number) => {
 
 export const SystemStartup = ({ children }: { children: ReactNode }) => {
   const { isLoading: settingsLoading } = useUserSettings();
-  const { isSessionRestored } = useWindowState();
+  const { isSessionRestored, windows } = useWindowState();
   const { theme } = useTheme();
   const [bootTheme] = useState(theme);
   const [stages, setStages] = useState(initialStages);
@@ -78,6 +103,20 @@ export const SystemStartup = ({ children }: { children: ReactNode }) => {
   const [exiting, setExiting] = useState(false);
   const [bootReason] = useState(() => consumeBootReason());
   const [bootMode] = useState(() => consumeBootMode());
+  // DEL (or F2, or the DEL button) during boot opens the setup utility; the desktop waits for it.
+  const [setupRequested, setSetupRequested] = useState(false);
+  const [setupDone, setSetupDone] = useState(false);
+
+  useEffect(() => {
+    if (bootComplete || setupRequested) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Delete" && event.key !== "F2") return;
+      event.preventDefault();
+      setSetupRequested(true);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [bootComplete, setupRequested]);
 
   const updateStage = (label: string, update: Partial<BootStage>) => {
     setStages((current) => current.map((stage) => (
@@ -100,8 +139,13 @@ export const SystemStartup = ({ children }: { children: ReactNode }) => {
       const moduleTask = preloadAppModules((loaded, total) => {
         if (!cancelled) updateStage("modules", { detail: `loading app modules ${loaded}/${total}` });
       }).then((failures) => {
-        if (!cancelled) updateStage("modules", {
-          detail: failures ? `app modules ready (${failures} deferred)` : "all app modules cached",
+        if (cancelled) return;
+        const scripts = resourceBytes(SCRIPT_PATTERN);
+        const size = scripts.bytes ? `, ${formatBytes(scripts.bytes)} of script` : "";
+        updateStage("modules", {
+          detail: failures
+            ? `app modules ready (${failures} deferred${size})`
+            : `${APP_MODULE_COUNT} app modules cached (${scripts.count} files${size})`,
           state: failures ? "warning" : "done",
         });
       });
@@ -109,21 +153,54 @@ export const SystemStartup = ({ children }: { children: ReactNode }) => {
       const assetTask = preloadLocalAssets((loaded, total) => {
         if (!cancelled) updateStage("assets", { detail: `loading local assets ${loaded}/${total}` });
       }).then((failures) => {
-        if (!cancelled) updateStage("assets", {
-          detail: failures ? `local assets ready (${failures} deferred)` : "all local assets cached",
+        if (cancelled) return;
+        const images = resourceBytes(IMAGE_PATTERN);
+        const size = images.bytes ? `, ${formatBytes(images.bytes)}` : "";
+        updateStage("assets", {
+          detail: failures
+            ? `local assets ready (${failures} deferred${size})`
+            : `${bundledAssetUrls.length} local assets cached${size}`,
           state: failures ? "warning" : "done",
         });
       });
 
+      const cacheStartedAt = performance.now();
       const cacheTask = withTimeout(getUserChannels(APP_CONFIG.ARENA_USERNAME), 5000)
-        .then((channels) => {
-          if (!cancelled) updateStage("cache", {
-            detail: channels ? `Are.na index cached (${channels.length} channels)` : "Are.na index deferred",
+        .then(async (channels) => {
+          if (cancelled) return;
+          const latency = Math.round(performance.now() - cacheStartedAt);
+          let hitRate = "";
+          try {
+            const stats = await getUsageStats();
+            const total = stats.cacheHits + stats.cacheMisses;
+            if (total > 0) hitRate = `, ${Math.round((stats.cacheHits / total) * 100)}% cache hits`;
+          } catch {
+            // Usage counters are a nicety; the stage reports without them.
+          }
+          if (cancelled) return;
+          updateStage("cache", {
+            detail: channels
+              ? `Are.na index cached (${channels.length} channels, ${latency} ms${hitRate})`
+              : `Are.na index deferred (${latency} ms${hitRate})`,
             state: channels ? "done" : "warning",
           });
         })
         .catch(() => {
           if (!cancelled) updateStage("cache", { detail: "Are.na index available on demand", state: "warning" });
+        });
+
+      updateStage("storage", { detail: "measuring storage", state: "running" });
+      const storageTask = (navigator.storage?.estimate ? navigator.storage.estimate() : Promise.resolve(null))
+        .then((estimate) => {
+          if (cancelled) return;
+          const heap = (performance as Performance & { memory?: { usedJSHeapSize: number } }).memory?.usedJSHeapSize;
+          const heapText = heap ? `, ${formatBytes(heap)} JS heap` : "";
+          updateStage("storage", estimate && typeof estimate.usage === "number"
+            ? { detail: `${formatBytes(estimate.usage)} in browser storage${heapText}`, state: "done" }
+            : { detail: `storage estimate unavailable${heapText}`, state: "warning" });
+        })
+        .catch(() => {
+          if (!cancelled) updateStage("storage", { detail: "storage estimate unavailable", state: "warning" });
         });
 
       const themeName = THEMES[bootTheme].name;
@@ -142,7 +219,7 @@ export const SystemStartup = ({ children }: { children: ReactNode }) => {
         ? withTimeout(document.fonts.ready, 4000)
         : Promise.resolve(null);
 
-      await Promise.all([moduleTask, assetTask, cacheTask, themeTask, fontTask]);
+      await Promise.all([moduleTask, assetTask, cacheTask, storageTask, themeTask, fontTask]);
 
       const minimumBootTime = 700;
       const remaining = minimumBootTime - (performance.now() - startedAt);
@@ -163,14 +240,16 @@ export const SystemStartup = ({ children }: { children: ReactNode }) => {
       : { detail: "user settings mounted", state: "done" });
   }, [settingsLoading]);
 
+  const windowCount = windows.length;
   useEffect(() => {
     updateStage("session", isSessionRestored
-      ? { detail: "window session restored", state: "done" }
+      ? { detail: windowCount ? `window session restored (${windowCount} ${windowCount === 1 ? "window" : "windows"})` : "window session restored (empty)", state: "done" }
       : { detail: "restoring window session", state: "running" });
-  }, [isSessionRestored]);
+  }, [isSessionRestored, windowCount]);
 
   useEffect(() => {
     if (!preloadReady || settingsLoading || !isSessionRestored) return;
+    if (setupRequested && !setupDone) return;
 
     const exitTimer = setTimeout(() => setExiting(true), 180);
     const completeTimer = setTimeout(() => setBootComplete(true), 430);
@@ -178,37 +257,17 @@ export const SystemStartup = ({ children }: { children: ReactNode }) => {
       clearTimeout(exitTimer);
       clearTimeout(completeTimer);
     };
-  }, [isSessionRestored, preloadReady, settingsLoading]);
+  }, [isSessionRestored, preloadReady, settingsLoading, setupDone, setupRequested]);
 
   const progress = useMemo(() => {
     const finished = stages.filter((stage) => stage.state === "done" || stage.state === "warning").length;
     return Math.round((finished / stages.length) * 100);
   }, [stages]);
 
-  if (bootMode === "kernel-panic") {
-    return (
-      <main className="system-boot-screen system-kernel-panic" aria-label="Kernel panic">
-        <div className="system-boot-terminal">
-          <div className="system-kernel-panic-title">KERNEL PANIC</div>
-          <pre>{`Kernel panic - not syncing: No working init found.
-VFS: Unable to mount root fs on unknown-block(0,0)
-CPU: 0 PID: 1 Comm: init Not tainted ${SYSTEM_VERSION}
-Call Trace:
- panic+0x101/0x2e3
- mount_block_root+0x16a/0x31d
- prepare_namespace+0x13f/0x175
- kernel_init_freeable+0x2c8/0x2f2
----[ end Kernel panic - not syncing: VFS: Unable to mount root fs ]---`}</pre>
-          <button
-            type="button"
-            className="system-kernel-retry"
-            onClick={() => window.open(RICK_ROLL_URL, "_blank", "noopener,noreferrer")}
-          >
-            RETRY BOOT
-          </button>
-        </div>
-      </main>
-    );
+  if (bootMode === "kernel-panic") return <KernelPanic theme={theme} />;
+
+  if (setupRequested && !setupDone && !settingsLoading) {
+    return <BiosSetup onExit={() => setSetupDone(true)} />;
   }
 
   if (bootComplete) return <>{children}</>;
@@ -253,6 +312,9 @@ Call Trace:
         <div className="system-boot-prompt">
           <span>root@lok</span>:~# boot desktop <span className="system-boot-cursor">_</span>
           <output>{String(progress).padStart(3, "0")}%</output>
+        </div>
+        <div className="system-boot-setup">
+          Press <button type="button" className="system-boot-setup-key" onClick={() => setSetupRequested(true)}>DEL</button> to enter SETUP
         </div>
       </div>
     </main>
