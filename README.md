@@ -91,6 +91,7 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 *   [x] Develop `Media` app module (audio and video player with playlist, spectrum analyzer, Media Session controls, and hand-off from Are.na and the fediverse reader).
 *   [x] Media and Images accept Are.na links: a channel queues its audio and video blocks or opens as an image gallery, audio and video blocks open straight in Media, and Images is on the desktop.
 *   [x] Add desktop themes: `lok`, plus `98`, `XP`, and `7` after 98.css, XP.css, and 7.css, with a classic taskbar layout.
+*   [x] Develop `Notepad` (plain text, Markdown with preview, basic rich text; saved in the browser), `Clock` (Internet time, local time, world clock), `Calculator` (desk calculator with a tape) and `Chance` (dice, coin, cards, tarot with an Ask AI hand-off).
 
 ### Phase 4: Persistence & Polish
 
@@ -102,6 +103,16 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 *   [ ] Configure deployment (e.g., using Netlify, Vercel).
 
 ## Development Log
+
+### Session: 3.1.2 — Notepad, Clock, Calculator, Chance (2026-10-11)
+
+Second of the four 3.1 releases. Four apps join the desktop, each code-split like the others (`src/apps/<name>/`, lazy loader in `lazyApps.tsx`, catalog entry, route, pixel icon), with their pure logic in tested modules.
+
+*   **Notepad** (`src/apps/notepad/`): entries with a title, a body and a format (plain text, Markdown, rich text), saved in IndexedDB as you type (`app:notepad`, debounced). Sidebar of notes newest first; a title input, a format switch, Markdown preview (side by side above 720 px of window width, stacked below), download as `.txt`/`.md`/`.html`, delete with a confirm press, Ctrl/Cmd+S toast and Ctrl/Cmd+N. `markdown.ts` is a small renderer (headings, soft line breaks, emphasis, strikethrough, code spans and fences, links limited to http/https/mailto, quotes, lists, rules; text is escaped before markup is added; tested). Rich text is a `contentEditable` with `execCommand` buttons; `richText.ts` whitelists tags and strips attributes on every input and paste, and converts between HTML and text when the format changes. The editor is uncontrolled: its HTML is set when a note opens, never on keystrokes, so the caret never jumps.
+*   **Clock** (`src/apps/clock/`): Swatch Internet time (`@867.47`, from `src/lib/internetTime.ts`, which the calendar flyout now shares; integer milliseconds so the boundaries are exact), the local zone as the first row, and a world clock defaulting to Hong Kong, Tokyo, Hà Nội, Los Angeles, New York, London and Kyiv (`Europe/Kiev` fallback). Rows show the delta from local and "tomorrow"/"yesterday". Zones are added from `Intl.supportedValuesOf('timeZone')` grouped by area, removed per row (focus moves to the neighbour), and reset; persisted as `app:clock`, max 24. One 500 ms interval drives the app. `time.ts` (offsets through Intl parts, DST-correct, formatting, normalisation) is tested.
+*   **Calculator** (`src/apps/calculator/`): a desk calculator. `evaluate.ts` parses `+ − × ÷`, parentheses, unary minus and postfix `%`, rounds to 12 significant digits and reports division by zero and malformed input as errors (tested). Keyboard entry, repeat-equals, a tape of the last 20 calculations that recalls a result (`app:calculator`), copy with a toast.
+*   **Chance** (`src/apps/chance/`): Dice (one to twelve dice of d4–d100, a short shake before the result), Coin (with a history and counts), Cards (draw up to twelve from a shuffled 52-card deck, shuffle to start over) and Tarot (one card or a past/present/future spread from the 78-card deck in `tarot.ts`, upright or reversed, with keyword meanings). "Don't know what this means? Ask AI" hands the reading to Ask AI, which gained an `ask` launch prop: a question with an id is asked once, after the saved runs have loaded, and then dropped from the window props so a restored session does not ask it again. `random.ts` (seedable rng, dice, coin, deck, draws, the Ask AI question, state normalisation) is tested. The footer says what the randomness is: the browser's pseudo-random generator, fine for games, never for keys.
+*   Three pixel icons (clock, calculator, dice) drawn in `scripts/pixel-icons.mjs`; Notepad reuses the note icon. Routes `/notepad`, `/clock`, `/calculator`, `/chance?tab=`; the Pages function's known UI paths include them so deep links reach the desktop.
 
 ### Session: 3.1.1 — desktop: snapping, shade, launcher, menus, icon layout (2026-10-11)
 

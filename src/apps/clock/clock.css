@@ -1,0 +1,246 @@
+/*
+ * Clock styles, code-split with the app chunk. Colours come from shared
+ * tokens so every theme recolours the readouts; the Tailwind tier classes on
+ * the big numbers (text-2xl) and captions (text-xs) let the classic skins
+ * resize them on their own grids.
+ */
+
+.clock-window {
+    container-type: inline-size;
+}
+
+.clock-body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    color: var(--text-color);
+    background: var(--detail-bg);
+}
+
+/* ---------- Internet time ---------- */
+
+.clock-internet {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 22px 12px 16px;
+    text-align: center;
+}
+
+.clock-window .clock-beats {
+    font-family: var(--font-code);
+    font-size: clamp(40px, 16cqi, 72px);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+}
+
+.clock-window .clock-caption {
+    font-family: var(--font-code);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--log-muted);
+}
+
+/* ---------- Local zone ---------- */
+
+.clock-local {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+        "label offset"
+        "time  time"
+        "date  date";
+    row-gap: 2px;
+    column-gap: 10px;
+    padding: 10px 12px 12px;
+    background: var(--detail-header-bg);
+    border-top: 1px solid var(--internal-border);
+    border-bottom: 1px solid var(--internal-border);
+}
+
+.clock-local-label {
+    grid-area: label;
+    overflow: hidden;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.clock-local-offset {
+    grid-area: offset;
+    align-self: center;
+    font-family: var(--font-code);
+    color: var(--log-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.clock-window .clock-local-time {
+    grid-area: time;
+    font-family: var(--font-code);
+    font-size: clamp(28px, 10cqi, 44px);
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+}
+
+.clock-local-date {
+    grid-area: date;
+    color: var(--log-muted);
+}
+
+/* ---------- World clock ---------- */
+
+.clock-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.clock-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 36px;
+    padding: 4px 6px 4px 12px;
+    border-bottom: 1px solid var(--internal-border);
+    font-variant-numeric: tabular-nums;
+    transition: background-color 120ms;
+}
+
+.clock-row:hover,
+.clock-row:focus-within {
+    background: var(--detail-meta-bg);
+}
+
+.clock-row-label {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.clock-row-meta {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: baseline;
+    gap: 8px;
+    color: var(--log-muted);
+    font-family: var(--font-code);
+    text-align: right;
+    white-space: nowrap;
+}
+
+.clock-row-day {
+    font-style: italic;
+}
+
+.clock-row-delta {
+    min-width: 4.5ch;
+}
+
+.clock-row-time {
+    flex: 0 0 auto;
+    min-width: 5ch;
+    font-family: var(--font-code);
+    text-align: right;
+}
+
+.clock-row-remove {
+    flex: 0 0 auto;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    color: inherit;
+    background: transparent;
+    border: 1px solid transparent;
+    font-size: 16px;
+    line-height: 1;
+    opacity: 0.55;
+    transition: opacity 120ms, background-color 120ms;
+}
+
+.clock-row-remove:hover {
+    background: var(--button-bg);
+    border-color: var(--internal-border);
+    opacity: 1;
+}
+
+.clock-row-remove:active {
+    background: var(--button-hover);
+}
+
+.clock-row-remove:focus-visible {
+    outline: 1px dotted var(--text-color);
+    outline-offset: 1px;
+    opacity: 1;
+}
+
+.clock-empty {
+    margin: 0;
+    padding: 18px 12px;
+    color: var(--log-muted);
+    text-align: center;
+}
+
+/* ---------- Footer ---------- */
+
+.clock-footer {
+    flex-wrap: nowrap;
+}
+
+.clock-add {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.clock-add .clock-select {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+}
+
+/* A narrow window keeps the whole select usable: the Reset button drops below it. */
+@container (max-width: 400px) {
+    .clock-footer {
+        flex-wrap: wrap;
+        overflow: visible;
+    }
+
+    .clock-add {
+        flex-basis: 100%;
+    }
+
+    .clock-footer > .retro-button {
+        margin-left: auto;
+    }
+
+    .clock-row-meta {
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0;
+    }
+}
+
+@media (hover: none) {
+    .clock-row-remove {
+        opacity: 0.8;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .clock-row,
+    .clock-row-remove {
+        transition: none;
+    }
+}

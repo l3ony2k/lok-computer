@@ -241,6 +241,43 @@ export const ROUTES: RouteConfig[] = [
     },
 
     {
+        pattern: 'notepad',
+        componentType: 'Notepad',
+        extractProps: () => ({}),
+        generateUrl: () => '/notepad',
+        getTitle: () => 'Notepad',
+    },
+
+    {
+        pattern: 'clock',
+        componentType: 'Clock',
+        extractProps: () => ({}),
+        generateUrl: () => '/clock',
+        getTitle: () => 'Clock',
+    },
+
+    {
+        pattern: 'calculator',
+        componentType: 'Calculator',
+        extractProps: () => ({}),
+        generateUrl: () => '/calculator',
+        getTitle: () => 'Calculator',
+    },
+
+    {
+        pattern: 'chance',
+        componentType: 'Chance',
+        extractProps: (_, query) => ({
+            initialTab: query.get('tab') || undefined,
+        }),
+        generateUrl: (props) => {
+            if (props.initialTab && props.initialTab !== 'dice') return `/chance?tab=${encodeURIComponent(String(props.initialTab))}`;
+            return '/chance';
+        },
+        getTitle: () => 'Chance',
+    },
+
+    {
         pattern: 'console',
         componentType: 'Console',
         extractProps: () => ({}),

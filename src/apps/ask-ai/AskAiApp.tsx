@@ -361,8 +361,14 @@ const FollowUpForm = ({ run, request, disabled, focusFirst, onSubmit, onAnswerAn
   );
 };
 
-export const AskAiApp: React.FC = () => {
-  const [state, setState] = usePersistedState<AskAiState>({
+export interface AskAiAppProps {
+  /** A question handed over by another app (Chance's tarot reading); each id is submitted once. */
+  ask?: { id: string; question: string };
+  onPropsChange?: (props: Record<string, unknown>) => void;
+}
+
+export const AskAiApp: React.FC<AskAiAppProps> = ({ ask: handoff, onPropsChange }) => {
+  const [state, setState, loadingState] = usePersistedState<AskAiState>({
     key: STORAGE_KEY,
     defaultValue: { runs: [] },
     debounceMs: 200,
@@ -480,12 +486,25 @@ export const AskAiApp: React.FC = () => {
     }
   }, [refocusPrompt, setState, updateRun]);
 
-  const ask = (text: string) => {
+  const ask = useCallback((text: string) => {
     const trimmed = text.trim();
     if (!trimmed || busy) return;
     void execute({ id: createRunId(), question: trimmed, createdAt: Date.now(), status: 'planning' }, { append: true });
     setQuestion('');
-  };
+  }, [busy, execute]);
+
+  // A handed-over question is asked once per id, then dropped from the window
+  // props so a restored session does not ask it again. It waits for the saved
+  // runs to load (a run appended before that would be overwritten), and while
+  // a run is busy the question waits in the composer instead.
+  const handledHandoff = useRef<string | null>(null);
+  useEffect(() => {
+    if (!handoff || loadingState || handledHandoff.current === handoff.id) return;
+    handledHandoff.current = handoff.id;
+    if (busy) setQuestion(handoff.question);
+    else ask(handoff.question);
+    onPropsChange?.({ ask: undefined });
+  }, [ask, busy, handoff, loadingState, onPropsChange]);
 
   const submit = (event?: React.FormEvent) => {
     event?.preventDefault();

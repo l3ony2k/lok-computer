@@ -54,7 +54,8 @@ html[data-chrome="classic"]:not(#_) body {
 html[data-chrome="classic"]:not(#_) :where(
     h1, h2, .text-lg, .text-xl, .text-2xl, .arena-channel-card-title,
     .ask-ai-best-answer strong, .ask-ai-value strong, .oobe-brand strong,
-    .oobe-crt-preview > strong, .oobe-page h1
+    .oobe-crt-preview > strong, .oobe-page h1,
+    .calculator-result, .chance-coin-face, .chance-die-value, .chance-tarot-name, .clock-beats, .clock-local-time
 ) {
     --c-type-size: var(--c-text-heading);
     font-family: var(--c-font-heading);
@@ -75,6 +76,8 @@ html[data-chrome="classic"]:not(#_) :where(
     .image-viewer-dropzone, .image-viewer-message, .lok-reader-media-play, .media-player-dropzone,
     .media-player-empty, .media-player-error, .media-player-lcd, .media-player-playlist-empty,
     .media-player-track, .oobe-page p, .oobe-range-setting, .oobe-step, .oobe-summary dd, .theme-picker-label,
+    .calculator-expression, .calculator-tape-entry, .chance-ask, .chance-tarot-meaning, .clock-local-label, .clock-row-label,
+    .notepad-editor, .notepad-empty, .notepad-list-title, .notepad-preview, .notepad-rich,
     #guestbooks___challenge-answer-container input, #guestbooks___challenge-answer-container label,
     #guestbooks___guestbook-messages-container blockquote,
     #guestbooks___guestbook-messages-container p:first-child b
@@ -107,6 +110,9 @@ html[data-chrome="classic"]:not(#_) :where(
     .media-player-track-time, .oobe-attribution, .oobe-brand span, .oobe-crt-preview > span,
     .oobe-footer > span, .oobe-live-preview small, .oobe-range-setting output, .oobe-step > span,
     .oobe-step-count, .oobe-summary dt, .weather-attribution,
+    .calculator-tape-empty, .calculator-tape-header, .chance-coin-label, .chance-die-sides, .chance-footer span,
+    .chance-hint, .chance-tarot-arcana, .chance-tarot-orientation, .chance-tarot-position, .chance-total,
+    .clock-caption, .clock-row-meta, .notepad-empty-list, .notepad-footer, .notepad-list-meta,
     #guestbooks___guestbook-messages-container p:first-child small
 ) {
     --c-type-size: var(--c-text-small);

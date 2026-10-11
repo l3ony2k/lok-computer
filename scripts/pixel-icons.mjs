@@ -773,6 +773,98 @@ const ART = {
     ...#sssssssssssssssssss#.....
     ....###################......
   ` },
+  clock: { art: `
+    ............####............
+    .........##########.........
+    .......##hhhhhkhhhh##.......
+    .....##hhhwwwwkwwwwww##.....
+    ....##hhkwwwwwwwwwwkww##....
+    ...##hhwwwwwwwwwwwwwwww##...
+    ...#hhwwwwwwwwwwwwwwwwww#...
+    ..#hhwwwwwwwwwwwwwwwwwwss#..
+    ..#hkwwwwwwwwwwwwwwwwwwks#..
+    .#hhwwwwwwwwwwwwwwwww#wwss#.
+    .#hwwwww##wwwwwwwww###wwws#.
+    .#hwwwwww##wwwwwww###wwwws#.
+    ##hwwwwwww###www###wwwwwws##
+    ##hwwwwwwwww#rr###wwwwwwws##
+    ##kkwwwwwwwwwrr#wwwwwwwwkk##
+    ##hwwwwwwwwwwrwwwwwwwwwwws##
+    .#hwwwwwwwwwrwwwwwwwwwwwws#.
+    .#hwwwwwwwwwrwwwwwwwwwwwws#.
+    .#hwwwwwwwwrwwwwwwwwwwwwss#.
+    ..#wkwwwwwwrwwwwwwwwwwwks#..
+    ..#wwwwwwwrwwwwwwwwwwwwss#..
+    ...#wwwwwrwwwwwwwwwwwwss#...
+    ...##wwwwrwwwwwwwwwwwss##...
+    ....##wskwwwwwwwwwwkss##....
+    .....##ssswwwwkwwwsss##.....
+    .......##ssssskssss##.......
+    .........##########.........
+    ............####............
+  ` },
+  calculator: { art: `
+    .######################.
+    #gggggggggggggggggggggd#
+    #gggggggggggggggggggggd#
+    #gg##################gd#
+    #gg#ccccccckkkckkkcc#gd#
+    #gg#ccccccckckckckcc#gd#
+    #gg#ccccccckckckckcc#gd#
+    #gg#ccccccckkkckkkcc#gd#
+    #gg##################gd#
+    #gggggggggggggggggggggd#
+    #gggggggggggggggggggggd#
+    #ggwwwsgwwwsgwwwsglllbd#
+    #ggwwwsgwwwsgwwwsglllbd#
+    #ggsss#gsss#gsss#gbbb#d#
+    #gggggggggggggggggggggd#
+    #gggggggggggggggggggggd#
+    #ggwwwsgwwwsgwwwsglllbd#
+    #ggwwwsgwwwsgwwwsglllbd#
+    #ggsss#gsss#gsss#gbbb#d#
+    #gggggggggggggggggggggd#
+    #gggggggggggggggggggggd#
+    #ggwwwsgwwwsgwwwsglllbd#
+    #ggwwwsgwwwsgwwwsglllbd#
+    #ggsss#gsss#gsss#gbbb#d#
+    #gggggggggggggggggggggd#
+    #gggggggggggggggggggggd#
+    #ggwwwsgwwwsgwwwsgoooOd#
+    #ggwwwsgwwwsgwwwsgoooOd#
+    #ddsss#dsss#dsss#dOOO#d#
+    .######################.
+  ` },
+  dice: { art: `
+    .............##############.
+    ............#rrrrrrrrrrrrrr#
+    ............#rrrrrrrrrrrrrR#
+    ............#rr##rrrrrrrrrR#
+    ............#rr##rrrrrrrrrR#
+    ............#rrrrrrrrrrrrrR#
+    ............#rrrrrrrrrrrrrR#
+    ............#rrrrrr##rrrrrR#
+    ............#rrrrrr##rrrrrR#
+    ............#rrrrrrrrrrrrrR#
+    .################.rrrrrrrrR#
+    #wwwwwwwwwwwwwwww#rrrrr##rR#
+    #wwwwwwwwwwwwwwws#rrrrr##rR#
+    #ww##wwwwww##wwws#rrrrrrrrR#
+    #ww##wwwwww##wwws#RRRRRRRRR#
+    #wwwwwwwwwwwwwwws##########.
+    #wwwwwwwwwwwwwwws#..........
+    #wwwwww##wwwwwwws#..........
+    #wwwwww##wwwwwwws#..........
+    #wwwwwwwwwwwwwwws#..........
+    #wwwwwwwwwwwwwwws#..........
+    #ww##wwwwww##wwws#..........
+    #ww##wwwwww##wwws#..........
+    #wwwwwwwwwwwwwwws#..........
+    #wwwwwwwwwwwwwwws#..........
+    #wwwwwwwwwwwwwwws#..........
+    #wsssssssssssssss#..........
+    .################...........
+  ` },
 };
 // </art>
 

@@ -14,6 +14,18 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '3.1.2',
+    date: '2026-10-11',
+    title: 'Four new apps',
+    notes: [
+      'Notepad: notes saved in this browser, as plain text, Markdown with a preview, or basic rich text; download any note as a file.',
+      'Clock: Internet time in beats, your local time, and a world clock you can add zones to (Hong Kong, Tokyo, Hà Nội, Los Angeles, New York, London and Kyiv to start).',
+      'Calculator: a desk calculator with a tape, keyboard entry, and a repeat-equals.',
+      'Chance: dice (up to twelve, any shape), a coin, cards from a 52-card deck, and tarot with an "Ask AI" button for the reading. Randomness is an illusion here; never use it for secrets.',
+      'Ask AI accepts a question handed over by another app.',
+    ],
+  },
+  {
     version: '3.1.1',
     date: '2026-10-11',
     title: 'A desktop that behaves like one',

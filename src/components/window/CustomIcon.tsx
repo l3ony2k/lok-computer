@@ -19,6 +19,9 @@ import fediIcon from '../../assets/icons/fedi.png';
 import shelfIcon from '../../assets/icons/shelf.png';
 import noteIcon from '../../assets/icons/note.png';
 import mediaIcon from '../../assets/icons/media.png';
+import clockIcon from '../../assets/icons/clock.png';
+import calculatorIcon from '../../assets/icons/calculator.png';
+import diceIcon from '../../assets/icons/dice.png';
 
 interface CustomIconProps {
   iconType?: string;
@@ -53,6 +56,9 @@ const ICONS: Record<string, string> = {
   shelf: shelfIcon,
   note: noteIcon,
   media: mediaIcon,
+  clock: clockIcon,
+  calculator: calculatorIcon,
+  dice: diceIcon,
 };
 
 export const CustomIcon: React.FC<CustomIconProps> = ({ iconType, className, pixelated = false }) => {

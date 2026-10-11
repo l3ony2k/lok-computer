@@ -1,0 +1,304 @@
+/*
+ * Chance: dice, coin, cards, tarot. Colours come from shared tokens so every
+ * theme recolours it; the only "colour" of its own is the red suits, which use
+ * the error token every theme defines.
+ */
+
+.chance-window {
+    container-type: inline-size;
+}
+
+.chance-pane {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 12px;
+}
+
+.chance-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.chance-total,
+.chance-hint {
+    font-size: 12px;
+    color: var(--log-muted);
+}
+
+.chance-total strong {
+    color: var(--text-color);
+    font-variant-numeric: tabular-nums;
+}
+
+.chance-footer span {
+    font-size: 11px;
+    color: var(--log-muted);
+    line-height: 1.35;
+}
+
+/* ---------- Dice ---------- */
+
+.chance-dice-config {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+}
+
+.chance-die-select {
+    width: 68px;
+}
+
+.chance-dice-results {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 56px;
+}
+
+.chance-die {
+    position: relative;
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--block-border);
+    background: var(--block-bg);
+    color: var(--text-color);
+    box-shadow: var(--surface-shadow);
+}
+
+.chance-die-value {
+    font-family: var(--font-code);
+    font-size: 22px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.chance-die-sides {
+    position: absolute;
+    right: 3px;
+    bottom: 1px;
+    font-size: 9px;
+    color: var(--log-muted);
+}
+
+.chance-die[data-rolling] {
+    animation: chance-shake 120ms linear infinite;
+}
+
+@keyframes chance-shake {
+    0% { transform: translate(0, 0) rotate(0deg); }
+    25% { transform: translate(1px, -1px) rotate(2deg); }
+    50% { transform: translate(-1px, 1px) rotate(-2deg); }
+    75% { transform: translate(1px, 1px) rotate(1deg); }
+    100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+/* ---------- Coin ---------- */
+
+.chance-coin {
+    width: 120px;
+    height: 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    margin: 8px auto 0;
+    border: 3px double var(--block-border);
+    background: var(--detail-meta-bg);
+    color: var(--text-color);
+    box-shadow: var(--surface-shadow);
+}
+
+.chance-coin-face {
+    font-family: var(--font-code);
+    font-size: 44px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.chance-coin-label {
+    font-size: 11px;
+    color: var(--log-muted);
+}
+
+.chance-coin[data-flipping] {
+    animation: chance-flip 500ms ease-in-out;
+}
+
+@keyframes chance-flip {
+    0% { transform: scaleX(1); }
+    25% { transform: scaleX(0.1); }
+    50% { transform: scaleX(1); }
+    75% { transform: scaleX(0.1); }
+    100% { transform: scaleX(1); }
+}
+
+.chance-coin-history {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.chance-coin-history li {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--internal-border);
+    font-family: var(--font-code);
+    font-size: 12px;
+}
+
+.chance-coin-history li[data-side="heads"] {
+    color: var(--detail-bg);
+    background: var(--text-color);
+}
+
+/* ---------- Cards ---------- */
+
+.chance-count {
+    align-items: stretch;
+}
+
+.chance-count-value {
+    min-width: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-top: 1px solid var(--block-border);
+    border-bottom: 1px solid var(--block-border);
+    font-variant-numeric: tabular-nums;
+    font-size: 13px;
+}
+
+.chance-hand {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.chance-card {
+    position: relative;
+    width: 64px;
+    height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--block-border);
+    background: var(--block-bg);
+    color: var(--text-color);
+    box-shadow: var(--surface-shadow);
+    font-family: var(--font-code);
+}
+
+.chance-card[data-red] {
+    color: var(--log-error);
+}
+
+.chance-card-corner {
+    position: absolute;
+    top: 4px;
+    left: 5px;
+    font-size: 11px;
+    line-height: 1.1;
+    text-align: center;
+}
+
+.chance-card-corner-bottom {
+    top: auto;
+    left: auto;
+    right: 5px;
+    bottom: 4px;
+    transform: rotate(180deg);
+}
+
+.chance-card-pip {
+    font-size: 30px;
+}
+
+/* ---------- Tarot ---------- */
+
+.chance-reading {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+}
+
+@container (min-width: 560px) {
+    .chance-reading[data-spread="3"] {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+.chance-tarot {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 12px 14px;
+    border: 2px solid var(--block-border);
+    background: var(--block-bg);
+    box-shadow: var(--surface-shadow);
+}
+
+.chance-tarot[data-reversed] {
+    border-style: dashed;
+}
+
+.chance-tarot-position {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--log-muted);
+}
+
+.chance-tarot-arcana {
+    font-size: 11px;
+    color: var(--log-muted);
+}
+
+.chance-tarot-name {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.chance-tarot-orientation {
+    font-size: 11px;
+}
+
+.chance-tarot-meaning {
+    margin: 4px 0 0;
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--text-color);
+}
+
+.chance-ask {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border: 1px solid var(--internal-border);
+    background: var(--detail-meta-bg);
+    font-size: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .chance-die[data-rolling],
+    .chance-coin[data-flipping] {
+        animation: none;
+    }
+}

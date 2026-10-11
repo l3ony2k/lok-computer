@@ -1,0 +1,211 @@
+/*
+ * Calculator styles, code-split with the app chunk. Every colour and face
+ * comes from the shared tokens so all eight themes recolour the keypad.
+ */
+
+.calculator-root {
+    height: 100%;
+    min-height: 0;
+    container-type: inline-size;
+}
+
+.calculator-panel {
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ---------- Display ---------- */
+
+.calculator-display {
+    flex: 0 0 auto;
+    padding: 8px 10px 10px;
+    border-bottom: 1px solid var(--internal-border);
+    color: var(--text-color);
+    background: var(--detail-meta-bg);
+    font-family: var(--font-code);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+
+.calculator-expression {
+    --c-type-size: var(--c-text-small);
+    min-height: 1.4em;
+    overflow: hidden;
+    white-space: nowrap;
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--log-muted);
+}
+
+/*
+ * The result steps down as it grows so a 12-significant-digit value never
+ * clips at 300px. Bitmap skins size text through --c-type-size instead and
+ * only get the 2x heading cell while the text is short enough for it.
+ */
+.calculator-result {
+    --c-type-size: var(--c-text-heading);
+    overflow: hidden;
+    white-space: nowrap;
+    font-size: 32px;
+    line-height: 1.2;
+}
+
+.calculator-result[data-length="medium"] {
+    font-size: 26px;
+}
+
+.calculator-result[data-length="long"] {
+    --c-type-size: var(--c-text-body);
+    font-size: 21px;
+}
+
+.calculator-result[data-length="extra"] {
+    --c-type-size: var(--c-text-body);
+    font-size: 16px;
+}
+
+.calculator-result[data-length="max"] {
+    --c-type-size: var(--c-text-body);
+    font-size: 13px;
+}
+
+.calculator-result[data-error="true"] {
+    color: var(--log-muted);
+}
+
+/* ---------- Tape and keys ---------- */
+
+.calculator-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.calculator-tape {
+    flex: 0 1 auto;
+    min-height: 0;
+    max-height: 45%;
+    display: flex;
+    flex-direction: column;
+    border-bottom: 1px solid var(--internal-border);
+    background: var(--detail-bg);
+}
+
+.calculator-tape-header {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    padding: 3px 4px 3px 8px;
+    border-bottom: 1px solid var(--internal-border);
+    background: var(--detail-header-bg);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--log-muted);
+}
+
+.calculator-tape-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    list-style: none;
+}
+
+.calculator-tape-entry {
+    display: flex;
+    width: 100%;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 4px 8px;
+    border: 0;
+    border-bottom: 1px solid var(--internal-border);
+    background: transparent;
+    color: var(--text-color);
+    font-family: var(--font-code);
+    font-variant-numeric: tabular-nums;
+    font-size: 12px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.calculator-tape-entry:hover {
+    background: var(--button-hover);
+}
+
+.calculator-tape-entry > span {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--log-muted);
+}
+
+.calculator-tape-entry > strong {
+    flex: 0 0 auto;
+    font-weight: 600;
+}
+
+.calculator-tape-empty {
+    margin: 0;
+    padding: 12px 10px;
+    font-size: 12px;
+    text-align: center;
+    color: var(--log-muted);
+}
+
+/*
+ * Twenty columns let the function row hold five keys (span 4) above rows of
+ * four (span 5) while every key stays on one grid.
+ */
+.calculator-keys {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: repeat(20, minmax(0, 1fr));
+    grid-auto-rows: minmax(36px, 1fr);
+    gap: 4px;
+    padding: 6px;
+    background: var(--detail-bg);
+}
+
+.calculator-keys .calculator-key {
+    grid-column: span 5;
+    min-width: 0;
+    padding: 0;
+    font-size: 16px;
+}
+
+.calculator-keys .calculator-key[data-span="4"] {
+    grid-column: span 4;
+}
+
+/*
+ * The classic chrome pins every retro button to the control height from an
+ * id-level selector; keys have to fill their grid row, so match that weight.
+ */
+html:not(#_) .calculator-keys .calculator-key {
+    height: auto;
+    min-height: 36px;
+}
+
+@container (min-width: 520px) {
+    .calculator-body {
+        flex-direction: row;
+    }
+
+    .calculator-tape {
+        order: 2;
+        flex: 0 0 42%;
+        max-height: none;
+        border-bottom: 0;
+        border-left: 1px solid var(--internal-border);
+    }
+}

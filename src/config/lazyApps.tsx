@@ -49,6 +49,10 @@ export const APP_MODULE_LOADERS = {
     Shelf: () => import('@/apps/shelf/ShelfApp'),
     Links: () => import('@/apps/links/LinksApp'),
     MediaPlayer: () => import('@/apps/media/MediaPlayerApp'),
+    Notepad: () => import('@/apps/notepad/NotepadApp'),
+    Chance: () => import('@/apps/chance/ChanceApp'),
+    Clock: () => import('@/apps/clock/ClockApp'),
+    Calculator: () => import('@/apps/calculator/CalculatorApp'),
 } as const;
 
 export const ChannelBrowser = lazy(() =>
@@ -96,3 +100,15 @@ export const LinksApp = lazy(() =>
 
 export const MediaPlayerApp = lazy(() =>
     APP_MODULE_LOADERS.MediaPlayer().then(m => ({ default: m.MediaPlayerApp })));
+
+export const NotepadApp = lazy(() =>
+    APP_MODULE_LOADERS.Notepad().then(m => ({ default: m.NotepadApp })));
+
+export const ChanceApp = lazy(() =>
+    APP_MODULE_LOADERS.Chance().then(m => ({ default: m.ChanceApp })));
+
+export const ClockApp = lazy(() =>
+    APP_MODULE_LOADERS.Clock().then(m => ({ default: m.ClockApp })));
+
+export const CalculatorApp = lazy(() =>
+    APP_MODULE_LOADERS.Calculator().then(m => ({ default: m.CalculatorApp })));

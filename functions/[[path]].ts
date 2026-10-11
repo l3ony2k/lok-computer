@@ -30,6 +30,10 @@ const UI_PATHS = new Set([
   "/privacy",
   "/shelf",
   "/weather",
+  "/notepad",
+  "/clock",
+  "/calculator",
+  "/chance",
   "/web",
 ]);
 

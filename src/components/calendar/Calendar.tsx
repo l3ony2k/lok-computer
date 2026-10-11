@@ -1,6 +1,7 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import type { MenuPlacement } from '@/components/menu/AppMenu';
+import { swatchBeats } from '@/lib/internetTime';
 
 interface CalendarProps {
   isOpen: boolean;
@@ -8,28 +9,6 @@ interface CalendarProps {
   date?: Date;
   placement?: MenuPlacement;
 }
-
-// Calculate Swatch Internet Time (.beats) with centibeats
-// 1 day = 1000 beats, measured from Biel Mean Time (UTC+1)
-const getSwatchBeats = (date: Date): string => {
-  // Get UTC time including milliseconds for centibeats
-  const utcHours = date.getUTCHours();
-  const utcMinutes = date.getUTCMinutes();
-  const utcSeconds = date.getUTCSeconds();
-  const utcMilliseconds = date.getUTCMilliseconds();
-
-  // Convert to Biel Mean Time (UTC+1) in seconds with milliseconds
-  const bielSeconds = ((utcHours + 1) * 3600) + (utcMinutes * 60) + utcSeconds + (utcMilliseconds / 1000);
-
-  // Calculate beats with centibeats (1 beat = 86.4 seconds, 1000 beats per day)
-  const beats = (bielSeconds / 86.4) % 1000;
-
-  // Format: beats.centibeats (e.g., 500.75)
-  const wholeBeats = Math.floor(beats).toString().padStart(3, '0');
-  const centibeats = Math.floor((beats % 1) * 100).toString().padStart(2, '0');
-
-  return `${wholeBeats}.${centibeats}`;
-};
 
 /** Calendar and analog clock flyout. `date` ticks from the clock that opens it. */
 export const Calendar: React.FC<CalendarProps> = ({
@@ -202,7 +181,7 @@ export const Calendar: React.FC<CalendarProps> = ({
 A decimal time concept dividing the day into 1000 beats.
 No time zones, same time worldwide!`}
           >
-            @{getSwatchBeats(clockTime)}
+            @{swatchBeats(clockTime)}
           </a>
         </div>
 
