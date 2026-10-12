@@ -104,9 +104,13 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 
 ## Development Log
 
+### Session: 3.1.7 — shade in place (2026-10-12)
+
+*   **Shade animation on the real frame** (`WindowTransitionProvider`): the ghost stood in for the window with its own simplified title bar (icon and title, generic height, no controls) while the real frame was hidden, which is fine for a box flying to the taskbar but visible as a swap when the box sits exactly on the window. Shade and unshade now tween the real surface's height with the Web Animations API, the content area pinned to its height and clipped so the app does not reflow, and on BeOS the tab width (with its `max-width` lifted for the duration, since the cap clamped the tween short of the full width). The state flips in the same task as the measurements, through `flushSync`: at the end of a shade, at the start of an unshade (the shaded geometry is measured by trialling the `is-shaded` class before committing). Minimize and restore keep the ghost.
+
 ### Session: 3.1.6 — shade animation, themed list headings, pips (2026-10-12)
 
-*   **Shade animation** (`useWindowTransitions`, `WindowTransitionProvider`, `WindowContainer`): shading and unshading run through the same ghost as minimize and restore. The ghost shrinks the frame to its title bar (or grows it back to the stored height) while the real window flips state behind it; reduced motion skips it like the others.
+*   **Shade animation** (`useWindowTransitions`, `WindowTransitionProvider`, `WindowContainer`): shading and unshading animate like minimize and restore (first through the ghost; 3.1.7 moves it onto the real frame). Reduced motion skips it like the others.
 *   **BeOS shaded tab**: a shaded window's tab spans the full frame (`[data-shaded]` on the surface), so the tab can be dragged to either edge instead of stopping where the hidden body would.
 *   **Stacking audit** (`useWindowManager`): `focusWindow` read stack membership from a snapshot taken before the pending update, so a focus queued right after `stackWindow` raised the old stack and could leave a third window between the two tabs; membership is now read inside the updater. Stacks dissolve whenever the active theme has no `tabStacking`, on theme change and on session restore. Minimized members keep membership and share group moves and resizes, so they come back aligned.
 *   **List headings** (`classic.css`, each skin): the heading cell carries the theme's header tokens and a per-theme header height, and the sort button is a transparent full-bleed hit area, so the heading no longer looks like a small button inside a taller cell. Hover, active-sort and pressed states move to the cell. 7: white gradient with column separators; XP: flat with the 3px base; 98: raised bevel edge to edge; System: thin white band; TUI: blue bar, white text; Palm: bordered cells; BeOS: raised gray strip.

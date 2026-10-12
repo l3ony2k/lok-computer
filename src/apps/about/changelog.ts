@@ -14,6 +14,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '3.1.7',
+    date: '2026-10-12',
+    title: 'A steadier shade',
+    notes: [
+      'The shade animation rolls the real frame up and down: the title, its icon and the controls stay put the whole way instead of swapping for a stand-in, and on BeOS the tab widens to the frame as it rolls.',
+    ],
+  },
+  {
     version: '3.1.6',
     date: '2026-10-12',
     title: 'Pips, headings and a shade that moves',
