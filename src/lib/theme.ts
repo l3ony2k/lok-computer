@@ -187,6 +187,7 @@ export const THEMES: Readonly<Record<ThemeId, ThemeDefinition>> = {
     tabStacking: true,
     credit: { label: 'beos-css by mtechnic', url: 'https://beta.mtechnic.me/' },
     loadStyles: () => Promise.all([import('@/themes/classic.css'), import('@/themes/beos/theme.css')]),
+    fonts: ['12px "Swis721 BT Coverage"', 'bold 12px "Swis721 BT Coverage"', 'italic bold 12px "Swis721 BT Coverage"', '12px "ProFont Coverage"'],
   },
   palm: {
     id: 'palm',
@@ -202,6 +203,12 @@ export const THEMES: Readonly<Record<ThemeId, ThemeDefinition>> = {
     fonts: ['11px "Pixelated MS Sans Serif"', 'bold 11px "Pixelated MS Sans Serif"'],
   },
 };
+
+/**
+ * Screens where the Palm theme frames the desktop phone-size (src/themes/palm/theme.css
+ * keeps the same query): choosing it there shrinks every window, so the picker asks first.
+ */
+export const PALM_FRAME_QUERY = '(min-width: 600px) and (min-height: 600px)';
 
 /** Display order. Not derived from THEMES: integer-like keys ('7', '98') would sort first. */
 export const THEME_IDS: readonly ThemeId[] = ['lok', '98', 'xp', '7', 'system', 'tui', '386', 'cs16', 'beos', 'palm'];

@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { getOverlayRoot } from '@/lib/overlayRoot';
 import { Search } from 'lucide-react';
 import { CustomIcon } from '@/components/window/CustomIcon';
 import { useApplicationLauncher } from '@/hooks/useApplicationLauncher';
@@ -226,6 +227,6 @@ export const KeyboardLauncher: React.FC = () => {
         </div>
       </div>
     </div>,
-    document.body,
+    getOverlayRoot(),
   );
 };

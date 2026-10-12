@@ -1,5 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
+import { getOverlayRoot } from '@/lib/overlayRoot';
 import { MenuList, type MenuEntry } from './MenuItems';
 
 /** `top` drops from the top bar; `bottom` rises from the taskbar as a start menu. */
@@ -38,6 +39,6 @@ export const AppMenu: React.FC<AppMenuProps> = ({ items, isOpen, placement = 'to
         </div>
       </div>
     </div>,
-    document.body,
+    getOverlayRoot(),
   );
 };

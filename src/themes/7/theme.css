@@ -425,12 +425,28 @@ html[data-theme="7"][data-layout]:not(#_) .app-menu-panel[data-placement="bottom
     width: 280px;
     padding: 6px;
     overflow: visible;
-    background: linear-gradient(rgba(40, 70, 105, 0.82), rgba(18, 34, 56, 0.9));
+    background: transparent;
     border: 1px solid rgba(0, 0, 0, 0.75);
     border-radius: 6px;
     box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35) inset, 3px 3px 12px rgba(0, 0, 0, 0.6);
+}
+
+/* The glass is a layer under the content, not a filter on the panel: a
+   backdrop-filter makes its element the containing block for fixed
+   descendants, and submenus are positioned fixed against the overlay root. */
+html[data-theme="7"][data-layout]:not(#_) .app-menu-panel[data-placement="bottom"]::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 5px;
+    background: linear-gradient(rgba(40, 70, 105, 0.82), rgba(18, 34, 56, 0.9));
     -webkit-backdrop-filter: blur(10px) saturate(1.4);
     backdrop-filter: blur(10px) saturate(1.4);
+    pointer-events: none;
+}
+
+html[data-theme="7"][data-layout]:not(#_) .app-menu-panel[data-placement="bottom"] > * {
+    position: relative;
 }
 
 html[data-theme="7"][data-layout]:not(#_) .app-menu-banner {
@@ -642,7 +658,7 @@ html[data-theme="7"][data-layout]:not(#_) .lok-reader-entry-list > .lok-reader-e
 @media (prefers-reduced-transparency: reduce) {
     html[data-theme="7"][data-layout]:not(#_) .window-surface,
     html[data-theme="7"][data-layout]:not(#_) .taskbar,
-    html[data-theme="7"][data-layout]:not(#_) .app-menu-panel[data-placement="bottom"] {
+    html[data-theme="7"][data-layout]:not(#_) .app-menu-panel[data-placement="bottom"]::before {
         -webkit-backdrop-filter: none;
         backdrop-filter: none;
     }

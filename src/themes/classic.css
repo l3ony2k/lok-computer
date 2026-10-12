@@ -75,7 +75,7 @@ html[data-chrome="classic"]:not(#_) :where(
     .config-section-title, .config-setting-heading, .config-stats-grid dd, .config-system-info dd,
     .image-viewer-dropzone, .image-viewer-message, .lok-reader-media-play, .media-player-dropzone,
     .media-player-empty, .media-player-error, .media-player-lcd, .media-player-playlist-empty,
-    .media-player-track, .oobe-page p, .oobe-range-setting, .oobe-step, .oobe-summary dd, .theme-picker-label,
+    .media-player-track, .oobe-page p, .system-dialog-body, .oobe-range-setting, .oobe-step, .oobe-summary dd, .theme-picker-label,
     .calculator-expression, .calculator-tape-entry, .chance-ask, .chance-tarot-meaning, .clock-local-label, .clock-row-label,
     .notepad-editor, .notepad-empty, .notepad-list-title, .notepad-preview, .notepad-rich,
     #guestbooks___challenge-answer-container input, #guestbooks___challenge-answer-container label,
@@ -1104,8 +1104,14 @@ html[data-chrome="classic"]:not(#_) [data-sonner-toast] [data-button]:hover {
     background: var(--c-btn-bg-hover) !important;
 }
 
-html[data-chrome="classic"]:not(#_) .oobe-overlay {
+html[data-chrome="classic"]:not(#_) .oobe-overlay,
+html[data-chrome="classic"]:not(#_) .system-dialog-overlay {
     background: var(--c-modal-backdrop, rgba(0, 0, 0, 0.25));
+}
+
+html[data-chrome="classic"]:not(#_) .system-dialog-body,
+html[data-chrome="classic"]:not(#_) .system-dialog-actions {
+    background: var(--c-face);
 }
 
 html[data-chrome="classic"]:not(#_) .oobe-steps {

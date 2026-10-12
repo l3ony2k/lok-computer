@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { AppMenu, type MenuPlacement } from '@/components/menu/AppMenu';
@@ -189,6 +189,11 @@ export const SystemClock: React.FC<{ placement: MenuPlacement }> = React.memo(({
   const [now, setNow] = useState(() => new Date());
   const [isOpen, setIsOpen] = useState(false);
   const isTray = placement === 'bottom';
+  const openApplication = useApplicationLauncher();
+  const openClock = useCallback(() => {
+    setIsOpen(false);
+    openApplication('Clock');
+  }, [openApplication]);
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
@@ -225,6 +230,7 @@ export const SystemClock: React.FC<{ placement: MenuPlacement }> = React.memo(({
         placement={placement}
         onClose={() => setIsOpen(false)}
         date={now}
+        onOpenClock={openClock}
       />
     </>
   );

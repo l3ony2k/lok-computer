@@ -1,6 +1,7 @@
 import React, { type CSSProperties, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Check, ChevronRight } from 'lucide-react';
 import { CustomIcon } from '@/components/window/CustomIcon';
+import { getOverlayBounds } from '@/lib/overlayRoot';
 
 import { isDivider, type MenuEntry, type MenuItemEntry } from './menuModel';
 
@@ -17,40 +18,62 @@ interface MenuListProps {
   submenuClassName?: string;
 }
 
-/** Space kept between a submenu and the viewport edge. */
+/** Space kept between a submenu and the edge of the overlay. */
 const SUBMENU_EDGE_MARGIN = 8;
+/** Gap between an item and the list that hangs off it. */
+const SUBMENU_GAP = 5;
+
+interface SubmenuPlacement {
+  left: number;
+  top: number;
+  flip: boolean;
+}
 
 /**
- * A nested list beside its item. When it would leave the viewport it opens to
- * the left instead; when that side has no room either (a phone, with the menu
- * at the left edge) it slides back over its parent until it fits.
+ * A nested list beside its item. It is positioned fixed, against the overlay
+ * root rather than its parent: a parent list that scrolls (the Applications
+ * list) would otherwise clip it, or scroll sideways to show it. When it would
+ * leave the overlay it opens to the left of its item instead; when that side
+ * has no room either (a phone, with the menu at the left edge) it sits flush
+ * with the far edge, over its parent. In a menu that rises from the taskbar
+ * the list's bottom lines up with its item.
  */
 const Submenu: React.FC<MenuListProps & { onMouseEnter: () => void }> = ({ items, onClose, submenuClassName, onMouseEnter }) => {
   const ref = useRef<HTMLDivElement>(null);
-  const [flip, setFlip] = useState(false);
-  const [shift, setShift] = useState(0);
+  const [placement, setPlacement] = useState<SubmenuPlacement | null>(null);
 
   useLayoutEffect(() => {
     const element = ref.current;
-    if (!element) return;
+    const item = element?.parentElement;
+    if (!element || !item) return;
+    const bounds = getOverlayBounds();
+    const itemRect = item.getBoundingClientRect();
     const rect = element.getBoundingClientRect();
-    const overflow = rect.right - (window.innerWidth - SUBMENU_EDGE_MARGIN);
-    if (overflow <= 0) return;
-    // Flipped, the list hangs off the left edge of its item, not of itself.
-    const item = element.parentElement?.getBoundingClientRect();
-    if (item && item.left - rect.width - 5 >= SUBMENU_EDGE_MARGIN) {
-      setFlip(true);
-      return;
+    const rises = Boolean(element.closest('[data-placement="bottom"]'));
+
+    let left = itemRect.right + SUBMENU_GAP - bounds.left;
+    let flip = false;
+    if (left + rect.width > bounds.width - SUBMENU_EDGE_MARGIN) {
+      const flipped = itemRect.left - SUBMENU_GAP - rect.width - bounds.left;
+      if (flipped >= SUBMENU_EDGE_MARGIN) {
+        left = flipped;
+        flip = true;
+      } else {
+        left = Math.max(SUBMENU_EDGE_MARGIN, bounds.width - SUBMENU_EDGE_MARGIN - rect.width);
+      }
     }
-    setShift(Math.min(overflow, Math.max(0, rect.left - SUBMENU_EDGE_MARGIN)));
+
+    const wanted = rises ? itemRect.bottom + 1 - rect.height : itemRect.top - 1;
+    const top = Math.max(SUBMENU_EDGE_MARGIN, Math.min(wanted - bounds.top, bounds.height - SUBMENU_EDGE_MARGIN - rect.height));
+    setPlacement({ left, top, flip });
   }, []);
 
   return (
     <div
       ref={ref}
-      className={`menu-surface menu-submenu absolute select-none ${submenuClassName ?? ''}`}
-      data-flip={flip ? 'left' : undefined}
-      style={shift ? { transform: `translateX(-${shift}px)` } : undefined}
+      className={`menu-surface menu-submenu select-none ${submenuClassName ?? ''}`}
+      data-flip={placement?.flip ? 'left' : undefined}
+      style={placement ? { left: placement.left, top: placement.top } : { left: 0, top: 0, visibility: 'hidden' }}
       role="menu"
       onMouseEnter={onMouseEnter}
     >

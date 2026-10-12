@@ -14,6 +14,19 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '3.1.8',
+    date: '2026-10-12',
+    title: 'Palm on a desk, BeOS in its own type',
+    notes: [
+      'A shaded window launched again blinks its title bar, so a double-click on its icon is seen to land.',
+      'Palm on a large screen keeps its menus, calendar, search and right-click menus inside the phone frame; choosing Palm there asks first, since the desktop shrinks with it.',
+      'Nested menus (the Are.na channels under Applications) open beside their item in every theme instead of inside a scrolling list.',
+      'Palm: solid scrollbar thumbs with pixel arrows, a muted placeholder, option rows that fit the frame, and a tab bar that scrolls with the mouse wheel.',
+      'BeOS is set in the screen fonts beos-css traced from BeOS R5 (Swiss 721 and ProFont) instead of the system Helvetica.',
+      'The analog clock in the calendar flyout opens the Clock app.',
+    ],
+  },
+  {
     version: '3.1.7',
     date: '2026-10-12',
     title: 'A steadier shade',

@@ -65,6 +65,8 @@ export interface DesktopWindow {
   zIndex: number;
   iconType?: string;
   props?: Record<string, unknown>; // Launch props, kept for serialization and Share Window
+  /** Set (to the time) when a launch landed on this window while it was shaded: the title bar blinks. Not persisted. */
+  attention?: number;
 }
 
 // Input for opening a window: everything caller-controlled, ids/z-index are assigned internally.
@@ -374,11 +376,18 @@ export const useWindowManagerController = (): WindowManagerController => {
         window.componentType ? w.componentType === window.componentType : w.title === window.title
       ));
       if (existingWindow) {
-        if (window.deliverProps) {
+        // A shaded window stays a bare title bar after the focus, which is easy
+        // to miss after a double-click on an icon: stamp it so the bar blinks.
+        const attention = existingWindow.shaded ? Date.now() : undefined;
+        if (window.deliverProps || attention) {
           // Same component type re-renders in place, so app state survives and sees the new props.
           setWindows((prev) => prev.map((w) => (
             w.id === existingWindow.id
-              ? { ...w, content: window.content, props: { ...w.props, ...window.props } }
+              ? {
+                  ...w,
+                  ...(window.deliverProps ? { content: window.content, props: { ...w.props, ...window.props } } : {}),
+                  ...(attention ? { attention } : {}),
+                }
               : w
           )));
         }

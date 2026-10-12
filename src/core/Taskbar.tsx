@@ -3,6 +3,7 @@ import { scrollIntoViewWithin } from '@/lib/utils';
 import { useWindowActions, useWindowState } from '@/hooks/useWindowManager';
 import { CustomIcon } from '@/components/window/CustomIcon';
 import { useScrollFade } from '@/hooks/useScrollFade';
+import { useWheelScroll } from '@/hooks/useWheelScroll';
 import { ContextMenu } from '@/components/menu/ContextMenu';
 import { buildWindowMenu } from '@/components/window/windowMenu';
 import { useWindowTransitions } from '@/hooks/useWindowTransitions';
@@ -15,29 +16,9 @@ export const Taskbar = ({ layout = 'lok' }: { layout?: DesktopLayout }) => {
   const { minimizeWithTransition, restoreWithTransition, toggleShadeWithTransition } = useWindowTransitions();
   const tasksRef = useRef<HTMLDivElement>(null);
   useScrollFade(tasksRef);
+  useWheelScroll(tasksRef);
   const [taskMenu, setTaskMenu] = useState<{ id: string; x: number; y: number } | null>(null);
   const isClassic = layout === 'classic';
-
-  useEffect(() => {
-    const tasks = tasksRef.current;
-
-    const handleWheel = (event: WheelEvent) => {
-      if (tasks && event.deltaY !== 0) {
-        event.preventDefault();
-        tasks.scrollLeft += event.deltaY + event.deltaX;
-      }
-    };
-
-    if (tasks) {
-      tasks.addEventListener('wheel', handleWheel, { passive: false });
-    }
-
-    return () => {
-      if (tasks) {
-        tasks.removeEventListener('wheel', handleWheel);
-      }
-    };
-  }, []);
 
   // The strip scrolls rather than squeezing titles, so keep the active task in view.
   useEffect(() => {

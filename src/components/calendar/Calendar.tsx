@@ -1,5 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
+import { getOverlayRoot } from '@/lib/overlayRoot';
 import type { MenuPlacement } from '@/components/menu/AppMenu';
 import { swatchBeats } from '@/lib/internetTime';
 
@@ -8,6 +9,8 @@ interface CalendarProps {
   onClose: () => void;
   date?: Date;
   placement?: MenuPlacement;
+  /** Opens the Clock app; the analog clock becomes a button when given. */
+  onOpenClock?: () => void;
 }
 
 /** Calendar and analog clock flyout. `date` ticks from the clock that opens it. */
@@ -16,6 +19,7 @@ export const Calendar: React.FC<CalendarProps> = ({
   onClose,
   date = new Date(),
   placement = 'top',
+  onOpenClock,
 }) => {
   if (!isOpen) return null;
   const clockTime = date;
@@ -101,9 +105,17 @@ export const Calendar: React.FC<CalendarProps> = ({
       onClick={handleOutsideClick}
     >
       <div className="menu-surface calendar-panel p-3 select-none" data-placement={placement} role="dialog" aria-label="Calendar and clock">
-        {/* Analog Clock */}
+        {/* Analog Clock: a button into the Clock app */}
         <div className="flex justify-center mb-3 select-none">
-          <svg width="110" height="110" viewBox="0 0 110 110">
+          <button
+            type="button"
+            className="calendar-clock-button"
+            onClick={onOpenClock}
+            disabled={!onOpenClock}
+            title="Open Clock"
+            aria-label="Open Clock"
+          >
+          <svg width="110" height="110" viewBox="0 0 110 110" aria-hidden="true">
             {/* Clock Face - Circle with minute marks */}
             <circle
               cx="55"
@@ -168,6 +180,7 @@ export const Calendar: React.FC<CalendarProps> = ({
               className="text-foreground"
             />
           </svg>
+          </button>
         </div>
 
         <div className="text-center text-sm mb-2 text-foreground select-none">
@@ -198,6 +211,6 @@ No time zones, same time worldwide!`}
         </div>
       </div>
     </div>,
-    document.body,
+    getOverlayRoot(),
   );
 };

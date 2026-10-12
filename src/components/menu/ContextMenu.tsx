@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { getOverlayBounds, getOverlayRoot, toOverlayPoint } from '@/lib/overlayRoot';
 import { MenuList, type MenuEntry } from './MenuItems';
 
 export type ContextMenuItem = MenuEntry;
@@ -38,27 +39,31 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ items, isOpen, positio
         };
     }, [isOpen, handleOutsideClick, handleKeyDown]);
 
+    const { x, y } = position;
     useLayoutEffect(() => {
         const menu = menuRef.current;
         if (!isOpen || !menu) return;
         const rect = menu.getBoundingClientRect();
-        menu.style.left = `${Math.max(0, Math.min(position.x, window.innerWidth - rect.width))}px`;
-        menu.style.top = `${Math.max(0, Math.min(position.y, window.innerHeight - rect.height))}px`;
-    }, [isOpen, position.x, position.y]);
+        const bounds = getOverlayBounds();
+        const point = toOverlayPoint({ x, y }, bounds);
+        menu.style.left = `${Math.max(0, Math.min(point.x, bounds.width - rect.width))}px`;
+        menu.style.top = `${Math.max(0, Math.min(point.y, bounds.height - rect.height))}px`;
+    }, [isOpen, x, y]);
 
     if (!isOpen) return null;
 
     // Portaled: a menu opened from inside a window must not be clipped by it.
+    // Placed by the layout effect above (the pointer position is viewport-relative; the overlay root may not be).
     return createPortal(
         <div
             ref={menuRef}
             className="menu-surface context-menu fixed min-w-[160px] select-none z-[10000]"
             role="menu"
-            style={{ left: position.x, top: position.y }}
+            style={{ left: 0, top: 0 }}
             onContextMenu={(event) => event.preventDefault()}
         >
             <MenuList items={items} onClose={onClose} submenuClassName="context-submenu" />
         </div>,
-        document.body,
+        getOverlayRoot(),
     );
 };

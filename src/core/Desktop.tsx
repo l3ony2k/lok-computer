@@ -163,8 +163,9 @@ export const Desktop = () => {
     ];
 
     // Dynamic viewport height: on phones the plain vh unit runs behind the browser toolbar and nothing can scroll it into view.
+    // Under the palm layout the root is the overlay root: menus and flyouts portal into the phone frame (src/lib/overlayRoot.ts).
     return (
-        <div className="desktop-root h-dvh w-screen flex flex-col">
+        <div className="desktop-root h-dvh w-screen flex flex-col" data-overlay-root={layout === 'palm' ? 'contained' : undefined}>
             {layout === 'lok' && <TopBar />}
             {layout === 'palm' && <PalmBar />}
 

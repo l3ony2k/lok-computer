@@ -4,6 +4,7 @@ import { useWindowActions, useWindowState } from '@/hooks/useWindowManager';
 import { useWindowTransitions } from '@/hooks/useWindowTransitions';
 import { CustomIcon } from '@/components/window/CustomIcon';
 import { useScrollFade } from '@/hooks/useScrollFade';
+import { useWheelScroll } from '@/hooks/useWheelScroll';
 import { OfflineReadout, SearchButton, SystemClock, SystemMenuButton } from './SystemMenu';
 
 /**
@@ -41,6 +42,7 @@ export const PalmTabBar: React.FC = () => {
   const onScreen = windows.some((window) => window.id === activeWindow && !window.minimized);
   const tabsRef = useRef<HTMLDivElement>(null);
   useScrollFade(tabsRef);
+  useWheelScroll(tabsRef);
 
   const goHome = () => {
     windows.forEach((window) => {

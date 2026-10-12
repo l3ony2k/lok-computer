@@ -1,4 +1,4 @@
-import { memo, Suspense, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { memo, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { WindowErrorBoundary } from './WindowErrorBoundary';
 import { useWindowActions, type DesktopWindow } from '@/hooks/useWindowManager';
 import { X, Minimize, Maximize } from 'lucide-react';
@@ -37,6 +37,10 @@ const WINDOW_DRAG_CANCEL = '.window-menu-button, .window-controls';
 /** Space BeOS keeps free at the right of a frame, so a strip of tabs never reaches the corner. */
 const STACK_STRIP_MARGIN = 24;
 
+/** The attention blink: three flashes, each this long off and on. */
+const ATTENTION_FLASHES = 3;
+const ATTENTION_PHASE_MS = 140;
+
 export const DraggableWindow = memo(function DraggableWindow({ window: windowProps, isActive, isTransitioning, stackMembers, onTitleDoubleClick }: DraggableWindowProps) {
   const {
     closeWindow, focusWindow, maximizeWindow, restoreWindow,
@@ -53,6 +57,29 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
   const [snapPreview, setSnapPreview] = useState<SnapRect | null>(null);
   const snapZoneRef = useRef<SnapZone | null>(null);
   const shaded = Boolean(windowProps.shaded);
+
+  // Attention: a launch that landed on this window while it was shaded. The
+  // title bar flashes by dropping data-active for the off phases (every theme
+  // has an inactive look) under a data-attention flag the lok theme styles.
+  const [attentionOff, setAttentionOff] = useState(false);
+  const [attentionOn, setAttentionOn] = useState(false);
+  useEffect(() => {
+    if (!windowProps.attention) return;
+    setAttentionOn(true);
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    for (let phase = 0; phase < ATTENTION_FLASHES * 2; phase += 1) {
+      timers.push(setTimeout(() => setAttentionOff(phase % 2 === 0), phase * ATTENTION_PHASE_MS));
+    }
+    timers.push(setTimeout(() => {
+      setAttentionOff(false);
+      setAttentionOn(false);
+    }, ATTENTION_FLASHES * 2 * ATTENTION_PHASE_MS));
+    return () => {
+      timers.forEach(clearTimeout);
+      setAttentionOff(false);
+      setAttentionOn(false);
+    };
+  }, [windowProps.attention]);
 
   // Tab stacking (BeOS): a tab dropped on another window's tab joins its
   // frame, and the tabs line up in a strip. A stacked window drags its whole
@@ -365,7 +392,8 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
       >
         <div
           data-window-surface-id={windowProps.id}
-          data-active={isActive || undefined}
+          data-active={(isActive && !attentionOff) || undefined}
+          data-attention={attentionOn || undefined}
           data-maximized={windowProps.maximized || undefined}
           data-shaded={shaded || undefined}
           className="window-surface flex flex-col w-full h-full overflow-hidden"

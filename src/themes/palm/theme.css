@@ -108,7 +108,7 @@ html[data-theme="palm"][data-layout]:not(#_) {
     --c-title-font: var(--font-ui);
     --c-title-size: 11px;
     --c-title-weight: 700;
-    --c-placeholder: #3a4236;
+    --c-placeholder: #6b756a;
     --c-focus-outline: 1px dotted #000000;
     --c-focus-offset: -3px;
     --c-control-height: 24px;
@@ -263,6 +263,16 @@ html[data-theme="palm"][data-layout]:not(#_) #root {
     background: #141414;
 }
 
+/* The desktop is the overlay root (src/lib/overlayRoot.ts): menus, the calendar
+   and the launcher portal into it, and layout containment makes it their
+   containing block, so they open inside the frame on a large screen. The size
+   container gives their cq units the frame's size. */
+html[data-theme="palm"][data-layout]:not(#_) .desktop-root {
+    position: relative;
+    contain: layout paint;
+    container-type: size;
+}
+
 @media (min-width: 600px) and (min-height: 600px) {
     html[data-theme="palm"][data-layout]:not(#_) #root {
         display: flex;
@@ -410,18 +420,59 @@ html[data-theme="palm"][data-layout]:not(#_) a {
     text-decoration: underline;
 }
 
+/* Palm OS scrollbars: a solid black thumb in a track that is divided from the
+   content by one line, with pixel arrows at the ends. */
 html[data-theme="palm"][data-layout]:not(#_) ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
 }
 
-html[data-theme="palm"][data-layout]:not(#_) ::-webkit-scrollbar-track {
-    background: var(--palm-lcd);
+html[data-theme="palm"][data-layout]:not(#_) ::-webkit-scrollbar-track,
+html[data-theme="palm"][data-layout]:not(#_) ::-webkit-scrollbar-button:single-button {
+    background-color: var(--palm-lcd);
+}
+
+html[data-theme="palm"][data-layout]:not(#_) ::-webkit-scrollbar-track:vertical,
+html[data-theme="palm"][data-layout]:not(#_) ::-webkit-scrollbar-button:single-button:vertical {
     box-shadow: inset 1px 0 #000000;
+}
+
+html[data-theme="palm"][data-layout]:not(#_) ::-webkit-scrollbar-track:horizontal,
+html[data-theme="palm"][data-layout]:not(#_) ::-webkit-scrollbar-button:single-button:horizontal {
+    box-shadow: inset 0 1px #000000;
+}
+
+html[data-theme="palm"][data-layout]:not(#_) ::-webkit-scrollbar-corner {
+    background: var(--palm-lcd);
+    box-shadow: inset 1px 1px #000000;
 }
 
 html[data-theme="palm"][data-layout]:not(#_) ::-webkit-scrollbar-thumb {
     background: #000000;
-    border: 2px solid var(--palm-lcd);
+    border: 0;
     border-radius: 0;
+}
+
+html[data-theme="palm"][data-layout]:not(#_) ::-webkit-scrollbar-button:single-button {
+    display: block;
+    width: 10px;
+    height: 10px;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+html[data-theme="palm"][data-layout]:not(#_) ::-webkit-scrollbar-button:single-button:vertical:decrement {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 5 3' width='5' height='3' shape-rendering='crispEdges'%3E%3Cpath d='M2 0h1v1h1v1h1v1H0V2h1V1h1z' fill='%23000'/%3E%3C/svg%3E");
+}
+
+html[data-theme="palm"][data-layout]:not(#_) ::-webkit-scrollbar-button:single-button:vertical:increment {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 5 3' width='5' height='3' shape-rendering='crispEdges'%3E%3Cpath d='M0 0h5v1H4v1H3v1H2V2H1V1H0z' fill='%23000'/%3E%3C/svg%3E");
+}
+
+html[data-theme="palm"][data-layout]:not(#_) ::-webkit-scrollbar-button:single-button:horizontal:decrement {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 3 5' width='3' height='5' shape-rendering='crispEdges'%3E%3Cpath d='M0 2h1V1h1V0h1v5H2V4H1V3H0z' fill='%23000'/%3E%3C/svg%3E");
+}
+
+html[data-theme="palm"][data-layout]:not(#_) ::-webkit-scrollbar-button:single-button:horizontal:increment {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 3 5' width='3' height='5' shape-rendering='crispEdges'%3E%3Cpath d='M0 0h1v1h1v1h1v1H2v1H1v1H0z' fill='%23000'/%3E%3C/svg%3E");
 }

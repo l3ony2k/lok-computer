@@ -3,8 +3,13 @@
  * "BeOS R5, rebuilt in CSS" by mtechnic). Palette and geometry follow its
  * tokens: a #d8d8d8 panel, the yellow window tab (#ffcb00, lit #ffff50,
  * shaded #af7b00), #606060 frames, the #4566a8 Deskbar leaf, and the
- * #5a8e8e desktop. Type is the Swiss 721 family BeOS shipped with, through
- * the system's Helvetica/Arial.
+ * #5a8e8e desktop. Type is beos-css's "Swis721 BT Coverage" and "ProFont
+ * Coverage": BeOS R5's screen fonts (Swiss 721 and ProFont, (C) Be Inc.)
+ * traced from their bitmaps into variable fonts with an optical-size axis
+ * (9 to 12). Each glyph is a COLRv0 stack: the full pixels follow the text
+ * colour, the edge pixels are palette entries at falling opacities, so the
+ * faces anti-alias like the BeOS app_server did. The default palette is
+ * black; `--be-light` recolours the edges for light text on dark ground.
  *
  * Layout: the lok layout's top bar becomes the Deskbar. Windows carry their
  * title in a tab narrower than the frame, with the close box on the left and
@@ -12,6 +17,52 @@
  *
  * Scope: html[data-theme="beos"][data-layout]:not(#_) outranks classic.css.
  */
+
+@font-face {
+    font-family: "Swis721 BT Coverage";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("./fonts/swis721-coverage.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "Swis721 BT Coverage";
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url("./fonts/swis721-coverage-bold.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "Swis721 BT Coverage";
+    font-style: italic;
+    font-weight: 400;
+    font-display: swap;
+    src: url("./fonts/swis721-coverage-italic.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "Swis721 BT Coverage";
+    font-style: italic;
+    font-weight: 700;
+    font-display: swap;
+    src: url("./fonts/swis721-coverage-bold-italic.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "ProFont Coverage";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("./fonts/profont-coverage.woff2") format("woff2");
+}
+
+/* Edge pixels for light text (the Deskbar leaf, desktop labels on the teal). */
+@font-palette-values --be-light {
+    font-family: "Swis721 BT Coverage";
+    override-colors: 0 #ffffff24, 1 #ffffff49, 2 #ffffff6d, 3 #ffffff92, 4 #ffffffb6, 5 #ffffffdb;
+}
 
 html[data-theme="beos"][data-layout]:not(#_) {
     --be-panel: #d8d8d8;
@@ -34,8 +85,8 @@ html[data-theme="beos"][data-layout]:not(#_) {
     --be-tab-bevel: inset 1px 1px var(--be-tab-lit), inset -1px 0 var(--be-tab-shade);
 
     /* lok tokens */
-    --font-ui: "Swis721 BT", "Swiss 721", "Helvetica Neue", Helvetica, Arial, "Nimbus Sans L", sans-serif;
-    --font-code: "ProFont", "Courier New", ui-monospace, Menlo, monospace;
+    --font-ui: "Swis721 BT Coverage", "Swis721 BT", "Swiss 721", "Helvetica Neue", Helvetica, Arial, "Nimbus Sans L", sans-serif;
+    --font-code: "ProFont Coverage", "ProFont", "Courier New", ui-monospace, Menlo, monospace;
     --retro-window: 0 0% 85%;
     --retro-window-titlebar: 48 100% 50%;
     --background: 0 0% 85%;
@@ -260,11 +311,13 @@ html[data-theme="beos"][data-layout]:not(#_) {
     --c-desktop-label-selected-border: 0;
     --c-desktop-icon-selected-filter: brightness(0.7);
     --c-modal-backdrop: transparent;
+    -webkit-font-smoothing: none;
 }
 
 /* ---------- Deskbar (the lok layout's top bar) ---------- */
 
 html[data-theme="beos"][data-layout]:not(#_) .system-menu-button {
+    font-palette: --be-light;
     margin: 2px 4px 2px 2px;
     padding: 0 7px;
     color: #ffffff;
@@ -467,6 +520,7 @@ html[data-theme="beos"][data-layout]:not(#_) .taskbar-button[aria-pressed="true"
 
 html[data-theme="beos"][data-layout]:not(#_) .desktop-icon-label {
     font-weight: 400;
+    font-palette: --be-light;
 }
 
 /* ---------- Scrollbars ---------- */
