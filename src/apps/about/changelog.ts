@@ -14,6 +14,20 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '3.1.6',
+    date: '2026-10-12',
+    title: 'Pips, headings and a shade that moves',
+    notes: [
+      'Shading a window is animated like minimize and restore: the frame rolls up to its title bar and back down. On BeOS a shaded tab spans the whole frame, so it can be dragged right up to an edge.',
+      'BeOS stacks hold together: focusing a freshly stacked pair raises both tabs, and stacks dissolve under any theme without tab stacking, including a restored session.',
+      'List headings look like each system\'s Explorer columns: 7\'s white gradient with separators, XP\'s flat header, 98\'s raised bevel, a thin band on System, a blue bar on TUI, bordered cells on Palm, a gray strip on BeOS.',
+      'Six-sided dice show pips, ivory with black spots and a red one and four. Chance can include two jokers, and earlier draws fill the space under the hand in rows instead of a single strip.',
+      'The planner\'s own answers in Ask AI type out like the rest.',
+      'Submenus on phones open on the side with room and never run off the screen; a tap-opened submenu stays open. Taskbars fade the edge their buttons run past, and the start button keeps its size however crowded the strip.',
+      'A shaded 7 window keeps its glass: the sheen no longer cuts a hard line across a short frame. The launcher under 7 lost a stray vertical line.',
+    ],
+  },
+  {
     version: '3.1.5',
     date: '2026-10-12',
     title: 'Stacked tabs, straight answers',

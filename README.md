@@ -104,6 +104,18 @@ This project aims to evolve from a simple Are.na browser into a functional, mult
 
 ## Development Log
 
+### Session: 3.1.6 — shade animation, themed list headings, pips (2026-10-12)
+
+*   **Shade animation** (`useWindowTransitions`, `WindowTransitionProvider`, `WindowContainer`): shading and unshading run through the same ghost as minimize and restore. The ghost shrinks the frame to its title bar (or grows it back to the stored height) while the real window flips state behind it; reduced motion skips it like the others.
+*   **BeOS shaded tab**: a shaded window's tab spans the full frame (`[data-shaded]` on the surface), so the tab can be dragged to either edge instead of stopping where the hidden body would.
+*   **Stacking audit** (`useWindowManager`): `focusWindow` read stack membership from a snapshot taken before the pending update, so a focus queued right after `stackWindow` raised the old stack and could leave a third window between the two tabs; membership is now read inside the updater. Stacks dissolve whenever the active theme has no `tabStacking`, on theme change and on session restore. Minimized members keep membership and share group moves and resizes, so they come back aligned.
+*   **List headings** (`classic.css`, each skin): the heading cell carries the theme's header tokens and a per-theme header height, and the sort button is a transparent full-bleed hit area, so the heading no longer looks like a small button inside a taller cell. Hover, active-sort and pressed states move to the cell. 7: white gradient with column separators; XP: flat with the 3px base; 98: raised bevel edge to edge; System: thin white band; TUI: blue bar, white text; Palm: bordered cells; BeOS: raised gray strip.
+*   **Dice and cards** (`src/apps/chance/`): six-sided dice draw pips on a 3×3 grid, ivory with black spots and a red one and four; other dice keep their number. A Jokers checkbox adds a red and a black joker (toggling deals a fresh deck). The history wraps into rows that fill the empty space under the hand and scrolls vertically inside the window; readouts share the buttons' border colour.
+*   **Typed answers** (`AskAiApp`): the planner's `answer` card runs the typing hook over its paragraphs (faster than the summary), cursor on the paragraph being typed, note and meta once the last character lands; restored runs show at once, and screen readers get the full text once.
+*   **Submenus on phones** (`MenuItems`): a flyout flips from its item's edge and, when neither side fits, slides back over its parent until it does. A touch-opened submenu ignores the mouse-leave Android fires after a tap (iPhones keep the hover state, which hid the bug there).
+*   **Taskbars** (`useScrollFade`, `Taskbar`, `PalmBar`): a scrolling task strip fades the edge its content runs past (left, right or both) in every theme and on the Palm tab bar; the start button keeps its size however many tasks crowd the strip (7's orb stays a 40×38 circle on a phone). Palm's buttons, tabs, tasks and close box are square.
+*   **7 glass**: the sheen gradient used percentage stops, which put a hard highlight edge at 41% of the frame's height; invisible behind content on a tall window, it cut across the title bar of a 38px shaded frame. Pixel stops keep the gloss on the title bar at any height. The context-menu icon gutter line no longer applies to the launcher list.
+
 ### Session: 3.1.5 — BeOS tab stacking, planner answers, phone polish (2026-10-12)
 
 Fixes from the first day on phones with 3.1.4.

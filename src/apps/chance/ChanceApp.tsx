@@ -10,7 +10,9 @@ import {
   DIE_SIDES,
   MAX_CARDS,
   MAX_DICE,
+  PIP_LAYOUT,
   SPREAD_POSITIONS,
+  isRedFace,
   buildDeck,
   drawCards,
   drawTarot,
@@ -52,12 +54,14 @@ const PlayingCardView = ({ card, small }: { card: PlayingCard; small?: boolean }
     className="chance-card"
     data-red={card.red || undefined}
     data-small={small || undefined}
+    data-joker={card.joker || undefined}
     role="img"
-    aria-label={`${card.rank} of ${card.suit}`}
+    aria-label={card.joker ? `${card.red ? 'Red' : 'Black'} joker` : `${card.rank} of ${card.suit}`}
   >
-    <span className="chance-card-corner" aria-hidden="true">{card.rank}<br />{card.symbol}</span>
+    <span className="chance-card-corner" aria-hidden="true">{card.joker ? 'J' : card.rank}<br />{card.symbol}</span>
     <span className="chance-card-pip" aria-hidden="true">{card.symbol}</span>
-    {!small && <span className="chance-card-corner chance-card-corner-bottom" aria-hidden="true">{card.rank}<br />{card.symbol}</span>}
+    {card.joker && !small && <span className="chance-card-word" aria-hidden="true">Joker</span>}
+    {!small && <span className="chance-card-corner chance-card-corner-bottom" aria-hidden="true">{card.joker ? 'J' : card.rank}<br />{card.symbol}</span>}
   </div>
 );
 
@@ -162,11 +166,19 @@ export const ChanceApp: React.FC<ChanceAppProps> = ({ initialTab, onPropsChange 
 
   // Cards: every draw stays on the table, the latest one large and the earlier
   // ones in a strip below it, until Clear or a fresh deck.
-  const [deck, setDeck] = useState<PlayingCard[]>(() => shuffle(buildDeck()));
+  const [deck, setDeck] = useState<PlayingCard[]>(() => shuffle(buildDeck(state.jokers)));
   const [draws, setDraws] = useState<PlayingCard[][]>([]);
   const [drawCount, setDrawCount] = useState(1);
   const hand = draws[0] ?? [];
   const earlier = draws.slice(1);
+  const deckSize = state.jokers ? 54 : 52;
+
+  // Jokers change the deck itself, so toggling them deals a fresh one.
+  const setJokers = (jokers: boolean) => {
+    setState((prev) => ({ ...prev, jokers }));
+    setDeck(shuffle(buildDeck(jokers)));
+    setDraws([]);
+  };
 
   const draw = () => {
     const { drawn, rest } = drawCards(deck, drawCount);
@@ -178,7 +190,7 @@ export const ChanceApp: React.FC<ChanceAppProps> = ({ initialTab, onPropsChange 
   const clearTable = () => setDraws([]);
 
   const reshuffle = () => {
-    setDeck(shuffle(buildDeck()));
+    setDeck(shuffle(buildDeck(state.jokers)));
     setDraws([]);
   };
 
@@ -244,7 +256,15 @@ export const ChanceApp: React.FC<ChanceAppProps> = ({ initialTab, onPropsChange 
           <div className="chance-dice-results" aria-live="polite" aria-busy={rolling}>
             {(faces ?? state.dice.map(() => null)).map((value, index) => (
               <div className="chance-die" data-rolling={rolling || undefined} data-sides={state.dice[index]} key={index}>
-                <span className="chance-die-value">{value ?? '·'}</span>
+                {state.dice[index] === 6 && value !== null ? (
+                  <span className="chance-die-pips" data-red={isRedFace(value) || undefined} role="img" aria-label={`${value}`}>
+                    {Array.from({ length: 9 }, (_, cell) => (
+                      <span key={cell} className="chance-pip" data-on={PIP_LAYOUT[value].includes(cell) || undefined} />
+                    ))}
+                  </span>
+                ) : (
+                  <span className="chance-die-value">{value ?? '·'}</span>
+                )}
                 <span className="chance-die-sides">d{state.dice[index]}</span>
               </div>
             ))}
@@ -282,7 +302,7 @@ export const ChanceApp: React.FC<ChanceAppProps> = ({ initialTab, onPropsChange 
       )}
 
       {state.tab === 'cards' && (
-        <section className="chance-pane" aria-label="Cards">
+        <section className="chance-pane chance-pane-cards" aria-label="Cards">
           <div className="chance-actions">
             <div className="app-joined-control chance-count">
               <RetroButton size="icon" aria-label="Draw fewer cards" onClick={() => setDrawCount((count) => Math.max(1, count - 1))} disabled={drawCount <= 1}>
@@ -298,6 +318,10 @@ export const ChanceApp: React.FC<ChanceAppProps> = ({ initialTab, onPropsChange 
             </RetroButton>
             <RetroButton size="sm" onClick={reshuffle}>Shuffle</RetroButton>
             <RetroButton size="sm" onClick={clearTable} disabled={draws.length === 0}>Clear</RetroButton>
+            <label className="chance-toggle">
+              <input type="checkbox" checked={state.jokers} onChange={(event) => setJokers(event.target.checked)} />
+              <span>Jokers</span>
+            </label>
             <span className="chance-total">{deck.length} left</span>
           </div>
 
@@ -315,7 +339,7 @@ export const ChanceApp: React.FC<ChanceAppProps> = ({ initialTab, onPropsChange 
               ))}
             </div>
           )}
-          {draws.length === 0 && deck.length < 52 && (
+          {draws.length === 0 && deck.length < deckSize && (
             <p className="chance-hint">The table is clear. Draw again, or shuffle for a fresh deck.</p>
           )}
         </section>

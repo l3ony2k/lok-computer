@@ -17,16 +17,32 @@ interface MenuListProps {
   submenuClassName?: string;
 }
 
-/** A nested list that flips to the left when it would leave the viewport. */
+/** Space kept between a submenu and the viewport edge. */
+const SUBMENU_EDGE_MARGIN = 8;
+
+/**
+ * A nested list beside its item. When it would leave the viewport it opens to
+ * the left instead; when that side has no room either (a phone, with the menu
+ * at the left edge) it slides back over its parent until it fits.
+ */
 const Submenu: React.FC<MenuListProps & { onMouseEnter: () => void }> = ({ items, onClose, submenuClassName, onMouseEnter }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [flip, setFlip] = useState(false);
+  const [shift, setShift] = useState(0);
 
   useLayoutEffect(() => {
     const element = ref.current;
     if (!element) return;
     const rect = element.getBoundingClientRect();
-    if (rect.right > window.innerWidth && rect.left - rect.width - 10 >= 0) setFlip(true);
+    const overflow = rect.right - (window.innerWidth - SUBMENU_EDGE_MARGIN);
+    if (overflow <= 0) return;
+    // Flipped, the list hangs off the left edge of its item, not of itself.
+    const item = element.parentElement?.getBoundingClientRect();
+    if (item && item.left - rect.width - 5 >= SUBMENU_EDGE_MARGIN) {
+      setFlip(true);
+      return;
+    }
+    setShift(Math.min(overflow, Math.max(0, rect.left - SUBMENU_EDGE_MARGIN)));
   }, []);
 
   return (
@@ -34,6 +50,7 @@ const Submenu: React.FC<MenuListProps & { onMouseEnter: () => void }> = ({ items
       ref={ref}
       className={`menu-surface menu-submenu absolute select-none ${submenuClassName ?? ''}`}
       data-flip={flip ? 'left' : undefined}
+      style={shift ? { transform: `translateX(-${shift}px)` } : undefined}
       role="menu"
       onMouseEnter={onMouseEnter}
     >
@@ -48,6 +65,9 @@ const MenuItem: React.FC<{ item: MenuItemEntry; onClose: () => void; submenuClas
   const [overflowDistance, setOverflowDistance] = useState(0);
   const textRef = useRef<HTMLSpanElement>(null);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // A tap opens a submenu and then fires the mouse compatibility events; the
+  // mouseleave that follows must not close what the finger just opened.
+  const touchRef = useRef(false);
 
   const hasSubItems = Boolean(item.subItems && item.subItems.length > 0);
   const disabled = item.disabled || (!item.action && !hasSubItems);
@@ -82,7 +102,7 @@ const MenuItem: React.FC<{ item: MenuItemEntry; onClose: () => void; submenuClas
 
   const handleMouseLeave = () => {
     setIsHovering(false);
-    if (hasSubItems) {
+    if (hasSubItems && !touchRef.current) {
       closeTimeoutRef.current = setTimeout(() => {
         setIsSubMenuOpen(false);
         closeTimeoutRef.current = null;
@@ -97,8 +117,10 @@ const MenuItem: React.FC<{ item: MenuItemEntry; onClose: () => void; submenuClas
       item.action();
       onClose();
     } else if (hasSubItems) {
-      // Touch has no hover: a tap opens the submenu.
-      setIsSubMenuOpen((open) => !open);
+      // Touch has no hover: a tap opens the submenu. Open, not toggle: a tap
+      // also fires a synthetic mouseenter first, which would have opened and
+      // then closed it, and a click on a hovered parent keeps it open anyway.
+      setIsSubMenuOpen(true);
     }
   };
 
@@ -112,6 +134,7 @@ const MenuItem: React.FC<{ item: MenuItemEntry; onClose: () => void; submenuClas
 
   return (
     <div
+      onPointerDown={(event) => { touchRef.current = event.pointerType === 'touch'; }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onClick={handleClick}

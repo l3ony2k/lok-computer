@@ -220,6 +220,7 @@ html[data-theme="386"][data-layout]:not(#_) {
     --c-group-shadow: none;
     --c-list-bg: var(--dos-gray);
     --c-list-shadow: inset 0 0 0 1px var(--dos-black);
+    --c-header-height: 19px;
     --c-header-bg: var(--dos-gray);
     --c-header-border: 0;
     --c-header-shadow: inset 0 -1px var(--dos-black);

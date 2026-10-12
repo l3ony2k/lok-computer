@@ -13,7 +13,8 @@ html[data-theme="7"][data-layout]:not(#_) {
     --w7-el-grad-a: linear-gradient(#e5f4fc, #c4e5f6 30% 50%, #98d1ef 50%, #68b3db);
     --w7-glass: rgba(69, 128, 196, 0.62);
     --w7-glass-inactive: rgba(165, 190, 220, 0.55);
-    --w7-glass-sheen: linear-gradient(transparent 20%, rgba(255, 255, 255, 0.55) 40%, transparent 41%), linear-gradient(to right, rgba(255, 255, 255, 0.4), rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.2));
+    /* The gloss sits on the title bar in pixels, not a share of the frame: a percentage band put a hard edge mid title bar on a shaded window. */
+    --w7-glass-sheen: linear-gradient(rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.18) 16px, transparent 34px), linear-gradient(to right, rgba(255, 255, 255, 0.4), rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.2));
     --w7-caption: linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.3) 45%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.1) 75%, rgba(255, 255, 255, 0.5));
     --w7-caption-hover: radial-gradient(circle at bottom, #2aceda, transparent 65%), linear-gradient(#b6d9ee 50%, #1a6ca1 50%);
     --w7-caption-active: radial-gradient(circle at bottom, #0bfdfa, transparent 65%), linear-gradient(#86a7bc 50%, #092747 50%);
@@ -203,6 +204,7 @@ html[data-theme="7"][data-layout]:not(#_) {
     --c-group-title-fg: #1e3287;
     --c-list-bg: #ffffff;
     --c-list-shadow: none;
+    --c-header-height: 25px;
     --c-header-bg: linear-gradient(#ffffff, #f7f8fa);
     --c-header-bg-hover: linear-gradient(#f3f8fd, #e3f1fb);
     --c-header-border: 0;
@@ -368,7 +370,9 @@ html[data-theme="7"][data-layout]:not(#_) .taskbar {
 
 html[data-theme="7"][data-layout]:not(#_) .start-button,
 html[data-theme="7"][data-layout]:not(#_) .start-button:hover {
+    flex: 0 0 40px;
     width: 40px;
+    min-width: 40px;
     height: 38px;
     padding: 0;
     margin-right: 6px;
@@ -468,7 +472,8 @@ html[data-theme="7"][data-layout]:not(#_) .app-menu-panel[data-placement="bottom
     min-height: 32px;
 }
 
-html[data-theme="7"][data-layout]:not(#_) .menu-surface:not(.app-menu-panel)::before {
+/* Menus carry Windows 7's icon-gutter line; the launcher and the calendar share the surface but are not menus. */
+html[data-theme="7"][data-layout]:not(#_) .menu-surface:is(.context-menu, .menu-submenu)::before {
     content: "";
     position: absolute;
     top: 2px;
@@ -477,10 +482,6 @@ html[data-theme="7"][data-layout]:not(#_) .menu-surface:not(.app-menu-panel)::be
     width: 2px;
     box-shadow: inset 1px 0 rgba(0, 0, 0, 0.15), inset -1px 0 #ffffff;
     pointer-events: none;
-}
-
-html[data-theme="7"][data-layout]:not(#_) .menu-surface.calendar-panel::before {
-    content: none;
 }
 
 html[data-theme="7"][data-layout]:not(#_) .menu-item-button {

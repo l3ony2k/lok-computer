@@ -79,6 +79,37 @@
     font-variant-numeric: tabular-nums;
 }
 
+/* A six-sided die is the classic one: ivory face, black pips, red one and four. */
+.chance-die[data-sides="6"] {
+    background: #fbf9f2;
+    border-color: #2a2a2a;
+}
+
+.chance-die-pips {
+    --pip: #161616;
+    width: 40px;
+    height: 40px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    place-items: center;
+}
+
+.chance-die-pips[data-red] {
+    --pip: #c8102e;
+}
+
+.chance-pip {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: transparent;
+}
+
+.chance-pip[data-on] {
+    background: var(--pip);
+}
+
 .chance-die-sides {
     position: absolute;
     right: 3px;
@@ -176,8 +207,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border-top: 1px solid var(--block-border);
-    border-bottom: 1px solid var(--block-border);
+    border-top: 1px solid hsl(var(--border));
+    border-bottom: 1px solid hsl(var(--border));
     font-variant-numeric: tabular-nums;
     font-size: 13px;
 }
@@ -207,13 +238,41 @@
     --card-ink: #c8102e;
 }
 
-/* Earlier draws: a strip of small cards, newest first, scrolling sideways. */
+/* The cards pane fills the window so the history can take the space below the hand. */
+.chance-pane-cards {
+    min-height: 100%;
+}
+
+.chance-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+/* Earlier draws: rows of small cards, newest first, scrolling down through the empty space. */
 .chance-history {
+    flex: 1 1 auto;
+    min-height: 0;
     display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
     gap: 10px;
     padding: 10px 0 4px;
-    overflow-x: auto;
+    overflow-y: auto;
     border-top: 1px dashed var(--internal-border);
+}
+
+.chance-card-word {
+    position: absolute;
+    right: 3px;
+    top: 50%;
+    transform: translateY(-50%) rotate(90deg);
+    transform-origin: center;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
 }
 
 .chance-history-draw {

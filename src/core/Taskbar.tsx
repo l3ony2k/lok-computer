@@ -2,6 +2,7 @@ import { useRef, useEffect, useState } from 'react';
 import { scrollIntoViewWithin } from '@/lib/utils';
 import { useWindowActions, useWindowState } from '@/hooks/useWindowManager';
 import { CustomIcon } from '@/components/window/CustomIcon';
+import { useScrollFade } from '@/hooks/useScrollFade';
 import { ContextMenu } from '@/components/menu/ContextMenu';
 import { buildWindowMenu } from '@/components/window/windowMenu';
 import { useWindowTransitions } from '@/hooks/useWindowTransitions';
@@ -10,9 +11,10 @@ import { OfflineReadout, SearchButton, SystemClock, SystemMenuButton } from './S
 
 export const Taskbar = ({ layout = 'lok' }: { layout?: DesktopLayout }) => {
   const { windows, activeWindow } = useWindowState();
-  const { focusWindow, maximizeWindow, restoreWindow, toggleWindowShade, closeWindow } = useWindowActions();
-  const { minimizeWithTransition, restoreWithTransition } = useWindowTransitions();
+  const { focusWindow, maximizeWindow, restoreWindow, closeWindow } = useWindowActions();
+  const { minimizeWithTransition, restoreWithTransition, toggleShadeWithTransition } = useWindowTransitions();
   const tasksRef = useRef<HTMLDivElement>(null);
+  useScrollFade(tasksRef);
   const [taskMenu, setTaskMenu] = useState<{ id: string; x: number; y: number } | null>(null);
   const isClassic = layout === 'classic';
 
@@ -73,7 +75,7 @@ export const Taskbar = ({ layout = 'lok' }: { layout?: DesktopLayout }) => {
     unminimize: () => restoreWithTransition(menuWindow),
     maximize: () => maximizeWindow(menuWindow.id),
     restore: () => restoreWindow(menuWindow.id),
-    toggleShade: () => toggleWindowShade(menuWindow.id),
+    toggleShade: () => toggleShadeWithTransition(menuWindow),
     close: () => closeWindow(menuWindow.id),
   }) : [];
 

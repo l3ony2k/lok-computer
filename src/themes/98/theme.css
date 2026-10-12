@@ -204,6 +204,7 @@ html[data-theme="98"][data-layout]:not(#_) {
     --c-group-shadow: inset 1px 1px #ffffff, 1px 1px #ffffff;
     --c-list-bg: #ffffff;
     --c-list-shadow: var(--w98-field);
+    --c-header-height: 20px;
     --c-header-bg: #c0c0c0;
     --c-header-shadow: var(--w98-raised);
     --c-header-shadow-active: var(--w98-pressed);

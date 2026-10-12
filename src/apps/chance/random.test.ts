@@ -3,7 +3,9 @@ import {
   DEFAULT_DICE,
   MAX_CARDS,
   MAX_DICE,
+  PIP_LAYOUT,
   buildDeck,
+  isRedFace,
   drawCards,
   drawTarot,
   flipCoin,
@@ -41,6 +43,16 @@ describe('dice and coins', () => {
   });
 });
 
+describe('pips', () => {
+  test('every face has as many pips as its value, centred faces odd, and one and four are red', () => {
+    for (let face = 1; face <= 6; face += 1) {
+      expect(PIP_LAYOUT[face]).toHaveLength(face);
+      expect(PIP_LAYOUT[face].includes(4)).toBe(face % 2 === 1);
+    }
+    expect([1, 2, 3, 4, 5, 6].filter(isRedFace)).toEqual([1, 4]);
+  });
+});
+
 describe('cards', () => {
   test('the deck has 52 distinct cards and a shuffle keeps them all', () => {
     const deck = buildDeck();
@@ -51,6 +63,13 @@ describe('cards', () => {
     expect(new Set(shuffled.map((card) => card.id)).size).toBe(52);
     expect(shuffled).not.toEqual(deck);
     expect(deck[0].id).toBe('A♠');
+  });
+
+  test('jokers are optional: one red, one black, at the bottom of a fresh deck', () => {
+    const deck = buildDeck(true);
+    expect(deck).toHaveLength(54);
+    expect(deck.slice(52).map((card) => [card.joker, card.red])).toEqual([[true, true], [true, false]]);
+    expect(buildDeck(false).some((card) => card.joker)).toBe(false);
   });
 
   test('drawing takes from the top, never more than the cap or what is left', () => {
@@ -82,8 +101,8 @@ describe('tarot', () => {
 
 describe('normalizeChanceState', () => {
   test('keeps known tabs and dice, falls back otherwise', () => {
-    expect(normalizeChanceState({ tab: 'tarot', dice: [6, 20, 7, 100] })).toEqual({ tab: 'tarot', dice: [6, 20, 100] });
-    expect(normalizeChanceState({ tab: 'nope', dice: [] })).toEqual({ tab: 'dice', dice: DEFAULT_DICE });
+    expect(normalizeChanceState({ tab: 'tarot', dice: [6, 20, 7, 100], jokers: true })).toEqual({ tab: 'tarot', dice: [6, 20, 100], jokers: true });
+    expect(normalizeChanceState({ tab: 'nope', dice: [] })).toEqual({ tab: 'dice', dice: DEFAULT_DICE, jokers: false });
     expect(normalizeChanceState(null).dice).toEqual(DEFAULT_DICE);
     expect(normalizeChanceState({ dice: Array(20).fill(6) }).dice).toHaveLength(MAX_DICE);
   });

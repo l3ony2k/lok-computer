@@ -233,7 +233,9 @@ html[data-theme="tui"][data-layout]:not(#_) {
     --c-group-title-fg: var(--vga-white);
     --c-list-bg: var(--vga-cyan);
     --c-list-shadow: none;
+    --c-header-height: 16px;
     --c-header-bg: var(--vga-blue);
+    --c-header-fg: var(--vga-white);
     --c-header-border: 0;
     --c-header-shadow: none;
     --c-header-shadow-active: none;

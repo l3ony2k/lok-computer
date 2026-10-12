@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Home } from 'lucide-react';
 import { useWindowActions, useWindowState } from '@/hooks/useWindowManager';
 import { useWindowTransitions } from '@/hooks/useWindowTransitions';
 import { CustomIcon } from '@/components/window/CustomIcon';
+import { useScrollFade } from '@/hooks/useScrollFade';
 import { OfflineReadout, SearchButton, SystemClock, SystemMenuButton } from './SystemMenu';
 
 /**
@@ -38,6 +39,8 @@ export const PalmTabBar: React.FC = () => {
   const { focusWindow, minimizeWindow } = useWindowActions();
   const { restoreWithTransition } = useWindowTransitions();
   const onScreen = windows.some((window) => window.id === activeWindow && !window.minimized);
+  const tabsRef = useRef<HTMLDivElement>(null);
+  useScrollFade(tabsRef);
 
   const goHome = () => {
     windows.forEach((window) => {
@@ -58,7 +61,7 @@ export const PalmTabBar: React.FC = () => {
         <Home className="w-4 h-4" aria-hidden="true" />
         <span>Home</span>
       </button>
-      <div className="palm-tabs flex items-stretch min-w-0 overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none' }}>
+      <div ref={tabsRef} className="palm-tabs flex items-stretch min-w-0 overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none' }}>
         {windows.map((window) => {
           const current = window.id === activeWindow && !window.minimized;
           return (

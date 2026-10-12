@@ -101,6 +101,8 @@ export interface WindowManagerActionsContextType {
   unstackWindow: (id: string) => void;
   /** Moves or resizes every member of a stack together. */
   updateStackBounds: (stackId: string, bounds: Partial<WindowBounds>) => void;
+  /** Clears every stack: a theme without tab stacking must not raise or move windows as groups. */
+  dissolveStacks: () => void;
   updateWindowProps: (id: string, props: Record<string, unknown>) => void;
 }
 
@@ -307,18 +309,19 @@ export const useWindowManagerController = (): WindowManagerController => {
   }, [windows, isSessionRestored]);
 
   const focusWindow = useCallback((id: string) => {
-    // A stacked window brings its stack up with it (keeping their order), so the strip stays whole.
-    const stackId = windowsRef.current.find((w) => w.id === id)?.stack;
-    const raised = new Map<string, number>();
-    if (stackId) {
-      for (const member of [...windowsRef.current].filter((w) => w.stack === stackId && w.id !== id && !w.minimized).sort((a, b) => a.zIndex - b.zIndex)) {
-        raised.set(member.id, nextZIndex());
+    // A stacked window brings its stack up with it (keeping their order), so
+    // the strip stays whole. Membership is read inside the updater: a focus
+    // queued right after stackWindow must see the new stack, not the old one.
+    setWindows((prev) => {
+      const stackId = prev.find((w) => w.id === id)?.stack;
+      const raised = new Map<string, number>();
+      if (stackId) {
+        for (const member of [...prev].filter((w) => w.stack === stackId && w.id !== id && !w.minimized).sort((a, b) => a.zIndex - b.zIndex)) {
+          raised.set(member.id, nextZIndex());
+        }
       }
-    }
-    const newZIndex = nextZIndex();
-
-    setWindows((prev) =>
-      prev.map((w) => {
+      const newZIndex = nextZIndex();
+      return prev.map((w) => {
         if (w.id === id) {
           return {
             ...w,
@@ -330,8 +333,8 @@ export const useWindowManagerController = (): WindowManagerController => {
         }
         const memberZIndex = raised.get(w.id);
         return memberZIndex === undefined ? w : { ...w, zIndex: memberZIndex };
-      })
-    );
+      });
+    });
 
     setActiveWindow(id);
   }, [nextZIndex]);
@@ -494,6 +497,12 @@ export const useWindowManagerController = (): WindowManagerController => {
     );
   }, []);
 
+  const dissolveStacks = useCallback(() => {
+    setWindows((prev) => (
+      prev.some((w) => w.stack) ? prev.map((w) => (w.stack ? { ...w, stack: undefined, stackedAt: undefined } : w)) : prev
+    ));
+  }, []);
+
   const updateWindowProps = useCallback((id: string, props: Record<string, unknown>) => {
     setWindows((prev) =>
       prev.map((w) =>
@@ -521,6 +530,7 @@ export const useWindowManagerController = (): WindowManagerController => {
     stackWindow,
     unstackWindow,
     updateStackBounds,
+    dissolveStacks,
     updateWindowProps,
   }), [
     closeWindow,
@@ -535,6 +545,7 @@ export const useWindowManagerController = (): WindowManagerController => {
     stackWindow,
     unstackWindow,
     updateStackBounds,
+    dissolveStacks,
     updateWindowProps,
   ]);
 

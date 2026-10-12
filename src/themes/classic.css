@@ -739,26 +739,47 @@ html[data-chrome="classic"]:not(#_) .config-request-list span {
     border-radius: var(--c-field-radius);
 }
 
-/* Lists, tables, and selection */
+/*
+ * Lists, tables, and selection. Column headings are the cells themselves,
+ * as in Explorer: the header tokens (bg, border, shadow, height) paint the
+ * <th>, and the sort button inside is a transparent hit area filling it.
+ */
 html[data-chrome="classic"]:not(#_) .arena-file-table th,
 html[data-chrome="classic"]:not(#_) .arena-file-table th.arena-file-thumbnail-cell {
-    background: var(--c-face);
+    height: var(--c-header-height, 20px);
+    padding: 0;
+    color: var(--c-header-fg, var(--text-color));
+    background: var(--c-header-bg, var(--c-btn-bg));
+    border: var(--c-header-border, 0);
+    border-left: 0;
+    box-shadow: var(--c-header-shadow, var(--c-btn-shadow));
+    font-size: var(--c-font-size);
+    line-height: 1;
+}
+
+html[data-chrome="classic"]:not(#_) .arena-file-table th.arena-file-static-header {
+    padding: 0 6px !important;
 }
 
 html[data-chrome="classic"]:not(#_) .arena-file-table th button {
-    height: 20px;
-    background: var(--c-header-bg, var(--c-btn-bg));
-    border: var(--c-header-border, 0);
-    box-shadow: var(--c-header-shadow, var(--c-btn-shadow));
+    width: 100%;
+    height: 100%;
+    padding: 0 6px;
+    color: inherit;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
     font-size: var(--c-font-size);
+    text-align: left;
 }
 
-html[data-chrome="classic"]:not(#_) .arena-file-table th button:hover,
-html[data-chrome="classic"]:not(#_) .arena-file-table th button[data-active="true"] {
+html[data-chrome="classic"]:not(#_) .arena-file-table th:has(> button:hover),
+html[data-chrome="classic"]:not(#_) .arena-file-table th:has(> button[data-active="true"]) {
     background: var(--c-header-bg-hover, var(--c-header-bg, var(--c-btn-bg)));
 }
 
-html[data-chrome="classic"]:not(#_) .arena-file-table th button:active {
+html[data-chrome="classic"]:not(#_) .arena-file-table th:has(> button:active) {
     box-shadow: var(--c-header-shadow-active, var(--c-btn-shadow-active));
 }
 

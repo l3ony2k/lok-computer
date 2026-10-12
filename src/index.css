@@ -421,6 +421,7 @@
         left: calc(100% + 5px);
         top: -1px;
         z-index: 1;
+        max-width: calc(100vw - 16px);
     }
 
     .menu-submenu[data-flip="left"] {
@@ -429,8 +430,7 @@
     }
 
     .app-submenu {
-        width: min(260px, calc(100vw - 235px));
-        min-width: 180px;
+        width: min(260px, max(180px, calc(100vw - 235px)));
         max-height: min(420px, calc(100dvh - 60px));
         overflow-y: auto;
         overscroll-behavior: contain;
@@ -609,6 +609,27 @@
     /* Buttons keep their size; the strip scrolls (wheel, trackpad, touch) instead of squeezing titles. */
     .taskbar-button {
         flex: none;
+    }
+
+    /* A strip that scrolls sideways fades the edge its content runs past (useScrollFade sets the attribute). */
+    [data-scroll-fade="right"] {
+        -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+        mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+    }
+
+    [data-scroll-fade="left"] {
+        -webkit-mask-image: linear-gradient(to right, transparent, #000 28px);
+        mask-image: linear-gradient(to right, transparent, #000 28px);
+    }
+
+    [data-scroll-fade="both"] {
+        -webkit-mask-image: linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent);
+        mask-image: linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent);
+    }
+
+    /* The start button keeps its size however many tasks crowd the strip. */
+    .start-button {
+        flex: 0 0 auto;
     }
 
     .start-button,
@@ -1005,13 +1026,14 @@
         min-width: 0;
     }
 
+    /* A readout sits in a row with buttons and fields, so it takes their border, not a content block's. */
     .app-readout {
         height: var(--control-height);
         display: flex;
         align-items: center;
         justify-content: center;
         padding: 0 7px;
-        border: 1px solid var(--block-border);
+        border: 1px solid hsl(var(--border));
         background: var(--block-bg);
         font-size: 12px;
         text-align: center;

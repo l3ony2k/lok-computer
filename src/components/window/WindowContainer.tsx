@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { toast } from 'sonner';
 import { useWindowActions, useWindowState, type DesktopWindow } from '@/hooks/useWindowManager';
 import { DraggableWindow } from './DraggableWindow';
@@ -6,11 +6,20 @@ import { useWindowTransitions } from '@/hooks/useWindowTransitions';
 import { DEFAULT_WINDOW_SETTINGS, useUserSettings } from '@/hooks/useUserSettings';
 import { useApplicationLauncher } from '@/hooks/useApplicationLauncher';
 import { stackOrder } from '@/lib/windowStacks';
+import { useTheme } from '@/hooks/useTheme';
 
 export const WindowContainer = () => {
-  const { windows, activeWindow } = useWindowState();
-  const { maximizeWindow, restoreWindow, toggleWindowShade } = useWindowActions();
-  const { isWindowTransitioning } = useWindowTransitions();
+  const { windows, activeWindow, isSessionRestored } = useWindowState();
+  const { maximizeWindow, restoreWindow, dissolveStacks } = useWindowActions();
+  const { definition } = useTheme();
+
+  // Stacks are a BeOS thing: under any other theme (or a session restored into
+  // one) they would still raise and move as a group with nothing to show for it.
+  const tabStacking = Boolean(definition.tabStacking);
+  useEffect(() => {
+    if (!tabStacking && isSessionRestored) dissolveStacks();
+  }, [dissolveStacks, isSessionRestored, tabStacking]);
+  const { isWindowTransitioning, toggleShadeWithTransition } = useWindowTransitions();
   const { settings, updateSetting } = useUserSettings();
   const openApplication = useApplicationLauncher();
   // Read through a ref so the handler stays stable and memoized windows do not re-render on every setting change.
@@ -22,7 +31,7 @@ export const WindowContainer = () => {
   const handleTitleDoubleClick = useCallback((window: DesktopWindow) => {
     const prefs = { ...DEFAULT_WINDOW_SETTINGS, ...settingsRef.current.windows };
     if (window.shaded || prefs.titleDoubleClick === 'shade') {
-      toggleWindowShade(window.id);
+      toggleShadeWithTransition(window);
     } else if (window.maximized) {
       restoreWindow(window.id);
     } else {
@@ -40,7 +49,7 @@ export const WindowContainer = () => {
         },
       });
     }
-  }, [maximizeWindow, openApplication, restoreWindow, toggleWindowShade, updateSetting]);
+  }, [maximizeWindow, openApplication, restoreWindow, toggleShadeWithTransition, updateSetting]);
 
   // Tab strips: each stack's members in order, as one string so a memoized window re-renders only when its strip changes.
   const stackMembers = useMemo(() => {

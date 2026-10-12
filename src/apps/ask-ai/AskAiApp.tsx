@@ -6,6 +6,7 @@ import { WindowLayout } from '@/components/window/WindowLayout';
 import { RetroButton } from '@/components/ui/RetroButton';
 import { usePersistedState } from '@/hooks/useStorage';
 import { TypoText } from './TypoText';
+import { useTypo } from './useTypo';
 import {
   JevRequestError,
   answerJev,
@@ -261,26 +262,45 @@ const BestAnswerCard = ({ answer }: { answer: JevAnswer }) => {
  * sum), so there is no probability and no analytics: the text and a note on
  * why it came from the planner.
  */
-const DirectAnswerCard = ({ answer, plannerModel, plannerMs }: { answer: DirectAnswer; plannerModel?: string; plannerMs?: number }) => (
-  <section className="ask-ai-property ask-ai-best ask-ai-direct" aria-label="Answer">
-    <header>
-      <span className="ask-ai-property-title">Answer</span>
-      <span className="ask-ai-type">Planner</span>
-    </header>
-    <div className="ask-ai-direct-text">
-      {answer.text.split(/\n{2,}/).map((paragraph, index) => (
-        <p key={index}>{paragraph.split('\n').map((line, lineIndex) => (
-          <React.Fragment key={lineIndex}>{lineIndex > 0 && <br />}{line}</React.Fragment>
-        ))}</p>
-      ))}
-    </div>
-    <footer className="ask-ai-meta">
-      {answer.note && <span className="ask-ai-direct-note">{answer.note}</span>}
-      {plannerModel && <span>planner {plannerModel}</span>}
-      {plannerMs !== undefined && <span>{plannerMs}ms</span>}
-    </footer>
-  </section>
-);
+const paragraphsOf = (text: string) => text.split(/\n{2,}/).map((paragraph) => paragraph.split('\n'));
+
+/**
+ * The planner's prose is typed out like the plan summary, typos and all
+ * (src/apps/ask-ai/useTypo.ts), a little faster since it runs to several
+ * paragraphs. A restored run shows the text at once; the footer waits for the
+ * last character.
+ */
+const DirectAnswerCard = ({ answer, isNew, plannerModel, plannerMs }: { answer: DirectAnswer; isNew: boolean; plannerModel?: string; plannerMs?: number }) => {
+  const { displayText, isTyping } = useTypo(answer.text, isNew, { speed: 11, jitter: 6, typoChance: 2 });
+  const paragraphs = paragraphsOf(displayText);
+  return (
+    <section className="ask-ai-property ask-ai-best ask-ai-direct" aria-label="Answer">
+      <header>
+        <span className="ask-ai-property-title">Answer</span>
+        <span className="ask-ai-type">Planner</span>
+      </header>
+      {/* Screen readers get the final text once, not every keystroke. */}
+      <div className="ask-ai-direct-text" aria-hidden={isNew || undefined}>
+        {paragraphs.map((lines, index) => (
+          <p key={index}>
+            {lines.map((line, lineIndex) => (
+              <React.Fragment key={lineIndex}>{lineIndex > 0 && <br />}{line}</React.Fragment>
+            ))}
+            {isTyping && index === paragraphs.length - 1 && <span className="animate-pulse">▌</span>}
+          </p>
+        ))}
+      </div>
+      {isNew && <p className="sr-only">{answer.text}</p>}
+      {!isTyping && (
+        <footer className="ask-ai-meta">
+          {answer.note && <span className="ask-ai-direct-note">{answer.note}</span>}
+          {plannerModel && <span>planner {plannerModel}</span>}
+          {plannerMs !== undefined && <span>{plannerMs}ms</span>}
+        </footer>
+      )}
+    </section>
+  );
+};
 
 const Notes = ({ answer }: { answer: JevAnswer }) => (
   answer.notes.length ? (
@@ -737,7 +757,7 @@ export const AskAiApp: React.FC<AskAiAppProps> = ({ ask: handoff, onPropsChange 
               )}
 
               {run.status === 'answered' && run.direct && (
-                <DirectAnswerCard answer={run.direct} plannerModel={run.plannerModel} plannerMs={run.plannerMs} />
+                <DirectAnswerCard answer={run.direct} isNew={isLatest} plannerModel={run.plannerModel} plannerMs={run.plannerMs} />
               )}
 
               {run.status === 'refused' && run.refusal && (

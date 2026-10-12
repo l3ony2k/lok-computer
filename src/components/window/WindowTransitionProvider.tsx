@@ -3,6 +3,7 @@ import { scrollIntoViewWithin } from "@/lib/utils";
 import { CustomIcon } from "@/components/window/CustomIcon";
 import { useWindowActions, type DesktopWindow } from "@/hooks/useWindowManager";
 import { WindowTransitionContext, type WindowTransitionContextType } from "@/hooks/useWindowTransitions";
+import { WINDOW_DEFAULTS } from "@/config/window";
 
 interface ViewportRect {
   left: number;
@@ -39,7 +40,7 @@ const getDesktopRect = () => {
 const reducedMotionEnabled = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 export const WindowTransitionProvider = ({ children }: { children: ReactNode }) => {
-  const { minimizeWindow, focusWindow } = useWindowActions();
+  const { minimizeWindow, focusWindow, toggleWindowShade } = useWindowActions();
   const [transition, setTransition] = useState<WindowTransition | null>(null);
   const [transitioningWindowId, setTransitioningWindowId] = useState<string | null>(null);
   const transitioningWindowRef = useRef<string | null>(null);
@@ -112,6 +113,23 @@ export const WindowTransitionProvider = ({ children }: { children: ReactNode }) 
     });
   }, [focusWindow, runTransition]);
 
+  // Shade: the ghost shrinks from the frame to its title bar; unshade runs it
+  // back out to the window's stored height. The real window flips state at
+  // the commit, hidden behind the ghost until it lands.
+  const toggleShadeWithTransition = useCallback((window: DesktopWindow) => {
+    const source = getWindowElement(window.id);
+    const titlebar = source?.querySelector(".window-titlebar");
+    if (!source || !titlebar) {
+      toggleWindowShade(window.id);
+      return;
+    }
+    const frame = toViewportRect(source);
+    const tab = toViewportRect(titlebar);
+    const rolled = { left: frame.left, top: frame.top, width: frame.width, height: tab.height };
+    const unrolled = { left: frame.left, top: frame.top, width: frame.width, height: window.height ?? WINDOW_DEFAULTS.DEFAULT_HEIGHT };
+    runTransition(window, window.shaded ? rolled : frame, window.shaded ? unrolled : rolled, () => toggleWindowShade(window.id));
+  }, [runTransition, toggleWindowShade]);
+
   const isWindowTransitioning = useCallback(
     (id: string) => transitioningWindowId === id,
     [transitioningWindowId],
@@ -120,8 +138,9 @@ export const WindowTransitionProvider = ({ children }: { children: ReactNode }) 
   const value = useMemo<WindowTransitionContextType>(() => ({
     minimizeWithTransition,
     restoreWithTransition,
+    toggleShadeWithTransition,
     isWindowTransitioning,
-  }), [isWindowTransitioning, minimizeWithTransition, restoreWithTransition]);
+  }), [isWindowTransitioning, minimizeWithTransition, restoreWithTransition, toggleShadeWithTransition]);
 
   const ghostRect = transition?.phase === "to" ? transition.to : transition?.from;
 

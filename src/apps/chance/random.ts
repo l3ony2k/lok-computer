@@ -29,9 +29,11 @@ export const isDieSides = (value: unknown): value is DieSides => (DIE_SIDES as r
 export interface ChanceState {
   tab: ChanceTab;
   dice: DieSides[];
+  /** Two jokers in the deck. */
+  jokers: boolean;
 }
 
-export const DEFAULT_CHANCE_STATE: ChanceState = { tab: 'dice', dice: DEFAULT_DICE };
+export const DEFAULT_CHANCE_STATE: ChanceState = { tab: 'dice', dice: DEFAULT_DICE, jokers: false };
 
 export const normalizeChanceState = (stored: unknown): ChanceState => {
   if (!stored || typeof stored !== 'object') return DEFAULT_CHANCE_STATE;
@@ -40,10 +42,24 @@ export const normalizeChanceState = (stored: unknown): ChanceState => {
   return {
     tab: isChanceTab(candidate.tab) ? candidate.tab : 'dice',
     dice: dice.length ? dice : DEFAULT_DICE,
+    jokers: candidate.jokers === true,
   };
 };
 
 export const rollDie = (sides: number, rng: Rng = defaultRng) => 1 + Math.floor(rng() * sides);
+
+/** Pip positions on a 3×3 grid (row-major, 0–8) for each face of a six-sided die. */
+export const PIP_LAYOUT: Record<number, readonly number[]> = {
+  1: [4],
+  2: [2, 6],
+  3: [2, 4, 6],
+  4: [0, 2, 6, 8],
+  5: [0, 2, 4, 6, 8],
+  6: [0, 2, 3, 5, 6, 8],
+};
+
+/** Classic dice paint the one and the four red. */
+export const isRedFace = (value: number) => value === 1 || value === 4;
 
 export const rollDice = (dice: readonly number[], rng: Rng = defaultRng) => dice.map((sides) => rollDie(sides, rng));
 
@@ -61,7 +77,7 @@ export const shuffle = <T>(items: readonly T[], rng: Rng = defaultRng): T[] => {
   return result;
 };
 
-export type SuitId = 'spades' | 'hearts' | 'diamonds' | 'clubs';
+export type SuitId = 'spades' | 'hearts' | 'diamonds' | 'clubs' | 'joker';
 
 export interface PlayingCard {
   id: string;
@@ -69,7 +85,13 @@ export interface PlayingCard {
   suit: SuitId;
   symbol: string;
   red: boolean;
+  joker?: boolean;
 }
+
+const JOKERS: PlayingCard[] = [
+  { id: 'joker-red', rank: 'Joker', suit: 'joker', symbol: '★', red: true, joker: true },
+  { id: 'joker-black', rank: 'Joker', suit: 'joker', symbol: '★', red: false, joker: true },
+];
 
 const CARD_SUITS: Array<{ id: SuitId; symbol: string; red: boolean }> = [
   { id: 'spades', symbol: '♠', red: false },
@@ -80,13 +102,17 @@ const CARD_SUITS: Array<{ id: SuitId; symbol: string; red: boolean }> = [
 
 const CARD_RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
 
-export const buildDeck = (): PlayingCard[] => CARD_SUITS.flatMap((suit) => CARD_RANKS.map((rank) => ({
-  id: `${rank}${suit.symbol}`,
-  rank,
-  suit: suit.id,
-  symbol: suit.symbol,
-  red: suit.red,
-})));
+/** The 52 cards, plus a red and a black joker when asked. */
+export const buildDeck = (jokers = false): PlayingCard[] => [
+  ...CARD_SUITS.flatMap((suit) => CARD_RANKS.map((rank) => ({
+    id: `${rank}${suit.symbol}`,
+    rank,
+    suit: suit.id,
+    symbol: suit.symbol,
+    red: suit.red,
+  }))),
+  ...(jokers ? JOKERS : []),
+];
 
 /** Takes `count` cards off the top; fewer when the deck runs short. */
 export const drawCards = (deck: readonly PlayingCard[], count: number) => {

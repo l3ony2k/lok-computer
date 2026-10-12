@@ -224,6 +224,7 @@ html[data-theme="beos"][data-layout]:not(#_) {
     --c-group-shadow: inset 1px 1px #ffffff;
     --c-list-bg: #ffffff;
     --c-list-shadow: inset 1px 1px #989898;
+    --c-header-height: 20px;
     --c-header-bg: #d8d8d8;
     --c-header-border: 1px solid #989898;
     --c-header-shadow: var(--be-raised);
@@ -358,7 +359,10 @@ html[data-theme="beos"][data-layout]:not(#_) .window-titlebar[data-stacked] {
     transition: margin-left 120ms ease-out;
 }
 
+/* A shaded window is only its tab, so the tab spans the frame: a narrow tab could never reach the edges its hidden body still occupied. */
 html[data-theme="beos"][data-layout]:not(#_) .draggable-window.is-shaded .window-titlebar {
+    width: 100%;
+    max-width: none;
     margin-bottom: 0;
     border-bottom: 1px solid var(--be-frame);
 }

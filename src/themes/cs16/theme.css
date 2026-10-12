@@ -228,6 +228,7 @@ html[data-theme="cs16"][data-layout]:not(#_) {
     --c-group-title-fg: var(--cs-text);
     --c-list-bg: var(--cs-bg-2);
     --c-list-shadow: var(--cs-sunken);
+    --c-header-height: 22px;
     --c-header-bg: var(--cs-bg);
     --c-header-border: 0;
     --c-header-shadow: var(--cs-raised);

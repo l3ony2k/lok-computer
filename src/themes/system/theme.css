@@ -233,6 +233,7 @@ html[data-theme="system"][data-layout]:not(#_) {
     --c-group-shadow: none;
     --c-list-bg: #ffffff;
     --c-list-shadow: inset 0 0 0 1px #000000;
+    --c-header-height: 17px;
     --c-header-bg: #ffffff;
     --c-header-border: 1px solid #000000;
     --c-header-shadow: none;

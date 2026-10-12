@@ -196,6 +196,7 @@ html[data-theme="xp"][data-layout]:not(#_) {
     --c-group-title-fg: #0046d5;
     --c-list-bg: #ffffff;
     --c-list-shadow: none;
+    --c-header-height: 20px;
     --c-header-bg: linear-gradient(180deg, #ffffff, #ebeadb);
     --c-header-bg-hover: linear-gradient(180deg, #ffffff, #f3f3ea);
     --c-header-border: 0;

@@ -39,11 +39,11 @@ const STACK_STRIP_MARGIN = 24;
 
 export const DraggableWindow = memo(function DraggableWindow({ window: windowProps, isActive, isTransitioning, stackMembers, onTitleDoubleClick }: DraggableWindowProps) {
   const {
-    closeWindow, focusWindow, maximizeWindow, restoreWindow, toggleWindowShade,
+    closeWindow, focusWindow, maximizeWindow, restoreWindow,
     updateWindowPosition, updateWindowDimensions, updateWindowBounds,
     stackWindow, unstackWindow, updateStackBounds,
   } = useWindowActions();
-  const { minimizeWithTransition } = useWindowTransitions();
+  const { minimizeWithTransition, toggleShadeWithTransition } = useWindowTransitions();
   const { definition } = useTheme();
   // The palm layout shows one window at a time, each filling the screen.
   const fillsScreen = windowProps.maximized || definition.layout === 'palm';
@@ -150,7 +150,7 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
       unminimize: () => focusWindow(windowProps.id),
       maximize: () => maximizeWindow(windowProps.id),
       restore: () => restoreWindow(windowProps.id),
-      toggleShade: () => toggleWindowShade(windowProps.id),
+      toggleShade: () => toggleShadeWithTransition(windowProps),
       close: () => closeWindow(windowProps.id),
       share: shareUrl ? () => void copyShareUrl(shareUrl) : null,
       detach: stacked ? () => {
