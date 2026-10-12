@@ -328,6 +328,36 @@ html[data-theme="beos"][data-layout]:not(#_) .window-surface > .flex-1 {
     box-shadow: inset 1px 1px #ffffff, inset -1px -1px #989898, 2px 2px 0 rgba(0, 0, 0, 0.3);
 }
 
+/*
+ * Stacking (src/lib/windowStacks.ts): windows dropped tab-on-tab share a
+ * frame and their tabs form a strip. The row beside a tab is empty, so it
+ * must not take the pointer: presses there reach the tabs of the windows
+ * stacked under this one. Only the tab, the body and the resize handles do.
+ */
+html[data-theme="beos"][data-layout]:not(#_) .draggable-window,
+html[data-theme="beos"][data-layout]:not(#_) .draggable-window > .window-surface {
+    pointer-events: none;
+}
+
+html[data-theme="beos"][data-layout]:not(#_) .draggable-window > .window-surface > .window-titlebar,
+html[data-theme="beos"][data-layout]:not(#_) .draggable-window > .window-surface > .window-content-area,
+html[data-theme="beos"][data-layout]:not(#_) .draggable-window > div:not(.window-surface) > div {
+    pointer-events: auto;
+}
+
+/* The tab a dragged tab hovers over lights up, as Haiku's does. */
+html[data-theme="beos"][data-layout]:not(#_) .window-titlebar[data-stack-target],
+html[data-theme="beos"][data-layout]:not(#_) .window-surface:not([data-active]) .window-titlebar[data-stack-target] {
+    background: var(--be-tab-lit);
+    color: #000000;
+    box-shadow: var(--be-tab-bevel);
+}
+
+/* Stacked tabs touch; the strip's offsets are inline (measured tab widths). */
+html[data-theme="beos"][data-layout]:not(#_) .window-titlebar[data-stacked] {
+    transition: margin-left 120ms ease-out;
+}
+
 html[data-theme="beos"][data-layout]:not(#_) .draggable-window.is-shaded .window-titlebar {
     margin-bottom: 0;
     border-bottom: 1px solid var(--be-frame);
@@ -417,7 +447,7 @@ html[data-theme="beos"][data-layout]:not(#_) .menu-item-button {
 }
 
 html[data-theme="beos"][data-layout]:not(#_) .app-menu-panel[data-placement="top"] {
-    top: calc(var(--c-menubar-height) + 1px);
+    top: calc(var(--c-menubar-height) + var(--safe-top) + 1px);
 }
 
 /* ---------- Desktop and taskbar ---------- */

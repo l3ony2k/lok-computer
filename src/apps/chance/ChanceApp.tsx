@@ -46,6 +46,21 @@ const ASK_AI_TYPE = 'AI Talk';
 
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+/** A playing card: ivory face, black or red ink in every theme (a card is a card). */
+const PlayingCardView = ({ card, small }: { card: PlayingCard; small?: boolean }) => (
+  <div
+    className="chance-card"
+    data-red={card.red || undefined}
+    data-small={small || undefined}
+    role="img"
+    aria-label={`${card.rank} of ${card.suit}`}
+  >
+    <span className="chance-card-corner" aria-hidden="true">{card.rank}<br />{card.symbol}</span>
+    <span className="chance-card-pip" aria-hidden="true">{card.symbol}</span>
+    {!small && <span className="chance-card-corner chance-card-corner-bottom" aria-hidden="true">{card.rank}<br />{card.symbol}</span>}
+  </div>
+);
+
 const createId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
 /**
@@ -145,20 +160,26 @@ export const ChanceApp: React.FC<ChanceAppProps> = ({ initialTab, onPropsChange 
     flipTimer.current = window.setTimeout(land, FLIP_MS);
   };
 
-  // Cards
+  // Cards: every draw stays on the table, the latest one large and the earlier
+  // ones in a strip below it, until Clear or a fresh deck.
   const [deck, setDeck] = useState<PlayingCard[]>(() => shuffle(buildDeck()));
-  const [hand, setHand] = useState<PlayingCard[]>([]);
+  const [draws, setDraws] = useState<PlayingCard[][]>([]);
   const [drawCount, setDrawCount] = useState(1);
+  const hand = draws[0] ?? [];
+  const earlier = draws.slice(1);
 
   const draw = () => {
     const { drawn, rest } = drawCards(deck, drawCount);
-    setHand(drawn);
+    if (!drawn.length) return;
+    setDraws((prev) => [drawn, ...prev]);
     setDeck(rest);
   };
 
+  const clearTable = () => setDraws([]);
+
   const reshuffle = () => {
     setDeck(shuffle(buildDeck()));
-    setHand([]);
+    setDraws([]);
   };
 
   // Tarot
@@ -276,22 +297,26 @@ export const ChanceApp: React.FC<ChanceAppProps> = ({ initialTab, onPropsChange 
               Draw {drawCount === 1 ? 'a card' : `${drawCount} cards`}
             </RetroButton>
             <RetroButton size="sm" onClick={reshuffle}>Shuffle</RetroButton>
+            <RetroButton size="sm" onClick={clearTable} disabled={draws.length === 0}>Clear</RetroButton>
             <span className="chance-total">{deck.length} left</span>
           </div>
 
           {hand.length > 0 && (
-            <div className="chance-hand" aria-live="polite">
-              {hand.map((card) => (
-                <div className="chance-card" data-red={card.red || undefined} key={card.id} aria-label={`${card.rank} of ${card.suit}`}>
-                  <span className="chance-card-corner">{card.rank}<br />{card.symbol}</span>
-                  <span className="chance-card-pip" aria-hidden="true">{card.symbol}</span>
-                  <span className="chance-card-corner chance-card-corner-bottom" aria-hidden="true">{card.rank}<br />{card.symbol}</span>
+            <div className="chance-hand" aria-live="polite" aria-label="Latest draw">
+              {hand.map((card) => <PlayingCardView card={card} key={card.id} />)}
+            </div>
+          )}
+          {earlier.length > 0 && (
+            <div className="chance-history" aria-label="Earlier draws">
+              {earlier.map((cards) => (
+                <div className="chance-history-draw" key={cards[0].id}>
+                  {cards.map((card) => <PlayingCardView card={card} small key={card.id} />)}
                 </div>
               ))}
             </div>
           )}
-          {hand.length === 0 && deck.length < 52 && (
-            <p className="chance-hint">The hand is empty. Draw again, or shuffle to start over.</p>
+          {draws.length === 0 && deck.length < 52 && (
+            <p className="chance-hint">The table is clear. Draw again, or shuffle for a fresh deck.</p>
           )}
         </section>
       )}

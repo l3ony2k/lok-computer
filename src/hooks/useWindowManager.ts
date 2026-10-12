@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { WINDOW_DEFAULTS } from "@/config/window";
+import { dissolveSingletons, leaveStack } from '@/lib/windowStacks';
 import { createApplicationElement, getApplicationDefinition } from "@/config/apps";
 import { getAppState, setAppState, deleteAppState } from "@/lib/storage";
 
@@ -25,6 +26,8 @@ export interface SerializableWindowData {
   minimized?: boolean;
   maximized?: boolean;
   shaded?: boolean;
+  stack?: string;
+  stackedAt?: number;
   zIndex: number;
   props?: Record<string, unknown>; // Component-specific props (channelSlug, blockId, etc.)
 }
@@ -54,6 +57,10 @@ export interface DesktopWindow {
   maximized?: boolean;
   /** Rolled up to its title bar (window shade). */
   shaded?: boolean;
+  /** Stack this window shares a frame with (BeOS tab stacking); see src/lib/windowStacks.ts. */
+  stack?: string;
+  /** When it joined the stack: orders the tab strip. */
+  stackedAt?: number;
   wasMaximized?: boolean;
   zIndex: number;
   iconType?: string;
@@ -88,6 +95,12 @@ export interface WindowManagerActionsContextType {
   updateWindowDimensions: (id: string, width: number, height: number) => void;
   /** Position and size in one update (snapping), leaving maximized and shaded states. */
   updateWindowBounds: (id: string, bounds: Partial<WindowBounds>) => void;
+  /** Puts `id` in `targetId`'s stack (joining its frame); the tabs form a strip. */
+  stackWindow: (id: string, targetId: string) => void;
+  /** Takes the window out of its stack; a stack left with one member dissolves. */
+  unstackWindow: (id: string) => void;
+  /** Moves or resizes every member of a stack together. */
+  updateStackBounds: (stackId: string, bounds: Partial<WindowBounds>) => void;
   updateWindowProps: (id: string, props: Record<string, unknown>) => void;
 }
 
@@ -134,6 +147,7 @@ export const useWindowLaunchActions = () => {
 
 // Monotonic suffix so windows opened within the same millisecond still get unique ids.
 let windowIdCounter = 0;
+let stackIdCounter = 0;
 
 /** The frontmost of these windows, or null when there are none. */
 const topmost = (windows: DesktopWindow[]) => (
@@ -214,6 +228,8 @@ export const useWindowManagerController = (): WindowManagerController => {
             minimized: savedWindow.minimized || false,
             maximized: savedWindow.maximized || false,
             shaded: savedWindow.shaded || false,
+            stack: savedWindow.stack,
+            stackedAt: savedWindow.stackedAt,
             wasMaximized: false,
             zIndex: savedWindow.zIndex,
             minWidth: WINDOW_DEFAULTS.MIN_WIDTH,
@@ -224,7 +240,7 @@ export const useWindowManagerController = (): WindowManagerController => {
         }
 
         if (restoredWindows.length > 0) {
-          setWindows(restoredWindows);
+          setWindows(dissolveSingletons(restoredWindows));
           zIndexRef.current = maxZIndex;
           setActiveWindow(topmost(restoredWindows.filter((w) => !w.minimized))?.id ?? null);
           console.info(`[WindowManager] Restored ${restoredWindows.length} windows`);
@@ -266,6 +282,8 @@ export const useWindowManagerController = (): WindowManagerController => {
             minimized: w.minimized,
             maximized: w.maximized,
             shaded: w.shaded,
+            stack: w.stack,
+            stackedAt: w.stackedAt,
             zIndex: w.zIndex,
             props: w.props,
           }));
@@ -289,20 +307,30 @@ export const useWindowManagerController = (): WindowManagerController => {
   }, [windows, isSessionRestored]);
 
   const focusWindow = useCallback((id: string) => {
+    // A stacked window brings its stack up with it (keeping their order), so the strip stays whole.
+    const stackId = windowsRef.current.find((w) => w.id === id)?.stack;
+    const raised = new Map<string, number>();
+    if (stackId) {
+      for (const member of [...windowsRef.current].filter((w) => w.stack === stackId && w.id !== id && !w.minimized).sort((a, b) => a.zIndex - b.zIndex)) {
+        raised.set(member.id, nextZIndex());
+      }
+    }
     const newZIndex = nextZIndex();
 
     setWindows((prev) =>
-      prev.map((w) => (
-        w.id === id
-          ? {
+      prev.map((w) => {
+        if (w.id === id) {
+          return {
             ...w,
             zIndex: newZIndex,
             minimized: false,
             maximized: w.wasMaximized || w.maximized,
             wasMaximized: false
-          }
-          : w
-      ))
+          };
+        }
+        const memberZIndex = raised.get(w.id);
+        return memberZIndex === undefined ? w : { ...w, zIndex: memberZIndex };
+      })
     );
 
     setActiveWindow(id);
@@ -362,7 +390,7 @@ export const useWindowManagerController = (): WindowManagerController => {
 
   const closeWindow = useCallback((id: string) => {
     setWindows((previousWindows) => {
-      const remainingWindows = previousWindows.filter((window) => window.id !== id);
+      const remainingWindows = dissolveSingletons(previousWindows.filter((window) => window.id !== id));
       if (activeWindowRef.current === id) {
         setActiveWindow(topmost(remainingWindows.filter((w) => !w.minimized))?.id ?? null);
       }
@@ -387,7 +415,7 @@ export const useWindowManagerController = (): WindowManagerController => {
 
   const maximizeWindow = useCallback((id: string) => {
     setWindows((prev) =>
-      prev.map((w) =>
+      leaveStack(prev, id).map((w) =>
         w.id === id ? { ...w, maximized: true, minimized: false, shaded: false } : w
       )
     );
@@ -396,7 +424,7 @@ export const useWindowManagerController = (): WindowManagerController => {
 
   const toggleWindowShade = useCallback((id: string) => {
     setWindows((prev) =>
-      prev.map((w) =>
+      leaveStack(prev, id).map((w) =>
         w.id === id ? { ...w, shaded: !w.shaded, minimized: false } : w
       )
     );
@@ -436,6 +464,36 @@ export const useWindowManagerController = (): WindowManagerController => {
     );
   }, []);
 
+  const stackWindow = useCallback((id: string, targetId: string) => {
+    setWindows((prev) => {
+      const target = prev.find((w) => w.id === targetId);
+      const joining = prev.find((w) => w.id === id);
+      if (!target || !joining || id === targetId || target.maximized || target.minimized) return prev;
+      if (joining.stack && joining.stack === target.stack) return prev;
+      stackIdCounter += 1;
+      const stackId = target.stack ?? `stack-${Date.now()}-${stackIdCounter}`;
+      const now = Date.now();
+      const bounds = { x: target.x, y: target.y, width: target.width, height: target.height };
+      // The target's shade would leave the joining window on a frame of a different height.
+      return leaveStack(prev, id).map((w) => {
+        if (w.id === targetId) return { ...w, shaded: false, stack: stackId, stackedAt: w.stack ? w.stackedAt : now - 1 };
+        if (w.id === id) return { ...w, ...bounds, stack: stackId, stackedAt: now, maximized: false, shaded: false, minimized: false };
+        return w;
+      });
+    });
+    focusWindow(id);
+  }, [focusWindow]);
+
+  const unstackWindow = useCallback((id: string) => {
+    setWindows((prev) => leaveStack(prev, id));
+  }, []);
+
+  const updateStackBounds = useCallback((stackId: string, bounds: Partial<WindowBounds>) => {
+    setWindows((prev) =>
+      prev.map((w) => (w.stack === stackId ? { ...w, ...bounds } : w))
+    );
+  }, []);
+
   const updateWindowProps = useCallback((id: string, props: Record<string, unknown>) => {
     setWindows((prev) =>
       prev.map((w) =>
@@ -460,6 +518,9 @@ export const useWindowManagerController = (): WindowManagerController => {
     updateWindowPosition,
     updateWindowDimensions,
     updateWindowBounds,
+    stackWindow,
+    unstackWindow,
+    updateStackBounds,
     updateWindowProps,
   }), [
     closeWindow,
@@ -471,6 +532,9 @@ export const useWindowManagerController = (): WindowManagerController => {
     updateWindowPosition,
     updateWindowDimensions,
     updateWindowBounds,
+    stackWindow,
+    unstackWindow,
+    updateStackBounds,
     updateWindowProps,
   ]);
 

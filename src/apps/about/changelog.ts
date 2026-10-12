@@ -14,6 +14,19 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '3.1.5',
+    date: '2026-10-12',
+    title: 'Stacked tabs, straight answers',
+    notes: [
+      'BeOS stacks windows: drop a tab on another window\'s tab and the two share a frame, their tabs side by side in a strip. Click a tab to bring that window up; drag any tab to move the stack; hold Shift while dragging (or use "Detach from stack" in the window menu) to pull one out.',
+      'Ask AI no longer refuses what Jev cannot judge: a tarot reading, a poem, a sum. The planner answers in prose itself and says so.',
+      'Text fields show a focus ring only when you reach them with the keyboard; a click or tap leaves them clean in every theme, the Console and the launcher included. Fields next to buttons are the same height as the buttons.',
+      'On phones the bars keep clear of the status bar and the home indicator, the status bar takes the top bar\'s colour, and Palm\'s large icons keep their labels.',
+      'Chance\'s cards are ivory with black and red ink in every theme; earlier draws stay on the table in a strip of small cards, with a Clear button.',
+      'A fresh install opens the desktop sooner: the boot screen no longer waits for every chunk and image to download before showing it.',
+    ],
+  },
+  {
     version: '3.1.4',
     date: '2026-10-11',
     title: 'Install it, and a handheld',

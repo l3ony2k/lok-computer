@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "lok.computer Public API",
-    "version": "3.1.4",
+    "version": "3.1.5",
     "description": "Public REST endpoints used by the lok.computer browser desktop. Most operations read public data through an upstream provider. No caller API key is currently required. Upstream-dependent operations can fail independently of the credential-free status endpoint.",
     "contact": {
       "name": "Lok",
@@ -94,7 +94,7 @@
       "post": {
         "operationId": "planJevQuestions",
         "summary": "Plan typed Jev questions for a request",
-        "description": "Reads a question with the server-configured fast language model, without calling Jev. The reply's `kind` is `plan` (typed Jev questions: a primary question that answers the person plus up to four supporting questions), `needs_input` (fields to ask the person for, then plan again with `inputs`), or `refuse` (Jev cannot judge it, with a suggested rephrasing). Do not send secrets or sensitive personal data.",
+        "description": "Reads a question with the server-configured fast language model, without calling Jev. The reply's `kind` is `plan` (typed Jev questions: a primary question that answers the person plus up to four supporting questions), `needs_input` (fields to ask the person for, then plan again with `inputs`), `answer` (Jev has nothing to judge, such as writing, explaining or arithmetic, so the planner, a language model itself, answers in prose), or `refuse` (an empty or disallowed question). Do not send secrets or sensitive personal data.",
         "tags": ["AI"],
         "requestBody": {
           "required": true,
@@ -164,7 +164,7 @@
       "post": {
         "operationId": "askJev",
         "summary": "Answer a request with Jev and return the requested properties",
-        "description": "Plans a question with the server-configured fast language model (or uses a supplied plan), evaluates it with TypeSafe's Jev decision model, and returns `best` (the answer in plain words with its probability, confidence, and certainty), per-question evidence, notes on close calls and option-order consistency, and the raw Jev request and response. When the planner needs more input or refuses, that reply is returned without calling Jev. Do not send secrets or sensitive personal data.",
+        "description": "Plans a question with the server-configured fast language model (or uses a supplied plan), evaluates it with TypeSafe's Jev decision model, and returns `best` (the answer in plain words with its probability, confidence, and certainty), per-question evidence, notes on close calls and option-order consistency, and the raw Jev request and response. When the planner needs more input, answers directly, or refuses, that reply is returned without calling Jev. Do not send secrets or sensitive personal data.",
         "tags": ["AI"],
         "requestBody": {
           "required": true,
@@ -179,7 +179,7 @@
         },
         "responses": {
           "200": {
-            "description": "The best answer with analytics, or a needs_input or refuse reply.",
+            "description": "The best answer with analytics, or a needs_input, answer or refuse reply.",
             "content": {
               "application/json": {
                 "schema": {
@@ -189,6 +189,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/JevNeedsInput"
+                    },
+                    {
+                      "$ref": "#/components/schemas/JevDirectAnswer"
                     },
                     {
                       "$ref": "#/components/schemas/JevRefusal"
@@ -922,10 +925,47 @@
           }
         }
       },
+      "JevDirectAnswer": {
+        "type": "object",
+        "required": ["kind", "text"],
+        "description": "Jev had nothing to judge (a request to write, explain or interpret something, arithmetic, dates), so the planner answered in prose itself. No probability, no analytics.",
+        "properties": {
+          "kind": {
+            "const": "answer"
+          },
+          "text": {
+            "type": "string",
+            "description": "Plain text; paragraphs are separated by blank lines."
+          },
+          "note": {
+            "type": ["string", "null"],
+            "description": "One sentence on why Jev did not judge it."
+          },
+          "planner": {
+            "type": ["object", "null"],
+            "properties": {
+              "model": {
+                "type": "string"
+              }
+            }
+          },
+          "timing": {
+            "type": "object",
+            "properties": {
+              "plannerMs": {
+                "type": ["integer", "null"]
+              },
+              "jevMs": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
       "JevRefusal": {
         "type": "object",
         "required": ["kind", "message"],
-        "description": "Jev cannot judge the question, e.g. a request to write text or do arithmetic.",
+        "description": "The question was empty, unintelligible, or one the planner must not help with.",
         "properties": {
           "kind": {
             "const": "refuse"

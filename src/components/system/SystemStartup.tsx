@@ -81,6 +81,16 @@ const preloadLocalAssets = async (onProgress: (loaded: number, total: number) =>
   return results.filter((result) => result.status === "rejected").length;
 };
 
+/**
+ * How long the boot waits for the warm-ups before showing the desktop. A
+ * fresh install (an installed app has its own storage, so nothing is cached)
+ * downloads every chunk and image here; past these bounds the desktop opens
+ * and the downloads finish behind it, where the service worker still keeps
+ * them for the next visit.
+ */
+const MODULE_WAIT_MS = 6000;
+const ASSET_WAIT_MS = 4000;
+
 const withTimeout = async <T,>(promise: Promise<T>, milliseconds: number) => {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<null>((resolve) => {
@@ -139,7 +149,7 @@ export const SystemStartup = ({ children }: { children: ReactNode }) => {
       const moduleTask = preloadAppModules((loaded, total) => {
         if (!cancelled) updateStage("modules", { detail: `loading app modules ${loaded}/${total}` });
       }).then((failures) => {
-        if (cancelled) return;
+        if (cancelled) return true;
         const scripts = resourceBytes(SCRIPT_PATTERN);
         const size = scripts.bytes ? `, ${formatBytes(scripts.bytes)} of script` : "";
         updateStage("modules", {
@@ -148,12 +158,13 @@ export const SystemStartup = ({ children }: { children: ReactNode }) => {
             : `${APP_MODULE_COUNT} app modules cached (${scripts.count} files${size})`,
           state: failures ? "warning" : "done",
         });
+        return true;
       });
 
       const assetTask = preloadLocalAssets((loaded, total) => {
         if (!cancelled) updateStage("assets", { detail: `loading local assets ${loaded}/${total}` });
       }).then((failures) => {
-        if (cancelled) return;
+        if (cancelled) return true;
         const images = resourceBytes(IMAGE_PATTERN);
         const size = images.bytes ? `, ${formatBytes(images.bytes)}` : "";
         updateStage("assets", {
@@ -162,6 +173,7 @@ export const SystemStartup = ({ children }: { children: ReactNode }) => {
             : `${bundledAssetUrls.length} local assets cached${size}`,
           state: failures ? "warning" : "done",
         });
+        return true;
       });
 
       const cacheStartedAt = performance.now();
@@ -219,7 +231,14 @@ export const SystemStartup = ({ children }: { children: ReactNode }) => {
         ? withTimeout(document.fonts.ready, 4000)
         : Promise.resolve(null);
 
-      await Promise.all([moduleTask, assetTask, cacheTask, storageTask, themeTask, fontTask]);
+      const boundedModules = withTimeout(moduleTask, MODULE_WAIT_MS).then((done) => {
+        if (done === null && !cancelled) updateStage("modules", { detail: "app modules loading in the background", state: "warning" });
+      });
+      const boundedAssets = withTimeout(assetTask, ASSET_WAIT_MS).then((done) => {
+        if (done === null && !cancelled) updateStage("assets", { detail: "local assets loading in the background", state: "warning" });
+      });
+
+      await Promise.all([boundedModules, boundedAssets, cacheTask, storageTask, themeTask, fontTask]);
 
       const minimumBootTime = 700;
       const remaining = minimumBootTime - (performance.now() - startedAt);

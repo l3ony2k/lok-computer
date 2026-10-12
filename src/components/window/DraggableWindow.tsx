@@ -1,4 +1,4 @@
-import { memo, Suspense, useCallback, useRef, useState } from 'react';
+import { memo, Suspense, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { WindowErrorBoundary } from './WindowErrorBoundary';
 import { useWindowActions, type DesktopWindow } from '@/hooks/useWindowManager';
 import { X, Minimize, Maximize } from 'lucide-react';
@@ -14,11 +14,14 @@ import { useWindowTransitions } from '@/hooks/useWindowTransitions';
 import { useTheme } from '@/hooks/useTheme';
 import { pointerFromDragEvent, resolveSnapZone, snapZoneRect, type SnapRect, type SnapZone } from '@/lib/windowSnap';
 import { buildWindowMenu } from './windowMenu';
+import { forgetTabWidth, parseStackMembers, reportTabWidth, useStackTabOffset } from '@/lib/windowStacks';
 
 interface DraggableWindowProps {
   window: DesktopWindow;
   isActive: boolean;
   isTransitioning: boolean;
+  /** Ids of this window's stack in strip order, comma-joined; null when it is not stacked. */
+  stackMembers: string | null;
   /** Double-click on the title bar: maximize or shade, by the Config setting. */
   onTitleDoubleClick: (window: DesktopWindow) => void;
 }
@@ -31,10 +34,14 @@ interface DraggableWindowProps {
  */
 const WINDOW_DRAG_CANCEL = '.window-menu-button, .window-controls';
 
-export const DraggableWindow = memo(function DraggableWindow({ window: windowProps, isActive, isTransitioning, onTitleDoubleClick }: DraggableWindowProps) {
+/** Space BeOS keeps free at the right of a frame, so a strip of tabs never reaches the corner. */
+const STACK_STRIP_MARGIN = 24;
+
+export const DraggableWindow = memo(function DraggableWindow({ window: windowProps, isActive, isTransitioning, stackMembers, onTitleDoubleClick }: DraggableWindowProps) {
   const {
     closeWindow, focusWindow, maximizeWindow, restoreWindow, toggleWindowShade,
     updateWindowPosition, updateWindowDimensions, updateWindowBounds,
+    stackWindow, unstackWindow, updateStackBounds,
   } = useWindowActions();
   const { minimizeWithTransition } = useWindowTransitions();
   const { definition } = useTheme();
@@ -46,6 +53,45 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
   const [snapPreview, setSnapPreview] = useState<SnapRect | null>(null);
   const snapZoneRef = useRef<SnapZone | null>(null);
   const shaded = Boolean(windowProps.shaded);
+
+  // Tab stacking (BeOS): a tab dropped on another window's tab joins its
+  // frame, and the tabs line up in a strip. A stacked window drags its whole
+  // stack along (the siblings follow through inline transforms until the drop
+  // commits the move); Shift while dragging takes it out instead.
+  const stacking = Boolean(definition.tabStacking) && !fillsScreen;
+  const members = useMemo(() => parseStackMembers(stackMembers), [stackMembers]);
+  const stacked = stacking && Boolean(windowProps.stack) && members.length > 1;
+  const tabOffset = useStackTabOffset(members, windowProps.id, stacked);
+  const titleRef = useRef<HTMLDivElement>(null);
+  const groupRef = useRef<{ nodes: HTMLElement[]; transforms: string[] } | null>(null);
+  const detachRef = useRef(false);
+  const stackTargetRef = useRef<HTMLElement | null>(null);
+
+  useLayoutEffect(() => {
+    const tab = titleRef.current;
+    if (!stacked || !tab) return;
+    const report = () => reportTabWidth(windowProps.id, tab.getBoundingClientRect().width);
+    report();
+    const observer = new ResizeObserver(report);
+    observer.observe(tab);
+    return () => {
+      observer.disconnect();
+      forgetTabWidth(windowProps.id);
+    };
+  }, [stacked, windowProps.id]);
+
+  /** The tab of another (unmaximized) window under the point, if any. */
+  const stackTargetAt = useCallback((x: number, y: number): HTMLElement | null => {
+    for (const element of document.elementsFromPoint(x, y)) {
+      const tab = element.closest<HTMLElement>('.window-titlebar');
+      if (!tab) continue;
+      const surface = tab.parentElement;
+      const id = surface?.dataset.windowSurfaceId;
+      if (!id || id === windowProps.id || surface?.dataset.maximized) continue;
+      return tab;
+    }
+    return null;
+  }, [windowProps.id]);
 
   const handleMinimize = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -107,6 +153,10 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
       toggleShade: () => toggleWindowShade(windowProps.id),
       close: () => closeWindow(windowProps.id),
       share: shareUrl ? () => void copyShareUrl(shareUrl) : null,
+      detach: stacked ? () => {
+        unstackWindow(windowProps.id);
+        updateWindowPosition(windowProps.id, (windowProps.x ?? 0) + STACK_STRIP_MARGIN, (windowProps.y ?? 0) + STACK_STRIP_MARGIN);
+      } : undefined,
     });
   };
 
@@ -114,9 +164,22 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
   // reaching the desktop's left or right edge does the same without it.
   const handleDrag = useCallback<RndDragCallback>((e, data) => {
     if (windowProps.maximized) return;
+    const group = groupRef.current;
+    if (group) {
+      for (const node of group.nodes) node.style.transform = `translate(${data.x}px, ${data.y}px)`;
+    }
     const layer = data.node.parentElement;
     const pointer = pointerFromDragEvent(e as unknown as Event);
     if (!layer || !pointer) return;
+    // A single tab over another window's tab lights it: dropping there stacks them.
+    if (stacking && !group) {
+      const target = stackTargetAt(pointer.clientX, pointer.clientY);
+      if (target !== stackTargetRef.current) {
+        stackTargetRef.current?.removeAttribute('data-stack-target');
+        target?.setAttribute('data-stack-target', '');
+        stackTargetRef.current = target;
+      }
+    }
     const layerRect = layer.getBoundingClientRect();
     const area = { width: layer.clientWidth, height: layer.clientHeight };
     const modifier = 'altKey' in e && Boolean((e as { altKey?: boolean }).altKey);
@@ -124,13 +187,20 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
     if (zone === snapZoneRef.current) return;
     snapZoneRef.current = zone;
     setSnapPreview(zone ? snapZoneRect(zone, area) : null);
-  }, [windowProps.maximized]);
+  }, [stackTargetAt, stacking, windowProps.maximized]);
 
   const handleDragStop = useCallback<RndDragCallback>((_e, data) => {
     setIsInteracting(false);
     const zone = snapZoneRef.current;
     snapZoneRef.current = null;
     setSnapPreview(null);
+    const group = groupRef.current;
+    groupRef.current = null;
+    const target = stackTargetRef.current;
+    stackTargetRef.current = null;
+    target?.removeAttribute('data-stack-target');
+    const detaching = detachRef.current;
+    detachRef.current = false;
     if (windowProps.maximized) return;
 
     const parentElement = data.node.parentElement;
@@ -145,6 +215,27 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
     };
     const minWidth = windowProps.minWidth ?? WINDOW_DEFAULTS.MIN_WIDTH;
     const minHeight = windowProps.minHeight ?? WINDOW_DEFAULTS.MIN_HEIGHT;
+    const width = windowProps.width ?? WINDOW_DEFAULTS.DEFAULT_WIDTH;
+    const height = windowProps.height ?? WINDOW_DEFAULTS.DEFAULT_HEIGHT;
+
+    if (group && windowProps.stack) {
+      // The siblings followed through inline transforms; the state update places the whole stack for real.
+      group.nodes.forEach((node, index) => { node.style.transform = group.transforms[index]; });
+      const bounds = zone
+        ? adjustWindowToViewport({ ...snapZoneRect(zone, viewport), minWidth, minHeight }, viewport)
+        : adjustWindowToViewport({ x: data.x, y: data.y, width, height, minWidth, minHeight }, viewport);
+      updateStackBounds(windowProps.stack, zone
+        ? { x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height }
+        : { x: bounds.x, y: bounds.y });
+      return;
+    }
+
+    if (detaching) unstackWindow(windowProps.id);
+    const targetId = target?.parentElement?.dataset.windowSurfaceId;
+    if (targetId) {
+      stackWindow(windowProps.id, targetId);
+      return;
+    }
 
     if (zone) {
       const target = snapZoneRect(zone, viewport);
@@ -156,15 +247,18 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
     const currentWindowData: WindowDimensions = {
       x: data.x,
       y: data.y,
-      width: windowProps.width ?? WINDOW_DEFAULTS.DEFAULT_WIDTH,
+      width,
       // A shaded window is only as tall as its title bar; clamping with its full height would push it up.
-      height: shaded ? data.node.offsetHeight : (windowProps.height ?? WINDOW_DEFAULTS.DEFAULT_HEIGHT),
+      height: shaded ? data.node.offsetHeight : height,
       minWidth,
       minHeight: shaded ? 0 : minHeight,
     };
     const adjusted = adjustWindowToViewport(currentWindowData, viewport);
     updateWindowPosition(windowProps.id, adjusted.x, adjusted.y);
-  }, [windowProps.id, windowProps.maximized, windowProps.width, windowProps.height, windowProps.minWidth, windowProps.minHeight, shaded, updateWindowPosition, updateWindowBounds]);
+  }, [
+    windowProps.id, windowProps.maximized, windowProps.width, windowProps.height, windowProps.minWidth, windowProps.minHeight, windowProps.stack,
+    shaded, updateWindowPosition, updateWindowBounds, updateStackBounds, stackWindow, unstackWindow,
+  ]);
 
   const handleResizeStop = useCallback<RndResizeCallback>((_e, _direction, ref, _delta, position) => {
     setIsInteracting(false);
@@ -188,8 +282,11 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
       minHeight: windowProps.minHeight ?? WINDOW_DEFAULTS.MIN_HEIGHT,
     };
     const adjusted = adjustWindowToViewport(currentWindowData, viewport);
-    updateWindowBounds(windowProps.id, { x: adjusted.x, y: adjusted.y, width: adjusted.width, height: adjusted.height });
-  }, [windowProps.id, windowProps.minWidth, windowProps.minHeight, updateWindowDimensions, updateWindowPosition, updateWindowBounds]);
+    const bounds = { x: adjusted.x, y: adjusted.y, width: adjusted.width, height: adjusted.height };
+    // A stacked window shares its frame: resizing it resizes the stack.
+    if (stacked && windowProps.stack) updateStackBounds(windowProps.stack, bounds);
+    else updateWindowBounds(windowProps.id, bounds);
+  }, [windowProps.id, windowProps.minWidth, windowProps.minHeight, windowProps.stack, stacked, updateWindowDimensions, updateWindowPosition, updateWindowBounds, updateStackBounds]);
 
   // Focus on press. The title bar itself focuses through onDragStart; its
   // buttons are excluded from dragging (WINDOW_DRAG_CANCEL), so they focus here
@@ -209,6 +306,21 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
       focusWindow(windowProps.id);
     }
   }, [focusWindow, windowProps.id, isActive]);
+
+  // A drag of a stacked tab takes the stack along, unless Shift is held to detach it.
+  const handleDragStart = useCallback<RndDragCallback>((e) => {
+    handleInteractionStartFocus();
+    detachRef.current = stacked && 'shiftKey' in e && Boolean((e as { shiftKey?: boolean }).shiftKey);
+    if (!stacked || detachRef.current) {
+      groupRef.current = null;
+      return;
+    }
+    const nodes = members
+      .filter((member) => member !== windowProps.id)
+      .map((member) => document.querySelector<HTMLElement>(`.window-surface[data-window-surface-id="${member}"]`)?.parentElement ?? null)
+      .filter((node): node is HTMLElement => node !== null);
+    groupRef.current = { nodes, transforms: nodes.map((node) => node.style.transform) };
+  }, [handleInteractionStartFocus, members, stacked, windowProps.id]);
 
   const calculatedWidth = typeof windowProps.width === 'number' ? windowProps.width : WINDOW_DEFAULTS.DEFAULT_WIDTH;
   const calculatedHeight = typeof windowProps.height === 'number' ? windowProps.height : WINDOW_DEFAULTS.DEFAULT_HEIGHT;
@@ -241,7 +353,7 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
           zIndex: windowProps.zIndex,
         }}
         onMouseDown={handleMouseDownFocus}
-        onDragStart={handleInteractionStartFocus}
+        onDragStart={handleDragStart}
         onDrag={handleDrag}
         onDragStop={handleDragStop}
         onResizeStart={handleInteractionStartFocus}
@@ -260,7 +372,10 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
         >
           {/* Title bar - fixed height */}
           <div
+            ref={titleRef}
             className="window-titlebar"
+            data-stacked={stacked || undefined}
+            style={stacked ? { marginLeft: tabOffset, minWidth: 0, maxWidth: `calc((100% - ${STACK_STRIP_MARGIN}px) / ${members.length})` } : undefined}
             onDoubleClick={handleTitleDoubleClick}
             onContextMenu={handleTitleContextMenu}
           >

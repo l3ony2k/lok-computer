@@ -311,6 +311,24 @@
     line-height: 1.4;
 }
 
+/* The planner's own answer: prose instead of a probability. */
+.ask-ai-direct-text {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ask-ai-direct-text p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+}
+
+.ask-ai-direct-note {
+    font-style: italic;
+}
+
 .ask-ai-best-stats {
     display: flex;
     flex-wrap: wrap;
@@ -709,14 +727,16 @@
 }
 
 /* One-line composer that grows with pasted text (height set in AskAiApp). */
-.ask-ai-question-input {
+/* The double :not(#_) outranks the classic skins' field padding, which would make one line taller than the Ask button. */
+.ask-ai-question-input:not(#_):not(#_) {
     min-width: 0;
-    height: auto;
-    min-height: 28px;
+    height: var(--control-height);
+    min-height: var(--control-height);
     max-height: 120px;
-    padding-top: 5px;
-    padding-bottom: 5px;
-    line-height: 1.35;
+    padding-top: 0;
+    padding-bottom: 0;
+    /* One line fills the control exactly (the border is 2px), so it matches the Ask button. */
+    line-height: calc(var(--control-height) - 2px);
     resize: none;
     user-select: text;
 }

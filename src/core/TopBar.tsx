@@ -12,7 +12,7 @@ const ActiveWindowName: React.FC = () => {
 
 /** Top bar for the lok layout; classic layouts move these controls into the taskbar. */
 export const TopBar: React.FC = React.memo(() => (
-  <div className="app-header h-[35px] text-sm flex items-center select-none">
+  <div className="app-header text-sm flex items-center select-none">
     <div className="app-header-start flex items-center min-w-0">
       <SystemMenuButton placement="top" />
       <ActiveWindowName />

@@ -37,7 +37,7 @@ export interface ThemeDefinition {
   chrome: ThemeChrome;
   /** Color schemes the theme implements. Single-scheme themes ignore the appearance preference. */
   schemes: readonly ColorScheme[];
-  /** Browser UI color (`<meta name="theme-color">`) per scheme. */
+  /** Browser UI color (`<meta name="theme-color">`) per scheme: the colour at the top of the page, so a phone's status bar blends into the bar under it. */
   themeColor: Readonly<Partial<Record<ColorScheme, string>>>;
   /** Label on the start button in the classic layout. */
   startLabel?: string;
@@ -51,6 +51,8 @@ export interface ThemeDefinition {
   loadStyles?: () => Promise<unknown>;
   /** CSS font shorthands warmed with the stylesheet so text never swaps after a switch. */
   fonts?: readonly string[];
+  /** Title tabs narrower than the frame: dropping one on another stacks the windows (BeOS). */
+  tabStacking?: boolean;
 }
 
 export interface ThemePreference {
@@ -180,8 +182,9 @@ export const THEMES: Readonly<Record<ThemeId, ThemeDefinition>> = {
     layout: 'lok',
     chrome: 'classic',
     schemes: ['light'],
-    themeColor: { light: '#5a8e8e' },
+    themeColor: { light: '#d8d8d8' },
     menuLabel: 'lok',
+    tabStacking: true,
     credit: { label: 'beos-css by mtechnic', url: 'https://beta.mtechnic.me/' },
     loadStyles: () => Promise.all([import('@/themes/classic.css'), import('@/themes/beos/theme.css')]),
   },
@@ -193,7 +196,7 @@ export const THEMES: Readonly<Record<ThemeId, ThemeDefinition>> = {
     layout: 'palm',
     chrome: 'classic',
     schemes: ['light'],
-    themeColor: { light: '#c5cfbd' },
+    themeColor: { light: '#000000' },
     menuLabel: 'lok',
     loadStyles: () => Promise.all([import('@/themes/classic.css'), import('@/themes/palm/theme.css')]),
     fonts: ['11px "Pixelated MS Sans Serif"', 'bold 11px "Pixelated MS Sans Serif"'],

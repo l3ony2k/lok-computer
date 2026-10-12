@@ -197,6 +197,15 @@ describe("Jev planner replies", () => {
       .toEqual({ kind: "refuse", message: "Ask about a specific text instead.", suggestion: null });
   });
 
+  test("passes direct answers through and requires their text", () => {
+    expect(normalizePlannerReply({ kind: "answer", text: "  The Page of Cups opens the story.\n\nThen work.  ", note: "Jev does not write readings." }))
+      .toEqual({ kind: "answer", text: "The Page of Cups opens the story.\n\nThen work.", note: "Jev does not write readings." });
+    expect(normalizePlannerReply({ kind: "answer", text: "Forty-two." })).toEqual({ kind: "answer", text: "Forty-two.", note: null });
+    expectInvalid(() => normalizePlannerReply({ kind: "answer", text: "   " }));
+    // A plan's "answer" is its primary question object, never a direct answer.
+    expect(normalizePlannerReply({ kind: "answer", answer: { key: "a", type: "noul", instructions: "Is `subject` round?" }, state: "x" }).kind).toBe("plan");
+  });
+
   test("returns plans and rejects unknown kinds", () => {
     const reply = normalizePlannerReply(plannerPlan);
     expect(reply.kind).toBe("plan");
@@ -327,6 +336,8 @@ describe("Jev pipeline", () => {
     expect(needs).toMatchObject({ kind: "needs_input", fields: [{ key: "email" }], planner: { model: "planner-test" } });
     const refused = await ask({ kind: "refuse", message: "No.", suggestion: "Try this." });
     expect(refused).toMatchObject({ kind: "refuse", message: "No.", suggestion: "Try this." });
+    const answered = await ask({ kind: "answer", text: "Here is the reading.", note: "Jev judges; it does not write." });
+    expect(answered).toMatchObject({ kind: "answer", text: "Here is the reading.", note: "Jev judges; it does not write.", planner: { model: "planner-test" } });
   });
 
   test("sends follow-up inputs to the planner as supplied state", async () => {

@@ -9,7 +9,9 @@
  *   directly and up to four supporting questions for analytics;
  * - `needs_input`: the question refers to material the person has not given
  *   (or personal facts only they know), with 1-3 fields to ask for;
- * - `refuse`: Jev cannot judge it (generation, arithmetic, no answer space).
+ * - `answer`: Jev has nothing to judge (writing, explaining, arithmetic), so
+ *   the planner, a language model itself, answers the person directly.
+ * - `refuse`: the question is empty or one the planner must not help with.
  * This module validates the reply, calls Jev, checks the primary choice
  * against option-order bias, and forms the best answer with evidence.
  *
@@ -43,6 +45,8 @@ export const LIMITS = {
   inputFields: 3,
   inputs: 6,
   inputChars: 8000,
+  /** A direct answer from the planner. */
+  answerChars: 4000,
 };
 
 /** Confidence bands for the best answer; TypeSafe suggests not acting below 0.5. */
@@ -94,9 +98,12 @@ QUESTION = {"key": "<snake_case>", "label": "<2-5 word title>", "type": "noul" |
 Personal decisions ("Should I quit my job?", "Is my plan realistic?", "Is my essay good?") need the person's situation or material: ask for it unless the question already describes it.
 Ask for 1-3 fields, only what the judgment needs. "required": false means you could answer without it, but better with it. Never ask for facts you can supply from general knowledge.
 
-3. REFUSE, when Jev cannot answer:
-{"kind": "refuse", "message": "<one sentence on why>", "suggestion": "<a rephrased question Jev could answer>"}
-Refuse requests to write, summarize, translate, list, or explain something (Jev does not generate text); exact arithmetic, counting, or date calculations; and questions with no judgeable answer.
+3. ANSWER, when Jev has nothing to judge: requests to write, summarize, translate, list, explain, or interpret something (a poem, a tarot reading, what a dream means, a recipe), exact arithmetic, counting, or date calculations, and questions with no judgeable answer. Then answer the person yourself, as a knowledgeable friend would:
+{"kind": "answer", "text": "<the answer: plain text, one to four short paragraphs separated by blank lines, no markdown, no headings>", "note": "<one short sentence on why Jev did not judge this>"}
+Answer fully but briefly. For an interpretation (tarot, dreams, horoscopes) give the reading in the spirit it was asked for.
+
+4. REFUSE, only when the question is empty or unintelligible, or asks for something you must not help with:
+{"kind": "refuse", "message": "<one sentence on why>", "suggestion": "<a rephrased question Jev could answer, or null>"}
 
 Choosing the answer type:
 - noul for a clear yes/no condition. Phrase it so that yes means the condition holds.
@@ -127,10 +134,10 @@ Q: Is this email a phishing attempt?
 Q: Should I quit my job?
 {"kind": "needs_input", "message": "That depends on your situation. Tell me a little about it.", "fields": [{"key": "situation", "label": "Your situation", "placeholder": "What is pushing you to leave, and what keeps you there?", "multiline": true, "required": true}, {"key": "plan", "label": "Plan after quitting", "placeholder": "e.g. another offer, savings for six months, no plan yet", "multiline": false, "required": false}]}
 Q: Write me a poem about autumn.
-{"kind": "refuse", "message": "Jev judges and chooses; it does not write text.", "suggestion": "Which season do poets write about most: spring, summer, autumn, or winter?"}`;
+{"kind": "answer", "text": "The maples let their letters go,\nred envelopes the wind delivers\nto gutters, ponds, and anyone\nstill walking slowly by the rivers.", "note": "Jev judges and chooses; it does not write text, so the planner wrote this."}`;
 
 const SUPPLIED_STATE_NOTE = 'SUPPLIED STATE (Jev receives exactly this as the state, merged with any extra background object you return; refer to its fields in backticks):';
-const ANSWER_ANYWAY_NOTE = 'The person chose to continue without giving more input. Do not return "needs_input": return a plan from what is available, or refuse if the question cannot be judged at all.';
+const ANSWER_ANYWAY_NOTE = 'The person chose to continue without giving more input. Do not return "needs_input": return a plan from what is available, or answer it yourself if the question cannot be judged at all.';
 
 const isPlainObject = (value) => Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 
@@ -389,6 +396,12 @@ const normalizeInputRequest = (raw) => {
   };
 };
 
+const normalizeDirectAnswer = (raw) => {
+  const text = clipText(raw.text ?? raw.reply ?? raw.message, LIMITS.answerChars);
+  if (!text) throw invalidPlan('An "answer" reply must carry the answer in "text".');
+  return { kind: 'answer', text, note: clipText(raw.note, 300) };
+};
+
 const normalizeRefusal = (raw) => ({
   kind: 'refuse',
   message: clipText(raw.message ?? raw.error, 400) ?? 'Jev cannot judge that question.',
@@ -396,8 +409,9 @@ const normalizeRefusal = (raw) => ({
 });
 
 /**
- * Validates a planner reply into `{kind: 'plan', plan}`, `{kind: 'needs_input', ...}`
- * or `{kind: 'refuse', ...}`. Invalid replies throw with code `invalid_plan`.
+ * Validates a planner reply into `{kind: 'plan', plan}`, `{kind: 'needs_input', ...}`,
+ * `{kind: 'answer', text, note}` or `{kind: 'refuse', ...}`. Invalid replies throw
+ * with code `invalid_plan`.
  */
 export const normalizePlannerReply = (raw, { suppliedState = null, answerAnyway = false } = {}) => {
   if (!isPlainObject(raw)) throw invalidPlan('The reply must be a JSON object.');
@@ -406,6 +420,10 @@ export const normalizePlannerReply = (raw, { suppliedState = null, answerAnyway 
   if (kind === 'refuse' || kind === 'refusal' || (!kind && typeof raw.error === 'string' && raw.error.trim())) {
     return normalizeRefusal(raw);
   }
+  // A plan carries its answer QUESTION under "answer"; a direct answer carries prose under "text".
+  if (kind === 'answer' && typeof raw.text === 'string') {
+    return normalizeDirectAnswer(raw);
+  }
   if (kind === 'needs_input' || kind === 'need_input') {
     if (answerAnyway) throw invalidPlan(ANSWER_ANYWAY_NOTE);
     return normalizeInputRequest(raw);
@@ -413,7 +431,7 @@ export const normalizePlannerReply = (raw, { suppliedState = null, answerAnyway 
   if (kind === 'plan' || raw.answer !== undefined || raw.questions !== undefined) {
     return { kind: 'plan', plan: normalizePlan(raw, suppliedState) };
   }
-  throw invalidPlan('Set "kind" to "plan", "needs_input", or "refuse".');
+  throw invalidPlan('Set "kind" to "plan", "needs_input", "answer" (with "text"), or "refuse".');
 };
 
 /** Pulls the first JSON object out of a model reply, tolerating code fences and prose. */
@@ -814,7 +832,7 @@ export const planQuestions = async (body, env, fetchImpl = (...args) => fetch(..
 
 /**
  * Full pipeline for one request. A supplied `plan` skips the planner;
- * otherwise a `needs_input` or `refuse` outcome returns without calling Jev.
+ * otherwise a `needs_input`, `answer` or `refuse` outcome returns without calling Jev.
  */
 export const runJevRequest = async (body, env, fetchImpl = (...args) => fetch(...args)) => {
   const timing = { plannerMs: null, jevMs: 0 };

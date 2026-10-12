@@ -146,7 +146,7 @@ export default {
       });
     }
 
-    // Ask AI: decide how Jev should answer a question (plan, ask for input, or refuse), without calling Jev.
+    // Ask AI: decide how Jev should answer a question (plan, ask for input, answer it directly, or refuse), without calling Jev.
     if (url.pathname === '/api/jev/plan') {
       if (request.method !== 'POST') {
         return makeMethodNotAllowedResponse('POST');
@@ -155,7 +155,7 @@ export default {
         if (await isRateLimited(request, env.JEV_RATE_LIMITER)) return makeRateLimitedResponse();
         const started = Date.now();
         const body = await readJsonBody(request);
-        // `kind` is "plan", "needs_input" (ask the person for more), or "refuse".
+        // `kind` is "plan", "needs_input" (ask the person for more), "answer" (the planner answered itself), or "refuse".
         const { plannerModel, ...outcome } = await planQuestions(body ?? {}, env);
         return makeJsonResponse({
           ...outcome,

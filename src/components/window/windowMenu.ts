@@ -12,6 +12,8 @@ export interface WindowMenuActions {
   close: () => void;
   /** Copies the deep link; null when the window has no route. Omit to leave the entry out. */
   share?: (() => void) | null;
+  /** Takes a stacked window out of its stack (BeOS). Omit to leave the entry out. */
+  detach?: () => void;
 }
 
 /** The window menu, shared by the title bar's icon menu, its right-click, and the taskbar. */
@@ -25,6 +27,9 @@ export const buildWindowMenu = (window: DesktopWindow, actions: WindowMenuAction
       : { label: 'Maximize', action: actions.maximize },
     { label: 'Shade', checked: Boolean(window.shaded), action: actions.toggleShade },
   ];
+  if (actions.detach && window.stack) {
+    items.push({ label: 'Detach from stack', action: actions.detach });
+  }
   if (actions.share !== undefined) {
     items.push({ type: 'divider' }, { label: 'Share Window', disabled: !actions.share, action: actions.share ?? undefined });
   }

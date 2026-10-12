@@ -14,7 +14,7 @@ export const PalmBar: React.FC = React.memo(() => {
   const { windows, activeWindow } = useWindowState();
   const active = windows.find((window) => window.id === activeWindow && !window.minimized);
   return (
-    <div className="app-header palm-bar h-[35px] text-sm flex items-center select-none">
+    <div className="app-header palm-bar text-sm flex items-center select-none">
       <div className="app-header-start flex items-center min-w-0">
         <SystemMenuButton placement="top" />
         <span className="palm-bar-title truncate" aria-live="polite">{active?.title ?? 'lok.computer'}</span>

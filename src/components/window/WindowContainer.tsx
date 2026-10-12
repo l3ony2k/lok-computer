@@ -1,10 +1,11 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import { toast } from 'sonner';
 import { useWindowActions, useWindowState, type DesktopWindow } from '@/hooks/useWindowManager';
 import { DraggableWindow } from './DraggableWindow';
 import { useWindowTransitions } from '@/hooks/useWindowTransitions';
 import { DEFAULT_WINDOW_SETTINGS, useUserSettings } from '@/hooks/useUserSettings';
 import { useApplicationLauncher } from '@/hooks/useApplicationLauncher';
+import { stackOrder } from '@/lib/windowStacks';
 
 export const WindowContainer = () => {
   const { windows, activeWindow } = useWindowState();
@@ -41,6 +42,17 @@ export const WindowContainer = () => {
     }
   }, [maximizeWindow, openApplication, restoreWindow, toggleWindowShade, updateSetting]);
 
+  // Tab strips: each stack's members in order, as one string so a memoized window re-renders only when its strip changes.
+  const stackMembers = useMemo(() => {
+    const strips = new Map<string, string>();
+    for (const window of windows) {
+      if (window.stack && !strips.has(window.stack)) {
+        strips.set(window.stack, stackOrder(windows, window.stack).map((member) => member.id).join(','));
+      }
+    }
+    return strips;
+  }, [windows]);
+
   return (
     <div className="window-layer h-full w-full relative">
       {windows.map((window) => (
@@ -49,6 +61,7 @@ export const WindowContainer = () => {
           window={window}
           isActive={activeWindow === window.id}
           isTransitioning={isWindowTransitioning(window.id)}
+          stackMembers={window.stack ? stackMembers.get(window.stack) ?? null : null}
           onTitleDoubleClick={handleTitleDoubleClick}
         />
       ))}

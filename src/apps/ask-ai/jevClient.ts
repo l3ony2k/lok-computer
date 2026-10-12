@@ -2,7 +2,8 @@
  * Client for the Ask AI Worker endpoints (see jev.js at the repository root).
  *
  * `planJev` sends a question to the planner, which replies with a plan, a
- * request for more input, or a refusal. `answerJev` sends a plan to Jev and
+ * request for more input, a direct answer (when Jev has nothing to judge the
+ * planner, a language model itself, answers), or a refusal. `answerJev` sends a plan to Jev and
  * returns the best answer with per-question evidence. Two calls let the UI
  * show the plan while Jev is still answering.
  */
@@ -47,6 +48,14 @@ export interface Refusal {
   suggestion: string | null;
 }
 
+/** The planner's own answer, for questions Jev cannot judge (writing, explaining, arithmetic). */
+export interface DirectAnswer {
+  /** Plain text; paragraphs are separated by blank lines. */
+  text: string;
+  /** Why Jev did not judge it. */
+  note: string | null;
+}
+
 interface PlannerMeta {
   planner: { model: string } | null;
   timing: { plannerMs: number };
@@ -55,6 +64,7 @@ interface PlannerMeta {
 export type JevPlanResponse =
   | ({ kind: 'plan'; plan: JevPlan } & PlannerMeta)
   | ({ kind: 'needs_input' } & InputRequest & PlannerMeta)
+  | ({ kind: 'answer' } & DirectAnswer & PlannerMeta)
   | ({ kind: 'refuse' } & Refusal & PlannerMeta);
 
 interface BaseProperty {

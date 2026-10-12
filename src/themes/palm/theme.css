@@ -270,6 +270,8 @@ html[data-theme="palm"][data-layout]:not(#_) #root {
     }
 
     html[data-theme="palm"][data-layout]:not(#_) .desktop-root {
+        --safe-top: 0px;
+        --safe-bottom: 0px;
         width: 392px;
         height: min(760px, calc(100dvh - 40px));
         border: 12px solid #2a2a2a;
@@ -326,8 +328,8 @@ html[data-theme="palm"][data-layout]:not(#_) .window-snap-preview {
 /* ---------- Bars ---------- */
 
 html[data-theme="palm"][data-layout]:not(#_) .palm-bar {
-    height: var(--c-menubar-height);
-    min-height: var(--c-menubar-height);
+    height: calc(var(--c-menubar-height) + var(--safe-top));
+    min-height: calc(var(--c-menubar-height) + var(--safe-top));
 }
 
 html[data-theme="palm"][data-layout]:not(#_) .palm-bar-title {
@@ -336,10 +338,10 @@ html[data-theme="palm"][data-layout]:not(#_) .palm-bar-title {
 }
 
 html[data-theme="palm"][data-layout]:not(#_) .palm-tabbar {
-    height: var(--taskbar-height);
-    min-height: var(--taskbar-height);
+    height: calc(var(--taskbar-height) + var(--safe-bottom));
+    min-height: calc(var(--taskbar-height) + var(--safe-bottom));
     gap: 2px;
-    padding: 3px;
+    padding: 3px 3px calc(3px + var(--safe-bottom));
     background: var(--palm-lcd);
     border-top: 1px solid #000000;
 }
@@ -383,11 +385,6 @@ html[data-theme="palm"][data-layout]:not(#_) .desktop-icons-layer:not([data-free
     gap: 6px 0;
 }
 
-html[data-theme="palm"][data-layout]:not(#_) .desktop-icon-button {
-    width: 84px;
-    height: 72px;
-}
-
 html[data-theme="palm"][data-layout]:not(#_) .desktop-icon-label {
     font-weight: 400;
 }
@@ -395,7 +392,7 @@ html[data-theme="palm"][data-layout]:not(#_) .desktop-icon-label {
 /* ---------- Menus and content ---------- */
 
 html[data-theme="palm"][data-layout]:not(#_) .app-menu-panel[data-placement="top"] {
-    top: var(--c-menubar-height);
+    top: calc(var(--c-menubar-height) + var(--safe-top));
     left: 0;
 }
 

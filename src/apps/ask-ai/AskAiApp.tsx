@@ -11,6 +11,7 @@ import {
   answerJev,
   planJev,
   type ChoiceProperty,
+  type DirectAnswer,
   type InputRequest,
   type JevAnswer,
   type JevPlan,
@@ -21,7 +22,7 @@ import {
 } from './jevClient';
 import './ask-ai.css';
 
-type RunStatus = 'planning' | 'needs_input' | 'refused' | 'asking' | 'done' | 'error';
+type RunStatus = 'planning' | 'needs_input' | 'answered' | 'refused' | 'asking' | 'done' | 'error';
 
 interface AskRun {
   id: string;
@@ -31,6 +32,8 @@ interface AskRun {
   /** Answers to the planner's follow-up fields. */
   inputs?: Record<string, string>;
   request?: InputRequest;
+  /** The planner answered itself: nothing for Jev to judge. */
+  direct?: DirectAnswer;
   refusal?: Refusal;
   plan?: JevPlan;
   plannerModel?: string;
@@ -59,11 +62,13 @@ const EXAMPLES = [
 
 const HELP_TEXT = 'This is a thinking machine. It reads your question, works out what kind of answer it needs, '
   + 'and asks Jev, a model that answers with probabilities instead of prose. You get the best answer and how sure it is. '
+  + 'When there is nothing to judge (a poem, a reading, a sum), the planner answers in prose itself. '
   + 'Powered by Jev and GPT.';
 
 const STATUS_TEXT: Record<RunStatus, string> = {
   planning: 'Planning',
   needs_input: 'More detail needed',
+  answered: 'Answered by the planner',
   refused: 'Jev cannot answer this',
   asking: 'Asking Jev',
   done: 'Answered',
@@ -251,6 +256,32 @@ const BestAnswerCard = ({ answer }: { answer: JevAnswer }) => {
   );
 };
 
+/**
+ * The planner's own answer. Jev had nothing to judge (a reading, a poem, a
+ * sum), so there is no probability and no analytics: the text and a note on
+ * why it came from the planner.
+ */
+const DirectAnswerCard = ({ answer, plannerModel, plannerMs }: { answer: DirectAnswer; plannerModel?: string; plannerMs?: number }) => (
+  <section className="ask-ai-property ask-ai-best ask-ai-direct" aria-label="Answer">
+    <header>
+      <span className="ask-ai-property-title">Answer</span>
+      <span className="ask-ai-type">Planner</span>
+    </header>
+    <div className="ask-ai-direct-text">
+      {answer.text.split(/\n{2,}/).map((paragraph, index) => (
+        <p key={index}>{paragraph.split('\n').map((line, lineIndex) => (
+          <React.Fragment key={lineIndex}>{lineIndex > 0 && <br />}{line}</React.Fragment>
+        ))}</p>
+      ))}
+    </div>
+    <footer className="ask-ai-meta">
+      {answer.note && <span className="ask-ai-direct-note">{answer.note}</span>}
+      {plannerModel && <span>planner {plannerModel}</span>}
+      {plannerMs !== undefined && <span>{plannerMs}ms</span>}
+    </footer>
+  </section>
+);
+
 const Notes = ({ answer }: { answer: JevAnswer }) => (
   answer.notes.length ? (
     <ul className="ask-ai-notes">
@@ -420,13 +451,18 @@ export const AskAiApp: React.FC<AskAiAppProps> = ({ ask: handoff, onPropsChange 
     scrollIntoViewWithin(node as HTMLElement | null, { block: settled ? 'start' : 'end' });
   }, [latestId, latestStatus]);
 
-  // Grow the composer with its content; it scrolls only past the cap.
+  // Grow the composer with its content; it scrolls only past the cap. The
+  // border is measured rather than assumed: skins draw fields with no border
+  // (a bevel instead), and a fixed allowance made one line taller than the
+  // Ask button beside it.
   useEffect(() => {
     const input = promptRef.current;
     if (!input) return;
     input.style.height = 'auto';
-    input.style.height = `${Math.min(input.scrollHeight + 2, COMPOSER_MAX_HEIGHT)}px`;
-    input.style.overflowY = input.scrollHeight + 2 > COMPOSER_MAX_HEIGHT ? 'auto' : 'hidden';
+    const border = input.offsetHeight - input.clientHeight;
+    const needed = input.scrollHeight + border;
+    input.style.height = `${Math.min(needed, COMPOSER_MAX_HEIGHT)}px`;
+    input.style.overflowY = needed > COMPOSER_MAX_HEIGHT ? 'auto' : 'hidden';
   }, [question]);
 
   /**
@@ -463,6 +499,10 @@ export const AskAiApp: React.FC<AskAiAppProps> = ({ ask: handoff, onPropsChange 
             status: 'needs_input',
             request: { message: outcome.message, fields: outcome.fields, optional: outcome.optional },
           });
+          return;
+        }
+        if (outcome.kind === 'answer') {
+          updateRun(run.id, { ...meta, status: 'answered', direct: { text: outcome.text, note: outcome.note } });
           return;
         }
         if (outcome.kind === 'refuse') {
@@ -694,6 +734,10 @@ export const AskAiApp: React.FC<AskAiAppProps> = ({ ask: handoff, onPropsChange 
                   onSubmit={(values) => continueRun(run, values)}
                   onAnswerAnyway={() => continueRun(run, run.inputs ?? {}, true)}
                 />
+              )}
+
+              {run.status === 'answered' && run.direct && (
+                <DirectAnswerCard answer={run.direct} plannerModel={run.plannerModel} plannerMs={run.plannerMs} />
               )}
 
               {run.status === 'refused' && run.refusal && (

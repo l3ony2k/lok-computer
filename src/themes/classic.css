@@ -433,6 +433,12 @@ html[data-chrome="classic"]:not(#_) :where(.search-input, input.arena-toolbar-co
     min-height: var(--c-field-height, 21px);
 }
 
+/* A field beside buttons (toolbar and footer rows, joined controls) takes the button height, so the row reads as one line. */
+html[data-chrome="classic"]:not(#_) :where(.app-toolbar-row, .app-footer-row, .app-joined-control) :where(.search-input, input.arena-toolbar-control, select.arena-toolbar-control):not(textarea) {
+    height: var(--c-control-height);
+    min-height: var(--c-control-height);
+}
+
 html[data-chrome="classic"]:not(#_) :where(.search-input, input.arena-toolbar-control):disabled {
     background-color: var(--c-field-bg-disabled, var(--c-face));
 }
@@ -838,9 +844,11 @@ html[data-chrome="classic"]:not(#_) .calendar-panel .bg-accent {
 /* ---------- Menu bar (lok layout only renders .app-header) ---------- */
 
 html[data-chrome="classic"]:not(#_) .app-header {
-    height: var(--c-menubar-height, 22px);
-    min-height: var(--c-menubar-height, 22px);
+    height: calc(var(--c-menubar-height, 22px) + var(--safe-top));
+    min-height: calc(var(--c-menubar-height, 22px) + var(--safe-top));
     padding: var(--c-menubar-padding, 0 4px);
+    /* A phone's status bar sits in this strip; the bar's background paints under it. */
+    border-top: var(--safe-top) solid transparent;
     gap: 0;
     color: var(--c-menubar-fg, var(--text-color));
     background: var(--c-menubar-bg, var(--c-face));
@@ -893,12 +901,12 @@ html[data-chrome="classic"]:not(#_) .app-header + .desktop-container {
 
 /* Pull-down menus hang from the bar itself. */
 html[data-chrome="classic"]:not(#_) .app-menu-panel[data-placement="top"] {
-    top: var(--c-menubar-height, 22px);
+    top: calc(var(--c-menubar-height, 22px) + var(--safe-top));
     left: var(--c-menubar-menu-left, 0px);
 }
 
 html[data-chrome="classic"]:not(#_) .calendar-panel[data-placement="top"] {
-    top: var(--c-menubar-height, 22px);
+    top: calc(var(--c-menubar-height, 22px) + var(--safe-top));
     right: 0;
 }
 
@@ -907,6 +915,8 @@ html[data-chrome="classic"]:not(#_) .calendar-panel[data-placement="top"] {
 html[data-chrome="classic"]:not(#_) .taskbar {
     gap: 4px;
     padding: var(--c-taskbar-padding, 2px 2px 2px 2px);
+    /* The home indicator sits in this strip; the bar's background paints under it. */
+    border-bottom: var(--safe-bottom) solid transparent;
     color: var(--c-taskbar-fg, var(--text-color));
     background: var(--c-taskbar-bg);
     border-top: var(--c-taskbar-border-top);

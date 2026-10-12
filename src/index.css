@@ -50,6 +50,9 @@
         --desktop-label-edge: rgba(255, 255, 255, 0.94);
         --chrome-height: 35px;
         --control-height: 24px;
+        /* A phone's status bar and home indicator (viewport-fit=cover); 0 elsewhere. The bars pad themselves by these. */
+        --safe-top: env(safe-area-inset-top, 0px);
+        --safe-bottom: env(safe-area-inset-bottom, 0px);
 
         /* Theme-level tokens. Every theme stylesheet overrides these under :root[data-theme]. */
         --font-ui: ui-monospace, Menlo, Monaco, "Cascadia Mono", "Segoe UI Mono", "Roboto Mono", "Oxygen Mono", "Ubuntu Mono", "Source Code Pro", "Fira Mono", "Droid Sans Mono", "Consolas", "Courier New", monospace;
@@ -179,6 +182,21 @@
     :where(button, a, input, textarea, select, [tabindex]):focus-visible {
         outline: 2px solid var(--focus-color);
         outline-offset: -2px;
+    }
+
+    /*
+     * Text fields match :focus-visible even after a click, so the ring sat on
+     * top of a field the person had just tapped. src/lib/inputModality.ts
+     * marks keyboard use on the root; until then fields show no ring in any
+     * theme (the double :not(#_) outranks the skins' own focus rules).
+     */
+    html:not(#_):not(#_):not([data-input="keyboard"]) :where(
+        input:not([type="checkbox"], [type="radio"], [type="range"], [type="button"], [type="submit"], [type="reset"], [type="file"]),
+        textarea,
+        select,
+        [contenteditable="true"]
+    ):focus-visible {
+        outline: none;
     }
 
     :where(button, input, textarea, select) {
@@ -329,8 +347,8 @@
     }
 
     .app-header {
-        min-height: var(--chrome-height);
-        padding: 0 10px;
+        min-height: calc(var(--chrome-height) + var(--safe-top));
+        padding: var(--safe-top) 10px 0;
         gap: 10px;
         color: var(--text-color);
         background: var(--header-bg);
@@ -576,9 +594,9 @@
 
     .taskbar {
         @apply border-t border-border flex items-center select-none;
-        height: var(--taskbar-height);
-        min-height: var(--taskbar-height);
-        padding: 0 10px;
+        height: calc(var(--taskbar-height) + var(--safe-bottom));
+        min-height: calc(var(--taskbar-height) + var(--safe-bottom));
+        padding: 0 10px var(--safe-bottom);
         gap: 6px;
         background: var(--header-bg);
     }
@@ -648,24 +666,29 @@
     }
 
     .app-menu-panel[data-placement="top"] {
-        top: calc(var(--chrome-height) + 8px);
+        top: calc(var(--chrome-height) + var(--safe-top) + 8px);
         left: 10px;
     }
 
     .calendar-panel[data-placement="top"] {
-        top: calc(var(--chrome-height) + 8px);
+        top: calc(var(--chrome-height) + var(--safe-top) + 8px);
         right: 10px;
     }
 
     .app-menu-panel[data-placement="bottom"] {
-        bottom: calc(var(--taskbar-height) + 2px);
+        bottom: calc(var(--taskbar-height) + var(--safe-bottom) + 2px);
         left: 2px;
         display: flex;
     }
 
     .calendar-panel[data-placement="bottom"] {
-        bottom: calc(var(--taskbar-height) + 2px);
+        bottom: calc(var(--taskbar-height) + var(--safe-bottom) + 2px);
         right: 2px;
+    }
+
+    /* The classic layout has no bar at the top: keep the desktop itself below the status bar. */
+    html[data-layout="classic"] .desktop-root {
+        padding-top: var(--safe-top);
     }
 
     .app-menu-panel[data-placement="bottom"] .app-submenu {
