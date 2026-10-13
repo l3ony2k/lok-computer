@@ -1,7 +1,8 @@
 name: CI
 
 # Runs the same four checks as a local change (AGENTS.md), with the bun release
-# Cloudflare Pages builds with, so a lockfile Pages cannot read fails here too.
+# pinned in package.json's packageManager field. Cloudflare Pages builds with the
+# BUN_VERSION set on the Pages project, which must match it.
 on:
   push:
     branches: [main]
@@ -26,7 +27,7 @@ jobs:
           node-version: 22
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.2.15
+          bun-version-file: package.json
       - run: bun install --frozen-lockfile
       - run: bun run lint
       - run: bun run typecheck

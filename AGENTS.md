@@ -12,9 +12,9 @@ bun run typecheck # tsc over src, then the Worker and Pages function with their 
 bun test         # Run architecture and behavior tests
 ```
 
-Run all four before finishing a change. GitHub Actions (`.github/workflows/ci.yml`) runs the same four under bun 1.2.15 on every push to `main` and every pull request; keep it in step when the checks change.
+Run all four before finishing a change. GitHub Actions (`.github/workflows/ci.yml`) runs the same four under the pinned bun on every push to `main` and every pull request; keep it in step when the checks change.
 
-Cloudflare Pages builds the frontend on every push to `main` with `bun install --frozen-lockfile` under **bun 1.2.15**. Never commit a `bun.lockb` written by a newer bun: 1.2.15 cannot parse it and the build fails. Regenerate the lockfile with that exact release (download `bun-v1.2.15` from GitHub and run its `bun install`), or set `BUN_VERSION` on the Pages project first. The Worker (`worker/`) is deployed by hand with `bunx wrangler deploy`, before the push when anything in `worker/` or `wrangler.toml` changed.
+**One bun version everywhere.** `package.json`'s `packageManager` (`bun@1.4.3`) pins it: CI reads it, and Cloudflare Pages builds every push with `bun install --frozen-lockfile` under the `BUN_VERSION` variable set on the Pages project (Production and Preview). Install with that release (`bunx bun@<version> install`), and commit only a `bun.lock` it wrote: an older bun cannot read a newer lockfile and the Pages build fails. To upgrade, set the new `BUN_VERSION` in both Pages environments first, then change `packageManager`, regenerate `bun.lock`, and run the four checks in one commit. The Worker (`worker/`) is deployed by hand with `bunx wrangler deploy`, before the push when anything in `worker/` or `wrangler.toml` changed.
 
 Path alias `@/` maps to `./src/`.
 

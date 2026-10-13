@@ -46,7 +46,7 @@ A small operating system in your browser, for curiosity and creation.
 
 ## Running it locally
 
-You need [Bun](https://bun.sh). Use **1.2.15** for `bun install`: Cloudflare Pages builds with that release, and a newer Bun rewrites `bun.lockb` in a format 1.2.15 can't read.
+You need [Bun](https://bun.sh), at the version pinned in `package.json` (`packageManager`). An older Bun can't read the `bun.lock` a newer one writes.
 
 ```bash
 bun install --frozen-lockfile
@@ -68,7 +68,7 @@ bun test
 bun run build
 ```
 
-[CI](.github/workflows/ci.yml) runs the same four with Bun 1.2.15 on every push to `main` and every pull request.
+[CI](.github/workflows/ci.yml) runs the same four with the pinned Bun on every push to `main` and every pull request.
 
 ## Deploying
 
