@@ -5,16 +5,23 @@ const incrementRequestCount = mock(async () => undefined);
 const setCachedData = mock(async () => undefined);
 const cacheDebugLog = mock(() => undefined);
 
+// Bun's module mocks are process-wide and outlive this file, so each one keeps
+// the real module's other exports; later test files import the same modules.
+const realStorage = await import('@/lib/storage');
+const realDebug = await import('@/lib/debug');
+const realOnlineStatus = await import('@/hooks/useOnlineStatus');
+
 mock.module('@/lib/storage', () => ({
+  ...realStorage,
   getCachedData,
   incrementRequestCount,
   setCachedData,
 }));
 
-mock.module('@/lib/debug', () => ({ cacheDebugLog }));
+mock.module('@/lib/debug', () => ({ ...realDebug, cacheDebugLog }));
 
 let online = true;
-mock.module('@/hooks/useOnlineStatus', () => ({ isOnline: () => online }));
+mock.module('@/hooks/useOnlineStatus', () => ({ ...realOnlineStatus, isOnline: () => online }));
 
 const { cachedRequest, OfflineError, isOfflineError } = await import('@/lib/cachedRequest');
 

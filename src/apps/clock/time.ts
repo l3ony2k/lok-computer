@@ -181,7 +181,15 @@ export const formatZoneTime = (id: string, date: Date, withSeconds = false): str
   formatter(withSeconds ? 'clock' : 'time', id).format(date);
 
 /** "Sat 11 Oct" in `id`. */
-export const formatZoneDate = (id: string, date: Date): string => formatter('date', id).format(date);
+/**
+ * "Wed 1 Jul". Built from the parts because en-GB punctuation differs between
+ * ICU releases (newer ones write "Wed, 1 Jul"), so browsers would disagree.
+ */
+export const formatZoneDate = (id: string, date: Date): string => {
+  const parts = formatter('date', id).formatToParts(date);
+  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((entry) => entry.type === type)?.value ?? '';
+  return `${part('weekday')} ${part('day')} ${part('month')}`;
+};
 
 const readEntry = (entry: unknown): { id: unknown; label: unknown } => {
   if (typeof entry === 'string') return { id: entry, label: undefined };
