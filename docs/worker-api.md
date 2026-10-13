@@ -12,7 +12,7 @@ Browser App
      └── Worker API calls (authenticated services)
             │
             ▼
-     Cloudflare Worker (worker.js)
+     Cloudflare Worker (worker/worker.js)
             │
             ├── /api/jev/plan → planner LLM (plan, ask for input, or refuse)
             ├── /api/jev → planner LLM + TypeSafe Jev (best answer + analytics)
@@ -101,15 +101,17 @@ The three proxies share the `PROXY_RATE_LIMITER` binding in `wrangler.toml` (60 
 
 ```toml
 name = "lok-computer-worker"
-main = "worker.js"
+main = "worker/worker.js"
 compatibility_date = "2025-05-15"
-account_id = "your-account-id"
 
 [vars]
 JEV_MODEL = "jev-latest"
 JEV_PLANNER_MODEL = "gpt-6-luna"
 FEDI_INSTANCE = "https://rex.cat"
+NEODB_USERNAME = "lok"
 ```
+
+There is no `account_id`: wrangler deploys to the logged-in account, or to `CLOUDFLARE_ACCOUNT_ID` when the login reaches several. `NEODB_USERNAME` is the NeoDB user whose shelf `/api/neodb/shelf` reads; without it the route answers 500.
 
 `JEV_PLANNER_MODEL` sets the Ask AI planner (`gpt-6-luna` on HyprLab) and is required; without it the planner answers 503. `JEV_PLANNER_REASONING_EFFORT` sets the planner's `reasoning_effort` (default `none`: planning is a short structured task, and gpt-6-luna plans in about 3-5s without hidden reasoning; set it to an empty string to omit the field). Providers that reject it, or JSON mode, get one retry without both.
 
@@ -151,7 +153,7 @@ wrangler deploy
 
 ## Adding a New API Endpoint
 
-1. Add route handling in `worker.js`:
+1. Add route handling in `worker/worker.js`:
 
 ```javascript
 if (url.pathname === '/api/your-endpoint') {

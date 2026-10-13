@@ -28,12 +28,12 @@
       })();
     </script>
     <title>lok.computer</title>
-    <!-- Self-hosted Umami. Pageviews are reported by src/lib/analytics.ts (one per visit, the arrival URL); the tag only sends events. -->
-    <script defer src="https://stats.130170.xyz/script.js" data-website-id="67f89e27-5ede-4ccd-8073-1c88ff24974f" data-auto-pageview="false"></script>
+    <!-- Self-hosted Umami, rendered from VITE_UMAMI_* by vite.config.ts (nothing when unset to empty). Pageviews are reported by src/lib/analytics.ts (one per visit, the arrival URL); the tag only sends events. -->
+    %ANALYTICS_TAG%
     <meta name="description" content="lok.computer is a browser-based mini desktop environment with modular apps including are.na browser, weather app, and more. Experience a retro desktop UI in your browser." />
     <meta name="author" content="Lok" />
     <meta name="keywords" content="lok computer, desktop environment, browser desktop, are.na browser, web desktop, virtual desktop, retro desktop ui, personal projects, retro ui, retro design, retro web design, retro web ui, retro web desktop, retro web app, retro web application, retro web app design, retro web app ui, retro web app desktop, retro web app desktop design, retro web app desktop ui, web ui, web design, web app, web application, web app design, web app ui, web app desktop, web app desktop design, web app desktop ui" />
-    <link rel="canonical" href="https://lok.computer" />
+    <link rel="canonical" href="%SITE_URL%" />
     <link rel="alternate" type="text/markdown" href="/llms.txt" title="lok.computer agent index" />
     <link rel="service-desc" type="application/vnd.oai.openapi+json" href="/openapi.json" title="lok.computer OpenAPI specification" />
     <link rel="sitemap" type="application/xml" href="/sitemap.xml" title="lok.computer sitemap" />
@@ -57,9 +57,9 @@
     <meta property="og:title" content="lok.computer" />
     <meta property="og:description" content="A mini desktop-like environment with modular apps including are.na browser, weather app, and more" />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://lok.computer" />
-    <meta property="og:image" content="https://lok.computer/og-image.webp" />
-    <meta property="og:logo" content="https://lok.computer/favicon-96x96.png" />
+    <meta property="og:url" content="%SITE_URL%" />
+    <meta property="og:image" content="%SITE_URL%/og-image.webp" />
+    <meta property="og:logo" content="%SITE_URL%/favicon-96x96.png" />
     <meta property="og:site_name" content="lok.computer" />
 
     <meta name="twitter:card" content="summary_large_image" />
@@ -67,14 +67,14 @@
     <meta name="twitter:creator" content="@l3on_y2k" />
     <meta name="twitter:title" content="lok.computer" />
     <meta name="twitter:description" content="Browser-based desktop environment with are.na browser, weather app and more" />
-    <meta name="twitter:image" content="https://lok.computer/og-image.webp" />
+    <meta name="twitter:image" content="%SITE_URL%/og-image.webp" />
     
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "WebApplication",
       "name": "lok.computer",
-      "url": "https://lok.computer",
+      "url": "%SITE_URL%",
       "description": "A browser-based mini desktop environment with modular apps including are.na browser, weather app, and more",
       "applicationCategory": "WebApplication",
       "operatingSystem": "Any",

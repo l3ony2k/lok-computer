@@ -1,24 +1,8 @@
 import React, { useState, useRef, useEffect, KeyboardEvent } from "react";
 import { WindowLayout } from "@/components/window/WindowLayout";
 import { RetroButton } from "@/components/ui/RetroButton";
+import { BROWSER_BOOKMARKS } from "@/config/site";
 
-// ============================================
-// BOOKMARKS CONFIGURATION
-// ============================================
-interface Bookmark {
-  name: string;
-  url: string;
-}
-
-const BOOKMARKS: Bookmark[] = [
-  { name: "are.na", url: "https://are.na/lok" },
-  { name: "blog", url: "https://l3on.site" },
-  { name: "journal", url: "https://journal.lok.computer" },
-  { name: "canvas", url: "https://abc.lok.computer" },
-  { name: "status", url: "https://status.cafe/users/lok" },
-  { name: "simone's", url: "https://simone.computer/#/webdesktops" },
-];
-// ============================================
 
 // Simple SVG icons for toolbar (or use a library if available)
 const BackIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>;
@@ -166,7 +150,7 @@ export const WebBrowser: React.FC<WebBrowserProps> = ({ initialUrl = "https://lo
           </div>
           {/* Bookmark Bar */}
           <div className="app-toolbar-row browser-bookmark-bar">
-            {BOOKMARKS.map((bookmark) => (
+            {BROWSER_BOOKMARKS.map((bookmark) => (
               <RetroButton
                 key={bookmark.url}
                 onClick={() => navigate(bookmark.url)}

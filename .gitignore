@@ -23,11 +23,15 @@ dist-ssr
 *.sln
 *.sw?
 
-# windsurf rules
-.windsurfrules
-
-# cursor rules
-.cursor/*
-
 # env
 .env
+.env.local
+.env.*.local
+.dev.vars
+
+# local tooling
+.wrangler
+test-results
+
+# promo video project (separate, not part of the site)
+promo

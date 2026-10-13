@@ -118,3 +118,30 @@ describe("proxy rate limiting", () => {
     }
   });
 });
+
+describe("NeoDB shelf proxy", () => {
+  test("reads the shelf of the configured NeoDB user", async () => {
+    const realFetch = globalThis.fetch;
+    const calls: string[] = [];
+    globalThis.fetch = (async (input: RequestInfo | URL) => {
+      calls.push(String(input));
+      return new Response(JSON.stringify({ data: [] }), { headers: { "content-type": "application/json" } });
+    }) as typeof fetch;
+    try {
+      const env = { NEODB_ACCESS_TOKEN: "token", NEODB_USERNAME: "someone else" };
+      const response = await worker.fetch(new Request("https://lok.computer/api/neodb/shelf?type=complete"), env, {});
+
+      expect(response.status).toBe(200);
+      expect(calls).toEqual(["https://neodb.social/api/user/someone%20else/shelf/complete?page=1&page_size=20"]);
+    } finally {
+      globalThis.fetch = realFetch;
+    }
+  });
+
+  test("refuses without a NeoDB user", async () => {
+    const response = await worker.fetch(new Request("https://lok.computer/api/neodb/shelf"), { NEODB_ACCESS_TOKEN: "token" }, {});
+
+    expect(response.status).toBe(500);
+    expect(await response.json()).toEqual({ error: "NEODB_USERNAME not configured" });
+  });
+});

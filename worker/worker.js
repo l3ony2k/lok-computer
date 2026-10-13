@@ -18,9 +18,33 @@ import { JevError, planQuestions, runJevRequest } from './jev.js';
  *
  * NeoDB Configuration:
  * - NEODB_ACCESS_TOKEN: NeoDB access token
+ * - NEODB_USERNAME: NeoDB user whose shelf is read (e.g., lok)
  *
  * Fedi and NeoDB proxies:
  * - PROXY_RATE_LIMITER: rate limiting binding shared by the proxy routes (wrangler.toml)
+ */
+
+/**
+ * A Cloudflare rate limiting binding.
+ * @typedef {{ limit(options: { key: string }): Promise<{ success: boolean }> }} RateLimiter
+ */
+
+/**
+ * The Worker's environment. Every entry is optional: routes check for what
+ * they need and answer 503 when it is missing.
+ * @typedef {object} Env
+ * @property {string} [AI_BASE_URL]
+ * @property {string} [AI_API_KEY]
+ * @property {string} [JEV_PLANNER_MODEL]
+ * @property {string} [JEV_PLANNER_REASONING_EFFORT]
+ * @property {string} [TYPESAFE_API_KEY]
+ * @property {string} [JEV_MODEL]
+ * @property {RateLimiter} [JEV_RATE_LIMITER]
+ * @property {string} [FEDI_INSTANCE]
+ * @property {string} [FEDI_ACCESS_TOKEN]
+ * @property {string} [NEODB_ACCESS_TOKEN]
+ * @property {string} [NEODB_USERNAME]
+ * @property {RateLimiter} [PROXY_RATE_LIMITER]
  */
 
 // Helper to set CORS headers
@@ -61,6 +85,10 @@ const readJsonBody = async (request) => {
 // Each client IP gets a budget: Ask AI calls spend planner and Jev credits
 // (JEV_RATE_LIMITER); the Fedi and NeoDB proxies spend a personal token's API
 // quota (PROXY_RATE_LIMITER). Without the binding, as in tests, there is no limit.
+/**
+ * @param {Request} request
+ * @param {RateLimiter | undefined} limiter
+ */
 const isRateLimited = async (request, limiter) => {
   if (!limiter) return false;
   const key = request.headers.get('CF-Connecting-IP') ?? 'anonymous';
@@ -112,6 +140,11 @@ function makeNotFoundResponse(request) {
 }
 
 export default {
+  /**
+   * @param {Request} request
+   * @param {Env} env
+   * @param {unknown} ctx
+   */
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
@@ -219,7 +252,7 @@ export default {
         return makeJsonResponse(data);
       } catch (error) {
         console.error('Error in Fedi account proxy:', error);
-        return makeJsonResponse({ error: 'Internal server error', details: error.message }, 500);
+        return makeJsonResponse({ error: 'Internal server error', details: error instanceof Error ? error.message : String(error) }, 500);
       }
     }
 
@@ -281,7 +314,7 @@ export default {
 
       } catch (error) {
         console.error('Error in Fedi proxy:', error);
-        return makeJsonResponse({ error: 'Internal server error in Fedi proxy', details: error.message }, 500);
+        return makeJsonResponse({ error: 'Internal server error in Fedi proxy', details: error instanceof Error ? error.message : String(error) }, 500);
       }
     }
 
@@ -299,6 +332,12 @@ export default {
           return makeJsonResponse({ error: 'NEODB_ACCESS_TOKEN not configured' }, 500);
         }
 
+        const neodbUser = env.NEODB_USERNAME;
+
+        if (!neodbUser) {
+          return makeJsonResponse({ error: 'NEODB_USERNAME not configured' }, 500);
+        }
+
         const shelfType = url.searchParams.get('type') || 'wishlist';
         const page = url.searchParams.get('page') || '1';
         const pageSize = url.searchParams.get('page_size') || '20';
@@ -309,7 +348,7 @@ export default {
           return makeJsonResponse({ error: 'Invalid shelf type. Must be: wishlist, progress, complete, or dropped' }, 400);
         }
 
-        const upstreamUrl = `https://neodb.social/api/user/lok/shelf/${shelfType}?page=${encodeURIComponent(page)}&page_size=${encodeURIComponent(pageSize)}`;
+        const upstreamUrl = `https://neodb.social/api/user/${encodeURIComponent(neodbUser)}/shelf/${shelfType}?page=${encodeURIComponent(page)}&page_size=${encodeURIComponent(pageSize)}`;
         const response = await fetch(upstreamUrl, {
           headers: {
             'Authorization': `Bearer ${neodbToken}`,
@@ -329,7 +368,7 @@ export default {
 
       } catch (error) {
         console.error('Error in NeoDB shelf proxy:', error);
-        return makeJsonResponse({ error: 'Internal server error', details: error.message }, 500);
+        return makeJsonResponse({ error: 'Internal server error', details: error instanceof Error ? error.message : String(error) }, 500);
       }
     }
 

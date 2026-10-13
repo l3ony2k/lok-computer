@@ -101,7 +101,7 @@ The shared layout uses project-specific `lok-reader-*` CSS hooks. Keep these hoo
 
 ### Ask AI (Jev)
 
-`jev.js` beside the Worker plans and answers typed questions: a fast LLM compiles a request into Jev questions (noul, choice, score), Jev answers them, and the Worker forms `result`, a JSON object keyed by the requested properties. The Ask AI app calls `/api/jev/plan` then `/api/jev` so the plan appears before the answers.
+`worker/jev.js` beside the Worker plans and answers typed questions: a fast LLM compiles a request into Jev questions (noul, choice, score), Jev answers them, and the Worker forms `result`, a JSON object keyed by the requested properties. The Ask AI app calls `/api/jev/plan` then `/api/jev` so the plan appears before the answers.
 
 ### Are.na channel browsing
 
@@ -121,4 +121,4 @@ The shared layout uses project-specific `lok-reader-*` CSS hooks. Keep these hoo
 | `src/lib/cachedRequest.ts` | persistent remote-read lifecycle |
 | `src/lib/storage.ts` | IndexedDB stores and primitives |
 
-Domain terms are defined in [`CONTEXT.md`](../CONTEXT.md).
+Domain terms are defined in the [glossary](glossary.md).

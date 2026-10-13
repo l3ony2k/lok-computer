@@ -1,7 +1,8 @@
 import { readFileSync } from "node:fs";
-import { defineConfig, type Plugin } from "vite";
+import { defineConfig, loadEnv, type Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
+import { renderAnalyticsTag, resolveDeployment, type Deployment } from "./src/config/deployment";
 
 const packageJsonUrl = new URL("./package.json", import.meta.url);
 const readSystemVersion = () => (
@@ -67,37 +68,57 @@ const serviceWorkerPlugin = (): Plugin => ({
   },
 });
 
+/**
+ * Fills index.html from the deployment settings (src/config/deployment.ts):
+ * %SITE_URL% in canonical and social-card URLs, %ANALYTICS_TAG% with the
+ * Umami tag or nothing. Runs before Vite's own %ENV% substitution.
+ */
+const deploymentHtmlPlugin = (deployment: Deployment): Plugin => ({
+  name: "lok-deployment-html",
+  transformIndexHtml: {
+    order: "pre",
+    handler: (html) => html
+      .replaceAll("%SITE_URL%", deployment.VITE_SITE_URL)
+      .replace("%ANALYTICS_TAG%", renderAnalyticsTag(deployment)),
+  },
+});
+
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
-  server: {
-    host: "::",
-    port: 8080,
-    // The API Worker owns upstream credentials. Proxy API calls during local
-    // development so browser requests use the same authenticated service as
-    // the deployed site instead of falling through to Vite's SPA fallback.
-    // LOK_API_ORIGIN points the proxy at a local Worker (e.g. `wrangler dev`).
-    proxy: {
-      "/api": {
-        target: process.env.LOK_API_ORIGIN || "https://lok.computer",
-        changeOrigin: true,
-        secure: true,
+export default defineConfig(({ mode }) => {
+  // VITE_* from .env files and the build environment, with lok.computer's defaults.
+  const deployment = resolveDeployment(loadEnv(mode, process.cwd(), "VITE_"));
+  return {
+    server: {
+      host: "::",
+      port: 8080,
+      // The API Worker owns upstream credentials. Proxy API calls during local
+      // development so browser requests use the same authenticated service as
+      // the deployed site instead of falling through to Vite's SPA fallback.
+      // LOK_API_ORIGIN points the proxy at a local Worker (e.g. `wrangler dev`).
+      proxy: {
+        "/api": {
+          target: process.env.LOK_API_ORIGIN || deployment.VITE_SITE_URL,
+          changeOrigin: true,
+          secure: true,
+        },
       },
     },
-  },
-  plugins: [
-    react(),
-    systemVersionPlugin(),
-    serviceWorkerPlugin(),
-  ],
-  build: {
-    // Raster images stay files: the boot screen warms them into the HTTP cache,
-    // and they are reused across versions instead of being re-downloaded as
-    // base64 inside every new entry chunk. Small SVGs (theme glyphs) inline.
-    assetsInlineLimit: (filePath, content) => filePath.endsWith(".svg") && content.length < 4096,
-  },
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
+    plugins: [
+      react(),
+      systemVersionPlugin(),
+      deploymentHtmlPlugin(deployment),
+      serviceWorkerPlugin(),
+    ],
+    build: {
+      // Raster images stay files: the boot screen warms them into the HTTP cache,
+      // and they are reused across versions instead of being re-downloaded as
+      // base64 inside every new entry chunk. Small SVGs (theme glyphs) inline.
+      assetsInlineLimit: (filePath, content) => filePath.endsWith(".svg") && content.length < 4096,
     },
-  },
-}));
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "./src"),
+      },
+    },
+  };
+});

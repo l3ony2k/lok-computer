@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { WindowLayout } from '@/components/window/WindowLayout';
 import { RetroButton } from '@/components/ui/RetroButton';
 import { usePersistedState } from '@/hooks/useStorage';
+import { SITE } from '@/config/site';
 
 // Import local 88x31 button images
 import l3onButton from '@/assets/buttons/l3on.gif'
@@ -79,7 +80,7 @@ const my88x31Variants = [
         id: '88x31-default',
         label: 'default',
         path: '/88x31.gif',
-        url: 'https://lok.computer/88x31.gif',
+        url: `${SITE.url}/88x31.gif`,
         width: 88,
         height: 31,
     },
@@ -87,7 +88,7 @@ const my88x31Variants = [
         id: '88x31-light',
         label: 'light',
         path: '/88x31-light.gif',
-        url: 'https://lok.computer/88x31-light.gif',
+        url: `${SITE.url}/88x31-light.gif`,
         width: 88,
         height: 31,
     },
@@ -95,7 +96,7 @@ const my88x31Variants = [
         id: '88x31-dark',
         label: 'dark',
         path: '/88x31-dark.gif',
-        url: 'https://lok.computer/88x31-dark.gif',
+        url: `${SITE.url}/88x31-dark.gif`,
         width: 88,
         height: 31,
     },
@@ -109,7 +110,7 @@ const my80x15Variants = [
         id: '80x15-default',
         label: 'default',
         path: '/80x15.gif',
-        url: 'https://lok.computer/80x15.gif',
+        url: `${SITE.url}/80x15.gif`,
         width: 80,
         height: 15,
     },
@@ -117,7 +118,7 @@ const my80x15Variants = [
         id: '80x15-light',
         label: 'light',
         path: '/80x15-light.gif',
-        url: 'https://lok.computer/80x15-light.gif',
+        url: `${SITE.url}/80x15-light.gif`,
         width: 80,
         height: 15,
     },
@@ -125,7 +126,7 @@ const my80x15Variants = [
         id: '80x15-dark',
         label: 'dark',
         path: '/80x15-dark.gif',
-        url: 'https://lok.computer/80x15-dark.gif',
+        url: `${SITE.url}/80x15-dark.gif`,
         width: 80,
         height: 15,
     },
@@ -178,7 +179,7 @@ const MyButtonsTab = () => {
     const [copiedId, setCopiedId] = useState<string | null>(null);
 
     const getEmbedCode = (variant: ButtonVariant) =>
-        `<a href="https://lok.computer" target="_blank" rel="noopener noreferrer"><img src="${variant.url}" alt="lok.computer" width="${variant.width}" height="${variant.height}" /></a>`;
+        `<a href="${SITE.url}" target="_blank" rel="noopener noreferrer"><img src="${variant.url}" alt="${SITE.name}" width="${variant.width}" height="${variant.height}" /></a>`;
 
     const handleCopyEmbed = (variant: ButtonVariant) => {
         navigator.clipboard.writeText(getEmbedCode(variant));

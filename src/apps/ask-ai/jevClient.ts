@@ -1,5 +1,5 @@
 /**
- * Client for the Ask AI Worker endpoints (see jev.js at the repository root).
+ * Client for the Ask AI Worker endpoints (see worker/jev.js).
  *
  * `planJev` sends a question to the planner, which replies with a plan, a
  * request for more input, a direct answer (when Jev has nothing to judge the

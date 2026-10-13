@@ -12,6 +12,8 @@ Welcome to the developer documentation for **lok.computer** - a retro-inspired w
 | [Worker & API](./worker-api.md) | Cloudflare Worker setup, API proxies |
 | [URL Routing](./url-routing.md) | Deep linking, URL schema |
 | [Styling](./styling.md) | CSS, themes, design patterns |
+| [Glossary](./glossary.md) | Domain terms: Application, launch, window session, cached request |
+| [Development log](./development-log.md) | Detailed notes for every release |
 
 ## Tech Stack
 
@@ -59,7 +61,7 @@ lok-computer/
 │   ├── pages/          # Index (the desktop shell)
 │   └── types/          # TypeScript type definitions
 ├── public/             # Static assets
-├── worker.js           # Cloudflare Worker
+├── worker/             # Cloudflare Worker (worker.js, jev.js, tests)
 ├── wrangler.toml       # Worker configuration
 └── docs/               # This documentation
 ```
@@ -104,6 +106,7 @@ Production secrets are set via Cloudflare dashboard.
 | `JEV_MODEL` | Jev model or alias (`jev-latest`) |
 | `FEDI_INSTANCE` | Mastodon/GtS instance URL |
 | `FEDI_ACCESS_TOKEN` | Fedi access token |
+| `NEODB_USERNAME` | NeoDB user whose shelf is shown |
 | `NEODB_ACCESS_TOKEN` | NeoDB access token |
 
 Two rate-limit bindings in `wrangler.toml` budget each client IP: `JEV_RATE_LIMITER` for Ask AI (20 calls per minute) and `PROXY_RATE_LIMITER` for the Fedi and NeoDB proxies (60 requests per minute).

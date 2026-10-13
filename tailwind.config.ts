@@ -45,7 +45,7 @@ export default {
           foreground: "hsl(var(--popover-foreground))",
         },
       },
-      // Square corners everywhere (see CLAUDE.md); rounded-* classes are not used.
+      // Square corners everywhere (see AGENTS.md); rounded-* classes are not used.
       borderRadius: {
         lg: "0",
         md: "0",

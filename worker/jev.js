@@ -223,7 +223,10 @@ export const normalizeInputs = (inputs) => {
   return entries.length ? Object.fromEntries(entries) : null;
 };
 
-/** Combines content supplied through the API (`state`) with follow-up answers (`inputs`). */
+/**
+ * Combines content supplied through the API (`state`) with follow-up answers (`inputs`).
+ * @param {{ state?: unknown, inputs?: unknown }} [supplied]
+ */
 export const buildSuppliedState = ({ state, inputs } = {}) => {
   const base = normalizeState(state ?? null);
   const answers = normalizeInputs(inputs);
@@ -323,6 +326,8 @@ const questionEntries = (value) => {
  * Validates a plan from the planner (`answer` + `analytics`) or from a person
  * editing a stored plan (`primary` + `questions`). Supplied material always
  * wins over the planner's state. The primary question comes first.
+ * @param {any} raw
+ * @param {unknown} [suppliedState]
  */
 export const normalizePlan = (raw, suppliedState = null) => {
   if (!isPlainObject(raw)) throw invalidPlan('The plan must be a JSON object.');
@@ -476,9 +481,10 @@ const round = (value, digits = 3) => {
   return Math.round(Number(value) * factor) / factor;
 };
 
+/** @param {Record<string, unknown>} probabilities */
 const sortedDistribution = (probabilities) => Object.fromEntries(
   Object.entries(probabilities)
-    .map(([key, value]) => [key, round(value)])
+    .map(([key, value]) => /** @type {[string, number]} */ ([key, round(value)]))
     .sort((a, b) => b[1] - a[1]),
 );
 
@@ -691,10 +697,24 @@ const readUpstreamJson = async (response, service) => {
 };
 
 /**
+ * The upstream fetch: the global one by default, a stub in tests.
+ * @typedef {(url: string, init: RequestInit) => Promise<Response>} FetchLike
+ */
+
+/**
+ * The global fetch, looked up on each call so tests can stub it.
+ * @type {FetchLike}
+ */
+const callFetch = (url, init) => fetch(url, init);
+
+/**
  * Calls Jev with a request body ({model, state, questions}), retrying rate
  * limits and overload with short backoff.
+ * @param {unknown} request
+ * @param {import('./worker.js').Env} env
+ * @param {FetchLike} [fetchImpl]
  */
-export const askJev = async (request, env, fetchImpl = (...args) => fetch(...args)) => {
+export const askJev = async (request, env, fetchImpl = callFetch) => {
   if (!env.TYPESAFE_API_KEY) throw new JevError('Jev is not configured on this server.', 503);
   const body = JSON.stringify(request);
 
@@ -745,9 +765,17 @@ const buildPlannerMessages = ({ question, suppliedState, answerAnyway, today }, 
  * Planning is a short structured task, so hidden reasoning only adds latency
  * (about 13s instead of 5s on gemini-2.5-flash-lite). Set
  * JEV_PLANNER_REASONING_EFFORT to another level, or to "" to omit the field.
+ * @param {import('./worker.js').Env} env
  */
 const plannerReasoningEffort = (env) => env.JEV_PLANNER_REASONING_EFFORT ?? 'none';
 
+/**
+ * @param {unknown} messages
+ * @param {import('./worker.js').Env} env
+ * @param {FetchLike} fetchImpl
+ * @param {boolean} extras
+ * @returns {Promise<{ content: string, model: string }>}
+ */
 const callPlanner = async (messages, env, fetchImpl, extras) => {
   if (!env.AI_BASE_URL || !env.AI_API_KEY || !env.JEV_PLANNER_MODEL) {
     throw new JevError('The question planner is not configured on this server.', 503);
@@ -807,8 +835,11 @@ export const withAsOfDate = (plan, question, today) => {
 /**
  * Plans a question: returns a plan, a request for more input, or a refusal.
  * Malformed replies get one corrective retry with the validation error.
+ * @param {any} body
+ * @param {import('./worker.js').Env} env
+ * @param {FetchLike} [fetchImpl]
  */
-export const planQuestions = async (body, env, fetchImpl = (...args) => fetch(...args)) => {
+export const planQuestions = async (body, env, fetchImpl = callFetch) => {
   const question = readQuestion(body);
   const suppliedState = buildSuppliedState({ state: body?.state, inputs: body?.inputs });
   const answerAnyway = body?.answerAnyway === true;
@@ -833,8 +864,12 @@ export const planQuestions = async (body, env, fetchImpl = (...args) => fetch(..
 /**
  * Full pipeline for one request. A supplied `plan` skips the planner;
  * otherwise a `needs_input`, `answer` or `refuse` outcome returns without calling Jev.
+ * @param {any} body
+ * @param {import('./worker.js').Env} env
+ * @param {FetchLike} [fetchImpl]
  */
-export const runJevRequest = async (body, env, fetchImpl = (...args) => fetch(...args)) => {
+export const runJevRequest = async (body, env, fetchImpl = callFetch) => {
+  /** @type {{ plannerMs: number | null, jevMs: number }} */
   const timing = { plannerMs: null, jevMs: 0 };
   let plan;
   let plannerModel = null;

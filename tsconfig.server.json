@@ -1,0 +1,29 @@
+{
+  /* The Cloudflare Worker (worker/), the Pages function and its tests (functions/).
+     The Worker is plain JS checked with checkJs; JSDoc supplies types where inference cannot.
+     noImplicitAny is off because annotating every plain-JS parameter (~80) adds noise without
+     catching more bugs; every other strict check (null safety, unknown catch values, call
+     signatures) still applies. */
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "skipLibCheck": true,
+    "types": ["bun"],
+    "allowJs": true,
+    "checkJs": true,
+    "strict": true,
+    "noImplicitAny": false,
+    "noFallthroughCasesInSwitch": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["worker", "functions"]
+}

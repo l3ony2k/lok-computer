@@ -1,14 +1,22 @@
 {
-  "name": "vite_react_shadcn_ts",
+  "name": "lok-computer",
   "private": true,
   "version": "3.1.8",
+  "description": "A retro desktop in the browser: windows, themes, and an Are.na browser.",
+  "license": "AGPL-3.0-or-later",
+  "author": "Leon Wong (https://lok.computer)",
+  "homepage": "https://lok.computer",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/l3ony2k/lok-computer.git"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "typecheck": "tsc -p tsconfig.app.json --noEmit",
+    "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.server.json --noEmit && tsc -p tsconfig.node.json --noEmit",
     "test": "bun test",
     "preview": "vite preview"
   },

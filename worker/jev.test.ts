@@ -321,8 +321,8 @@ describe("Jev pipeline", () => {
     expect(Object.keys(calls[2].body.questions as object)).toContain(`sentiment${ORDER_CHECK_SUFFIX}`);
     expect(output.kind).toBe("answer");
     expect(output.best?.answer).toBe("Mixed");
-    expect(output.jev.request).toEqual(calls[2].body);
-    expect(output.jev.response.model).toBe("jev-1.13.0");
+    expect<unknown>(output.jev?.request).toEqual(calls[2].body);
+    expect(output.jev?.response.model).toBe("jev-1.13.0");
     expect(output.planner).toEqual({ model: "planner-test" });
     expect(output.timing.plannerMs).toBeGreaterThanOrEqual(0);
   });

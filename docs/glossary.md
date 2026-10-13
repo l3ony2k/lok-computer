@@ -1,4 +1,6 @@
-# Domain Context
+# Glossary
+
+Domain terms used across the code and docs.
 
 ## Application
 
