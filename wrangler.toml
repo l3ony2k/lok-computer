@@ -1,8 +1,25 @@
 name = "lok-computer-worker"
 main = "worker/worker.js"
 compatibility_date = "2025-05-15"
+upload_source_maps = true
 # No account_id: wrangler uses the logged-in account, or CLOUDFLARE_ACCOUNT_ID when
 # the login can reach several.
+
+# lok-computer-worker.l3on.workers.dev, and a preview URL for every uploaded version
+# (`wrangler versions upload`), stay on.
+workers_dev = true
+preview_urls = true
+
+# The site: `bun run build` writes dist/, and the asset layer serves its files
+# directly with the headers in public/_headers. The Worker runs for "/" (the HTML
+# shell gets agent-readable content, worker/site.ts), for /api, and for any path
+# no file matches: the desktop's deep links, or a Markdown 404 (a missing file,
+# even under /assets/, never gets the HTML shell).
+[assets]
+directory = "dist"
+binding = "ASSETS"
+not_found_handling = "none"
+run_worker_first = ["/", "/api", "/api/*"]
 
 # Development environment variables
 [vars]
@@ -13,17 +30,15 @@ FEDI_INSTANCE = "https://rex.cat"
 NEODB_USERNAME = "lok"
 
 # Ask AI spends planner and Jev credits; 20 calls per minute per client IP
-# (one Ask is two calls). Wrangler 4.15 configures rate limiters as unsafe bindings.
-[[unsafe.bindings]]
+# (one Ask is two calls).
+[[ratelimits]]
 name = "JEV_RATE_LIMITER"
-type = "ratelimit"
 namespace_id = "1001"
 simple = { limit = 20, period = 60 }
 
 # The Fedi and NeoDB proxies spend a personal token's API quota; 60 requests
 # per minute per client IP (the desktop's feeds and shelf use a handful).
-[[unsafe.bindings]]
+[[ratelimits]]
 name = "PROXY_RATE_LIMITER"
-type = "ratelimit"
 namespace_id = "1002"
 simple = { limit = 60, period = 60 }

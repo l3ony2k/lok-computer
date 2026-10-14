@@ -5,9 +5,9 @@ import {
   renderNoScript,
 } from "./agent-content";
 
-interface PagesContext {
-  request: Request;
-  next(): Promise<Response>;
+/** The static assets binding (`[assets] binding = "ASSETS"` in wrangler.toml). */
+export interface AssetFetcher {
+  fetch(input: Request | URL | string): Promise<Response>;
 }
 
 const UI_PATHS = new Set([
@@ -37,32 +37,8 @@ const UI_PATHS = new Set([
   "/web",
 ]);
 
-const STATIC_PATHS = new Set([
-  "/80x15-dark.gif",
-  "/80x15-light.gif",
-  "/80x15.gif",
-  "/88x31-dark.gif",
-  "/88x31-light.gif",
-  "/88x31.gif",
-  "/agent-instructions.md",
-  "/apple-touch-icon.png",
-  "/favicon-96x96.png",
-  "/favicon.ico",
-  "/favicon.svg",
-  "/llms-full.txt",
-  "/llms.txt",
-  "/og-image.webp",
-  "/openapi.json",
-  "/robots.txt",
-  "/site.webmanifest",
-  "/sitemap.xml",
-  "/sw.js",
-  "/system-version.json",
-  "/web-app-manifest-192x192.png",
-  "/web-app-manifest-512x512.png",
-]);
-
-const DISCOVERY_LINKS = [
+// public/_headers sends the same value on every static file (site.test.ts checks).
+export const DISCOVERY_LINKS = [
   '</llms.txt>; rel="alternate"; type="text/markdown"',
   '</openapi.json>; rel="service-desc"; type="application/vnd.oai.openapi+json"',
   '</sitemap.xml>; rel="sitemap"; type="application/xml"',
@@ -148,11 +124,15 @@ function methodNotAllowedResponse(request: Request): Response {
   return response;
 }
 
-function withDiscoveryHeaders(response: Response, includeVary: boolean): Response {
+// The HTML shell is never cached: a stale shell would point at hashed assets
+// from an older build.
+const SHELL_CACHE_CONTROL = "no-cache, no-store, must-revalidate";
+
+function withDiscoveryHeaders(response: Response): Response {
   const headers = new Headers(response.headers);
   headers.set("Link", DISCOVERY_LINKS);
   headers.set("X-Content-Type-Options", "nosniff");
-  if (includeVary) addVary(headers);
+  addVary(headers);
   return new Response(response.body, {
     status: response.status,
     statusText: response.statusText,
@@ -166,17 +146,19 @@ function injectAgentContent(html: string, content: string): string {
   return html.replace("</body>", `${content}</body>`);
 }
 
-export async function onRequest(context: PagesContext): Promise<Response> {
-  const { request } = context;
+/**
+ * Everything outside /api. Static files never reach this: the asset layer
+ * serves them first (with the headers in public/_headers) and runs the Worker
+ * only for "/" (`run_worker_first`) and for paths no file matches. Those are
+ * the desktop's deep links, which get the HTML shell with agent-readable
+ * content (or Markdown on request), and everything else, which is a 404.
+ */
+export async function handleSiteRequest(request: Request, assets: AssetFetcher): Promise<Response> {
   const url = new URL(request.url);
   const pathname = normalizePath(url.pathname);
 
   if (request.method !== "GET" && request.method !== "HEAD") {
     return methodNotAllowedResponse(request);
-  }
-
-  if (STATIC_PATHS.has(pathname)) {
-    return withDiscoveryHeaders(await context.next(), false);
   }
 
   if (!isKnownUiPath(pathname)) {
@@ -188,23 +170,31 @@ export async function onRequest(context: PagesContext): Promise<Response> {
     return textResponse(request, renderMarkdown(document));
   }
 
-  const assetResponse = await context.next();
-  const contentType = assetResponse.headers.get("content-type") ?? "";
-  if (request.method === "HEAD" || !contentType.includes("text/html")) {
-    return withDiscoveryHeaders(assetResponse, true);
+  // Every deep link is the same single-page shell: index.html, served at "/".
+  const shellResponse = await assets.fetch(new Request(new URL("/", url), request));
+  const contentType = shellResponse.headers.get("content-type") ?? "";
+  if (!shellResponse.ok || !contentType.includes("text/html")) {
+    return withDiscoveryHeaders(shellResponse);
   }
 
-  const headers = new Headers(assetResponse.headers);
+  const headers = new Headers(shellResponse.headers);
   headers.delete("Content-Length");
   headers.delete("ETag");
+  // The asset layer sends a bare "text/html"; name the charset as Pages did.
+  headers.set("Content-Type", "text/html; charset=utf-8");
+  headers.set("Cache-Control", SHELL_CACHE_CONTROL);
   headers.set("Link", DISCOVERY_LINKS);
   headers.set("X-Content-Type-Options", "nosniff");
   addVary(headers);
 
-  const html = injectAgentContent(await assetResponse.text(), renderNoScript(document));
+  if (request.method === "HEAD") {
+    return new Response(null, { status: shellResponse.status, headers });
+  }
+
+  const html = injectAgentContent(await shellResponse.text(), renderNoScript(document));
   return new Response(html, {
-    status: assetResponse.status,
-    statusText: assetResponse.statusText,
+    status: shellResponse.status,
+    statusText: shellResponse.statusText,
     headers,
   });
 }

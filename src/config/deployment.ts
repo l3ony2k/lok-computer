@@ -1,8 +1,8 @@
 /**
  * Deployment settings: the values that change between lok.computer and a fork.
  *
- * Set them as build environment variables (the Cloudflare Pages dashboard, or a
- * local `.env`; see `.env.example`). Anything unset falls back to lok.computer's
+ * Set them as build environment variables (the Worker's Workers Builds settings,
+ * or a local `.env`; see `.env.example`). Anything unset falls back to lok.computer's
  * own value, so the live site needs none of them. They are compiled into the
  * public bundle and `index.html`: configuration, never secrets.
  *

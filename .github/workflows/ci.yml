@@ -1,8 +1,8 @@
 name: CI
 
 # Runs the same four checks as a local change (AGENTS.md), with the bun release
-# pinned in package.json's packageManager field. Cloudflare Pages builds with the
-# BUN_VERSION set on the Pages project, which must match it.
+# pinned in package.json's packageManager field. Workers Builds deploys with the
+# BUN_VERSION build variable set on the Worker, which must match it.
 on:
   push:
     branches: [main]

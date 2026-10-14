@@ -60,9 +60,9 @@ lok-computer/
 │   ├── lib/            # Utilities, API, storage
 │   ├── pages/          # Index (the desktop shell)
 │   └── types/          # TypeScript type definitions
-├── public/             # Static assets
-├── worker/             # Cloudflare Worker (worker.js, jev.js, tests)
-├── wrangler.toml       # Worker configuration
+├── public/             # Static files, copied into dist/ (and _headers for them)
+├── worker/             # Cloudflare Worker: the API, site routing, tests
+├── wrangler.toml       # Worker configuration (assets, vars, rate limits)
 └── docs/               # This documentation
 ```
 
@@ -86,7 +86,7 @@ IndexedDB-based storage for:
 `usePersistedState` owns view-state persistence and `cachedRequest` owns the persistent remote-read lifecycle.
 
 ### 5. Cloudflare Worker
-API proxy that handles:
+One Worker serves the built site from `dist/` as static assets and runs `worker/` for deep links, 404s and the API. The API proxy handles:
 - Authentication (Bluesky, Fediverse)
 - Rate limiting
 - CORS headers

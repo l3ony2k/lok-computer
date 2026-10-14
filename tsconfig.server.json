@@ -1,6 +1,6 @@
 {
-  /* The Cloudflare Worker (worker/), the Pages function and its tests (functions/).
-     The Worker is plain JS checked with checkJs; JSDoc supplies types where inference cannot.
+  /* The Cloudflare Worker (worker/: the API, the site routing in site.ts) and its tests.
+     The API is plain JS checked with checkJs; JSDoc supplies types where inference cannot.
      noImplicitAny is off because annotating every plain-JS parameter (~80) adds noise without
      catching more bugs; every other strict check (null safety, unknown catch values, call
      signatures) still applies. */
@@ -25,5 +25,5 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["worker", "functions"]
+  "include": ["worker"]
 }

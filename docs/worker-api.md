@@ -104,6 +104,12 @@ name = "lok-computer-worker"
 main = "worker/worker.js"
 compatibility_date = "2025-05-15"
 
+[assets]
+directory = "dist"
+binding = "ASSETS"
+not_found_handling = "none"
+run_worker_first = ["/", "/api", "/api/*"]
+
 [vars]
 JEV_MODEL = "jev-latest"
 JEV_PLANNER_MODEL = "gpt-6-luna"
@@ -136,7 +142,8 @@ wrangler secret put NEODB_ACCESS_TOKEN
 ### Local Worker Testing
 
 ```bash
-# Run worker locally
+# Run worker locally (it serves dist/, so build first)
+bun run build
 wrangler dev
 
 # Point the Vite dev proxy at it instead of production
@@ -145,8 +152,10 @@ LOK_API_ORIGIN=http://localhost:8787 bun dev
 
 ### Deploy Worker
 
+Workers Builds deploys on every push to `main`. By hand:
+
 ```bash
-wrangler deploy
+bun run deploy   # vite build, then wrangler deploy
 ```
 
 ---

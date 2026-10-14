@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { onRequest, isKnownUiPath } from "./[[path]]";
+import { DISCOVERY_LINKS, handleSiteRequest, isKnownUiPath } from "./site";
 import { ROUTES } from "../src/config/routes";
 
 const shell = `<!doctype html><html><head><title>lok.computer</title></head><body><div id="root"></div><noscript id="agent-static-content"><main>old fallback</main></noscript></body></html>`;
@@ -9,31 +9,36 @@ function createContext(
   init: RequestInit = {},
   assetResponse = new Response(shell, {
     headers: {
-      "Content-Type": "text/html; charset=utf-8",
+      "Content-Type": "text/html",
+      "Cache-Control": "public, max-age=0, must-revalidate",
+      ETag: '"shell"',
       Vary: "Accept-Encoding",
     },
   }),
 ) {
-  let nextCalls = 0;
-  return {
-    context: {
-      request: new Request(`https://lok.computer${path}`, init),
-      next: async () => {
-        nextCalls += 1;
-        return assetResponse;
-      },
+  const assetPaths: string[] = [];
+  const request = new Request(`https://lok.computer${path}`, init);
+  const assets = {
+    fetch: async (input: Request | URL | string) => {
+      const url = input instanceof Request ? input.url : String(input);
+      assetPaths.push(new URL(url).pathname);
+      return assetResponse;
     },
-    getNextCalls: () => nextCalls,
+  };
+  return {
+    handle: () => handleSiteRequest(request, assets),
+    getAssetCalls: () => assetPaths.length,
+    getAssetPaths: () => assetPaths,
   };
 }
 
-describe("agent-facing Pages routing", () => {
+describe("agent-facing site routing", () => {
   test("serves meaningful raw homepage HTML without changing the app shell", async () => {
-    const { context, getNextCalls } = createContext("/", {
+    const { handle, getAssetCalls } = createContext("/", {
       headers: { Accept: "text/html" },
     });
 
-    const response = await onRequest(context);
+    const response = await handle();
     const html = await response.text();
     const visibleFallback = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 
@@ -44,15 +49,15 @@ describe("agent-facing Pages routing", () => {
     expect(html).toContain('<div id="root"></div>');
     expect(html).toContain("<h1>lok.computer</h1>");
     expect(visibleFallback.length).toBeGreaterThan(500);
-    expect(getNextCalls()).toBe(1);
+    expect(getAssetCalls()).toBe(1);
   });
 
   test("negotiates homepage Markdown and does not fetch the HTML asset", async () => {
-    const { context, getNextCalls } = createContext("/", {
+    const { handle, getAssetCalls } = createContext("/", {
       headers: { Accept: "text/markdown" },
     });
 
-    const response = await onRequest(context);
+    const response = await handle();
     const body = await response.text();
 
     expect(response.status).toBe(200);
@@ -62,31 +67,31 @@ describe("agent-facing Pages routing", () => {
     expect(body).toStartWith("# lok.computer\n");
     expect(body).toContain("## When to use lok.computer");
     expect(body.length).toBeGreaterThan(1000);
-    expect(getNextCalls()).toBe(0);
+    expect(getAssetCalls()).toBe(0);
   });
 
   test("honors a q=0 Markdown exclusion", async () => {
-    const { context, getNextCalls } = createContext("/", {
+    const { handle, getAssetCalls } = createContext("/", {
       headers: { Accept: "text/markdown;q=0, text/html" },
     });
 
-    const response = await onRequest(context);
+    const response = await handle();
 
     expect(response.headers.get("content-type")).toContain("text/html");
-    expect(getNextCalls()).toBe(1);
+    expect(getAssetCalls()).toBe(1);
   });
 
   test("returns a real Markdown 404 for an unknown path", async () => {
-    const { context, getNextCalls } = createContext("/definitely-not-a-resource");
+    const { handle, getAssetCalls } = createContext("/definitely-not-a-resource");
 
-    const response = await onRequest(context);
+    const response = await handle();
     const body = await response.text();
 
     expect(response.status).toBe(404);
     expect(response.headers.get("content-type")).toBe("text/markdown; charset=utf-8");
     expect(body).toContain("# 404: resource not found");
     expect(body).toContain("/sitemap.xml");
-    expect(getNextCalls()).toBe(0);
+    expect(getAssetCalls()).toBe(0);
   });
 
   test("knows every route the desktop can open", () => {
@@ -99,22 +104,22 @@ describe("agent-facing Pages routing", () => {
 
   test("preserves static and dynamic desktop deep links", async () => {
     for (const path of ["/arena", "/explorer/example-channel", "/block/123", "/media", "/open"]) {
-      const { context, getNextCalls } = createContext(path, {
+      const { handle, getAssetCalls } = createContext(path, {
         headers: { Accept: "text/html" },
       });
-      const response = await onRequest(context);
+      const response = await handle();
 
       expect(response.status).toBe(200);
-      expect(getNextCalls()).toBe(1);
+      expect(getAssetCalls()).toBe(1);
     }
   });
 
   test("injects substantial no-JavaScript trust and developer content", async () => {
     for (const path of ["/about", "/contact", "/privacy", "/developers"]) {
-      const { context } = createContext(path, {
+      const { handle } = createContext(path, {
         headers: { Accept: "text/html" },
       });
-      const response = await onRequest(context);
+      const response = await handle();
       const html = await response.text();
       const fallback = html.match(
         /<noscript id="agent-static-content">([\s\S]*?)<\/noscript>/,
@@ -127,27 +132,58 @@ describe("agent-facing Pages routing", () => {
     }
   });
 
-  test("passes predictable machine-readable files to static assets", async () => {
-    const asset = new Response("# lok.computer", {
-      headers: { "Content-Type": "text/plain" },
+  test("serves every deep link from the shell at / and never caches it", async () => {
+    const { handle, getAssetPaths } = createContext("/explorer/example-channel", {
+      headers: { Accept: "text/html" },
     });
-    const { context, getNextCalls } = createContext("/llms.txt", {}, asset);
 
-    const response = await onRequest(context);
+    const response = await handle();
+
+    expect(getAssetPaths()).toEqual(["/"]);
+    expect(response.headers.get("content-type")).toBe("text/html; charset=utf-8");
+    expect(response.headers.get("cache-control")).toBe("no-cache, no-store, must-revalidate");
+    expect(response.headers.get("etag")).toBeNull();
+    expect(response.headers.get("link")).toBe(DISCOVERY_LINKS);
+  });
+
+  test("answers HEAD with the shell's headers and no body", async () => {
+    const { handle } = createContext("/about", { method: "HEAD" });
+
+    const response = await handle();
 
     expect(response.status).toBe(200);
-    expect(response.headers.get("link")).toContain("/openapi.json");
-    expect(await response.text()).toBe("# lok.computer");
-    expect(getNextCalls()).toBe(1);
+    expect(response.headers.get("content-type")).toContain("text/html");
+    expect(response.headers.get("content-length")).toBeNull();
+    expect(await response.text()).toBe("");
+  });
+
+  test("returns the Markdown 404 for a missing file, never the shell", async () => {
+    for (const path of ["/assets/index-missing.js", "/theme-previews/missing.webp", "/index.htm"]) {
+      const { handle, getAssetCalls } = createContext(path);
+
+      const response = await handle();
+
+      expect(response.status).toBe(404);
+      expect(response.headers.get("content-type")).toBe("text/markdown; charset=utf-8");
+      expect(getAssetCalls()).toBe(0);
+    }
+  });
+
+  test("static files carry the same discovery links from public/_headers", async () => {
+    const headers = await Bun.file("public/_headers").text();
+    const allFiles = headers.match(/^\/\*\n((?:[ \t]+.*\n)+)/m)?.[1] ?? "";
+
+    expect(allFiles).toContain(`Link: ${DISCOVERY_LINKS}`);
+    expect(allFiles).toContain("X-Content-Type-Options: nosniff");
   });
 
   test("rejects unsupported methods without invoking the app", async () => {
-    const { context, getNextCalls } = createContext("/", { method: "POST" });
+    const { handle, getAssetCalls } = createContext("/", { method: "POST" });
 
-    const response = await onRequest(context);
+    const response = await handle();
 
     expect(response.status).toBe(405);
     expect(response.headers.get("allow")).toBe("GET, HEAD");
-    expect(getNextCalls()).toBe(0);
+    expect(getAssetCalls()).toBe(0);
   });
 });

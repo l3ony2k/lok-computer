@@ -7,7 +7,7 @@ The **source code** of lok.computer is Copyright © 2025–2026 Leon Wong and li
 These are **not** licensed and remain all rights reserved, even where they sit inside licensed source files:
 
 - **The name and brand:** "lok.computer", "Lok", and the L3 logo, including `public/favicon.*`, `public/apple-touch-icon.png`, `public/web-app-manifest-*.png`, `public/og-image.webp`, and the site's own 88×31 and 80×15 buttons (`public/88x31*.gif`, `public/80x15*.gif`, `src/assets/buttons/l3on.gif`, `src/assets/buttons/88x31-*.gif`).
-- **My writing:** the prose in the About app, the changelog entries in `src/apps/about/changelog.ts`, `public/llms.txt`, `public/llms-full.txt`, `public/agent-instructions.md`, and the page text in `functions/agent-content.ts`.
+- **My writing:** the prose in the About app, the changelog entries in `src/apps/about/changelog.ts`, `public/llms.txt`, `public/llms-full.txt`, `public/agent-instructions.md`, and the page text in `worker/agent-content.ts`.
 - **Content the site displays:** Are.na channels and blocks, fediverse and Bluesky posts, and NeoDB shelf entries. None of it is stored in this repository; the apps fetch it at runtime, and much of it belongs to the people who made it.
 
 If you fork the project, replace these with your own.

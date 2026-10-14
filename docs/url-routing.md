@@ -52,7 +52,7 @@ Icon, dimensions, lazy view, default props, and single-instance behavior come fr
 4. calls `useApplicationLauncher`
 5. replaces the URL with `/`
 
-Unknown paths never reach it in production: the Pages function (`functions/[[path]].ts`) answers them with a 404.
+Unknown paths never reach it in production: the Worker (`worker/site.ts`) answers them with a 404.
 
 Deep-linked windows append to the restored Window session.
 

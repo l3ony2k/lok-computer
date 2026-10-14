@@ -145,3 +145,41 @@ describe("NeoDB shelf proxy", () => {
     expect(await response.json()).toEqual({ error: "NEODB_USERNAME not configured" });
   });
 });
+
+describe("one Worker for the site and the API", () => {
+  const assets = (calls: string[]) => ({
+    fetch: async (input: Request | URL | string) => {
+      calls.push(new URL(input instanceof Request ? input.url : String(input)).pathname);
+      return new Response("<!doctype html><html><body></body></html>", {
+        headers: { "Content-Type": "text/html; charset=utf-8" },
+      });
+    },
+  });
+
+  test("sends /api and everything under it to the API, never to the assets", async () => {
+    const calls: string[] = [];
+    for (const path of ["/api", "/api/", "/api/status"]) {
+      const response = await worker.fetch(new Request(`https://lok.computer${path}`), { ASSETS: assets(calls) }, {});
+
+      expect(response.status).toBe(200);
+      expect(response.headers.get("content-type")).toBe("application/json; charset=utf-8");
+    }
+    expect(calls).toEqual([]);
+  });
+
+  test("serves the site through the assets binding", async () => {
+    const calls: string[] = [];
+    const response = await worker.fetch(new Request("https://lok.computer/about"), { ASSETS: assets(calls) }, {});
+
+    expect(response.status).toBe(200);
+    expect(await response.text()).toContain('<noscript id="agent-static-content">');
+    expect(calls).toEqual(["/"]);
+  });
+
+  test("does not mistake a path that only starts with api for the API", async () => {
+    const response = await worker.fetch(new Request("https://lok.computer/apiary"), { ASSETS: assets([]) }, {});
+
+    expect(response.status).toBe(404);
+    expect(response.headers.get("content-type")).toBe("text/markdown; charset=utf-8");
+  });
+});

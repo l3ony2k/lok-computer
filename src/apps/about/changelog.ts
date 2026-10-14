@@ -14,6 +14,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '3.1.9',
+    date: '2026-10-14',
+    title: 'One Worker',
+    notes: [
+      'lok.computer now runs as a single Cloudflare Worker instead of a Pages site beside an API Worker, so the desktop and its API always ship together.',
+      'The XP, 7 and CS 1.6 theme swatches show their wallpapers again.',
+      'A missing file gets a 404 instead of the desktop page, which a browser could keep for a year in place of the real file.',
+      '/api answers with the API index instead of the desktop.',
+    ],
+  },
+  {
     version: '3.1.8',
     date: '2026-10-12',
     title: 'Palm on a desk, BeOS in its own type',

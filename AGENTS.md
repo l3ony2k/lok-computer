@@ -8,20 +8,23 @@ Working rules for anyone, human or coding agent, changing this repository. `CLAU
 bun dev          # Start dev server at localhost:8080 (do not start a second one if 8080 is already serving the project)
 bun run build    # Production build
 bun run lint     # Run ESLint
-bun run typecheck # tsc over src, then the Worker and Pages function with their tests (tsconfig.server.json), then vite.config.ts; the Vite build never type-checks
+bun run typecheck # tsc over src, then the Worker with its tests (tsconfig.server.json), then vite.config.ts; the Vite build never type-checks
 bun test         # Run architecture and behavior tests
+bun run deploy   # Build and deploy the site and Worker by hand (Workers Builds does this on every push to main)
 ```
 
-Run all four before finishing a change. GitHub Actions (`.github/workflows/ci.yml`) runs the same four under the pinned bun on every push to `main` and every pull request; keep it in step when the checks change.
+Run the four checks (build, lint, typecheck, test) before finishing a change. GitHub Actions (`.github/workflows/ci.yml`) runs the same four under the pinned bun on every push to `main` and every pull request; keep it in step when the checks change.
 
-**One bun version everywhere.** `package.json`'s `packageManager` (`bun@1.4.3`) pins it: CI reads it, and Cloudflare Pages builds every push with `bun install --frozen-lockfile` under the `BUN_VERSION` variable set on the Pages project (Production and Preview). Install with that release (`bunx bun@<version> install`), and commit only a `bun.lock` it wrote: an older bun cannot read a newer lockfile and the Pages build fails. To upgrade, set the new `BUN_VERSION` in both Pages environments first, then change `packageManager`, regenerate `bun.lock`, and run the four checks in one commit. The Worker (`worker/`) is deployed by hand with `bunx wrangler deploy`, before the push when anything in `worker/` or `wrangler.toml` changed.
+**One bun version everywhere.** `package.json`'s `packageManager` (`bun@1.4.3`) pins it: CI reads it, and Workers Builds builds every push to `main` with `bun install --frozen-lockfile` under the `BUN_VERSION` build variable set on the Worker. Install with that release (`bunx bun@<version> install`), and commit only a `bun.lock` it wrote: an older bun cannot read a newer lockfile and the build fails. To upgrade, set the new `BUN_VERSION` on the Worker's build settings first, then change `packageManager`, regenerate `bun.lock`, and run the four checks in one commit.
+
+**One Worker, one deploy.** `lok-computer-worker` serves the whole site: the built `dist/` as static assets and the code in `worker/`. Workers Builds runs `bun run build` and `npx wrangler deploy` on every push to `main`, so the frontend and the API always ship together. Never run a bare `wrangler deploy`: it uploads whatever `dist/` holds; `bun run deploy` builds first.
 
 Path alias `@/` maps to `./src/`.
 
 ## Repository Layout
 
-- `src/` the React desktop; `public/` static files served as is (`llms.txt`, `openapi.json`, buttons); `functions/` the Pages function (agent-facing Markdown, the 404 rule) and its tests.
-- `worker/` the Cloudflare Worker (`worker.js`, the Ask AI pipeline `jev.js`) and its tests; `wrangler.toml` deploys it.
+- `src/` the React desktop; `public/` static files served as is (`llms.txt`, `openapi.json`, buttons, `_headers`).
+- `worker/` the Cloudflare Worker and its tests: `worker.js` (entry point and the API), `jev.js` (the Ask AI pipeline), `site.ts` and `agent-content.ts` (deep links, agent-facing Markdown, the 404 rule); `wrangler.toml` configures it.
 - `scripts/pixel-icons.mjs` generates the app icons; `docs/` holds the developer docs, the glossary of domain terms, and the development log.
 - `promo/` is a separate, untracked video project (ignored by git and ESLint).
 
@@ -77,16 +80,20 @@ Use `usePersistedState` for view-state lifecycle and `cachedRequest` for remote 
 
 ### Offline
 
-`src/sw/service-worker.js` is built into `/sw.js` by the `lok-service-worker` plugin in `vite.config.ts` (version, shell precache list and asset list injected) and registered by `src/lib/serviceWorker.ts` in production only. Navigations are network-first with the cached shell as fallback, `/assets/*` cache-first (pruned per build), `/api/*`, `/system-version.json` and `/sw.js` never cached; `rebootSystem` unregisters it and clears caches. The Pages function must list any new root file (like `/sw.js`) in `STATIC_PATHS`. `cachedRequest` serves an expired entry when the browser is offline or the load fails (entries live 7 days past their TTL) and throws `OfflineError` only when nothing is saved. React Query runs loaders offline-first and does not retry offline. Render failed loads with `LoadFailure` (calm offline text, red error otherwise). `ConnectivityMonitor` sets `html[data-offline]` and toasts the transitions; `OfflineReadout` sits beside the clock. `lazyApps.tsx` wraps `React.lazy` so a chunk that fails to download shows `ChunkRetry` instead of poisoning the session, and `WindowErrorBoundary` keeps a crash inside its window.
+`src/sw/service-worker.js` is built into `/sw.js` by the `lok-service-worker` plugin in `vite.config.ts` (version, shell precache list and asset list injected) and registered by `src/lib/serviceWorker.ts` in production only. Navigations are network-first with the cached shell as fallback, `/assets/*` cache-first (pruned per build), `/api/*`, `/system-version.json` and `/sw.js` never cached; `rebootSystem` unregisters it and clears caches. Files in `dist/` are served by the asset layer before the Worker runs, so a new root file (like `/sw.js`) needs no Worker change; give it a `public/_headers` rule if it must stay uncached. `cachedRequest` serves an expired entry when the browser is offline or the load fails (entries live 7 days past their TTL) and throws `OfflineError` only when nothing is saved. React Query runs loaders offline-first and does not retry offline. Render failed loads with `LoadFailure` (calm offline text, red error otherwise). `ConnectivityMonitor` sets `html[data-offline]` and toasts the transitions; `OfflineReadout` sits beside the clock. `lazyApps.tsx` wraps `React.lazy` so a chunk that fails to download shows `ChunkRetry` instead of poisoning the session, and `WindowErrorBoundary` keeps a crash inside its window.
 
 ### Cloudflare Worker (`worker/worker.js`)
 
-A single Cloudflare Worker acts as an API proxy for everything that requires credentials (the Bsky app reads the public Bluesky API directly, so there is no Bluesky route):
-- `/api/jev/plan`, `/api/jev` — Ask AI: a fast planner LLM on an OpenAI-compatible endpoint (env: `AI_BASE_URL`, `AI_API_KEY`, required `JEV_PLANNER_MODEL`, `gpt-6-luna` in wrangler.toml; optional `JEV_PLANNER_REASONING_EFFORT`) compiles typed questions, TypeSafe Jev answers them (env: `TYPESAFE_API_KEY`, `JEV_MODEL`; per-IP `JEV_RATE_LIMITER`); logic in `worker/jev.js`. When Jev has nothing to judge (writing, explaining, arithmetic) the planner replies `answer` with its own prose instead of refusing
-- `/api/fedi/account` and `/api/fedi/statuses` — Mastodon/GoToSocial proxy (env: `FEDI_INSTANCE`, `FEDI_ACCESS_TOKEN`; per-IP `PROXY_RATE_LIMITER`, shared with NeoDB)
-- `/api/neodb/shelf` — NeoDB reading shelf proxy (env: `NEODB_ACCESS_TOKEN`; per-IP `PROXY_RATE_LIMITER`)
+One Worker serves lok.computer (`wrangler.toml`):
 
-Deploy/configure via `wrangler.toml`. Secrets are set in the Cloudflare dashboard, not in the toml.
+- **Static files** come from `dist/` through the asset layer, which applies `public/_headers` and answers before the Worker runs. The Worker runs for `/` (`run_worker_first`), `/api`, and any path no file matches; `not_found_handling` is `none`, so a missing file never gets the HTML shell.
+- **The site** (`worker/site.ts`): deep links get the HTML shell (fetched as `/` from the `ASSETS` binding, never cached) with agent-readable `<noscript>` content, or Markdown when the request accepts `text/markdown`; any other path is a Markdown 404. `site.ts` sets the headers on what it builds, since `_headers` covers only files.
+- **The API** under `/api` proxies everything that requires credentials (the Bsky app reads the public Bluesky API directly, so there is no Bluesky route):
+  - `/api/jev/plan`, `/api/jev` — Ask AI: a fast planner LLM on an OpenAI-compatible endpoint (env: `AI_BASE_URL`, `AI_API_KEY`, required `JEV_PLANNER_MODEL`, `gpt-6-luna` in wrangler.toml; optional `JEV_PLANNER_REASONING_EFFORT`) compiles typed questions, TypeSafe Jev answers them (env: `TYPESAFE_API_KEY`, `JEV_MODEL`; per-IP `JEV_RATE_LIMITER`); logic in `worker/jev.js`. When Jev has nothing to judge (writing, explaining, arithmetic) the planner replies `answer` with its own prose instead of refusing
+  - `/api/fedi/account` and `/api/fedi/statuses` — Mastodon/GoToSocial proxy (env: `FEDI_INSTANCE`, `FEDI_ACCESS_TOKEN`; per-IP `PROXY_RATE_LIMITER`, shared with NeoDB)
+  - `/api/neodb/shelf` — NeoDB reading shelf proxy (env: `NEODB_ACCESS_TOKEN`; per-IP `PROXY_RATE_LIMITER`)
+
+Configure via `wrangler.toml`. Secrets are set in the Cloudflare dashboard (or `wrangler secret put`), not in the toml.
 
 ### Deep Linking
 
@@ -105,7 +112,7 @@ App icons are pixel art generated by `node scripts/pixel-icons.mjs` (ASCII grids
 - `src/apps/media/` is the Media Player. Other apps hand it audio or video with `createMediaRequest`/`createMediaItem` from `mediaLibrary.ts` and `openApplication(MEDIA_PLAYER_TYPE, { props: { request } })`. A one-item request plays `once` (the player holds on `holdId` and stops at the end instead of advancing); videos of `SHORT_LOOP_SECONDS` or less loop like GIFs.
 - Are.na links go through `src/apps/arena/utils/arenaLinks.ts` (parse channel/block links, pick playable media and images) and `arenaImport.ts` (read a channel page by page); the Media Player and Images (`ImageViewer`, on the desktop) accept them, and `createMediaRequest([], true, { arena })` queues a whole channel.
 - `src/apps/ask-ai/` is Ask AI (catalog identity `AI Talk`). The person asks one question; `/api/jev/plan` replies `plan`, `needs_input` (ask for fields, re-plan with `inputs`), `answer` (the planner's own prose, shown as the Answer · Planner card) or `refuse`; `/api/jev` returns `best` plus analytics. Logic in `worker/jev.js`, tests in `worker/jev.test.ts`. Another app hands over a question with `openApplication('AI Talk', { props: { ask: { id, question } } })` (Chance's tarot does); each id is asked once and then cleared from the window props.
-- Notepad, Clock, Calculator and Chance (`src/apps/notepad|clock|calculator|chance/`) keep their logic in tested pure modules (`markdown.ts`, `richText.ts`, `time.ts`, `evaluate.ts`, `random.ts`); `src/lib/internetTime.ts` is shared with the calendar flyout. New deep links must also be added to `UI_PATHS` in `functions/[[path]].ts` (the readiness test checks).
+- Notepad, Clock, Calculator and Chance (`src/apps/notepad|clock|calculator|chance/`) keep their logic in tested pure modules (`markdown.ts`, `richText.ts`, `time.ts`, `evaluate.ts`, `random.ts`); `src/lib/internetTime.ts` is shared with the calendar flyout. New deep links must also be added to `UI_PATHS` in `worker/site.ts` (the readiness test checks).
 
 ### User Settings
 

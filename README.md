@@ -53,7 +53,7 @@ bun install --frozen-lockfile
 bun dev              # http://localhost:8080
 ```
 
-During development, `/api/*` requests go to the deployed site (`VITE_SITE_URL`, lok.computer by default), so Ask AI, Fedi and Shelf work without credentials. To run the Worker yourself, start `bunx wrangler dev` (with a `.dev.vars` file holding the secrets below) and point the dev server at it:
+During development, `/api/*` requests go to the deployed site (`VITE_SITE_URL`, lok.computer by default), so Ask AI, Fedi and Shelf work without credentials. To run the Worker yourself, build once (`bun run build`: the Worker serves `dist/`), start `bunx wrangler dev` (with a `.dev.vars` file holding the secrets below), and either open http://localhost:8787 for the whole site as deployed or point the dev server at it:
 
 ```bash
 LOK_API_ORIGIN=http://localhost:8787 bun dev
@@ -63,7 +63,7 @@ Before sending a change, run all four checks:
 
 ```bash
 bun run lint
-bun run typecheck    # the app, the Worker and Pages function, and the Vite config
+bun run typecheck    # the app, the Worker, and the Vite config
 bun test
 bun run build
 ```
@@ -72,10 +72,12 @@ bun run build
 
 ## Deploying
 
-The site has two parts on Cloudflare:
+The whole site is one Cloudflare Worker with static assets (`wrangler.toml`):
 
-1. **The frontend on Cloudflare Pages.** Build command `bun run build`, output directory `dist`. `functions/[[path]].ts` serves Markdown to agents and returns real 404s for unknown paths; `public/_routes.json` sends `/api/*` to the Worker.
-2. **The API Worker** (`worker/worker.js`, with the Ask AI pipeline in `worker/jev.js`), deployed by hand with `bunx wrangler deploy`. It holds every credential, so none reach the browser.
+- **The frontend** is the built `dist/`, served by the Worker's asset layer with the headers in `public/_headers`.
+- **The Worker** (`worker/`) answers the rest: `site.ts` gives deep links the app shell with Markdown for agents and returns real 404s for unknown paths, and `worker.js` serves the API under `/api` (with the Ask AI pipeline in `jev.js`). It holds every credential, so none reach the browser.
+
+[Workers Builds](https://developers.cloudflare.com/workers/ci-cd/builds/) deploys both on every push to `main`: build command `bun run build`, deploy command `npx wrangler deploy`, and the build variable `BUN_VERSION` set to the release in `packageManager`. To deploy by hand, run `bun run deploy`, which builds first (a bare `wrangler deploy` uploads whatever `dist/` holds).
 
 | Worker setting | Kind | Used by |
 |---|---|---|
@@ -88,13 +90,13 @@ The site has two parts on Cloudflare:
 | `NEODB_USERNAME`, `NEODB_ACCESS_TOKEN` | var, secret | Shelf app |
 | `JEV_RATE_LIMITER`, `PROXY_RATE_LIMITER` | binding | Per-IP rate limits, declared in `wrangler.toml` |
 
-Set secrets with `bunx wrangler secret put <NAME>`. Wrangler deploys to the account you're logged in to, or to `CLOUDFLARE_ACCOUNT_ID` when your login reaches several. Deploy the Worker before pushing when `worker.js`, `jev.js` or `wrangler.toml` changed. [docs/worker-api.md](docs/worker-api.md) has the endpoints in detail.
+Set secrets with `bunx wrangler secret put <NAME>`. Wrangler deploys to the account you're logged in to, or to `CLOUDFLARE_ACCOUNT_ID` when your login reaches several. [docs/worker-api.md](docs/worker-api.md) has the endpoints in detail.
 
 ## Making your own
 
 Fork it, then swap out what's mine:
 
-1. **Build settings.** Set these on your Pages project (or in `.env.local`; see [`.env.example`](.env.example)). Each one falls back to lok.computer's value when unset ([`src/config/deployment.ts`](src/config/deployment.ts)):
+1. **Build settings.** Set these as build variables on your Worker's Workers Builds settings (or in `.env.local`; see [`.env.example`](.env.example)). Each one falls back to lok.computer's value when unset ([`src/config/deployment.ts`](src/config/deployment.ts)):
 
    | Variable | What it sets |
    |---|---|
@@ -107,7 +109,7 @@ Fork it, then swap out what's mine:
 
 2. **Worker settings** in `wrangler.toml`: `FEDI_INSTANCE` and `NEODB_USERNAME`, plus the secrets in the table above.
 3. **[`src/config/site.ts`](src/config/site.ts):** the About window's quote, bio, links and projects, the repository link, and the Browser's bookmarks.
-4. **Everything else that's mine:** the `rel="me"` links, author and Twitter tags in `index.html`; the About text and changelog in `src/apps/about/`; the Links app and the 88×31 buttons in `src/assets/buttons/` and `public/`; the favicon and social image; `llms.txt`, `agent-instructions.md`, `openapi.json`, `sitemap.xml` and `robots.txt` in `public/`; `functions/agent-content.ts`.
+4. **Everything else that's mine:** the `rel="me"` links, author and Twitter tags in `index.html`; the About text and changelog in `src/apps/about/`; the Links app and the 88×31 buttons in `src/assets/buttons/` and `public/`; the favicon and social image; `llms.txt`, `agent-instructions.md`, `openapi.json`, `sitemap.xml` and `robots.txt` in `public/`; `worker/agent-content.ts`.
 
 The lok.computer name, the L3 logo and my writing aren't part of the licence (see below), so replace them rather than reuse them.
 

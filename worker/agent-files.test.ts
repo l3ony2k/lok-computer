@@ -94,17 +94,21 @@ describe("machine-readable agent resources", () => {
     expect(fallback).toContain('href="/openapi.json"');
   });
 
-  test("Pages routes preserve the API Worker service while covering site paths", async () => {
-    const routes = await Bun.file("public/_routes.json").json();
+  test("the Worker serves the built site and runs first only where it must", async () => {
+    const config = Bun.TOML.parse(await Bun.file("wrangler.toml").text()) as {
+      main: string;
+      assets: { directory: string; binding: string; not_found_handling: string; run_worker_first: string[] };
+    };
 
-    expect(routes.version).toBe(1);
-    expect(routes.include).toEqual(["/*"]);
-    expect(routes.exclude).toContain("/assets/*");
-    expect(routes.services).toEqual([
-      {
-        service: "lok-computer-worker",
-        path: "/api/*",
-      },
-    ]);
+    expect(config.main).toBe("worker/worker.js");
+    expect(config.assets.directory).toBe("dist");
+    expect(config.assets.binding).toBe("ASSETS");
+    // A missing file reaches the Worker (Markdown 404), never an SPA fallback.
+    expect(config.assets.not_found_handling).toBe("none");
+    expect(config.assets.run_worker_first).toEqual(["/", "/api", "/api/*"]);
+  });
+
+  test("no Pages-only routing file is published as a static asset", async () => {
+    expect(await Bun.file("public/_routes.json").exists()).toBe(false);
   });
 });
