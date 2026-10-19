@@ -22,6 +22,8 @@ export const CHANGELOG: ChangelogEntry[] = [
       'The XP, 7 and CS 1.6 theme swatches show their wallpapers again.',
       'A missing file gets a 404 instead of the desktop page, which a browser could keep for a year in place of the real file.',
       '/api answers with the API index instead of the desktop.',
+      'The privacy page now covers the self-hosted Umami analytics and where its server is.',
+      'Opening /privacy, /contact or /developers shows the text in a plain document window, with a button to copy all of it.',
     ],
   },
   {

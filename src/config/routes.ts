@@ -6,6 +6,7 @@
  */
 
 import { APP_CONFIG } from '@/config/constants';
+import { TEXT_DOCUMENT_PATHS, isTextDocumentPath, textDocumentFileName } from '@/config/textDocuments';
 
 export interface RouteConfig {
     /** URL path pattern, e.g., 'explorer/:channelSlug' */
@@ -284,6 +285,15 @@ export const ROUTES: RouteConfig[] = [
         generateUrl: () => '/console',
         getTitle: () => 'Console',
     },
+
+    // The agent-facing text documents, one route each, all in the Document window.
+    ...TEXT_DOCUMENT_PATHS.map((path): RouteConfig => ({
+        pattern: path.slice(1),
+        componentType: 'Document',
+        extractProps: () => ({ path }),
+        generateUrl: (props) => (isTextDocumentPath(props.path) ? props.path : null),
+        getTitle: (props) => (isTextDocumentPath(props.path) ? textDocumentFileName(props.path) : 'Document'),
+    })),
 
     {
         pattern: 'web',

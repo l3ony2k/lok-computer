@@ -10,6 +10,12 @@
   X-Content-Type-Options: nosniff
   Link: </llms.txt>; rel="alternate"; type="text/markdown", </openapi.json>; rel="service-desc"; type="application/vnd.oai.openapi+json", </sitemap.xml>; rel="sitemap"; type="application/xml"
 
+# The workers.dev address and the version preview URLs
+# (<version>-<worker>.<account>.workers.dev) serve a full copy of the site; only
+# the real domain should be listed. worker.js marks the responses it builds.
+https://:worker.:account.workers.dev/*
+  X-Robots-Tag: noindex
+
 /system-version.json
   Cache-Control: no-cache, no-store, must-revalidate
 

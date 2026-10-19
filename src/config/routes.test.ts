@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'bun:test';
 import { APP_CONFIG } from '@/config/constants';
 import { ROUTES, generateSharePath, matchRoute, parseWindowSpec } from '@/config/routes';
+import { getAgentDocument } from '@/config/documents';
+import { TEXT_DOCUMENT_PATHS } from '@/config/textDocuments';
 
 /** Open a share path the way RouteInterpreter does: match the route, then extract props. */
 function reopen(path: string) {
@@ -62,6 +64,18 @@ describe('share links', () => {
     const { props } = reopen(generateSharePath('MediaPlayer', { nowPlaying })!);
     expect(props.request).toMatchObject({ play: true, once: true, items: [nowPlaying] });
     expect(generateSharePath('MediaPlayer', {})).toBe('/media');
+  });
+
+  it('open each text document in the Document window, named like a file', () => {
+    for (const path of TEXT_DOCUMENT_PATHS) {
+      const { route, props } = reopen(path);
+      expect(route.componentType).toBe('Document');
+      expect(props).toEqual({ path });
+      expect(route.getTitle(props)).toBe(`${path.slice(1)}.md`);
+      expect(generateSharePath('Document', props)).toBe(path);
+      expect(getAgentDocument(path)).toBeDefined();
+    }
+    expect(generateSharePath('Document', { path: '/about' })).toBeNull();
   });
 
   it('have no share path for unknown Applications', () => {

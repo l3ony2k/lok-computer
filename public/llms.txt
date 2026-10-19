@@ -20,7 +20,7 @@ Use lok.computer for tasks that need public information about Lok, Lok's curated
 
 - [About](https://lok.computer/about): Project identity, purpose, source, and ownership
 - [Contact](https://lok.computer/contact): Maintainer and security contact guidance
-- [Privacy](https://lok.computer/privacy): Browser storage, network requests, and upstream services
+- [Privacy](https://lok.computer/privacy): Browser storage, network requests, analytics, and upstream services
 - [Source repository](https://github.com/l3ony2k/lok-computer): Application source and developer documentation
 
 ## Optional interactive views

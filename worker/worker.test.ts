@@ -176,6 +176,17 @@ describe("one Worker for the site and the API", () => {
     expect(calls).toEqual(["/"]);
   });
 
+  test("asks search engines not to list the workers.dev copy", async () => {
+    for (const path of ["/", "/about", "/missing", "/api/status"]) {
+      const copy = await worker.fetch(new Request(`https://lok-computer-worker.l3on.workers.dev${path}`), { ASSETS: assets([]) }, {});
+      const real = await worker.fetch(new Request(`https://lok.computer${path}`), { ASSETS: assets([]) }, {});
+
+      expect(copy.headers.get("x-robots-tag")).toBe("noindex");
+      expect(real.headers.get("x-robots-tag")).toBeNull();
+      expect(copy.status).toBe(real.status);
+    }
+  });
+
   test("does not mistake a path that only starts with api for the API", async () => {
     const response = await worker.fetch(new Request("https://lok.computer/apiary"), { ASSETS: assets([]) }, {});
 

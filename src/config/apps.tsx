@@ -22,6 +22,7 @@ import {
   ChanceApp,
   ClockApp,
   CalculatorApp,
+  DocumentApp,
   APP_MODULE_LOADERS,
 } from '@/config/lazyApps';
 import { ARENA_WINDOW_DEFAULTS } from '@/config/arenaWindows';
@@ -251,6 +252,16 @@ export const APPLICATIONS = {
     loader: APP_MODULE_LOADERS.BlockViewer,
     defaultWidth: ARENA_WINDOW_DEFAULTS.blockViewer.width,
     defaultHeight: ARENA_WINDOW_DEFAULTS.blockViewer.height,
+  },
+  // /privacy, /contact and /developers: the agent-facing text, shown as is.
+  Document: {
+    componentType: 'Document',
+    name: 'Document',
+    iconType: 'text',
+    component: DocumentApp,
+    loader: APP_MODULE_LOADERS.Document,
+    defaultWidth: 560,
+    defaultHeight: 600,
   },
   ImageViewer: {
     componentType: 'ImageViewer',

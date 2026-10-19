@@ -381,6 +381,35 @@ async function handleApiRequest(request, env) {
   return makeNotFoundResponse(request);
 }
 
+/**
+ * The workers.dev address and every version preview URL serve a full copy of
+ * the site; ask search engines to list only the real domain. public/_headers
+ * does the same for the static files.
+ * @param {URL} url
+ * @param {Response} response
+ */
+function withWorkersDevNoIndex(url, response) {
+  if (!url.hostname.endsWith('.workers.dev')) return response;
+  const marked = new Response(response.body, response);
+  marked.headers.set('X-Robots-Tag', 'noindex');
+  return marked;
+}
+
+/**
+ * @param {Request} request
+ * @param {Env} env
+ */
+function route(request, env) {
+  const { pathname } = new URL(request.url);
+  if (pathname === '/api' || pathname.startsWith('/api/')) {
+    return handleApiRequest(request, env);
+  }
+  if (!env.ASSETS) {
+    return new Response('The ASSETS binding is missing.', { status: 500 });
+  }
+  return handleSiteRequest(request, env.ASSETS);
+}
+
 export default {
   /**
    * @param {Request} request
@@ -388,13 +417,6 @@ export default {
    * @param {unknown} ctx
    */
   async fetch(request, env, ctx) {
-    const { pathname } = new URL(request.url);
-    if (pathname === '/api' || pathname.startsWith('/api/')) {
-      return handleApiRequest(request, env);
-    }
-    if (!env.ASSETS) {
-      return new Response('The ASSETS binding is missing.', { status: 500 });
-    }
-    return handleSiteRequest(request, env.ASSETS);
+    return withWorkersDevNoIndex(new URL(request.url), await route(request, env));
   },
 };

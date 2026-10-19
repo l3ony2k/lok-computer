@@ -28,7 +28,7 @@ Public material returned from another service remains attributable to that servi
 
 ## Privacy summary
 
-Cloudflare and upstream providers may process normal request information such as IP address, user agent, URL, timestamp, and security signals. Browser-local desktop state is not exposed through the public API. Ask AI submissions are processed by the configured external planner model and by TypeSafe (Jev). More detail is available at `https://lok.computer/privacy`.
+Cloudflare and upstream providers may process normal request information such as IP address, user agent, URL, timestamp, and security signals. Browser-local desktop state is not exposed through the public API. Ask AI submissions are processed by the configured external planner model and by TypeSafe (Jev). Visits are counted with self-hosted Umami analytics (no cookies, no stored IP addresses) on a server in Los Angeles, United States. More detail is available at `https://lok.computer/privacy`.
 
 ## Resource index
 

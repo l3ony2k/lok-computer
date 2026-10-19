@@ -109,7 +109,7 @@ Fork it, then swap out what's mine:
 
 2. **Worker settings** in `wrangler.toml`: `FEDI_INSTANCE` and `NEODB_USERNAME`, plus the secrets in the table above.
 3. **[`src/config/site.ts`](src/config/site.ts):** the About window's quote, bio, links and projects, the repository link, and the Browser's bookmarks.
-4. **Everything else that's mine:** the `rel="me"` links, author and Twitter tags in `index.html`; the About text and changelog in `src/apps/about/`; the Links app and the 88×31 buttons in `src/assets/buttons/` and `public/`; the favicon and social image; `llms.txt`, `agent-instructions.md`, `openapi.json`, `sitemap.xml` and `robots.txt` in `public/`; `worker/agent-content.ts`.
+4. **Everything else that's mine:** the `rel="me"` links, author and Twitter tags in `index.html`; the About text and changelog in `src/apps/about/`; the Links app and the 88×31 buttons in `src/assets/buttons/` and `public/`; the favicon and social image; `llms.txt`, `agent-instructions.md`, `openapi.json`, `sitemap.xml` and `robots.txt` in `public/`; the site's text documents in `src/config/documents.ts`.
 
 The lok.computer name, the L3 logo and my writing aren't part of the licence (see below), so replace them rather than reuse them.
 

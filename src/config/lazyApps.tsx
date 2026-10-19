@@ -53,6 +53,7 @@ export const APP_MODULE_LOADERS = {
     Chance: () => import('@/apps/chance/ChanceApp'),
     Clock: () => import('@/apps/clock/ClockApp'),
     Calculator: () => import('@/apps/calculator/CalculatorApp'),
+    Document: () => import('@/apps/document/DocumentApp'),
 } as const;
 
 export const ChannelBrowser = lazy(() =>
@@ -112,3 +113,6 @@ export const ClockApp = lazy(() =>
 
 export const CalculatorApp = lazy(() =>
     APP_MODULE_LOADERS.Calculator().then(m => ({ default: m.CalculatorApp })));
+
+export const DocumentApp = lazy(() =>
+    APP_MODULE_LOADERS.Document().then(m => ({ default: m.DocumentApp })));

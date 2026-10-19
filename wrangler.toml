@@ -21,6 +21,12 @@ binding = "ASSETS"
 not_found_handling = "none"
 run_worker_first = ["/", "/api", "/api/*"]
 
+# Workers Logs: every Worker invocation (the HTML shell, deep links, /api) and its
+# console output, kept by Cloudflare for a few days. Static files never start the
+# Worker, so they are not logged.
+[observability]
+enabled = true
+
 # Development environment variables
 [vars]
 JEV_MODEL = "jev-latest"
