@@ -1,4 +1,4 @@
-![lok.computer](docs/screenshots/banner.png)
+![lok.computer](docs/screenshots/banner.webp)
 
 # lok.computer
 
@@ -8,7 +8,7 @@ A small operating system in your browser, for curiosity and creation.
 
 **[lok.computer](https://lok.computer)** is my personal site, built as a retro desktop: draggable windows, a taskbar or menu bar, desktop icons, and a dozen small apps, most of them windows onto things I collect and write elsewhere ([Are.na](https://www.are.na/lok), the fediverse, NeoDB). It wears ten skins, from a flat monochrome default to Windows 98, Mac System 6 and BeOS.
 
-![lok.computer in its default theme: Are.na, Weather, About and Media windows on a dotted desktop](docs/screenshots/lok.png)
+![lok.computer in its default theme: Are.na, Weather, About and Media windows on a dotted desktop](docs/screenshots/lok.webp)
 
 <table>
   <tr>
