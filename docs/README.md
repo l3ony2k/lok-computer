@@ -69,7 +69,7 @@ lok-computer/
 ## Key Concepts
 
 ### 1. Applications
-Restorable programs that run in windows. The authoritative catalog in `config/apps.tsx` owns identity, lazy loader, defaults, and single-instance behavior.
+Restorable programs that run in windows. The authoritative catalog in `src/config/apps.tsx` owns identity, lazy loader, defaults, and single-instance behavior.
 
 ### 2. Application launch
 `useApplicationLauncher` turns Application identity and domain props into a live, restorable window.

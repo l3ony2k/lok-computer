@@ -31,6 +31,7 @@ dist-ssr
 
 # local tooling
 .wrangler
+.claude
 test-results
 
 # promo video project (separate, not part of the site)

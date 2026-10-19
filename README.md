@@ -1,3 +1,5 @@
+![lok.computer](docs/screenshots/banner.png)
+
 # lok.computer
 
 [![CI](https://github.com/l3ony2k/lok-computer/actions/workflows/ci.yml/badge.svg)](https://github.com/l3ony2k/lok-computer/actions/workflows/ci.yml)
@@ -6,15 +8,80 @@ A small operating system in your browser, for curiosity and creation.
 
 **[lok.computer](https://lok.computer)** is my personal site, built as a retro desktop: draggable windows, a taskbar or menu bar, desktop icons, and a dozen small apps, most of them windows onto things I collect and write elsewhere ([Are.na](https://www.are.na/lok), the fediverse, NeoDB). It wears ten skins, from a flat monochrome default to Windows 98, Mac System 6 and BeOS.
 
-![lok.computer in its default theme: Are.na, Weather, About and Media windows on a dotted desktop](docs/screenshots/lok.webp)
+![lok.computer in its default theme: Are.na, Weather, About and Media windows on a dotted desktop](docs/screenshots/lok.png)
 
 <table>
   <tr>
-    <td><img src="docs/screenshots/xp.webp" alt="The XP theme: Media, Clock and Calculator windows over Bliss" /></td>
-    <td><img src="docs/screenshots/98.webp" alt="The 98 theme: Are.na, Notepad and Console windows on teal" /></td>
-    <td><img src="docs/screenshots/system.webp" alt="The System theme: one-bit About, Clock and Calculator windows" /></td>
+    <td><img src="docs/screenshots/themes-1.webp" alt="The BeOS theme: Bsky, Ask AI, Chance and Config windows with yellow tabs" /></td>
+    <td><img src="docs/screenshots/themes-2.webp" alt="The 7 theme: glass windows and the keyboard launcher" /></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/themes-3.webp" alt="The CS 1.6 theme: olive windows and the Menu button" /></td>
+    <td><img src="docs/screenshots/themes-4.webp" alt="The XP theme over Bliss, with the start menu open" /></td>
   </tr>
 </table>
+
+<details>
+<summary><b>Time machine</b>: how it looked, from the first version to now</summary>
+
+**2025-04-27**
+
+<img src="docs/screenshots/time-machine/250427.webp" alt="lok.computer on 2025-04-27" />
+<img src="docs/screenshots/time-machine/250427-1.webp" alt="lok.computer on 2025-04-27" />
+
+**2025-04-28**
+
+<img src="docs/screenshots/time-machine/250428.webp" alt="lok.computer on 2025-04-28" />
+
+**2025-05-09**
+
+<img src="docs/screenshots/time-machine/250509.webp" alt="lok.computer on 2025-05-09" />
+
+**2025-05-18**
+
+<img src="docs/screenshots/time-machine/250518.webp" alt="lok.computer on 2025-05-18" />
+
+**2025-05-19**
+
+<img src="docs/screenshots/time-machine/250519.webp" alt="lok.computer on 2025-05-19" width="360" />
+
+**2025-06-07**
+
+<img src="docs/screenshots/time-machine/250607.webp" alt="lok.computer on 2025-06-07" />
+
+**2025-06-09**
+
+<img src="docs/screenshots/time-machine/250609.webp" alt="lok.computer on 2025-06-09" />
+
+**2025-11-26**
+
+<img src="docs/screenshots/time-machine/251126.webp" alt="lok.computer on 2025-11-26" />
+
+**2025-11-27**
+
+<img src="docs/screenshots/time-machine/251127.webp" alt="lok.computer on 2025-11-27" />
+
+**2025-12-04**
+
+<img src="docs/screenshots/time-machine/251204.webp" alt="lok.computer on 2025-12-04" />
+
+**2025-12-12**
+
+<img src="docs/screenshots/time-machine/251212.webp" alt="lok.computer on 2025-12-12" />
+
+**2026-01-05**
+
+<img src="docs/screenshots/time-machine/260105.webp" alt="lok.computer on 2026-01-05" />
+
+**2026-07-17**
+
+<img src="docs/screenshots/time-machine/260717.webp" alt="lok.computer on 2026-07-17" />
+
+**2026-07-21**
+
+<img src="docs/screenshots/time-machine/260721.webp" alt="lok.computer on 2026-07-21" />
+
+</details>
 
 ## What's inside
 
