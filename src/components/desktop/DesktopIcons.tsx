@@ -19,12 +19,16 @@ import {
 import {
   DESKTOP_ICON_POSITIONS_KEY,
   ICON_CELLS,
+  anchorIconPoint,
   clampIconPosition,
+  isLegacyIconPoint,
   layoutIconSlots,
   normalizeIconPositions,
+  resolveIconPoint,
   type IconArea,
   type IconCell,
   type IconPoint,
+  type StoredIconPoint,
 } from '@/lib/desktopIconLayout';
 
 /** Mouse: a drag starts after this much movement. */
@@ -169,7 +173,7 @@ export const DesktopIcons: React.FC = React.memo(() => {
     defaultValue: CATALOG_ORDER,
     normalize: (stored) => normalizeIconOrder(stored, CATALOG_ORDER),
   });
-  const [positions, setPositions] = usePersistedState<Record<string, IconPoint>>({
+  const [positions, setPositions] = usePersistedState<Record<string, StoredIconPoint>>({
     key: DESKTOP_ICON_POSITIONS_KEY,
     defaultValue: {},
     normalize: (stored) => normalizeIconPositions(stored, CATALOG_ORDER),
@@ -207,9 +211,22 @@ export const DesktopIcons: React.FC = React.memo(() => {
   const slots = useMemo(() => layoutIconSlots(apps.length, area, cell), [apps.length, area, cell]);
   const points = useMemo(() => (
     free
-      ? apps.map((app, index) => clampIconPosition(positions[app.componentType] ?? slots[index], area, cell))
+      ? apps.map((app, index) => {
+        const stored = positions[app.componentType];
+        return clampIconPosition(stored ? resolveIconPoint(stored, area, cell) : slots[index], area, cell);
+      })
       : null
   ), [apps, area, cell, free, positions, slots]);
+
+  // Positions saved before icons kept to the right edge were measured from the
+  // left; convert them against the first measured layer so they stay put.
+  useEffect(() => {
+    if (area.width <= 0 || !Object.values(positions).some(isLegacyIconPoint)) return;
+    setPositions((previous) => Object.fromEntries(Object.entries(previous).map(([type, point]) => [
+      type,
+      isLegacyIconPoint(point) ? anchorIconPoint(point, area, cell) : point,
+    ])));
+  }, [area, cell, positions, setPositions]);
 
   useEffect(() => {
     const dismissSelection = (event: PointerEvent) => {
@@ -288,12 +305,13 @@ export const DesktopIcons: React.FC = React.memo(() => {
         const layer = layerRef.current;
         if (layer) {
           const rect = layer.getBoundingClientRect();
+          const layerArea = { width: layer.clientWidth, height: layer.clientHeight };
           const point = clampIconPosition(
             { x: event.clientX - current.offsetX - rect.left, y: event.clientY - current.offsetY - rect.top },
-            { width: layer.clientWidth, height: layer.clientHeight },
+            layerArea,
             cellRef.current,
           );
-          setPositions((previous) => ({ ...previous, [current.type]: point }));
+          setPositions((previous) => ({ ...previous, [current.type]: anchorIconPoint(point, layerArea, cellRef.current) }));
         }
       } else {
         const target = iconTypeAt(event.clientX, event.clientY);

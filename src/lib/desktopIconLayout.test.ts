@@ -1,5 +1,13 @@
 import { describe, expect, test } from 'bun:test';
-import { ICON_CELLS, ICON_GAP, clampIconPosition, layoutIconSlots, normalizeIconPositions } from './desktopIconLayout';
+import {
+  ICON_CELLS,
+  ICON_GAP,
+  anchorIconPoint,
+  clampIconPosition,
+  layoutIconSlots,
+  normalizeIconPositions,
+  resolveIconPoint,
+} from './desktopIconLayout';
 
 const AREA = { width: 1000, height: 400 };
 const CELL = ICON_CELLS.m;
@@ -42,9 +50,29 @@ describe('clampIconPosition', () => {
 
 describe('normalizeIconPositions', () => {
   test('keeps finite coordinates for known apps only', () => {
-    const stored = { About: { x: 1, y: 2 }, Gone: { x: 3, y: 4 }, Weather: { x: 'a', y: 1 }, Media: null, Links: { x: Infinity, y: 0 } };
-    expect(normalizeIconPositions(stored, ['About', 'Weather', 'Media', 'Links'])).toEqual({ About: { x: 1, y: 2 } });
+    const stored = { About: { x: 1, y: 2 }, Gone: { x: 3, y: 4 }, Weather: { x: 'a', y: 1 }, Media: null, Links: { x: Infinity, y: 0 }, Clock: { right: 5, y: 6 } };
+    expect(normalizeIconPositions(stored, ['About', 'Weather', 'Media', 'Links', 'Clock'])).toEqual({
+      About: { x: 1, y: 2 },
+      Clock: { right: 5, y: 6 },
+    });
     expect(normalizeIconPositions([1, 2], ['About'])).toEqual({});
     expect(normalizeIconPositions(undefined, ['About'])).toEqual({});
+  });
+});
+
+describe('right-anchored positions', () => {
+  test('round-trip in the same layer', () => {
+    const point = { x: 300, y: 40 };
+    expect(resolveIconPoint(anchorIconPoint(point, AREA, CELL), AREA, CELL)).toEqual(point);
+  });
+
+  test('keep their distance from the right edge when the layer resizes, like the flow', () => {
+    const stored = anchorIconPoint(layoutIconSlots(1, AREA, CELL)[0], AREA, CELL);
+    const wider = { width: 1400, height: 400 };
+    expect(resolveIconPoint(stored, wider, CELL)).toEqual(layoutIconSlots(1, wider, CELL)[0]);
+  });
+
+  test('legacy top-left points resolve as they are', () => {
+    expect(resolveIconPoint({ x: 7, y: 8 }, AREA, CELL)).toEqual({ x: 7, y: 8 });
   });
 });

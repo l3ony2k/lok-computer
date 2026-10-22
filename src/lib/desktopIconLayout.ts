@@ -2,7 +2,8 @@
  * Desktop icon geometry. Icons flow in columns from the top-right corner (the
  * CSS grid mode); with snapping off they sit at stored coordinates, and icons
  * without one take the slot the flow would have given them, so switching modes
- * never moves anything. Pure helpers so the layout can be tested.
+ * never moves anything. Stored coordinates keep their distance from the right
+ * edge, as the flow does. Pure helpers so the layout can be tested.
  */
 import type { DesktopIconSize } from '@/hooks/useUserSettings';
 
@@ -63,17 +64,40 @@ export const clampIconPosition = (point: IconPoint, area: IconArea, cell: IconCe
   };
 };
 
+/**
+ * A placed icon as stored, anchored to the top-right corner like the flow:
+ * `right` is the gap between the icon's right edge and the layer's, so
+ * resizing the desktop moves placed icons with the ones still in the flow.
+ * `{ x, y }` is the older top-left form, converted once the layer is measured.
+ */
+export type StoredIconPoint = { right: number; y: number } | IconPoint;
+
+export const isLegacyIconPoint = (point: StoredIconPoint): point is IconPoint => !('right' in point);
+
+/** Where a stored icon sits in a layer of this size. */
+export const resolveIconPoint = (stored: StoredIconPoint, area: IconArea, cell: IconCell): IconPoint => (
+  isLegacyIconPoint(stored) ? stored : { x: area.width - cell.width - stored.right, y: stored.y }
+);
+
+/** The stored, right-anchored form of a point in a layer of this size. */
+export const anchorIconPoint = (point: IconPoint, area: IconArea, cell: IconCell): StoredIconPoint => ({
+  right: area.width - cell.width - point.x,
+  y: point.y,
+});
+
+const isFiniteNumber = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
+
 /** Stored coordinates for apps that still exist, with finite numbers only. */
-export const normalizeIconPositions = (stored: unknown, catalog: string[]): Record<string, IconPoint> => {
+export const normalizeIconPositions = (stored: unknown, catalog: string[]): Record<string, StoredIconPoint> => {
   if (!stored || typeof stored !== 'object' || Array.isArray(stored)) return {};
   const known = new Set(catalog);
-  const positions: Record<string, IconPoint> = {};
+  const positions: Record<string, StoredIconPoint> = {};
   for (const [type, value] of Object.entries(stored as Record<string, unknown>)) {
     if (!known.has(type) || !value || typeof value !== 'object') continue;
-    const { x, y } = value as Partial<IconPoint>;
-    if (typeof x === 'number' && Number.isFinite(x) && typeof y === 'number' && Number.isFinite(y)) {
-      positions[type] = { x, y };
-    }
+    const { x, y, right } = value as { x?: unknown; y?: unknown; right?: unknown };
+    if (!isFiniteNumber(y)) continue;
+    if (isFiniteNumber(right)) positions[type] = { right, y };
+    else if (isFiniteNumber(x)) positions[type] = { x, y };
   }
   return positions;
 };

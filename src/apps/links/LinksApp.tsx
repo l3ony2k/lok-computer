@@ -7,7 +7,6 @@ import { SITE } from '@/config/site';
 // Import local 88x31 button images
 import l3onButton from '@/assets/buttons/l3on.gif'
 import savyButton from '@/assets/buttons/savy.gif'
-import ro3orButton from '@/assets/buttons/ro3or.gif'
 import wwwButton from '@/assets/buttons/www.png';
 import lightdarkButton from '@/assets/buttons/lightdark.png';
 import imissxpButton from '@/assets/buttons/imissxp.gif';
@@ -34,11 +33,14 @@ const buttonSections = [
             { url: "https://eltr.ac", image: "https://www.eltr.ac/assets/88x31.webp", alt: "eltr.ac" },
             { url: "https://v1sta.xyz/", image: "https://v1sta.xyz/wp-content/uploads/2026/02/88x31.png", alt: "景の域" },
             { url: "https://ink.v1sta.xyz", image: "https://ink.v1sta.xyz/wp-content/uploads/2026/03/88x31-ink.v1sta.png", alt: "景の印" },
-            { url: "https://ro3or.com", image: ro3orButton, alt: "鹅玉" },
+            { url: "https://eyu.at", image: "https://bear-images.sfo2.cdn.digitaloceanspaces.com/lok/ro3or-2.gif", alt: "鹅玉" },
             { url: "https://saki.net7.blog", image: "https://bear-images.sfo2.cdn.digitaloceanspaces.com/lok/image-1.webp", alt: "花島の咲 SAKI" },
             { url: "https://net7.blog/", image: "https://net7.blog/wp-content/uploads/2026/01/net7_88x31.png", alt: "网沏 Net7.Blog" },
             { url: "https://leehenry.top", image: "https://leehenry.top/88x31.gif", alt: "伏枥之间" },
             { url: "https://dimden.dev/", image: "https://dimden.dev/services/images/88x31.gif", alt: "dimden.dev" },
+            { url: "https://shuyulin1127.com", image: "https://bear-images.sfo2.cdn.digitaloceanspaces.com/shuyulin1127/shuyupixelart_88x31.gif", alt: "Shuyu Pixelart" },
+            { url: "https://alanone.top/", image: "https://media.alanone.top/button-88x31.gif", alt: "ENCOM一号机" },
+            { url: "https://matling.fit", image: "https://drum.matling.fit/sd/universe/88x31.gif", alt: "matling.fit" },
             { url: "https://sweetfish.site", image: "https://sweetfish.site/img/button3.png", alt: "sweetfish.site" },
             { url: "https://vale.rocks", image: valerockButton, alt: "vale.rocks" },
             { url: "https://lucida.to", image: "https://lucida.to/buttons/88x31.gif", alt: "lucida.to" },
@@ -52,6 +54,8 @@ const buttonSections = [
             { url: "#", image: "https://bear-images.sfo2.cdn.digitaloceanspaces.com/lok/ally.webp", alt: "ally" },
             { url: "#", image: "https://bear-images.sfo2.cdn.digitaloceanspaces.com/lok/anti-fascism_button.gif", alt: "anti-fascism" },
             { url: "https://en.wikipedia.org/wiki/World_Wide_Web", image: wwwButton, alt: "World Wide Web" },
+            { url: "https://indieweb.org/", image: "https://v1sta.xyz/wp-content/uploads/2026/03/88x31-IndieWeb.png", alt: "IndieWeb" },
+            { url: "https://indieweb.org/Webmention", image: "https://v1sta.xyz/wp-content/uploads/2026/03/88x31-Webmention.png", alt: "Webmention" },
             { url: "#", image: lightdarkButton, alt: "Light/Dark Buttons" },
             { url: "https://win32.run/", image: imissxpButton, alt: "I miss XP" },
             { url: "#", image: madewithwindowsButton, alt: "Made with Windows" },

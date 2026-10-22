@@ -4,6 +4,11 @@ Session-by-session engineering notes, newest first. The short, user-facing relea
 
 Add an entry here for every version bump.
 
+### Session: 3.1.10 — right-anchored icons, new buttons (2026-10-22)
+
+*   **Free icon placement anchors to the top-right** (`src/lib/desktopIconLayout.ts`, `DesktopIcons.tsx`): the column flow starts at the layer's right edge, but dropped icons were stored as `{ x, y }` from the top-left, so resizing the viewport moved the flowing icons and left the placed ones behind. Positions are now stored as `{ right, y }` (`right` is the gap from the icon's right edge to the layer's; `anchorIconPoint`/`resolveIconPoint` convert against the measured layer). Older `{ x, y }` entries still normalize and are converted once the layer is first measured, so nothing jumps on upgrade.
+*   **Links** (`src/apps/links/LinksApp.tsx`): synced with the button wall on l3on.site. Added Shuyu Pixelart, ENCOM一号机 and matling.fit to Cool Websites, IndieWeb and Webmention to Other; 鹅玉 links to eyu.at with its new button (the local `ro3or.gif` import is gone). The guestbook button stays on lok.computer's own guestbook (meadow.cafe), separate from l3on.site's.
+
 ### Session: 3.1.9 — from Pages to one Worker (2026-10-14)
 
 *   **Cutover** (2026-10-19): Pages automatic deployments turned off, `main` merged and deployed with `bun run deploy`, the `lok.computer` custom domain moved from the Pages project to `lok-computer-worker` (a few minutes offline), the `lok.computer/api/*` zone route deleted, and Workers Builds connected to `main` (`bun run build`, `npx wrangler deploy`, `BUN_VERSION=1.4.3`). The Pages project stays, paused, as the rollback for a couple of weeks.

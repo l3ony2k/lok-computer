@@ -14,6 +14,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '3.1.10',
+    date: '2026-10-22',
+    title: 'Icons that stay put',
+    notes: [
+      'With snapping off, a desktop icon you placed keeps its distance from the right edge when the window resizes, moving with the icons still in their columns instead of drifting against them.',
+      'Links: new buttons for Shuyu Pixelart, ENCOM一号机, matling.fit, IndieWeb and Webmention; 鹅玉 has moved to eyu.at.',
+    ],
+  },
+  {
     version: '3.1.9',
     date: '2026-10-14',
     title: 'One Worker',
