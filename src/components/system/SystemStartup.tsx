@@ -14,8 +14,9 @@ import { BiosSetup } from "./BiosSetup";
 // Raster assets ship as hashed files (vite.config.ts keeps them out of the JS),
 // so warming them here fills the HTTP cache before the desktop paints.
 // The one SVG under assets is the icon script's vector source, not a runtime asset.
+// The 78 tarot cards are left out: Chance loads only the ones it draws.
 const bundledAssetModules = import.meta.glob(
-  "/src/assets/**/*.{png,gif,jpg,jpeg,webp,avif}",
+  ["/src/assets/**/*.{png,gif,jpg,jpeg,webp,avif}", "!/src/assets/tarot/**"],
   { eager: true, query: "?url", import: "default" },
 ) as Record<string, string>;
 

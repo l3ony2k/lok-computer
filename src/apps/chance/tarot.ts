@@ -86,6 +86,12 @@ export const TAROT_DECK: TarotCard[] = [
   }))),
 ];
 
+/**
+ * Pixel size of every card scan (src/assets/tarot, tarotImages.ts), so a card
+ * holds its space before the art loads. tarotImages.test.ts checks the files.
+ */
+export const TAROT_IMAGE_SIZE = { width: 600, height: 1004 } as const;
+
 export const arcanaLabel = (arcana: TarotArcana) => (
   arcana === 'major' ? 'Major Arcana' : `Suit of ${SUITS.find((suit) => suit.id === arcana)?.name ?? arcana}`
 );

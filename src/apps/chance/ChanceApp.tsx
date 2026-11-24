@@ -29,7 +29,9 @@ import {
   type PlayingCard,
   type TarotDraw,
 } from './random';
-import { arcanaLabel } from './tarot';
+import { TAROT_IMAGE_SIZE } from './tarot';
+import { TAROT_BACK } from './tarotImages';
+import { TarotCardView } from './TarotCardView';
 import './chance.css';
 
 export interface ChanceAppProps {
@@ -196,6 +198,13 @@ export const ChanceApp: React.FC<ChanceAppProps> = ({ initialTab, onPropsChange 
 
   // Tarot
   const [reading, setReading] = useState<TarotDraw[]>([]);
+  // Keys each reading's cards, so drawing again lays out fresh cards face down.
+  const [readingId, setReadingId] = useState(0);
+
+  const drawReading = (count: 1 | 3) => {
+    setReading(drawTarot(count));
+    setReadingId((id) => id + 1);
+  };
 
   const askAi = useCallback(() => {
     if (!reading.length) return;
@@ -232,7 +241,8 @@ export const ChanceApp: React.FC<ChanceAppProps> = ({ initialTab, onPropsChange 
     >
       {state.tab === 'dice' && (
         <section className="chance-pane" aria-label="Dice">
-          <div className="chance-dice-config">
+          <div className="chance-actions">
+            <RetroButton variant="primary" onClick={roll} disabled={rolling}>Roll</RetroButton>
             {state.dice.map((sides, index) => (
               <div className="chance-die-config app-joined-control" key={index}>
                 <select
@@ -249,11 +259,11 @@ export const ChanceApp: React.FC<ChanceAppProps> = ({ initialTab, onPropsChange 
               </div>
             ))}
             <RetroButton size="sm" onClick={addDie} disabled={state.dice.length >= MAX_DICE} title={`Up to ${MAX_DICE} dice`}>
-              <Plus className="w-3 h-3" /> Add die
+              <Plus className="w-3 h-3 mr-1" />Add die
             </RetroButton>
           </div>
 
-          <div className="chance-dice-results" aria-live="polite" aria-busy={rolling}>
+          <div className="chance-dice-results" data-idle={faces ? undefined : ''} aria-busy={rolling}>
             {(faces ?? state.dice.map(() => null)).map((value, index) => (
               <div className="chance-die" data-rolling={rolling || undefined} data-sides={state.dice[index]} key={index}>
                 {state.dice[index] === 6 && value !== null ? (
@@ -263,40 +273,49 @@ export const ChanceApp: React.FC<ChanceAppProps> = ({ initialTab, onPropsChange 
                     ))}
                   </span>
                 ) : (
-                  <span className="chance-die-value">{value ?? '·'}</span>
+                  <span className="chance-die-value">{value ?? '?'}</span>
                 )}
                 <span className="chance-die-sides">d{state.dice[index]}</span>
               </div>
             ))}
           </div>
 
-          <div className="chance-actions">
-            <RetroButton variant="primary" onClick={roll} disabled={rolling}>Roll</RetroButton>
-            {faces && !rolling && (
-              <span className="chance-total">Total <strong>{faces.reduce((sum, value) => sum + value, 0)}</strong></span>
-            )}
-          </div>
+          <p className="chance-readout" aria-live="polite">
+            {rolling ? 'Rolling…' : faces ? (
+              <>
+                <span>{faces.length === 1 ? 'Rolled' : 'Total'}</span>
+                <strong className="chance-readout-value">{faces.reduce((sum, value) => sum + value, 0)}</strong>
+              </>
+            ) : 'Choose your dice, then roll.'}
+          </p>
         </section>
       )}
 
       {state.tab === 'coin' && (
         <section className="chance-pane" aria-label="Coin">
-          <div className="chance-coin" data-side={coin ?? undefined} data-flipping={flipping || undefined} aria-live="polite">
-            <span className="chance-coin-face">{flipping ? '' : coin === 'heads' ? 'H' : coin === 'tails' ? 'T' : '?'}</span>
-            <span className="chance-coin-label">{flipping ? 'Flipping…' : coin === 'heads' ? 'Heads' : coin === 'tails' ? 'Tails' : 'Flip the coin'}</span>
-          </div>
           <div className="chance-actions">
             <RetroButton variant="primary" onClick={flip} disabled={flipping}>Flip</RetroButton>
-            {coinHistory.length > 0 && (
-              <span className="chance-total">{heads} heads · {coinHistory.length - heads} tails</span>
-            )}
           </div>
+
+          <div className="chance-coin" data-side={coin ?? undefined} data-flipping={flipping || undefined} aria-hidden="true">
+            <span className="chance-coin-face">{flipping ? '' : coin === 'heads' ? 'H' : coin === 'tails' ? 'T' : '?'}</span>
+          </div>
+
+          <p className="chance-readout" aria-live="polite">
+            {flipping ? 'Flipping…' : coin ? (
+              <strong className="chance-readout-value">{coin === 'heads' ? 'Heads' : 'Tails'}</strong>
+            ) : 'Heads or tails?'}
+          </p>
+
           {coinHistory.length > 0 && (
-            <ol className="chance-coin-history" aria-label="Recent flips">
-              {coinHistory.map((side, index) => (
-                <li key={`${index}-${side}`} data-side={side}>{side === 'heads' ? 'H' : 'T'}</li>
-              ))}
-            </ol>
+            <div className="chance-coin-tally">
+              <span className="chance-total">{heads} heads · {coinHistory.length - heads} tails</span>
+              <ol className="chance-coin-history" aria-label="Recent flips, newest first">
+                {coinHistory.map((side, index) => (
+                  <li key={`${index}-${side}`} data-side={side}>{side === 'heads' ? 'H' : 'T'}</li>
+                ))}
+              </ol>
+            </div>
           )}
         </section>
       )}
@@ -322,25 +341,39 @@ export const ChanceApp: React.FC<ChanceAppProps> = ({ initialTab, onPropsChange 
               <input type="checkbox" checked={state.jokers} onChange={(event) => setJokers(event.target.checked)} />
               <span>Jokers</span>
             </label>
-            <span className="chance-total">{deck.length} left</span>
           </div>
 
-          {hand.length > 0 && (
+          {hand.length > 0 ? (
             <div className="chance-hand" aria-live="polite" aria-label="Latest draw">
               {hand.map((card) => <PlayingCardView card={card} key={card.id} />)}
             </div>
-          )}
-          {earlier.length > 0 && (
-            <div className="chance-history" aria-label="Earlier draws">
-              {earlier.map((cards) => (
-                <div className="chance-history-draw" key={cards[0].id}>
-                  {cards.map((card) => <PlayingCardView card={card} small key={card.id} />)}
-                </div>
-              ))}
+          ) : (
+            <div className="chance-hand" aria-hidden="true">
+              <div className="chance-card chance-card-back" data-empty={deck.length === 0 || undefined} />
             </div>
           )}
-          {draws.length === 0 && deck.length < deckSize && (
-            <p className="chance-hint">The table is clear. Draw again, or shuffle for a fresh deck.</p>
+
+          <p className="chance-readout">
+            {deck.length === 0
+              ? 'The deck is empty. Shuffle for a fresh one.'
+              : draws.length === 0 && deck.length === deckSize
+                ? `${deckSize} cards, shuffled. Draw to deal from the top.`
+                : draws.length === 0
+                  ? `The table is clear, ${deck.length} left. Draw again, or shuffle for a fresh deck.`
+                  : `${deck.length} of ${deckSize} left`}
+          </p>
+
+          {earlier.length > 0 && (
+            <div className="chance-history" aria-label="Earlier draws">
+              <span className="chance-history-label">Earlier draws</span>
+              <div className="chance-history-draws">
+                {earlier.map((cards) => (
+                  <div className="chance-history-draw" key={cards[0].id}>
+                    {cards.map((card) => <PlayingCardView card={card} small key={card.id} />)}
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
         </section>
       )}
@@ -348,20 +381,28 @@ export const ChanceApp: React.FC<ChanceAppProps> = ({ initialTab, onPropsChange 
       {state.tab === 'tarot' && (
         <section className="chance-pane" aria-label="Tarot">
           <div className="chance-actions">
-            <RetroButton variant="primary" onClick={() => setReading(drawTarot(1))}>Draw one card</RetroButton>
-            <RetroButton onClick={() => setReading(drawTarot(3))}>Draw three</RetroButton>
+            <RetroButton variant="primary" onClick={() => drawReading(1)}>Draw one card</RetroButton>
+            <RetroButton onClick={() => drawReading(3)}>Draw three</RetroButton>
           </div>
+
+          {reading.length === 0 && (
+            <div className="chance-tarot-empty">
+              {TAROT_BACK && (
+                <img className="chance-tarot-empty-back" src={TAROT_BACK} alt="" decoding="async" draggable={false} {...TAROT_IMAGE_SIZE} />
+              )}
+              <p className="chance-hint">Draw one card for a quick answer, or three to read past, present and future.</p>
+            </div>
+          )}
 
           {reading.length > 0 && (
             <div className="chance-reading" data-spread={reading.length} aria-live="polite">
-              {reading.map(({ card, reversed }, index) => (
-                <article className="chance-tarot" data-reversed={reversed || undefined} key={card.id}>
-                  {reading.length === 3 && <span className="chance-tarot-position">{SPREAD_POSITIONS[index]}</span>}
-                  <span className="chance-tarot-arcana">{card.label} · {arcanaLabel(card.arcana)}</span>
-                  <h3 className="chance-tarot-name">{card.name}</h3>
-                  <span className="chance-tarot-orientation">{reversed ? '↓ Reversed' : '↑ Upright'}</span>
-                  <p className="chance-tarot-meaning">{reversed ? card.reversed : card.upright}</p>
-                </article>
+              {reading.map((draw, index) => (
+                <TarotCardView
+                  key={`${readingId}-${draw.card.id}`}
+                  draw={draw}
+                  index={index}
+                  position={reading.length === 3 ? SPREAD_POSITIONS[index] : undefined}
+                />
               ))}
             </div>
           )}
@@ -370,7 +411,7 @@ export const ChanceApp: React.FC<ChanceAppProps> = ({ initialTab, onPropsChange 
             <div className="chance-ask">
               <span>Don't know what this means?</span>
               <RetroButton size="sm" onClick={askAi}>
-                <Sparkles className="w-3 h-3" /> Ask AI
+                <Sparkles className="w-3 h-3 mr-1" />Ask AI
               </RetroButton>
             </div>
           )}

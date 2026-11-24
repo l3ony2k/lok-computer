@@ -53,6 +53,7 @@ The skins in `src/themes/` adapt styles, glyphs and values from these projects. 
 | `src/themes/cs16/icons/steam.svg` | Steam logo | Valve |
 | `src/assets/oneko.gif`, `src/assets/oneko-dark.gif` | Neko sprite sheet | From [oneko.js](https://github.com/adryd325/oneko.js) by adryd (MIT); the original Neko is by Masayuki Koba |
 | `src/assets/buttons/*` (except the site's own, listed above) | 88×31 buttons for other sites and services | Their respective sites and makers |
+| `src/assets/tarot/*.webp` | The 78 cards and the Roses & Lilies back of the Rider–Waite–Smith tarot (art by Pamela Colman Smith, devised by A. E. Waite, published by William Rider & Son, 1909), cropped and converted by `scripts/tarot-cards.mjs` | Public domain; scans of a 1909 first printing by Saskia Jansen, from [Wikimedia Commons](https://commons.wikimedia.org/wiki/Category:Rider-Waite_tarot_deck_(Roses_%26_Lilies)) |
 
 The Windows, XP, 7, Mac, BeOS, Palm, Counter-Strike and Steam names and looks belong to their owners; the themes are homages, not affiliated with or endorsed by them.
 

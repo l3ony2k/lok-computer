@@ -8,29 +8,54 @@
     container-type: inline-size;
 }
 
+/*
+ * Every tab is laid out the same way: its controls on top, then the result
+ * (dice, coin, cards, a reading) centred on the table beneath them, then a
+ * one-line readout. Objects grow with the window up to a cap, so a maximised
+ * window gives a calm, centred table rather than giant or stranded pieces.
+ */
 .chance-pane {
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    padding: 12px;
+    align-items: center;
+    gap: 18px;
+    padding: 16px 12px 20px;
 }
 
 .chance-actions {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+    justify-content: center;
     gap: 8px;
+}
+
+/* The line under the result: a hint before the first go, then the outcome. */
+.chance-readout {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    min-height: 2.6em;
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.35;
+    text-align: center;
+    color: var(--log-muted);
+}
+
+.chance-readout-value {
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--text-color);
+    font-variant-numeric: tabular-nums;
 }
 
 .chance-total,
 .chance-hint {
     font-size: 12px;
     color: var(--log-muted);
-}
-
-.chance-total strong {
-    color: var(--text-color);
-    font-variant-numeric: tabular-nums;
 }
 
 .chance-footer span {
@@ -41,28 +66,25 @@
 
 /* ---------- Dice ---------- */
 
-.chance-dice-config {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px;
-}
-
 .chance-die-select {
     width: 68px;
 }
 
+/* Dice grow with the window up to a cap; pips and numbers scale with them. */
 .chance-dice-results {
+    --die: clamp(56px, 10cqw, 84px);
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
-    min-height: 56px;
+    justify-content: center;
+    gap: calc(var(--die) * 0.22);
+    max-width: calc(var(--die) * 6 + var(--die) * 0.22 * 5);
+    padding-block: 6px;
 }
 
 .chance-die {
     position: relative;
-    width: 56px;
-    height: 56px;
+    width: var(--die);
+    height: var(--die);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -72,9 +94,14 @@
     box-shadow: var(--surface-shadow);
 }
 
+/* Before the first roll the dice wait, face unknown. */
+.chance-dice-results[data-idle] .chance-die {
+    color: var(--log-muted);
+}
+
 .chance-die-value {
     font-family: var(--font-code);
-    font-size: 22px;
+    font-size: calc(var(--die) * 0.4);
     font-weight: 700;
     font-variant-numeric: tabular-nums;
 }
@@ -87,8 +114,8 @@
 
 .chance-die-pips {
     --pip: #161616;
-    width: 40px;
-    height: 40px;
+    width: 72%;
+    height: 72%;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: repeat(3, 1fr);
@@ -100,8 +127,8 @@
 }
 
 .chance-pip {
-    width: 9px;
-    height: 9px;
+    width: calc(var(--die) * 0.16);
+    height: calc(var(--die) * 0.16);
     border-radius: 50%;
     background: transparent;
 }
@@ -118,6 +145,11 @@
     color: var(--log-muted);
 }
 
+/* Pips already say it is a d6; the label would sit on the corner pip. */
+.chance-die-pips ~ .chance-die-sides {
+    display: none;
+}
+
 .chance-die[data-rolling] {
     animation: chance-shake 120ms linear infinite;
 }
@@ -132,31 +164,31 @@
 
 /* ---------- Coin ---------- */
 
+/* A coin is a coin: struck silver in every theme, like the cards and the d6. */
 .chance-coin {
-    width: 120px;
-    height: 120px;
+    --coin: clamp(112px, 20cqw, 164px);
+    width: var(--coin);
+    height: var(--coin);
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 4px;
-    margin: 8px auto 0;
-    border: 3px double var(--block-border);
-    background: var(--detail-meta-bg);
-    color: var(--text-color);
-    box-shadow: var(--surface-shadow);
+    border: 1px solid #77746b;
+    border-radius: 50%;
+    background: radial-gradient(circle at 34% 28%, #ffffff 0%, #e4e2da 42%, #bdb9ae 100%);
+    color: #3d3b36;
+    box-shadow:
+        inset 0 0 0 calc(var(--coin) * 0.055) #d6d3ca,
+        inset 0 0 0 calc(var(--coin) * 0.055 + 1px) #8f8b80,
+        0 1px 2px rgb(0 0 0 / 0.2),
+        0 5px 14px rgb(0 0 0 / 0.16);
 }
 
 .chance-coin-face {
     font-family: var(--font-code);
-    font-size: 44px;
+    font-size: calc(var(--coin) * 0.38);
     font-weight: 700;
     line-height: 1;
-}
-
-.chance-coin-label {
-    font-size: 11px;
-    color: var(--log-muted);
+    text-shadow: 0 1px 0 rgb(255 255 255 / 0.7), 0 -1px 0 rgb(0 0 0 / 0.18);
 }
 
 .chance-coin[data-flipping] {
@@ -171,29 +203,41 @@
     100% { transform: scaleX(1); }
 }
 
+.chance-coin-tally {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Recent flips, newest first: small coins, heads dark, tails light. */
 .chance-coin-history {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px;
+    justify-content: center;
+    gap: 5px;
     margin: 0;
     padding: 0;
     list-style: none;
 }
 
 .chance-coin-history li {
-    width: 24px;
-    height: 24px;
+    width: 22px;
+    height: 22px;
     display: flex;
     align-items: center;
     justify-content: center;
     border: 1px solid var(--internal-border);
+    border-radius: 50%;
     font-family: var(--font-code);
-    font-size: 12px;
+    font-size: 11px;
+    color: var(--text-color);
 }
 
 .chance-coin-history li[data-side="heads"] {
     color: var(--detail-bg);
     background: var(--text-color);
+    border-color: var(--text-color);
 }
 
 /* ---------- Cards ---------- */
@@ -213,17 +257,22 @@
     font-size: 13px;
 }
 
+/* The latest draw, centred; cards grow with the window up to a cap. */
 .chance-hand {
+    --card: clamp(68px, 9cqw, 96px);
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    justify-content: center;
+    gap: calc(var(--card) * 0.14);
+    max-width: calc(var(--card) * 6 + var(--card) * 0.14 * 5);
+    padding-block: 6px;
 }
 
 .chance-card {
     --card-ink: #161616;
     position: relative;
-    width: 68px;
-    height: 96px;
+    width: var(--card, 68px);
+    height: calc(var(--card, 68px) * 1.41);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -243,6 +292,29 @@
     min-height: 100%;
 }
 
+/* The deck, face down, while nothing is on the table: a red lattice inside a white margin. */
+.chance-card-back::before {
+    content: "";
+    position: absolute;
+    inset: calc(var(--card) * 0.07);
+    border: 1px solid #b3202f;
+    background:
+        repeating-linear-gradient(45deg, #b3202f 0 1.5px, transparent 1.5px 6px),
+        repeating-linear-gradient(-45deg, #b3202f 0 1.5px, transparent 1.5px 6px),
+        #f3e4dc;
+}
+
+.chance-card-back[data-empty] {
+    border-style: dashed;
+    background: transparent;
+    box-shadow: none;
+    opacity: 0.5;
+}
+
+.chance-card-back[data-empty]::before {
+    content: none;
+}
+
 .chance-toggle {
     display: inline-flex;
     align-items: center;
@@ -254,14 +326,30 @@
 /* Earlier draws: rows of small cards, newest first, scrolling down through the empty space. */
 .chance-history {
     flex: 1 1 auto;
+    align-self: stretch;
     min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 0 4px;
+    overflow-y: auto;
+    border-top: 1px dashed var(--internal-border);
+}
+
+.chance-history-label {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--log-muted);
+}
+
+.chance-history-draws {
     display: flex;
     flex-wrap: wrap;
     align-content: flex-start;
-    gap: 10px;
-    padding: 10px 0 4px;
-    overflow-y: auto;
-    border-top: 1px dashed var(--internal-border);
+    justify-content: center;
+    gap: 12px;
 }
 
 .chance-card-word {
@@ -282,6 +370,7 @@
 }
 
 .chance-card[data-small] {
+    --card: 34px;
     width: 34px;
     height: 48px;
     box-shadow: none;
@@ -303,7 +392,7 @@
     position: absolute;
     top: 4px;
     left: 5px;
-    font-size: 11px;
+    font-size: calc(var(--card, 68px) * 0.16);
     line-height: 1.1;
     text-align: center;
 }
@@ -317,35 +406,231 @@
 }
 
 .chance-card-pip {
-    font-size: 30px;
+    font-size: calc(var(--card, 68px) * 0.44);
 }
 
 /* ---------- Tarot ---------- */
 
+/*
+ * A reading is laid out like cards on a table: the art (the 1909 scans keep
+ * their own colours) with its reading beneath or beside it, the whole spread
+ * centred. Cards are sized from the window's width but capped, so a maximised
+ * window gives a calm spread rather than giant cards. Narrow windows turn a
+ * three-card spread into rows of a thumbnail and its text.
+ */
 .chance-reading {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: 10px;
-}
-
-@container (min-width: 560px) {
-    .chance-reading[data-spread="3"] {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
+    width: 100%;
+    gap: 14px;
 }
 
 .chance-tarot {
+    display: grid;
+    gap: 12px;
+    min-width: 0;
+}
+
+/* The cards lift off the window a little; drop-shadow follows their rounded edge. */
+.chance-tarot-art,
+.chance-tarot-empty-back {
+    filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.18)) drop-shadow(0 4px 10px rgb(0 0 0 / 0.14));
+}
+
+/* One card, narrow: the card, then its reading, centred. */
+.chance-reading[data-spread="1"] {
+    justify-items: center;
+}
+
+.chance-reading[data-spread="1"] .chance-tarot {
+    justify-items: center;
+    max-width: 340px;
+    text-align: center;
+}
+
+.chance-reading[data-spread="1"] .chance-tarot-art {
+    width: min(100%, 200px);
+}
+
+.chance-reading[data-spread="1"] .chance-tarot-text {
+    align-items: center;
+}
+
+/* Three cards, narrow: rows of a thumbnail and its reading. */
+.chance-reading[data-spread="3"] {
+    max-width: 460px;
+    justify-self: center;
+}
+
+.chance-reading[data-spread="3"] .chance-tarot {
+    grid-template-columns: 76px minmax(0, 1fr);
+    align-items: start;
+    gap: 14px;
+}
+
+.chance-reading[data-spread="3"] .chance-tarot + .chance-tarot {
+    padding-top: 14px;
+    border-top: 1px solid var(--internal-border);
+}
+
+@container (min-width: 480px) {
+    /* One card, wide: the card beside its reading. */
+    .chance-reading[data-spread="1"] .chance-tarot {
+        grid-template-columns: clamp(180px, 34cqw, 240px) minmax(0, 300px);
+        align-items: center;
+        justify-items: start;
+        max-width: none;
+        gap: 28px;
+        text-align: start;
+    }
+
+    .chance-reading[data-spread="1"] .chance-tarot-art {
+        width: 100%;
+    }
+
+    .chance-reading[data-spread="1"] .chance-tarot-text {
+        align-items: start;
+    }
+}
+
+@container (min-width: 560px) {
+    /* Three cards, wide: side by side, each over its reading. */
+    .chance-reading[data-spread="3"] {
+        grid-template-columns: repeat(3, clamp(140px, 25cqw, 210px));
+        justify-content: center;
+        column-gap: clamp(16px, 4cqw, 36px);
+        max-width: none;
+    }
+
+    .chance-reading[data-spread="3"] .chance-tarot {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+        text-align: center;
+    }
+
+    .chance-reading[data-spread="3"] .chance-tarot + .chance-tarot {
+        padding-top: 0;
+        border-top: 0;
+    }
+
+    .chance-reading[data-spread="3"] .chance-tarot-text {
+        align-items: center;
+    }
+}
+
+/* Before the first draw: the deck, face down, and what the two draws are for. */
+.chance-tarot-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding-block: 8px;
+    text-align: center;
+}
+
+.chance-tarot-empty-back {
+    display: block;
+    width: 110px;
+    height: auto;
+    user-select: none;
+}
+
+.chance-tarot-empty .chance-hint {
+    max-width: 300px;
+    margin: 0;
+    line-height: 1.45;
+}
+
+/* The art: two faces in one frame. The back shows while the scan loads, then
+   the card turns over; with no back it simply fades in. */
+.chance-tarot-art {
+    position: relative;
+    width: 100%;
+    border: 1px solid var(--block-border);
+    background: var(--detail-meta-bg);
+    overflow: hidden;
+}
+
+/* The scans carry their own printed edge; the frame only marks the space while
+   there is no art to show. */
+.chance-tarot-art[data-art="shown"],
+.chance-tarot-art[data-back] {
+    border-color: transparent;
+    background: none;
+}
+
+.chance-tarot-art > * {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    transition:
+        transform 520ms cubic-bezier(0.3, 0.7, 0.3, 1) var(--chance-tarot-delay, 0ms),
+        opacity 320ms ease var(--chance-tarot-delay, 0ms);
+}
+
+.chance-tarot-face,
+.chance-tarot-back {
+    display: block;
+    object-fit: cover;
+    user-select: none;
+}
+
+.chance-tarot-back {
+    transform: perspective(900px) rotateY(0deg);
+}
+
+.chance-tarot-art[data-back] .chance-tarot-face {
+    transform: perspective(900px) rotateY(-180deg);
+}
+
+.chance-tarot-art:not([data-back]) .chance-tarot-face {
+    opacity: 0;
+}
+
+.chance-tarot-art[data-art="shown"] .chance-tarot-face {
+    transform: perspective(900px) rotateY(0deg);
+    opacity: 1;
+}
+
+.chance-tarot-art[data-art="shown"] .chance-tarot-back {
+    transform: perspective(900px) rotateY(180deg);
+}
+
+/* Reversed: the art lies upside down, as it came out of the deck. */
+.chance-tarot[data-reversed] .chance-tarot-face {
+    rotate: 180deg;
+}
+
+/* No art (missing or failed to load): a plain framed card, never a blank. */
+.chance-tarot-missing {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px;
+    text-align: center;
+    font-size: 11px;
+    line-height: 1.3;
+    color: var(--log-muted);
+    background: var(--detail-meta-bg);
+    box-shadow: inset 0 0 0 5px var(--block-bg), inset 0 0 0 6px var(--block-border);
+}
+
+.chance-tarot-art[data-art="failed"] .chance-tarot-back {
+    display: none;
+}
+
+.chance-tarot-missing span:first-child {
+    color: var(--text-color);
+}
+
+.chance-tarot-text {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    padding: 12px 12px 14px;
-    border: 2px solid var(--block-border);
-    background: var(--block-bg);
-    box-shadow: var(--surface-shadow);
-}
-
-.chance-tarot[data-reversed] {
-    border-style: dashed;
+    min-width: 0;
 }
 
 .chance-tarot-position {
@@ -382,8 +667,9 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+    justify-content: center;
     gap: 8px;
-    padding: 10px 12px;
+    padding: 8px 12px;
     border: 1px solid var(--internal-border);
     background: var(--detail-meta-bg);
     font-size: 12px;
@@ -393,5 +679,9 @@
     .chance-die[data-rolling],
     .chance-coin[data-flipping] {
         animation: none;
+    }
+
+    .chance-tarot-art > * {
+        transition: none;
     }
 }
