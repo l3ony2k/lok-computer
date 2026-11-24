@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { defineConfig, loadEnv, type Plugin } from "vite";
-import react from "@vitejs/plugin-react-swc";
+import react from "@vitejs/plugin-react";
 import path from "path";
 import { renderAnalyticsTag, resolveDeployment, type Deployment } from "./src/config/deployment";
 
