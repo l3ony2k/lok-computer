@@ -675,7 +675,7 @@ export const ImageViewerApp: React.FC<ImageViewerAppProps> = ({
             {naturalSize ? (
               <>
                 <span>{naturalSize.width} × {naturalSize.height}</span>
-                <span className="opacity-50"> @ </span>
+                <span className="text-muted-foreground"> @ </span>
                 <span>{displayWidth} × {displayHeight} px</span>
               </>
             ) : currentUrl && !imageFailed ? (

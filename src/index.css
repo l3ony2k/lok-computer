@@ -23,7 +23,11 @@
         --link-color: #0077cc;
         --log-text: #333333;
         --log-bg: #ffffff;
-        --log-muted: #777777;
+        /* Text roles: --text-color (main), --text-secondary (de-emphasised body copy),
+           --log-muted (meta, captions, footers). Tailwind's text-muted-foreground is the
+           same muted colour. Each passes 4.5:1 on every lok surface (textTokens.test.ts). */
+        --text-secondary: #4d4d4d;
+        --log-muted: #666666;
         --log-error: #b42318;
         --log-warn: #835c00;
         --log-info: #006aa3;
@@ -81,7 +85,7 @@
         --secondary-foreground: 0 0% 20%;
 
         --muted: 0 0% 98%;
-        --muted-foreground: 0 0% 38%;
+        --muted-foreground: 0 0% 40%; /* = --log-muted */
 
         --accent: 0 0% 80%;
         --accent-foreground: 0 0% 20%;
@@ -94,6 +98,11 @@
         --input: 0 0% 77%;
         --ring: 0 0% 0%;
 
+    }
+
+    /* Skins set their own text colours; secondary text follows each skin's main text. */
+    html[data-theme]:not([data-theme="lok"]) {
+        --text-secondary: color-mix(in srgb, var(--text-color) 80%, transparent);
     }
 
     .dark {
@@ -115,6 +124,7 @@
         --link-color: #66b3ff;
         --log-text: #f0f0f0;
         --log-bg: #1a1a1a;
+        --text-secondary: #c2c2c2;
         --log-muted: #999999;
         --log-error: #ff7066;
         --log-warn: #d7ba7d;
@@ -154,7 +164,7 @@
         --secondary-foreground: 0 0% 98%;
 
         --muted: 0 0% 16%;
-        --muted-foreground: 0 0% 67%;
+        --muted-foreground: 0 0% 60%; /* = --log-muted */
 
         --accent: 0 0% 27%;
         --accent-foreground: 0 0% 98%;
@@ -204,6 +214,9 @@
         font: inherit;
     }
 
+    /* Tailwind's preflight colours input::placeholder gray-400 (0,1,1); match its specificity so lok's grey applies. */
+    input::placeholder,
+    textarea::placeholder,
     ::placeholder {
         color: #777777;
         opacity: 1;
@@ -536,10 +549,11 @@
 
     .launcher-group-title {
         padding: 6px 8px 2px;
-        font-size: 10px;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        opacity: 0.55;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0;
+        text-transform: none;
+        color: var(--log-muted);
     }
 
     .launcher-item {
@@ -573,7 +587,7 @@
         padding: 16px;
         text-align: center;
         font-size: 12px;
-        opacity: 0.6;
+        color: var(--log-muted);
     }
 
     /* Long menu labels scroll on hover; AppMenu sets the distance and duration. */
@@ -1051,7 +1065,7 @@
         padding: 0 10px;
         background: var(--detail-meta-bg);
         border-bottom: 0;
-        color: color-mix(in srgb, var(--text-color) 68%, transparent);
+        color: var(--log-muted);
     }
 
     .app-tab-bar .retro-button:hover,
@@ -1417,7 +1431,7 @@
 
     .arena-file-fallback-preview > span {
         font-size: 11px;
-        opacity: 0.55;
+        color: var(--log-muted);
     }
 
     .arena-file-fallback-preview > strong {
@@ -1477,7 +1491,7 @@
         margin-top: 3px;
         overflow: hidden;
         font-size: 11px;
-        opacity: 0.62;
+        color: var(--log-muted);
         text-overflow: ellipsis;
         white-space: nowrap;
     }
@@ -1649,7 +1663,7 @@
 
     .arena-file-list-thumbnail span {
         font-size: 10px;
-        opacity: 0.55;
+        color: var(--log-muted);
     }
 
     .arena-file-list-title,
@@ -1711,7 +1725,7 @@
         padding: 0 10px;
         background: var(--header-bg);
         font-size: 11px;
-        color: color-mix(in srgb, var(--text-color) 62%, transparent);
+        color: var(--log-muted);
     }
 
     .arena-file-footer-actions {
@@ -2086,7 +2100,7 @@
     }
 
     .arena-detail-muted {
-        opacity: 0.55;
+        color: var(--log-muted);
     }
 
     .arena-detail-expand-list {
@@ -2129,7 +2143,7 @@
         flex: 0 0 auto;
         overflow: hidden;
         font-size: 11px;
-        opacity: 0.55;
+        color: var(--log-muted);
         text-overflow: ellipsis;
         white-space: nowrap;
     }
@@ -2176,7 +2190,7 @@
     .arena-detail-comment-header span {
         flex: 0 0 auto;
         font-size: 11px;
-        opacity: 0.5;
+        color: var(--log-muted);
     }
 
     .arena-detail-comment-body {
@@ -2195,7 +2209,7 @@
 
     .arena-detail-list-status {
         padding: 8px;
-        opacity: 0.55;
+        color: var(--log-muted);
     }
 
     .resizable-divider {
@@ -2318,7 +2332,7 @@
 #guestbooks___challenge-answer-container label {
     display: block;
     margin-bottom: 5px;
-    color: color-mix(in srgb, var(--text-color) 68%, transparent);
+    color: var(--log-muted);
     font-size: 12px;
     line-height: 1.35;
 }
@@ -2378,7 +2392,7 @@
 }
 
 #guestbooks___guestbook-messages-container p:first-child small {
-    color: color-mix(in srgb, var(--text-color) 58%, transparent);
+    color: var(--log-muted);
     font-size: 11px;
 }
 
@@ -2402,7 +2416,7 @@
     margin-left: 6px;
     padding: 1px 4px;
     border: 1px solid var(--internal-border);
-    color: color-mix(in srgb, var(--text-color) 62%, transparent);
+    color: var(--log-muted);
     background: var(--detail-meta-bg);
     font-size: 10px;
     font-weight: normal;
@@ -2490,7 +2504,7 @@
     justify-content: center;
     font-size: 11px;
     text-transform: uppercase;
-    opacity: 0.6;
+    color: var(--log-muted);
 }
 
 .lok-reader-media-play {
@@ -2607,12 +2621,24 @@
 
 .weather-attribution {
     margin-top: 16px;
-    color: color-mix(in srgb, var(--text-color) 55%, transparent);
+    color: var(--log-muted);
     font-size: 11px;
 }
 
 .weather-attribution a {
     color: inherit;
+/* Wraps inside the forecast's width instead of widening it (width 0, then 100%). */
+.weather-location {
+    width: 0;
+    min-width: 100%;
+    margin: 8px 0 0;
+    font-family: Consolas, "Cascadia Mono", "DejaVu Sans Mono", ui-monospace, monospace;
+    font-size: 11px;
+    line-height: 1.4;
+    color: var(--log-muted);
+    overflow-wrap: anywhere;
+}
+
     text-decoration: underline;
 }
 
@@ -3560,7 +3586,7 @@ a:hover .animate-marquee-if-overflow {
     justify-content: flex-start;
     gap: 7px;
     padding: 0 9px;
-    color: color-mix(in srgb, var(--text-color) 68%, transparent);
+    color: var(--log-muted);
     background: var(--detail-meta-bg);
     border-right: 0;
     text-align: left;
@@ -3647,7 +3673,7 @@ a:hover .animate-marquee-if-overflow {
     overflow: hidden;
     border: 1px solid var(--internal-border);
     background: var(--header-bg);
-    color: color-mix(in srgb, var(--text-color) 62%, transparent);
+    color: var(--log-muted);
     font-size: 11px;
 }
 
@@ -3809,9 +3835,10 @@ a:hover .animate-marquee-if-overflow {
 
 .config-system-info dt,
 .config-stats-grid dt {
-    color: color-mix(in srgb, var(--text-color) 62%, transparent);
-    font-size: 10px;
-    text-transform: uppercase;
+    color: var(--log-muted);
+    font-size: 11px;
+    letter-spacing: 0;
+    text-transform: none;
 }
 
 .config-system-info dd,
@@ -3832,7 +3859,7 @@ a:hover .animate-marquee-if-overflow {
 
 .config-help-text {
     margin: 0;
-    color: color-mix(in srgb, var(--text-color) 62%, transparent);
+    color: var(--log-muted);
     font-size: 11px;
 }
 
@@ -3988,7 +4015,7 @@ a:hover .animate-marquee-if-overflow {
 }
 
 .oobe-step-count {
-    color: color-mix(in srgb, var(--text-color) 58%, transparent);
+    color: var(--log-muted);
     font-size: 11px;
 }
 
@@ -4020,7 +4047,7 @@ a:hover .animate-marquee-if-overflow {
 }
 
 .oobe-brand span {
-    color: color-mix(in srgb, var(--text-color) 58%, transparent);
+    color: var(--log-muted);
     font-size: 10px;
 }
 
@@ -4033,7 +4060,7 @@ a:hover .animate-marquee-if-overflow {
     gap: 6px;
     padding: 0 8px;
     border: 1px solid transparent;
-    color: color-mix(in srgb, var(--text-color) 58%, transparent);
+    color: var(--log-muted);
     background: transparent;
     font-size: 12px;
     text-align: left;
@@ -4102,7 +4129,7 @@ a:hover .animate-marquee-if-overflow {
 
 .oobe-page p {
     margin: 5px 0 0;
-    color: color-mix(in srgb, var(--text-color) 62%, transparent);
+    color: var(--log-muted);
     font-size: 12px;
 }
 
@@ -4156,7 +4183,7 @@ a:hover .animate-marquee-if-overflow {
 }
 
 .oobe-live-preview small {
-    color: color-mix(in srgb, var(--text-color) 58%, transparent);
+    color: var(--log-muted);
     font-size: 10px;
 }
 
@@ -4182,7 +4209,7 @@ a:hover .animate-marquee-if-overflow {
 }
 
 .oobe-range-setting output {
-    color: color-mix(in srgb, var(--text-color) 62%, transparent);
+    color: var(--log-muted);
     font-size: 10px;
 }
 
@@ -4270,7 +4297,7 @@ a:hover .animate-marquee-if-overflow {
 }
 
 .oobe-summary dt {
-    color: color-mix(in srgb, var(--text-color) 62%, transparent);
+    color: var(--log-muted);
     font-size: 11px;
 }
 
@@ -4297,7 +4324,7 @@ a:hover .animate-marquee-if-overflow {
 
 .oobe-footer > span {
     overflow: hidden;
-    color: color-mix(in srgb, var(--text-color) 58%, transparent);
+    color: var(--log-muted);
     font-size: 10px;
     text-align: center;
     text-overflow: ellipsis;
@@ -4541,7 +4568,7 @@ a:hover .animate-marquee-if-overflow {
 }
 
 [data-sonner-toast] [data-description] {
-    color: color-mix(in srgb, var(--text-color) 72%, transparent) !important;
+    color: var(--log-muted) !important;
     line-height: 1.35;
 }
 
@@ -4692,7 +4719,7 @@ a:hover .animate-marquee-if-overflow {
     margin-left: auto;
     font-family: var(--font-code);
     font-size: 11px;
-    opacity: 0.7;
+    color: var(--log-muted);
 }
 
 .about-changelog-entry ul {

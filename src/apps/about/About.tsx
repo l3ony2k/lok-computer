@@ -152,7 +152,7 @@ const LinkButton88x31 = ({ link }: { link: ProfileLink }) => {
     <a href={link.url} target="_blank" rel="noopener noreferrer" title={link.text} className="relative cursor-default bg-secondary flex items-center justify-center" style={{ width: 88, height: 31 }}>
       {link.image ? (
         <>
-          <span className="absolute text-[8px] opacity-40">loading...</span>
+          <span className="absolute text-[8px] text-muted-foreground">loading...</span>
           <img src={link.image} alt={link.text} width={88} height={31} className="relative hover:outline hover:outline-2 hover:outline-accent pixelated-image" />
         </>
       ) : (
@@ -185,7 +185,7 @@ const AboutMe = () => (
     <div className="space-y-6 mt-4">
       {PROFILE.linkGroups.map((group) => (
         <div key={group.handle}>
-          <h3 className="font-bold mb-3 text-accent">{group.handle}</h3>
+          <h3 className="font-bold mb-3">{group.handle}</h3>
           <div className="flex flex-wrap gap-1">
             {group.links.map((link) => (
               <LinkButton88x31 key={link.text} link={link} />
@@ -207,8 +207,8 @@ const Projects = () => (
         <div key={project.id} className="border border-border transition-colors overflow-hidden">
           {project.image && <img src={project.image} alt={project.title} className="w-full select-none border-b border-border transition-colors" />}
           <div className="p-4">
-            <h3 className="font-bold text-accent mb-2">{project.title}</h3>
-            <p className="mb-3 opacity-80">{project.description}</p>
+            <h3 className="font-bold mb-2">{project.title}</h3>
+            <p className="mb-3 text-[color:var(--text-secondary)]">{project.description}</p>
             <div className="flex gap-2 flex-wrap">
               {project.actions.map((action) => (
                 <RetroButton className="p-3" key={action.text} size="sm" onClick={() => window.open(action.url, "_blank", "noopener,noreferrer")}>

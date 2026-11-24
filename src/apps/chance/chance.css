@@ -713,3 +713,28 @@
         transition: none;
     }
 }
+    line-height: 1.4;
+    text-align: center;
+    color: var(--log-muted);
+}
+
+.chance-ask-link {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--text-color);
+    cursor: pointer;
+}
+
+.chance-ask-link-text {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.chance-ask-link:hover .chance-ask-link-text {
+    text-decoration-thickness: 2px;
+}
+
+/* The base ring sits inside the box; a text link needs it outside. */
+.chance-ask-link:focus-visible {
+    outline-offset: 2px;

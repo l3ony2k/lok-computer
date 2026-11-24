@@ -181,9 +181,7 @@ const ShelfContent: React.FC<ShelfContentProps> = ({ type, page, onDataLoaded })
                                     </div>
                                 )}
                             </div>
-                            {/* Title with emoji */}
-                            <p className="text-xs truncate text-center group-hover:text-primary transition-colors">
-                                <span className="noto-emoji opacity-60">{getCategorySymbol(shelfItem.item.category)}</span>{' '}
+                            <p className="shelf-caption text-xs text-center group-hover:text-primary transition-colors">
                                 {shelfItem.item.display_title}
                             </p>
                         </div>
@@ -341,7 +339,9 @@ export const ShelfApp: React.FC<ShelfAppProps> = ({ initialTab, initialPage, onP
             footer={
                 <div className="app-footer-row">
                     <div className="flex items-center space-x-2">
-                        <span className="text-xs opacity-50">Total: {paginationInfo.count} items</span>
+                        {paginationByTab[activeTab] && (
+                            <span className="text-xs text-muted-foreground">Total: {paginationInfo.count} items</span>
+                        )}
                     </div>
                     {paginationInfo.pages > 1 && (
                         <div className="flex items-center space-x-0">

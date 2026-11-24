@@ -137,6 +137,46 @@ const my80x15Variants = [
 ];
 
 // ============================================
+// One 88x31 button: a quiet label while the remote image loads, and the
+// site's name in its place when the image cannot be fetched.
+// ============================================
+type LinkButtonProps = { url: string; image: string; alt: string };
+
+const LinkButton = ({ url, image, alt }: LinkButtonProps) => {
+    const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>('loading');
+
+    return (
+        <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={alt}
+            className="relative block cursor-default bg-secondary flex items-center justify-center overflow-hidden hover:outline hover:outline-2 hover:outline-accent"
+            style={{ width: 88, height: 31 }}
+        >
+            {status !== 'loaded' && (
+                <span className={status === 'error'
+                    ? 'absolute inset-x-1 truncate text-center text-[10px] text-muted-foreground'
+                    : 'absolute text-[8px] text-muted-foreground'}>
+                    {status === 'error' ? alt : 'loading...'}
+                </span>
+            )}
+            {status !== 'error' && (
+                <img
+                    src={image}
+                    alt={alt}
+                    width={88}
+                    height={31}
+                    onLoad={() => setStatus('loaded')}
+                    onError={() => setStatus('error')}
+                    className="relative pixelated-image"
+                />
+            )}
+        </a>
+    );
+};
+
+// ============================================
 // Buttons Tab - External 88x31 buttons
 // ============================================
 const ButtonsTab = () => (
@@ -144,27 +184,10 @@ const ButtonsTab = () => (
         <div className="space-y-6">
             {buttonSections.map((section) => (
                 <div key={section.id}>
-                    <h3 className="font-bold mb-3 text-accent">{section.title}</h3>
+                    <h3 className="font-bold mb-3 text-muted-foreground">{section.title}</h3>
                     <div className="flex flex-wrap gap-1">
                         {section.buttons.map((button) => (
-                            <a
-                                key={button.alt}
-                                href={button.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                title={button.alt}
-                                className="relative block cursor-default bg-secondary flex items-center justify-center"
-                                style={{ width: 88, height: 31 }}
-                            >
-                                <span className="absolute text-[8px] opacity-40">loading...</span>
-                                <img
-                                    src={button.image}
-                                    alt={button.alt}
-                                    width={88}
-                                    height={31}
-                                    className="relative hover:outline hover:outline-2 hover:outline-accent pixelated-image"
-                                />
-                            </a>
+                            <LinkButton key={button.alt} {...button} />
                         ))}
                     </div>
                 </div>
@@ -193,11 +216,11 @@ const MyButtonsTab = () => {
 
     const renderButtonSection = (title: string, variants: ButtonVariant[]) => (
         <>
-            <h4 className="font-bold mb-3 text-accent">{title}</h4>
+            <h4 className="font-bold mb-3 text-muted-foreground">{title}</h4>
             <div className="space-y-3 mb-6">
                 {variants.map((variant) => (
                     <div key={variant.id}>
-                        <span className="text-xs opacity-60 mb-1 block">{variant.label}</span>
+                        <span className="text-xs text-muted-foreground mb-1 block">{variant.label}</span>
                         <div className="flex gap-2 items-stretch">
                             {/* Button Preview */}
                             <div className="shrink-0 flex items-center">

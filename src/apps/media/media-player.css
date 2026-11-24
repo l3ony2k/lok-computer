@@ -164,7 +164,7 @@
 
 .media-player-empty span,
 .media-player-error span {
-    opacity: 0.7;
+    color: var(--log-muted);
 }
 
 .media-player-error {
@@ -193,7 +193,7 @@
     justify-content: space-between;
     gap: 6px;
     padding: 3px 5px 3px 8px;
-    color: color-mix(in srgb, var(--text-color) 62%, transparent);
+    color: var(--log-muted);
     background: var(--detail-header-bg);
     border-bottom: 1px solid var(--internal-border);
     font-size: 11px;
@@ -253,7 +253,7 @@
 .media-player-track-index {
     font-size: 11px;
     text-align: right;
-    opacity: 0.6;
+    color: var(--log-muted);
 }
 
 .media-player-track[data-current] .media-player-track-index {
@@ -280,7 +280,7 @@
 .media-player-track-text small {
     font-size: 10px;
     font-weight: 400;
-    opacity: 0.6;
+    color: var(--log-muted);
 }
 
 .media-player-track-kind {
@@ -289,14 +289,14 @@
     font-size: 9px;
     font-weight: 400;
     letter-spacing: 0.06em;
-    opacity: 0.7;
+    color: var(--log-muted);
 }
 
 .media-player-track-time {
     font-size: 11px;
     font-variant-numeric: tabular-nums;
     font-weight: 400;
-    opacity: 0.7;
+    color: var(--log-muted);
 }
 
 .media-player-track-remove {
@@ -328,7 +328,7 @@
     margin: auto;
     padding: 16px;
     font-size: 12px;
-    opacity: 0.6;
+    color: var(--log-muted);
 }
 
 .media-player-controls .app-footer-row {

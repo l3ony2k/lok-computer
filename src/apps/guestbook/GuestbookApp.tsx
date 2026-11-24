@@ -39,7 +39,7 @@ export const GuestbookApp: React.FC = () => {
       isScrollable={false}
       footer={
         <div className="app-footer-row justify-end">
-          <span id="guestbooks___guestbook-made-with" className="text-xs opacity-50 select-none">
+          <span id="guestbooks___guestbook-made-with" className="text-xs text-muted-foreground select-none">
             Lovingly made with <a target="_blank" rel="noopener noreferrer" href={APP_CONFIG.GUESTBOOK_URL} className="underline hover:opacity-80">Guestbooks</a>
           </span>
         </div>

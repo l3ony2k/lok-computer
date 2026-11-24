@@ -35,7 +35,7 @@ export const DocumentApp = ({ path }: DocumentAppProps) => {
     <WindowLayout
       toolbar={
         <div className="app-toolbar-row">
-          <span className="text-xs opacity-70 flex-1 min-w-0">Written for agents and crawlers, not as a page for people.</span>
+          <span className="text-xs text-muted-foreground flex-1 min-w-0">Written for agents and crawlers, not as a page for people.</span>
           <RetroButton size="sm" onClick={() => void copyText()} disabled={!text} title="Copy the whole text as Markdown">
             Copy
           </RetroButton>
