@@ -164,7 +164,11 @@
 
 /* ---------- Coin ---------- */
 
-/* A coin is a coin: struck silver in every theme, like the cards and the d6. */
+/*
+ * A coin is a coin: a 1909 Lincoln cent in every theme, photographed (see
+ * scripts/coin-images.mjs), like the tarot's 1909 cards. Both faces are
+ * stacked and the one showing is opaque.
+ */
 .chance-coin {
     --coin: clamp(112px, 20cqw, 164px);
     width: var(--coin);
@@ -174,25 +178,48 @@
     justify-content: center;
     border: 1px solid #77746b;
     border-radius: 50%;
-    background: radial-gradient(circle at 34% 28%, #ffffff 0%, #e4e2da 42%, #bdb9ae 100%);
-    color: #3d3b36;
-    box-shadow:
-        inset 0 0 0 calc(var(--coin) * 0.055) #d6d3ca,
-        inset 0 0 0 calc(var(--coin) * 0.055 + 1px) #8f8b80,
-        0 1px 2px rgb(0 0 0 / 0.2),
-        0 5px 14px rgb(0 0 0 / 0.16);
+    filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.2)) drop-shadow(0 5px 12px rgb(0 0 0 / 0.16));
 }
 
-.chance-coin-face {
-    font-family: var(--font-code);
-    font-size: calc(var(--coin) * 0.38);
-    font-weight: 700;
-    line-height: 1;
-    text-shadow: 0 1px 0 rgb(255 255 255 / 0.7), 0 -1px 0 rgb(0 0 0 / 0.18);
+.chance-coin-image {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    user-select: none;
+}
+
+.chance-coin[data-face="heads"] .chance-coin-image[data-side="heads"],
+.chance-coin[data-face="tails"] .chance-coin-image[data-side="tails"] {
+    opacity: 1;
+/*
+ * The flip turns the coin edge-on twice (25% and 75%). The face swaps at each
+ * edge, so it reads like a coin turning over: the starting face, the other
+ * face, then where it lands (`data-face`). Landing on the other face swaps
+ * once, landing on the same face swaps twice.
+ */
 }
 
 .chance-coin[data-flipping] {
     animation: chance-flip 500ms ease-in-out;
+.chance-coin[data-turns="once"] .chance-coin-image[data-start] {
+    animation: chance-face-out 500ms linear;
+}
+
+.chance-coin[data-turns="once"] .chance-coin-image:not([data-start]) {
+    animation: chance-face-in 500ms linear;
+}
+
+.chance-coin[data-turns="twice"] .chance-coin-image[data-start] {
+    animation: chance-face-away 500ms linear;
+}
+
+.chance-coin[data-turns="twice"] .chance-coin-image:not([data-start]) {
+    animation: chance-face-between 500ms linear;
+}
+
 }
 
 @keyframes chance-flip {
@@ -677,7 +704,8 @@
 
 @media (prefers-reduced-motion: reduce) {
     .chance-die[data-rolling],
-    .chance-coin[data-flipping] {
+    .chance-coin[data-flipping],
+    .chance-coin[data-flipping] .chance-coin-image {
         animation: none;
     }
 

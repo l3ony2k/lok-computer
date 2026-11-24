@@ -54,6 +54,7 @@ The skins in `src/themes/` adapt styles, glyphs and values from these projects. 
 | `src/assets/oneko.gif`, `src/assets/oneko-dark.gif` | Neko sprite sheet | From [oneko.js](https://github.com/adryd325/oneko.js) by adryd (MIT); the original Neko is by Masayuki Koba |
 | `src/assets/buttons/*` (except the site's own, listed above) | 88×31 buttons for other sites and services | Their respective sites and makers |
 | `src/assets/tarot/*.webp` | The 78 cards and the Roses & Lilies back of the Rider–Waite–Smith tarot (art by Pamela Colman Smith, devised by A. E. Waite, published by William Rider & Son, 1909), cropped and converted by `scripts/tarot-cards.mjs` | Public domain; scans of a 1909 first printing by Saskia Jansen, from [Wikimedia Commons](https://commons.wikimedia.org/wiki/Category:Rider-Waite_tarot_deck_(Roses_%26_Lilies)) |
+| `src/assets/coin/heads.webp`, `src/assets/coin/tails.webp` | Both sides of a 1909 Lincoln cent, VDB variety (design by Victor David Brenner, struck by the United States Mint), cut out and converted by `scripts/coin-images.mjs` | Public domain (US government work); photograph by Jaclyn Nash, National Numismatic Collection, National Museum of American History, public domain as a Smithsonian work, from [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:NNC-US-1909-1C-Lincoln_Cent_(wheat).jpg) |
 
 The Windows, XP, 7, Mac, BeOS, Palm, Counter-Strike and Steam names and looks belong to their owners; the themes are homages, not affiliated with or endorsed by them.
 

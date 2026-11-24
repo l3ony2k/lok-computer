@@ -37,5 +37,5 @@ test-results
 # promo video project (separate, not part of the site)
 promo
 
-# downloaded originals for scripts/tarot-cards.mjs
+# downloaded originals for scripts/tarot-cards.mjs and scripts/coin-images.mjs
 scripts/.cache

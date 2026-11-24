@@ -55,7 +55,7 @@ html[data-chrome="classic"]:not(#_) :where(
     h1, h2, .text-lg, .text-xl, .text-2xl, .arena-channel-card-title,
     .ask-ai-best-answer strong, .ask-ai-value strong, .oobe-brand strong,
     .oobe-crt-preview > strong, .oobe-page h1,
-    .calculator-result, .chance-coin-face, .chance-die-value, .chance-readout-value, .chance-tarot-name, .clock-beats, .clock-local-time
+    .calculator-result, .chance-die-value, .chance-readout-value, .chance-tarot-name, .clock-beats, .clock-local-time
 ) {
     --c-type-size: var(--c-text-heading);
     font-family: var(--c-font-heading);

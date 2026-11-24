@@ -32,6 +32,8 @@ import {
 import { TAROT_IMAGE_SIZE } from './tarot';
 import { TAROT_BACK } from './tarotImages';
 import { TarotCardView } from './TarotCardView';
+import coinHeads from '@/assets/coin/heads.webp';
+import coinTails from '@/assets/coin/tails.webp';
 import './chance.css';
 
 export interface ChanceAppProps {
@@ -45,6 +47,12 @@ const ROLL_MS = 450;
 const ROLL_TICK_MS = 60;
 const FLIP_MS = 500;
 const COIN_HISTORY = 12;
+/**
+ * The coin's two faces: a 1909 Lincoln cent from the National Numismatic
+ * Collection (made by scripts/coin-images.mjs), square and transparent outside the rim.
+ */
+const COIN_FACES: Record<CoinSide, string> = { heads: coinHeads, tails: coinTails };
+const COIN_IMAGE_SIZE = 360;
 /** Catalog identity of Ask AI (predates its rename). */
 const ASK_AI_TYPE = 'AI Talk';
 
@@ -142,6 +150,9 @@ export const ChanceApp: React.FC<ChanceAppProps> = ({ initialTab, onPropsChange 
   // Coin
   const [coin, setCoin] = useState<CoinSide | null>(null);
   const [flipping, setFlipping] = useState(false);
+  // The face showing when a flip starts and the one it lands on; the coin
+  // turns edge-on twice and shows the other face in between.
+  const [flipFaces, setFlipFaces] = useState<{ from: CoinSide; to: CoinSide } | null>(null);
   const [coinHistory, setCoinHistory] = useState<CoinSide[]>([]);
   const flipTimer = useRef<number | null>(null);
 
@@ -162,6 +173,7 @@ export const ChanceApp: React.FC<ChanceAppProps> = ({ initialTab, onPropsChange 
       land();
       return;
     }
+    setFlipFaces({ from: coin ?? 'heads', to: side });
     setFlipping(true);
     flipTimer.current = window.setTimeout(land, FLIP_MS);
   };
@@ -212,6 +224,7 @@ export const ChanceApp: React.FC<ChanceAppProps> = ({ initialTab, onPropsChange 
   }, [openApplication, reading]);
 
   const heads = coinHistory.filter((side) => side === 'heads').length;
+  const coinFace = flipping && flipFaces ? flipFaces.to : coin ?? 'heads';
 
   return (
     <WindowLayout
@@ -297,8 +310,26 @@ export const ChanceApp: React.FC<ChanceAppProps> = ({ initialTab, onPropsChange 
             <RetroButton variant="primary" onClick={flip} disabled={flipping}>Flip</RetroButton>
           </div>
 
-          <div className="chance-coin" data-side={coin ?? undefined} data-flipping={flipping || undefined} aria-hidden="true">
-            <span className="chance-coin-face">{flipping ? '' : coin === 'heads' ? 'H' : coin === 'tails' ? 'T' : '?'}</span>
+          <div
+            className="chance-coin"
+            data-face={coinFace}
+            data-flipping={flipping || undefined}
+            data-turns={flipping && flipFaces ? (flipFaces.from === flipFaces.to ? 'twice' : 'once') : undefined}
+            aria-hidden="true"
+          >
+            {(['heads', 'tails'] as const).map((side) => (
+              <img
+                key={side}
+                className="chance-coin-image"
+                src={COIN_FACES[side]}
+                alt=""
+                width={COIN_IMAGE_SIZE}
+                height={COIN_IMAGE_SIZE}
+                draggable={false}
+                data-side={side}
+                data-start={flipping && flipFaces?.from === side ? '' : undefined}
+              />
+            ))}
           </div>
 
           <p className="chance-readout" aria-live="polite">
