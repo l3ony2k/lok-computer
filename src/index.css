@@ -17,6 +17,9 @@
         --scrollbar-thumb-hover: #898989;
         --block-bg: #ffffff;
         --block-border: #333333;
+        /* Backdrops: under a modal dialog, and the lighter one under the launcher. */
+        --scrim: rgb(51 51 51 / 0.24);
+        --scrim-soft: rgb(51 51 51 / 0.14);
         --button-bg: #dddddd;
         --button-hover: #cccccc;
         --text-color: #333333;
@@ -119,6 +122,9 @@
         --scrollbar-thumb-hover: #777777;
         --block-bg: #2a2a2a;
         --block-border: #555555;
+        /* Dark mode dims with black: a light mix would wash the desktop out. */
+        --scrim: rgb(0 0 0 / 0.5);
+        --scrim-soft: rgb(0 0 0 / 0.32);
         --button-bg: #333333;
         --button-hover: #444444;
         --text-color: #f0f0f0;
@@ -615,7 +621,7 @@
 
     /* Keyboard launcher (Cmd/Ctrl+K). */
     .launcher-scrim {
-        background: color-mix(in srgb, var(--block-border) 14%, transparent);
+        background: var(--scrim-soft);
     }
 
     .launcher-panel {
@@ -1794,14 +1800,12 @@
         max-width: 420px;
     }
 
+    /* The thumbnail column is a fixed square and the narrow columns shrink to
+       their content (width: 1%), so the title, the one auto column, takes all
+       the spare width. A width on the title too made the table share the spare
+       width with the thumbnail column, stretching it beside a square image. */
     .arena-file-column-thumbnail {
         width: var(--arena-file-row-height);
-    }
-
-    .arena-file-column-title {
-        width: clamp(180px, 36vw, 420px);
-        min-width: 180px;
-        max-width: 420px;
     }
 
     .arena-file-column-type,
@@ -1974,9 +1978,6 @@
             display: none;
         }
 
-        .arena-file-column-title {
-            width: auto;
-        }
     }
 
     .arena-detail-split,
@@ -4076,7 +4077,7 @@ a:hover .animate-marquee-if-overflow {
     align-items: center;
     justify-content: center;
     padding: 20px;
-    background: color-mix(in srgb, var(--text-color) 24%, transparent);
+    background: var(--scrim);
 }
 
 .system-dialog {
@@ -4125,7 +4126,7 @@ a:hover .animate-marquee-if-overflow {
     align-items: center;
     justify-content: center;
     padding: 20px;
-    background: color-mix(in srgb, var(--text-color) 24%, transparent);
+    background: var(--scrim);
 }
 
 .oobe-window {
