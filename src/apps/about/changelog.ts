@@ -14,6 +14,18 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '3.2.0',
+    date: '2026-11-24',
+    title: 'Cards, a coin and a calmer desk',
+    notes: [
+      'Chance: tarot readings show the 1909 Rider–Waite–Smith cards, turned over as they load and upside down when reversed; the coin is a real 1909 Lincoln cent. Every tab is laid out like a table, and nothing grows huge in a big window.',
+      'The Calculator is rebuilt on one aligned grid, with = as the one dark key and the tape beside it in a wide window.',
+      'Dropdowns open a list drawn in your theme instead of the system one; lok also draws its own checkboxes and sliders.',
+      'Faint text across the desktop is easier to read, and lok’s small labels are in sentence case.',
+      'Shelf shows whole titles with a book, film or TV mark on each cover; Weather fits small windows; Fedi shows custom emoji; a channel opened from a link shows its real name; Clock spells St John’s and N’Djamena properly.',
+    ],
+  },
+  {
     version: '3.1.10',
     date: '2026-10-22',
     title: 'Icons that stay put',
