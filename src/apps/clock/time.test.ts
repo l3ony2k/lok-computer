@@ -126,6 +126,22 @@ describe('formatZoneTime and formatZoneDate', () => {
   });
 });
 
+describe('saved labels from older versions', () => {
+  test('respells labels that were derived from the zone id', () => {
+    const state = normalizeClockState({ zones: [
+      { id: 'America/St_Johns', label: 'St Johns' },
+      { id: 'Antarctica/DumontDUrville', label: 'DumontDUrville' },
+      { id: 'Africa/Ndjamena', label: 'Ndjamena' },
+    ] });
+    expect(state.zones.map((zone) => zone.label)).toEqual(["St John's", "Dumont d'Urville", "N'Djamena"]);
+  });
+
+  test('keeps a label someone chose', () => {
+    const state = normalizeClockState({ zones: [{ id: 'America/St_Johns', label: 'Newfoundland' }] });
+    expect(state.zones[0].label).toBe('Newfoundland');
+  });
+});
+
 describe('normalizeClockState', () => {
   const defaults = DEFAULT_ZONES.map((zone) => ({ ...zone }));
 

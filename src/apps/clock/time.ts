@@ -31,10 +31,25 @@ export const isSupportedZone = (id: string): boolean => {
   }
 };
 
+// Zone ids are ASCII without apostrophes or spaces; these cities are spelt properly.
+const CITY_SPELLINGS: Record<string, string> = {
+  DumontDUrville: "Dumont d'Urville",
+  Ndjamena: "N'Djamena",
+  St_Barthelemy: 'St Barthélemy',
+  St_Johns: "St John's",
+};
+
+/**
+ * The label older versions derived from the id ("St Johns", "DumontDUrville").
+ * A saved label equal to it was never typed by anyone, so it takes the current
+ * spelling; a label someone chose stays as it is.
+ */
+const legacyZoneLabel = (id: string): string => (id.split('/').pop() ?? id).replace(/_/g, ' ');
+
 /** "America/Argentina/Buenos_Aires" → "Buenos Aires". */
 export const zoneLabel = (id: string): string => {
   const segment = id.split('/').pop() ?? id;
-  return segment.replace(/_/g, ' ');
+  return CITY_SPELLINGS[segment] ?? segment.replace(/_/g, ' ');
 };
 
 // tzdata 2022b renamed Ukraine's capital; older zone databases only know the old spelling.
@@ -220,7 +235,7 @@ export const normalizeClockState = (stored: unknown): ClockState => {
     if (seen.has(key)) continue;
     seen.add(key);
     const trimmed = typeof label === 'string' ? label.trim() : '';
-    zones.push({ id, label: trimmed || labelForZone(id) });
+    zones.push({ id, label: trimmed && trimmed !== legacyZoneLabel(id) ? trimmed : labelForZone(id) });
   }
   return { zones };
 };
