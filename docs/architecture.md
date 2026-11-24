@@ -52,15 +52,13 @@ Launching a single-instance Application with explicit `props` delivers them to t
 
 `src/lib/cachedRequest.ts` owns the persistent request lifecycle:
 
-1. read IndexedDB TTL cache
+1. read IndexedDB TTL cache; a fresh entry is returned as is
 2. emit optional cache debug output
 3. offline: serve an expired entry if one exists, else throw `OfflineError` (no network call)
-4. count a remote request on miss
-5. call the source loader
-6. on failure: serve an expired entry if one exists, else rethrow
-7. persist the result
+4. online with an expired entry: return it at once and refresh it in the background (stale-while-revalidate). One refresh per key at a time, and none again within the key's TTL; a failed refresh keeps the saved copy. A stored refresh notifies `onCacheRevalidated`, which `App.tsx` turns into `queryClient.invalidateQueries()`: every query loads through `cachedRequest`, so the refetch re-reads IndexedDB and open windows update in place. Callers outside React Query (Are.na browsing) get the newer copy on their next read.
+5. on a miss: count a remote request, call the source loader (a failure rethrows), persist the result
 
-Expired entries are kept for seven days past their TTL so there is something to show offline. Are.na, Bsky, Fedi, Shelf, and Weather retain only source-specific URL, status, and decoding knowledge.
+Expired entries are kept for seven days past their TTL so there is something to show at once and offline. Are.na, Bsky, Fedi, Shelf, and Weather retain only source-specific URL, status, and decoding knowledge.
 
 ### Offline
 
@@ -72,7 +70,7 @@ Expired entries are kept for seven days past their TTL so there is something to 
 
 ### Persisted view state
 
-`usePersistedState` owns initial-load suppression, dynamic keys, optional disabling, normalization/migration, debounced writes, and optional synchronization. Storage remains internal to the implementation.
+`usePersistedState` owns initial-load suppression, dynamic keys, optional disabling, normalization/migration, debounced writes, and optional synchronization. Storage remains internal to the implementation. A pending debounced write is flushed, never dropped, when the window closes or the page unloads (`src/lib/debouncedWrite.ts`), and effects re-running for a key already loaded neither reload storage over the value in memory nor write it twice.
 
 ### Social feed
 

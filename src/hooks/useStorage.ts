@@ -3,6 +3,7 @@
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { getAppState, setAppState } from '@/lib/storage';
+import { createDebouncedWrite, type DebouncedWrite } from '@/lib/debouncedWrite';
 
 export interface PersistedStateOptions<T> {
     key: string;
@@ -17,6 +18,11 @@ export interface PersistedStateOptions<T> {
  * State that survives reloads. Owns the initial-load protection (nothing is
  * written back until the stored value has been read), key changes, optional
  * normalization of legacy values, and debounced writes.
+ *
+ * A pending write is flushed, never dropped, when the window closes or the
+ * page unloads (a change made just before closing used to be lost). Effects
+ * that run again for a key already loaded neither reload storage over the
+ * newer value in memory nor write or report the same value twice.
  *
  * @returns [value, setValue, isLoading]
  */
@@ -35,12 +41,19 @@ export const usePersistedState = <T>({
     const defaultValueRef = useRef(defaultValue);
     const normalizeRef = useRef(normalize);
     const onChangeRef = useRef(onChange);
+    const handled = useRef<{ key: string | null; value: unknown }>({ key: null, value: undefined });
+    const [writer] = useState<DebouncedWrite<T>>(() => createDebouncedWrite<T>((storeKey, storeValue) => setAppState(storeKey, storeValue)));
     defaultValueRef.current = defaultValue;
     normalizeRef.current = normalize;
     onChangeRef.current = onChange;
 
     // Load initial value from storage
     useEffect(() => {
+        // Effects re-running for a key already loaded:
+        // the value in memory is at least as new as storage.
+        if (enabled && hydratedKey.current === key) return;
+        // A write still pending belongs to the previous key.
+        writer.flush();
         let active = true;
         hydratedKey.current = null;
         setIsLoading(true);
@@ -80,31 +93,36 @@ export const usePersistedState = <T>({
         return () => {
             active = false;
         };
-    }, [enabled, key]);
+    }, [enabled, key, writer]);
 
     // Save to storage when value changes (skip initial load)
     useEffect(() => {
         if (!enabled || hydratedKey.current !== key || isLoading) {
             return;
         }
-
-        if (skipNextSave.current) {
+        if (handled.current.key === key && Object.is(handled.current.value, value)) {
             skipNextSave.current = false;
-            onChangeRef.current?.(value);
             return;
         }
+        handled.current = { key, value };
 
         onChangeRef.current?.(value);
-        const timeout = setTimeout(async () => {
-            try {
-                await setAppState(key, value);
-            } catch (error) {
-                console.error(`[Storage] Failed to save persisted state for "${key}":`, error);
-            }
-        }, debounceMs);
+        if (skipNextSave.current) {
+            skipNextSave.current = false;
+            return;
+        }
+        writer.schedule(key, value, debounceMs);
+    }, [enabled, key, value, isLoading, debounceMs, writer]);
 
-        return () => clearTimeout(timeout);
-    }, [enabled, key, value, isLoading, debounceMs]);
+    // Hide, unmount, or leaving the page: write what is pending now.
+    useEffect(() => {
+        const flush = () => writer.flush();
+        window.addEventListener('pagehide', flush);
+        return () => {
+            window.removeEventListener('pagehide', flush);
+            flush();
+        };
+    }, [writer]);
 
     const updateValue = useCallback((newValue: T | ((prev: T) => T)) => {
         setValue((prev) => {

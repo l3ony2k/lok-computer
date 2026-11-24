@@ -213,11 +213,18 @@ export const deleteAppState = async (key: string): Promise<void> => {
 /** Expired entries stay this long as an offline fallback before a read discards them. */
 const STALE_GRACE_MS = 7 * 24 * 60 * 60 * 1000;
 
+export interface CachedEntry<T> {
+    data: T;
+    /** Past its TTL: still worth showing, but due for a refresh. */
+    expired: boolean;
+}
+
 /**
- * Get cached data if it exists and hasn't expired. With `allowStale`, an
- * expired entry still counts, so a request can fall back to it offline.
+ * Get a cached entry, fresh or expired. An entry past its TTL is still
+ * returned (marked `expired`) for the grace period, so a request can show it
+ * at once while it refreshes, or fall back to it offline.
  */
-export const getCachedData = async <T>(key: string, options: { allowStale?: boolean } = {}): Promise<T | null> => {
+export const getCachedEntry = async <T>(key: string): Promise<CachedEntry<T> | null> => {
     try {
         const cached = await getFromStore<CachedData<T>>(STORES.API_CACHE, key);
 
@@ -237,14 +244,10 @@ export const getCachedData = async <T>(key: string, options: { allowStale?: bool
             return null;
         }
 
-        if (age > cached.ttl && !options.allowStale) {
-            await incrementCacheMiss();
-            cacheDebugLog(`[Storage] Cache expired for key "${key}"`);
-            return null;
-        }
-
+        const expired = age > cached.ttl;
+        if (expired) cacheDebugLog(`[Storage] Cache expired for key "${key}"`);
         await incrementCacheHit();
-        return cached.data;
+        return { data: cached.data, expired };
     } catch (error) {
         console.error(`[Storage] Failed to get cached data for key "${key}":`, error);
         return null;
