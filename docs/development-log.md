@@ -4,6 +4,12 @@ Session-by-session engineering notes, newest first. The short, user-facing relea
 
 Add an entry here for every version bump.
 
+### Session: 3.2.1 — saves survive a reload, cache shows at once (2026-11-25)
+
+*   **Saves on hide, close and unload** (`src/lib/debouncedWrite.ts`, `src/hooks/useStorage.ts`): debounced setting and view-state writes are flushed when the window hides, the component unmounts, or the page goes away, instead of being dropped with their pending timer. IndexedDB cannot finish a transaction during unload, so a `pagehide` flush also writes a synchronous copy to `localStorage`, which the next read moves into IndexedDB (`src/lib/storage.ts`).
+*   **Window session** (`src/hooks/useWindowManager.ts`): the 500 ms session save keeps the session it is about to write and flushes it through the same unload-safe path, so a window moved or an app tab switched just before a reload is restored.
+*   **Stale-while-revalidate** (`src/lib/cachedRequest.ts`, `src/App.tsx`): an expired entry is returned at once and refreshed in the background; `onCacheRevalidated` makes `App.tsx` invalidate the active queries so open windows update in place. `getCachedData` became `getCachedEntry`. Split out of `react-19-swr`; React 19 and idle freezing stay parked there.
+
 ### Session: 3.2.0 — tarot art, a real coin, a design pass over lok (2026-11-24)
 
 *   **Tarot art** (`src/apps/chance/tarot*.ts`, `TarotCardView.tsx`, `scripts/tarot-cards.mjs`): the 78 cards and back of the 1909 Rider–Waite–Smith "Roses & Lilies" printing (Pamela Colman Smith, public domain; scans from Wikimedia Commons) as 600×1004 WebP files in `src/assets/tarot` (43–95 KB, 5.3 MB in all). The script downloads each original once (SHA-1 checked against Commons, Wayback fallback when Commons rate-limits scripts), crops every card to its printed frame on an even paper margin, and converts with `sharp` (now a devDependency). Only drawn cards load: the boot warm-up skips the deck. A card lies face down until its scan loads, then turns over (off under reduced motion); reversed cards are upside down; a failed image leaves a framed card with its name.

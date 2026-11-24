@@ -14,6 +14,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '3.2.1',
+    date: '2026-11-25',
+    title: 'Nothing lost on a reload',
+    notes: [
+      'A change made just before closing a window or reloading the page is kept, window positions and open tabs included.',
+      'Are.na channels, feeds and the weather show what was saved last time at once and refresh behind it, instead of waiting on the network.',
+    ],
+  },
+  {
     version: '3.2.0',
     date: '2026-11-24',
     title: 'Cards, a coin and a calmer desk',
