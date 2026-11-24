@@ -443,10 +443,12 @@ html[data-chrome="classic"]:not(#_) :where(.search-input, input.arena-toolbar-co
     background-color: var(--c-field-bg-disabled, var(--c-face));
 }
 
-html[data-chrome="classic"]:not(#_) select.arena-toolbar-control {
+/* Every dropdown (components/ui/Select) draws the skin's arrow, whatever
+   field class it carries; [data-layout] outranks a skin's field padding. */
+html[data-chrome="classic"][data-layout]:not(#_) select {
     appearance: none;
     -webkit-appearance: none;
-    padding-right: 22px;
+    padding-right: var(--c-select-padding, 22px);
     background-image: var(--c-select-arrow);
     background-repeat: no-repeat;
     background-position: var(--c-select-arrow-position, right 2px center);

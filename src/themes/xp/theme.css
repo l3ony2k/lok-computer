@@ -484,7 +484,7 @@ html[data-theme="xp"][data-layout]:not(#_) input[type="radio"]:disabled {
     border-color: #cac8bb;
 }
 
-html[data-theme="xp"][data-layout]:not(#_) select.arena-toolbar-control:hover:not(:disabled) {
+html[data-theme="xp"][data-layout]:not(#_) select:hover:not(:disabled) {
     background-image: url("./icons/dropdown-hover.svg");
 }
 

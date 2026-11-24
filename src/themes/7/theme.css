@@ -598,7 +598,7 @@ html[data-theme="7"][data-layout]:not(#_) :where(.search-input, input.arena-tool
     border-color: #3d7bad #a4c9e3 #b7d9ed #b5cfe7;
 }
 
-html[data-theme="7"][data-layout]:not(#_) select.arena-toolbar-control:hover:not(:disabled) {
+html[data-theme="7"][data-layout]:not(#_) select:hover:not(:disabled) {
     background-image: url("./icons/select-arrow.svg"), var(--w7-el-grad-h);
     border-color: #3c7fb1;
 }

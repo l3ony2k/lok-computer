@@ -155,7 +155,9 @@ html[data-theme="tui"][data-layout]:not(#_) {
     --c-field-height: 16px;
     --c-field-bg-disabled: var(--vga-gray);
     --c-select-arrow: url("./icons/select.svg");
-    --c-select-arrow-position: right 0 center;
+    --c-select-arrow-position: right 4px center;
+    --c-select-arrow-size: 8px 16px;
+    --c-select-padding: 20px;
     --c-readout-bg: var(--vga-black);
     --c-readout-border: 0;
     --c-readout-shadow: none;
@@ -519,11 +521,6 @@ html[data-theme="tui"][data-layout]:not(#_) :where(.search-input, input.arena-to
 html[data-theme="tui"][data-layout]:not(#_) :where(.search-input, input.arena-toolbar-control, select.arena-toolbar-control, textarea.search-input):focus-visible {
     color: var(--vga-yellow);
     outline: 0;
-}
-
-html[data-theme="tui"][data-layout]:not(#_) select.arena-toolbar-control {
-    padding-right: 16px;
-    background-size: 8px 16px;
 }
 
 html[data-theme="tui"][data-layout]:not(#_) input[type="checkbox"],
