@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { Delete } from 'lucide-react';
 import { WindowLayout } from '@/components/window/WindowLayout';
 import { RetroButton } from '@/components/ui/RetroButton';
 import { usePersistedState } from '@/hooks/useStorage';
@@ -60,39 +61,35 @@ const KEYBOARD_ACTIONS: Record<string, KeyAction> = {
   C: { type: 'clear' },
 };
 
+/** Digits are the light keys, functions and operators the mid tone, equals the one dark key. */
+type KeyKind = 'digit' | 'function' | 'operator' | 'equals';
+
 interface KeyDefinition {
   label: string;
   action: KeyAction;
+  kind: KeyKind;
   name?: string;
-  /** Function-row keys span 4 of the 20 grid columns; everything else spans 5. */
-  narrow?: boolean;
-  primary?: boolean;
 }
 
-const digitKey = (digit: string): KeyDefinition => ({ label: digit, action: { type: 'digit', digit } });
+const digitKey = (digit: string): KeyDefinition => ({ label: digit, action: { type: 'digit', digit }, kind: 'digit' });
+const operatorKey = (operator: '÷' | '×' | '−' | '+', name: string): KeyDefinition => ({
+  label: operator, action: { type: 'operator', operator }, kind: 'operator', name,
+});
 
+/* Five rows of four on one grid, so every column lines up. Backspace edits
+   the entry, so it lives in the display beside it (and on the keyboard). */
 const KEYS: KeyDefinition[] = [
-  { label: 'AC', action: { type: 'clear' }, name: 'All clear', narrow: true },
-  { label: '⌫', action: { type: 'backspace' }, name: 'Backspace', narrow: true },
-  { label: '( )', action: { type: 'paren', which: 'auto' }, name: 'Parentheses', narrow: true },
-  { label: '%', action: { type: 'percent' }, name: 'Percent', narrow: true },
-  { label: '÷', action: { type: 'operator', operator: '÷' }, name: 'Divide', narrow: true, primary: true },
-  digitKey('7'),
-  digitKey('8'),
-  digitKey('9'),
-  { label: '×', action: { type: 'operator', operator: '×' }, name: 'Multiply', primary: true },
-  digitKey('4'),
-  digitKey('5'),
-  digitKey('6'),
-  { label: '−', action: { type: 'operator', operator: '−' }, name: 'Subtract', primary: true },
-  digitKey('1'),
-  digitKey('2'),
-  digitKey('3'),
-  { label: '+', action: { type: 'operator', operator: '+' }, name: 'Add', primary: true },
-  { label: '±', action: { type: 'negate' }, name: 'Change sign' },
+  { label: 'AC', action: { type: 'clear' }, kind: 'function', name: 'All clear' },
+  { label: '( )', action: { type: 'paren', which: 'auto' }, kind: 'function', name: 'Parentheses' },
+  { label: '%', action: { type: 'percent' }, kind: 'function', name: 'Percent' },
+  operatorKey('÷', 'Divide'),
+  digitKey('7'), digitKey('8'), digitKey('9'), operatorKey('×', 'Multiply'),
+  digitKey('4'), digitKey('5'), digitKey('6'), operatorKey('−', 'Subtract'),
+  digitKey('1'), digitKey('2'), digitKey('3'), operatorKey('+', 'Add'),
+  { label: '±', action: { type: 'negate' }, kind: 'digit', name: 'Change sign' },
   digitKey('0'),
-  { label: '.', action: { type: 'point' }, name: 'Decimal point' },
-  { label: '=', action: { type: 'equals' }, name: 'Equals', primary: true },
+  { label: '.', action: { type: 'point' }, kind: 'digit', name: 'Decimal point' },
+  { label: '=', action: { type: 'equals' }, kind: 'equals', name: 'Equals' },
 ];
 
 export const CalculatorApp: React.FC<CalculatorAppProps> = () => {
@@ -195,62 +192,78 @@ export const CalculatorApp: React.FC<CalculatorAppProps> = () => {
         }
         footer={
           <div className="app-footer-row">
-            <span className="text-xs opacity-50">{state.error ?? 'Ready'}</span>
-            <span className="text-xs opacity-50">{stored.tape.length} on tape</span>
+            <span className="text-xs calculator-status">{state.error ?? 'Ready'}</span>
+            <span className="text-xs calculator-status">{stored.tape.length} on tape</span>
           </div>
         }
         hasPadding={false}
       >
-        <div className="calculator-panel">
-          <div className="calculator-display" role="status" aria-live="polite">
-            <div ref={expressionRef} className="calculator-expression">
+        <div className="calculator-panel" data-tape={stored.tapeOpen || undefined}>
+          <div className="calculator-display">
+            <div ref={expressionRef} className="calculator-expression" aria-hidden="true">
               {expressionText || ' '}
             </div>
-            <div className="calculator-result" data-length={lengthBand(resultText)} data-error={state.error ? 'true' : undefined}>
-              {resultText}
+            <div className="calculator-entry">
+              <button
+                type="button"
+                className="calculator-backspace"
+                aria-label="Backspace"
+                title="Backspace"
+                tabIndex={-1}
+                onClick={() => pressKey({ type: 'backspace' })}
+              >
+                <Delete className="w-4 h-4" aria-hidden="true" />
+              </button>
+              <div
+                className="calculator-result"
+                role="status"
+                aria-live="polite"
+                data-length={lengthBand(resultText)}
+                data-error={state.error ? 'true' : undefined}
+              >
+                {resultText}
+              </div>
             </div>
           </div>
-          <div className="calculator-body">
-            {stored.tapeOpen && (
-              <section className="calculator-tape" aria-label="Tape">
-                <div className="calculator-tape-header">
-                  <span>Tape</span>
-                  <RetroButton size="sm" onClick={clearTape} disabled={stored.tape.length === 0}>
-                    Clear tape
-                  </RetroButton>
-                </div>
-                {stored.tape.length === 0 ? (
-                  <p className="calculator-tape-empty">No calculations yet</p>
-                ) : (
-                  <ol className="calculator-tape-list">
-                    {stored.tape.map((entry, index) => (
-                      <li key={`${index}:${entry.expression}`}>
-                        <button type="button" className="calculator-tape-entry" onClick={() => recall(entry)} title="Recall this result">
-                          <span>{entry.expression} =</span>
-                          <strong>{entry.result}</strong>
-                        </button>
-                      </li>
-                    ))}
-                  </ol>
-                )}
-              </section>
-            )}
-            <div className="calculator-keys">
-              {KEYS.map((key) => (
-                <RetroButton
-                  key={key.label}
-                  size="md"
-                  className="calculator-key"
-                  variant={key.primary ? 'primary' : 'default'}
-                  data-span={key.narrow ? '4' : undefined}
-                  aria-label={key.name}
-                  tabIndex={-1}
-                  onClick={() => pressKey(key.action)}
-                >
-                  {key.label}
+          {stored.tapeOpen && (
+            <section className="calculator-tape" aria-label="Tape">
+              <div className="calculator-tape-header">
+                <span>Tape</span>
+                <RetroButton size="sm" onClick={clearTape} disabled={stored.tape.length === 0}>
+                  Clear
                 </RetroButton>
-              ))}
-            </div>
+              </div>
+              {stored.tape.length === 0 ? (
+                <p className="calculator-tape-empty">No calculations yet</p>
+              ) : (
+                <ol className="calculator-tape-list">
+                  {stored.tape.map((entry, index) => (
+                    <li key={`${index}:${entry.expression}`}>
+                      <button type="button" className="calculator-tape-entry" onClick={() => recall(entry)} title="Recall this result">
+                        <span>{entry.expression} =</span>
+                        <strong>{entry.result}</strong>
+                      </button>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </section>
+          )}
+          <div className="calculator-keys">
+            {KEYS.map((key) => (
+              <RetroButton
+                key={key.label}
+                size="md"
+                className="calculator-key"
+                variant={key.kind === 'equals' ? 'primary' : 'default'}
+                data-kind={key.kind}
+                aria-label={key.name}
+                tabIndex={-1}
+                onClick={() => pressKey(key.action)}
+              >
+                {key.label}
+              </RetroButton>
+            ))}
           </div>
         </div>
       </WindowLayout>

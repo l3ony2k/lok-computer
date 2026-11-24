@@ -164,7 +164,7 @@ export const APPLICATIONS = {
     component: CalculatorApp,
     loader: APP_MODULE_LOADERS.Calculator,
     defaultWidth: 320,
-    defaultHeight: 480,
+    defaultHeight: 540,
     singleInstance: true,
     showOnDesktop: true,
   },
