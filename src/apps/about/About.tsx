@@ -6,6 +6,7 @@ import { SYSTEM_VERSION } from "@/lib/system";
 import { THEMES, THEME_IDS } from "@/lib/theme";
 import { CHANGELOG } from "./changelog";
 import { PROFILE, PROJECTS, type ProfileLink } from "@/config/site";
+import { COIN_TYPES } from "@/apps/chance/coins";
 
 
 // Theme credits come from the theme registry so new themes are credited automatically.
@@ -19,6 +20,13 @@ const TYPE_AND_PICTURE_CREDITS = [
   { label: "Harmony by Chuck Anderson", url: "https://en.wikipedia.org/wiki/Windows_7" },
   { label: "the Counter-Strike 1.6 menu art by Valve", url: "https://store.steampowered.com/app/10/CounterStrike/" },
 ];
+
+// Chance's tarot and coins: real, public-domain pictures. The coins come from
+// the coin catalog, so every coin type added there is thanked here.
+const TAROT_CREDIT = {
+  label: "the 1909 Rider–Waite–Smith tarot by Pamela Colman Smith",
+  url: "https://commons.wikimedia.org/wiki/Category:Rider-Waite_tarot_deck_(Roses_%26_Lilies)",
+};
 
 // ============================================
 // About This Section
@@ -107,6 +115,23 @@ const AboutThis = () => {
             </span>
           ))}
           .
+        </p>
+
+        <p className="mt-4">
+          the pictures in Chance:{" "}
+          <a href={TAROT_CREDIT.url} className="underline text-blue-700 dark:text-blue-300">
+            {TAROT_CREDIT.label}
+          </a>
+          , from Saskia Jansen’s scans of a first printing; and the coins (
+          {COIN_TYPES.map((type, index) => (
+            <span key={type.id}>
+              {index > 0 && ", "}
+              <a href={type.source} className="underline text-blue-700 dark:text-blue-300">
+                {type.label}
+              </a>
+            </span>
+          ))}
+          ), photographed by Jaclyn Nash for the Smithsonian’s National Numismatic Collection. Thank you for putting them in the public domain.
         </p>
 
         <Changelog />

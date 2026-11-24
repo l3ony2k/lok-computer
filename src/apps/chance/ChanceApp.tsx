@@ -11,17 +11,16 @@ import {
   DIE_SIDES,
   MAX_CARDS,
   MAX_DICE,
-  PIP_LAYOUT,
   SPREAD_POSITIONS,
-  isRedFace,
   buildDeck,
   drawCards,
   drawTarot,
-  flipCoin,
+  flipCoins,
   isChanceTab,
   isDieSides,
   normalizeChanceState,
   rollDice,
+  rollDie,
   shuffle,
   tarotQuestion,
   type ChanceState,
@@ -33,8 +32,11 @@ import {
 import { TAROT_IMAGE_SIZE } from './tarot';
 import { TAROT_BACK } from './tarotImages';
 import { TarotCardView } from './TarotCardView';
-import coinHeads from '@/assets/coin/heads.webp';
-import coinTails from '@/assets/coin/tails.webp';
+import { DieView } from './DieView';
+import { LAND_AT, THROW_MS, THROW_STAGGER_MS, throwDice } from './dieThrow';
+import { dealOriginOf, useDealTravel, type DealOrigin } from './deal';
+import { COIN_IMAGE_SIZE, COIN_TYPES, DEFAULT_COIN, MAX_COINS, coinType, isCoinType } from './coins';
+import { coinFace } from './coinImages';
 import './chance.css';
 
 export interface ChanceAppProps {
@@ -44,17 +46,14 @@ export interface ChanceAppProps {
 }
 
 const STORAGE_KEY = 'app:chance';
-const ROLL_MS = 450;
+/** Earlier rolls kept on the table, newest first. */
+const ROLL_HISTORY = 24;
 const ROLL_TICK_MS = 60;
 const FLIP_MS = 500;
-const COIN_HISTORY = 12;
+/** Earlier flips kept on the table, newest first. */
+const COIN_HISTORY = 24;
+const COIN_OPTIONS = COIN_TYPES.map((type) => ({ value: type.id, label: type.label }));
 const DIE_OPTIONS = DIE_SIDES.map((sides) => ({ value: String(sides), label: `d${sides}` }));
-/**
- * The coin's two faces: a 1909 Lincoln cent from the National Numismatic
- * Collection (made by scripts/coin-images.mjs), square and transparent outside the rim.
- */
-const COIN_FACES: Record<CoinSide, string> = { heads: coinHeads, tails: coinTails };
-const COIN_IMAGE_SIZE = 360;
 /** Catalog identity of Ask AI (predates its rename). */
 const ASK_AI_TYPE = 'AI Talk';
 
@@ -70,12 +69,65 @@ const PlayingCardView = ({ card, small }: { card: PlayingCard; small?: boolean }
     role="img"
     aria-label={card.joker ? `${card.red ? 'Red' : 'Black'} joker` : `${card.rank} of ${card.suit}`}
   >
-    <span className="chance-card-corner" aria-hidden="true">{card.joker ? 'J' : card.rank}<br />{card.symbol}</span>
-    <span className="chance-card-pip" aria-hidden="true">{card.symbol}</span>
-    {card.joker && !small && <span className="chance-card-word" aria-hidden="true">Joker</span>}
-    {!small && <span className="chance-card-corner chance-card-corner-bottom" aria-hidden="true">{card.joker ? 'J' : card.rank}<br />{card.symbol}</span>}
+    <span className="chance-card-corner" aria-hidden="true">{card.joker ? card.symbol : <>{card.rank}<br />{card.symbol}</>}</span>
+    {card.joker ? (
+      // A joker's face is the word itself, large, in its ink: red or black.
+      <span className="chance-card-joker" aria-hidden="true">JOKER</span>
+    ) : (
+      <span className="chance-card-pip" aria-hidden="true">{card.symbol}</span>
+    )}
+    {!small && <span className="chance-card-corner chance-card-corner-bottom" aria-hidden="true">{card.joker ? card.symbol : <>{card.rank}<br />{card.symbol}</>}</span>}
   </div>
 );
+
+/**
+ * A card from the latest draw, dealt: it leaves the deck face down, travels
+ * to its place while turning over (CSS, on data-face-up), staggered by its
+ * place in the hand. Without `origin` it simply lies face up.
+ */
+const DEAL_STAGGER_MS = 90;
+
+const DealtCard = ({ card, index, origin }: { card: PlayingCard; index: number; origin: DealOrigin | null }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const animate = origin !== null;
+  const delay = index * DEAL_STAGGER_MS;
+  const [faceUp, setFaceUp] = useState(!animate);
+  useDealTravel(ref, origin, delay, animate);
+  // Turn over a frame after mounting face down, so the turn always animates.
+  useEffect(() => {
+    if (faceUp) return;
+    let frame = requestAnimationFrame(() => { frame = requestAnimationFrame(() => setFaceUp(true)); });
+    return () => cancelAnimationFrame(frame);
+  }, [faceUp]);
+  return (
+    <div
+      ref={ref}
+      className="chance-dealt"
+      data-face-up={faceUp || undefined}
+      style={{ '--chance-deal-delay': `${animate ? delay : 0}ms` } as React.CSSProperties}
+    >
+      <div className="chance-card chance-card-back chance-dealt-back" aria-hidden="true" />
+      <PlayingCardView card={card} />
+    </div>
+  );
+};
+
+/** The deck, face down, as a stack that thins as it is dealt (one layer per ~9 cards). */
+const deckStackShadow = (remaining: number) => {
+  const layers = Math.min(6, Math.ceil(remaining / 9) - 1);
+  const shadows: string[] = [];
+  for (let layer = 1; layer <= layers; layer++) {
+    const offset = `${-layer}px ${layer * 2}px`;
+    shadows.push(`${offset} 0 -1px #fbf9f2`, `${offset} 0 0 #2a2a2a`);
+  }
+  return shadows.length ? shadows.join(', ') : undefined;
+};
+
+/** One roll of every die on the table. */
+interface DiceRoll { id: string; dice: { sides: number; value: number }[] }
+
+/** One flip of every coin on the table. */
+interface CoinFlip { id: string; coins: { type: string; side: CoinSide }[] }
 
 const createId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
@@ -105,7 +157,11 @@ export const ChanceApp: React.FC<ChanceAppProps> = ({ initialTab, onPropsChange 
   // Dice
   const [faces, setFaces] = useState<number[] | null>(null);
   const [rolling, setRolling] = useState(false);
+  // Every roll stays on the table: the latest large, earlier ones below.
+  const [rolls, setRolls] = useState<DiceRoll[]>([]);
   const rollTimer = useRef<number | null>(null);
+  const rollButtonRef = useRef<HTMLButtonElement>(null);
+  const diceRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => () => {
     if (rollTimer.current) window.clearTimeout(rollTimer.current);
@@ -113,25 +169,40 @@ export const ChanceApp: React.FC<ChanceAppProps> = ({ initialTab, onPropsChange 
 
   const roll = () => {
     if (rolling) return;
-    const final = rollDice(state.dice);
-    if (reducedMotion()) {
+    const dice = state.dice;
+    const final = rollDice(dice);
+    const record = () => setRolls((prev) => [{ id: createId(), dice: dice.map((sides, index) => ({ sides, value: final[index] })) }, ...prev].slice(0, ROLL_HISTORY + 1));
+    const container = diceRef.current;
+    const from = rollButtonRef.current?.getBoundingClientRect();
+    if (reducedMotion() || !container || !from) {
       setFaces(final);
+      record();
       return;
     }
     setRolling(true);
+    // Each die's number flickers while it tumbles and stops where it lands.
     const started = performance.now();
+    const landsAt = dice.map((_, index) => index * THROW_STAGGER_MS + THROW_MS * LAND_AT);
     const tick = () => {
-      if (performance.now() - started >= ROLL_MS) {
-        setFaces(final);
-        setRolling(false);
-        rollTimer.current = null;
-        return;
-      }
-      setFaces(rollDice(state.dice));
-      rollTimer.current = window.setTimeout(tick, ROLL_TICK_MS);
+      const elapsed = performance.now() - started;
+      setFaces(dice.map((sides, index) => (sides === 6 || elapsed >= landsAt[index] ? final[index] : rollDie(sides))));
+      if (elapsed < landsAt[landsAt.length - 1]) rollTimer.current = window.setTimeout(tick, ROLL_TICK_MS);
     };
     tick();
+    void throwDice(container, from, dice, final).then(() => {
+      if (rollTimer.current) window.clearTimeout(rollTimer.current);
+      rollTimer.current = null;
+      setFaces(final);
+      setRolling(false);
+      record();
+    });
   };
+
+  const clearRolls = () => {
+    setRolls([]);
+    setFaces(null);
+  };
+  const earlierRolls = rolls.slice(1);
 
   const setDie = (index: number, sides: number) => {
     if (!isDieSides(sides)) return;
@@ -149,13 +220,15 @@ export const ChanceApp: React.FC<ChanceAppProps> = ({ initialTab, onPropsChange 
     setFaces(null);
   };
 
-  // Coin
-  const [coin, setCoin] = useState<CoinSide | null>(null);
+  // Coins: every coin on the table flips at once. The latest flip lies large;
+  // earlier ones stay below in rows of small coins, like the cards.
+  const [coinFlips, setCoinFlips] = useState<CoinFlip[]>([]);
+  // The faces showing now (null before the first flip, or after the table changes).
+  const [coinSides, setCoinSides] = useState<CoinSide[] | null>(null);
   const [flipping, setFlipping] = useState(false);
-  // The face showing when a flip starts and the one it lands on; the coin
-  // turns edge-on twice and shows the other face in between.
-  const [flipFaces, setFlipFaces] = useState<{ from: CoinSide; to: CoinSide } | null>(null);
-  const [coinHistory, setCoinHistory] = useState<CoinSide[]>([]);
+  // Per coin, the face showing when a flip starts and the one it lands on; a
+  // coin turns edge-on twice and shows the other face in between.
+  const [flipFrom, setFlipFrom] = useState<CoinSide[]>([]);
   const flipTimer = useRef<number | null>(null);
 
   useEffect(() => () => {
@@ -164,10 +237,11 @@ export const ChanceApp: React.FC<ChanceAppProps> = ({ initialTab, onPropsChange 
 
   const flip = () => {
     if (flipping) return;
-    const side = flipCoin();
+    const coins = state.coins;
+    const sides = flipCoins(coins.length);
     const land = () => {
-      setCoin(side);
-      setCoinHistory((history) => [side, ...history].slice(0, COIN_HISTORY));
+      setCoinSides(sides);
+      setCoinFlips((prev) => [{ id: createId(), coins: coins.map((type, index) => ({ type, side: sides[index] })) }, ...prev].slice(0, COIN_HISTORY + 1));
       setFlipping(false);
       flipTimer.current = null;
     };
@@ -175,10 +249,36 @@ export const ChanceApp: React.FC<ChanceAppProps> = ({ initialTab, onPropsChange 
       land();
       return;
     }
-    setFlipFaces({ from: coin ?? 'heads', to: side });
+    setFlipFrom(coins.map((_, index) => coinSides?.[index] ?? 'heads'));
+    setCoinSides(sides);
     setFlipping(true);
     flipTimer.current = window.setTimeout(land, FLIP_MS);
   };
+
+  const setCoin = (index: number, type: string) => {
+    if (!isCoinType(type)) return;
+    setState((prev) => ({ ...prev, coins: prev.coins.map((current, position) => (position === index ? type : current)) }));
+  };
+
+  const addCoin = () => {
+    setState((prev) => (prev.coins.length >= MAX_COINS ? prev : { ...prev, coins: [...prev.coins, prev.coins[prev.coins.length - 1] ?? DEFAULT_COIN] }));
+    setCoinSides(null);
+  };
+
+  const removeCoin = (index: number) => {
+    setState((prev) => (prev.coins.length <= 1 ? prev : { ...prev, coins: prev.coins.filter((_, position) => position !== index) }));
+    setCoinSides(null);
+  };
+
+  const clearCoins = () => {
+    setCoinFlips([]);
+    setCoinSides(null);
+  };
+
+  const earlierFlips = coinFlips.slice(1);
+  const allFlipped = coinFlips.flatMap((entry) => entry.coins);
+  const headsSoFar = allFlipped.filter((coin) => coin.side === 'heads').length;
+  const shownHeads = coinSides?.filter((side) => side === 'heads').length ?? 0;
 
   // Cards: every draw stays on the table, the latest one large and the earlier
   // ones in a strip below it, until Clear or a fresh deck.
@@ -188,6 +288,34 @@ export const ChanceApp: React.FC<ChanceAppProps> = ({ initialTab, onPropsChange 
   const hand = draws[0] ?? [];
   const earlier = draws.slice(1);
   const deckSize = state.jokers ? 54 : 52;
+  const deckRef = useRef<HTMLDivElement>(null);
+  const slotCount = Math.max(hand.length, Math.min(drawCount, deck.length), 1);
+  const tableRef = useRef<HTMLDivElement>(null);
+  // How many cards fit in a row beside the deck, so deck and hand stay one
+  // centred group in any window instead of a full-width hand.
+  const [fitCols, setFitCols] = useState(6);
+  useEffect(() => {
+    const table = tableRef.current;
+    const pane = table?.parentElement;
+    if (!table || !pane || typeof ResizeObserver !== 'function') return;
+    const measure = () => {
+      const card = deckRef.current?.getBoundingClientRect().width ?? 0;
+      if (!card) return;
+      const style = getComputedStyle(table);
+      const stacked = style.flexDirection === 'column';
+      const paneStyle = getComputedStyle(pane);
+      const inner = pane.clientWidth - parseFloat(paneStyle.paddingLeft) - parseFloat(paneStyle.paddingRight);
+      const room = inner - (stacked ? 0 : card + parseFloat(style.columnGap || '0'));
+      const gap = card * 0.14;
+      setFitCols(Math.max(1, Math.min(6, Math.floor((room + gap) / (card + gap)))));
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(pane);
+    return () => observer.disconnect();
+  }, [state.tab]);
+  // The latest draw is dealt from the deck; set per draw, cleared on leaving the tab.
+  const [cardDeal, setCardDeal] = useState<{ id: string; origin: DealOrigin } | null>(null);
 
   // Jokers change the deck itself, so toggling them deals a fresh one.
   const setJokers = (jokers: boolean) => {
@@ -199,6 +327,8 @@ export const ChanceApp: React.FC<ChanceAppProps> = ({ initialTab, onPropsChange 
   const draw = () => {
     const { drawn, rest } = drawCards(deck, drawCount);
     if (!drawn.length) return;
+    const origin = reducedMotion() ? null : dealOriginOf(deckRef.current);
+    setCardDeal(origin ? { id: drawn[0].id, origin } : null);
     setDraws((prev) => [drawn, ...prev]);
     setDeck(rest);
   };
@@ -212,21 +342,57 @@ export const ChanceApp: React.FC<ChanceAppProps> = ({ initialTab, onPropsChange 
 
   // Tarot
   const [reading, setReading] = useState<TarotDraw[]>([]);
-  // Keys each reading's cards, so drawing again lays out fresh cards face down.
+  // Keys each reading's cards, so drawing again deals fresh cards face down.
   const [readingId, setReadingId] = useState(0);
+  // Where the deck lay when the cards were drawn: they are dealt from there.
+  const [dealOrigin, setDealOrigin] = useState<DealOrigin | null>(null);
+  // Whether this reading plays its deal; a reading already watched does not.
+  const [dealing, setDealing] = useState(false);
+  const [revealedCount, setRevealedCount] = useState(0);
+  // The Ask AI line fades in a beat after a deal ends, not on every visit.
+  const [askFresh, setAskFresh] = useState(false);
+  const tarotPaneRef = useRef<HTMLElement>(null);
 
   const drawReading = (count: 1 | 3) => {
+    // The deck: the face-down card before the first draw, else the middle
+    // card of the reading on the table.
+    const pane = tarotPaneRef.current;
+    const arts = pane ? Array.from(pane.querySelectorAll<HTMLElement>('.chance-tarot-art')) : [];
+    const deck = pane?.querySelector<HTMLElement>('.chance-tarot-empty-back') ?? arts[Math.floor(arts.length / 2)];
+    setDealOrigin(dealOriginOf(deck));
+    setDealing(!reducedMotion());
+    setRevealedCount(0);
+    setAskFresh(false);
     setReading(drawTarot(count));
     setReadingId((id) => id + 1);
   };
+
+  // Leaving the tab mid-deal finishes it: the cards come back as they ended.
+  useEffect(() => {
+    if (state.tab !== 'tarot') {
+      setDealing(false);
+      setAskFresh(false);
+    }
+    if (state.tab !== 'cards') setCardDeal(null);
+  }, [state.tab]);
+
+  const cardRevealed = useCallback(() => setRevealedCount((count) => count + 1), []);
+  const readingDone = reading.length > 0 && (!dealing || revealedCount >= reading.length);
+
+  // Once every card has turned and typed, coming back to the tab shows the
+  // reading as it ended instead of dealing it again.
+  useEffect(() => {
+    if (dealing && readingDone) {
+      setDealing(false);
+      setAskFresh(true);
+    }
+  }, [dealing, readingDone]);
 
   const askAi = useCallback(() => {
     if (!reading.length) return;
     openApplication(ASK_AI_TYPE, { props: { ask: { id: createId(), question: tarotQuestion(reading) } } });
   }, [openApplication, reading]);
 
-  const heads = coinHistory.filter((side) => side === 'heads').length;
-  const coinFace = flipping && flipFaces ? flipFaces.to : coin ?? 'heads';
 
   return (
     <WindowLayout
@@ -255,9 +421,9 @@ export const ChanceApp: React.FC<ChanceAppProps> = ({ initialTab, onPropsChange 
       }
     >
       {state.tab === 'dice' && (
-        <section className="chance-pane" aria-label="Dice">
+        <section className="chance-pane chance-pane-cards" aria-label="Dice">
           <div className="chance-actions">
-            <RetroButton variant="primary" onClick={roll} disabled={rolling}>Roll</RetroButton>
+            <RetroButton ref={rollButtonRef} variant="primary" onClick={roll} disabled={rolling}>Roll</RetroButton>
             {state.dice.map((sides, index) => (
               <div className="chance-die-config app-joined-control" key={index}>
                 <Select
@@ -275,22 +441,12 @@ export const ChanceApp: React.FC<ChanceAppProps> = ({ initialTab, onPropsChange 
             <RetroButton size="sm" onClick={addDie} disabled={state.dice.length >= MAX_DICE} title={`Up to ${MAX_DICE} dice`}>
               <Plus className="w-3 h-3" />Add die
             </RetroButton>
+            <RetroButton size="sm" onClick={clearRolls} disabled={rolls.length === 0}>Clear</RetroButton>
           </div>
 
-          <div className="chance-dice-results" data-idle={faces ? undefined : ''} aria-busy={rolling}>
-            {(faces ?? state.dice.map(() => null)).map((value, index) => (
-              <div className="chance-die" data-rolling={rolling || undefined} data-sides={state.dice[index]} key={index}>
-                {state.dice[index] === 6 && value !== null ? (
-                  <span className="chance-die-pips" data-red={isRedFace(value) || undefined} role="img" aria-label={`${value}`}>
-                    {Array.from({ length: 9 }, (_, cell) => (
-                      <span key={cell} className="chance-pip" data-on={PIP_LAYOUT[value].includes(cell) || undefined} />
-                    ))}
-                  </span>
-                ) : (
-                  <span className="chance-die-value">{value ?? '?'}</span>
-                )}
-                <span className="chance-die-sides">d{state.dice[index]}</span>
-              </div>
+          <div ref={diceRef} className="chance-dice-results" data-idle={faces ? undefined : ''} aria-busy={rolling}>
+            {state.dice.map((sides, index) => (
+              <DieView sides={sides} value={faces?.[index] ?? null} rolling={rolling} key={index} />
             ))}
           </div>
 
@@ -302,51 +458,107 @@ export const ChanceApp: React.FC<ChanceAppProps> = ({ initialTab, onPropsChange 
               </>
             ) : 'Choose your dice, then roll.'}
           </p>
+
+          {earlierRolls.length > 0 && (
+            <div className="chance-history" aria-label="Earlier rolls">
+              <span className="chance-history-label">Earlier rolls</span>
+              <div className="chance-history-draws">
+                {earlierRolls.map((entry) => (
+                  <div className="chance-history-draw chance-roll-marks" key={entry.id}>
+                    {entry.dice.map((die, index) => (
+                      <span className="chance-roll-mark" data-sides={die.sides} title={`d${die.sides}`} key={index}>{die.value}</span>
+                    ))}
+                    {entry.dice.length > 1 && (
+                      <span className="chance-roll-total">= {entry.dice.reduce((sum, die) => sum + die.value, 0)}</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </section>
       )}
 
       {state.tab === 'coin' && (
-        <section className="chance-pane" aria-label="Coin">
+        <section className="chance-pane chance-pane-cards" aria-label="Coins">
           <div className="chance-actions">
             <RetroButton variant="primary" onClick={flip} disabled={flipping}>Flip</RetroButton>
+            {state.coins.map((type, index) => (
+              <div className="chance-die-config app-joined-control" key={index}>
+                <Select
+                  className="search-input chance-coin-select"
+                  value={type}
+                  aria-label={`Coin ${index + 1}`}
+                  onValueChange={(next) => setCoin(index, next)}
+                  items={COIN_OPTIONS}
+                />
+                <RetroButton size="icon" aria-label={`Remove coin ${index + 1}`} disabled={state.coins.length <= 1} onClick={() => removeCoin(index)}>
+                  <Minus className="w-3 h-3" />
+                </RetroButton>
+              </div>
+            ))}
+            <RetroButton size="sm" onClick={addCoin} disabled={state.coins.length >= MAX_COINS} title={`Up to ${MAX_COINS} coins`}>
+              <Plus className="w-3 h-3" />Add coin
+            </RetroButton>
+            <RetroButton size="sm" onClick={clearCoins} disabled={coinFlips.length === 0}>Clear</RetroButton>
           </div>
 
-          <div
-            className="chance-coin"
-            data-face={coinFace}
-            data-flipping={flipping || undefined}
-            data-turns={flipping && flipFaces ? (flipFaces.from === flipFaces.to ? 'twice' : 'once') : undefined}
-            aria-hidden="true"
-          >
-            {(['heads', 'tails'] as const).map((side) => (
-              <img
-                key={side}
-                className="chance-coin-image"
-                src={COIN_FACES[side]}
-                alt=""
-                width={COIN_IMAGE_SIZE}
-                height={COIN_IMAGE_SIZE}
-                draggable={false}
-                data-side={side}
-                data-start={flipping && flipFaces?.from === side ? '' : undefined}
-              />
-            ))}
+          <div className="chance-coins" data-count={state.coins.length > 4 ? 'many' : state.coins.length > 1 ? 'few' : 'one'} aria-hidden="true">
+            {state.coins.map((type, index) => {
+              const face = coinSides?.[index] ?? 'heads';
+              const from = flipFrom[index] ?? 'heads';
+              return (
+                <div
+                  className="chance-coin"
+                  data-face={face}
+                  data-flipping={flipping || undefined}
+                  data-turns={flipping ? (from === face ? 'twice' : 'once') : undefined}
+                  key={index}
+                >
+                  {(['heads', 'tails'] as const).map((side) => (
+                    <img
+                      key={side}
+                      className="chance-coin-image"
+                      src={coinFace(type, side)}
+                      alt=""
+                      width={COIN_IMAGE_SIZE}
+                      height={COIN_IMAGE_SIZE}
+                      draggable={false}
+                      data-side={side}
+                      data-start={flipping && from === side ? '' : undefined}
+                    />
+                  ))}
+                </div>
+              );
+            })}
           </div>
 
           <p className="chance-readout" aria-live="polite">
-            {flipping ? 'Flipping…' : coin ? (
-              <strong className="chance-readout-value">{coin === 'heads' ? 'Heads' : 'Tails'}</strong>
-            ) : 'Heads or tails?'}
+            {flipping ? 'Flipping…' : coinSides ? (
+              coinSides.length === 1 ? (
+                <strong className="chance-readout-value">{coinSides[0] === 'heads' ? 'Heads' : 'Tails'}</strong>
+              ) : (
+                <strong className="chance-readout-value">
+                  {shownHeads} {shownHeads === 1 ? 'head' : 'heads'} · {coinSides.length - shownHeads} {coinSides.length - shownHeads === 1 ? 'tail' : 'tails'}
+                </strong>
+              )
+            ) : state.coins.length === 1 ? 'Heads or tails?' : `${state.coins.length} coins. Flip them all at once.`}
           </p>
 
-          {coinHistory.length > 0 && (
-            <div className="chance-coin-tally">
-              <span className="chance-total">{heads} heads · {coinHistory.length - heads} tails</span>
-              <ol className="chance-coin-history" aria-label="Recent flips, newest first">
-                {coinHistory.map((side, index) => (
-                  <li key={`${index}-${side}`} data-side={side}>{side === 'heads' ? 'H' : 'T'}</li>
+          {earlierFlips.length > 0 && (
+            <div className="chance-history" aria-label="Earlier flips">
+              <span className="chance-history-label">Earlier flips · {headsSoFar} heads and {allFlipped.length - headsSoFar} tails in all</span>
+              <div className="chance-history-draws">
+                {earlierFlips.map((entry) => (
+                  <ol className="chance-history-draw chance-coin-marks" key={entry.id}>
+                    {entry.coins.map((coin, index) => (
+                      <li key={index} data-side={coin.side} title={coinType(coin.type).label}>
+                        {coin.side === 'heads' ? 'H' : 'T'}
+                      </li>
+                    ))}
+                  </ol>
                 ))}
-              </ol>
+              </div>
             </div>
           )}
         </section>
@@ -375,15 +587,39 @@ export const ChanceApp: React.FC<ChanceAppProps> = ({ initialTab, onPropsChange 
             </label>
           </div>
 
-          {hand.length > 0 ? (
-            <div className="chance-hand" aria-live="polite" aria-label="Latest draw">
-              {hand.map((card) => <PlayingCardView card={card} key={card.id} />)}
+          <div ref={tableRef} className="chance-table">
+            <div
+              ref={deckRef}
+              className="chance-card chance-card-back chance-deck"
+              data-empty={deck.length === 0 || undefined}
+              style={{ boxShadow: deckStackShadow(deck.length) }}
+              aria-hidden="true"
+            />
+            {/*
+              The hand is a row of dashed slots, as many as the next draw needs
+              (or the cards on the table, if more): dealt cards land on them,
+              the rest stay outlined, and the deck never shifts as it deals.
+            */}
+            <div
+              className="chance-hand"
+              aria-live="polite"
+              aria-label={hand.length ? 'Latest draw' : undefined}
+              style={{ '--hand-cols': Math.min(fitCols, slotCount) } as React.CSSProperties}
+            >
+              {Array.from({ length: slotCount }, (_, index) => (
+                <div className="chance-card-slot" key={index}>
+                  {hand[index] && (
+                    <DealtCard
+                      card={hand[index]}
+                      index={index}
+                      origin={cardDeal?.id === hand[0].id ? cardDeal.origin : null}
+                      key={hand[index].id}
+                    />
+                  )}
+                </div>
+              ))}
             </div>
-          ) : (
-            <div className="chance-hand" aria-hidden="true">
-              <div className="chance-card chance-card-back" data-empty={deck.length === 0 || undefined} />
-            </div>
-          )}
+          </div>
 
           <p className="chance-readout">
             {deck.length === 0
@@ -411,7 +647,7 @@ export const ChanceApp: React.FC<ChanceAppProps> = ({ initialTab, onPropsChange 
       )}
 
       {state.tab === 'tarot' && (
-        <section className="chance-pane" aria-label="Tarot">
+        <section ref={tarotPaneRef} className="chance-pane" aria-label="Tarot">
           <div className="chance-actions">
             <RetroButton variant="primary" onClick={() => drawReading(1)}>Draw one card</RetroButton>
             <RetroButton onClick={() => drawReading(3)}>Draw three</RetroButton>
@@ -427,20 +663,23 @@ export const ChanceApp: React.FC<ChanceAppProps> = ({ initialTab, onPropsChange 
           )}
 
           {reading.length > 0 && (
-            <div className="chance-reading" data-spread={reading.length} aria-live="polite">
+            <div className="chance-reading" data-spread={reading.length} aria-live="polite" aria-busy={!readingDone || undefined}>
               {reading.map((draw, index) => (
                 <TarotCardView
                   key={`${readingId}-${draw.card.id}`}
                   draw={draw}
                   index={index}
                   position={reading.length === 3 ? SPREAD_POSITIONS[index] : undefined}
+                  animate={dealing}
+                  origin={dealOrigin}
+                  onRevealed={cardRevealed}
                 />
               ))}
             </div>
           )}
 
-          {reading.length > 0 && (
-            <p className="chance-ask-line">
+          {readingDone && (
+            <p className="chance-ask-line" data-fresh={askFresh || undefined}>
               Not sure what it means?{' '}
               <button type="button" className="chance-ask-link" onClick={askAi}>
                 <span className="chance-ask-link-text">Ask AI to read it</span> →

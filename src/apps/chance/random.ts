@@ -4,6 +4,7 @@
  * randomness is an illusion and never to use it for keys.
  */
 import { TAROT_DECK, type TarotCard } from './tarot';
+import { DEFAULT_COIN, MAX_COINS, isCoinType } from './coins';
 
 export type Rng = () => number;
 
@@ -29,19 +30,23 @@ export const isDieSides = (value: unknown): value is DieSides => (DIE_SIDES as r
 export interface ChanceState {
   tab: ChanceTab;
   dice: DieSides[];
+  /** The coins on the table, by type (coins.ts). */
+  coins: string[];
   /** Two jokers in the deck. */
   jokers: boolean;
 }
 
-export const DEFAULT_CHANCE_STATE: ChanceState = { tab: 'dice', dice: DEFAULT_DICE, jokers: false };
+export const DEFAULT_CHANCE_STATE: ChanceState = { tab: 'dice', dice: DEFAULT_DICE, coins: [DEFAULT_COIN], jokers: false };
 
 export const normalizeChanceState = (stored: unknown): ChanceState => {
   if (!stored || typeof stored !== 'object') return DEFAULT_CHANCE_STATE;
   const candidate = stored as Partial<ChanceState>;
   const dice = Array.isArray(candidate.dice) ? candidate.dice.filter(isDieSides).slice(0, MAX_DICE) : [];
+  const coins = Array.isArray(candidate.coins) ? candidate.coins.filter(isCoinType).slice(0, MAX_COINS) : [];
   return {
     tab: isChanceTab(candidate.tab) ? candidate.tab : 'dice',
     dice: dice.length ? dice : DEFAULT_DICE,
+    coins: coins.length ? coins : [DEFAULT_COIN],
     jokers: candidate.jokers === true,
   };
 };
@@ -66,6 +71,8 @@ export const rollDice = (dice: readonly number[], rng: Rng = defaultRng) => dice
 export type CoinSide = 'heads' | 'tails';
 
 export const flipCoin = (rng: Rng = defaultRng): CoinSide => (rng() < 0.5 ? 'heads' : 'tails');
+
+export const flipCoins = (count: number, rng: Rng = defaultRng): CoinSide[] => Array.from({ length: count }, () => flipCoin(rng));
 
 /** Fisher–Yates; returns a new array. */
 export const shuffle = <T>(items: readonly T[], rng: Rng = defaultRng): T[] => {

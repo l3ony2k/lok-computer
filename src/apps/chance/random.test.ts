@@ -9,6 +9,7 @@ import {
   drawCards,
   drawTarot,
   flipCoin,
+  flipCoins,
   normalizeChanceState,
   rollDice,
   rollDie,
@@ -16,6 +17,7 @@ import {
   tarotQuestion,
   type Rng,
 } from './random';
+import { DEFAULT_COIN } from './coins';
 import { TAROT_DECK } from './tarot';
 
 /** A tiny deterministic generator for tests. */
@@ -40,6 +42,7 @@ describe('dice and coins', () => {
   test('a coin lands on both sides', () => {
     expect(flipCoin(() => 0.2)).toBe('heads');
     expect(flipCoin(() => 0.7)).toBe('tails');
+    expect(flipCoins(3, seeded(2))).toHaveLength(3);
   });
 });
 
@@ -101,8 +104,9 @@ describe('tarot', () => {
 
 describe('normalizeChanceState', () => {
   test('keeps known tabs and dice, falls back otherwise', () => {
-    expect(normalizeChanceState({ tab: 'tarot', dice: [6, 20, 7, 100], jokers: true })).toEqual({ tab: 'tarot', dice: [6, 20, 100], jokers: true });
-    expect(normalizeChanceState({ tab: 'nope', dice: [] })).toEqual({ tab: 'dice', dice: DEFAULT_DICE, jokers: false });
+    expect(normalizeChanceState({ tab: 'tarot', dice: [6, 20, 7, 100], jokers: true })).toEqual({ tab: 'tarot', dice: [6, 20, 100], coins: [DEFAULT_COIN], jokers: true });
+    expect(normalizeChanceState({ tab: 'nope', dice: [] })).toEqual({ tab: 'dice', dice: DEFAULT_DICE, coins: [DEFAULT_COIN], jokers: false });
+    expect(normalizeChanceState({ coins: [DEFAULT_COIN, 'nope', DEFAULT_COIN] }).coins).toEqual([DEFAULT_COIN, DEFAULT_COIN]);
     expect(normalizeChanceState(null).dice).toEqual(DEFAULT_DICE);
     expect(normalizeChanceState({ dice: Array(20).fill(6) }).dice).toHaveLength(MAX_DICE);
   });

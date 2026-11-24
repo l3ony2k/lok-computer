@@ -81,8 +81,66 @@
     padding-block: 6px;
 }
 
-.chance-die {
+/*
+ * A die's place on the table: the ground shadow, and the die itself (thrown
+ * by DieView's throwDice). A d6 is a cube of six faces in 3D; other dice are a
+ * two-sided tile. Faces are .chance-die.
+ */
+.chance-die-slot {
     position: relative;
+    width: var(--die);
+    height: var(--die);
+}
+
+.chance-die-shadow {
+    position: absolute;
+    left: 8%;
+    right: 8%;
+    bottom: calc(var(--die) * -0.12);
+    height: calc(var(--die) * 0.16);
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgb(0 0 0 / 0.32), transparent);
+    pointer-events: none;
+}
+
+.chance-die-throw {
+    position: absolute;
+    inset: 0;
+    perspective: calc(var(--die) * 6);
+}
+
+.chance-cube,
+.chance-tile {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+}
+
+/* Pushed back half a die, so the face toward the viewer sits exactly in the
+   die's place and size, level with the flat dice beside it; it turns about
+   its own centre. */
+.chance-cube {
+    translate: 0 0 calc(var(--die) / -2);
+}
+
+.chance-die-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+}
+
+/* The cube's faces, each pushed out half a die from the centre. */
+.chance-cube > [data-side="front"] { transform: translateZ(calc(var(--die) / 2)); }
+.chance-cube > [data-side="back"] { transform: rotateY(180deg) translateZ(calc(var(--die) / 2)); }
+.chance-cube > [data-side="right"] { transform: rotateY(90deg) translateZ(calc(var(--die) / 2)); }
+.chance-cube > [data-side="left"] { transform: rotateY(-90deg) translateZ(calc(var(--die) / 2)); }
+.chance-cube > [data-side="top"] { transform: rotateX(90deg) translateZ(calc(var(--die) / 2)); }
+.chance-cube > [data-side="bottom"] { transform: rotateX(-90deg) translateZ(calc(var(--die) / 2)); }
+
+/* A tile's back carries the same number, so it reads mid-tumble. */
+.chance-tile > [data-side="back"] { transform: rotateY(180deg); }
+
+.chance-die {
     width: var(--die);
     height: var(--die);
     display: flex;
@@ -91,7 +149,6 @@
     border: 2px solid var(--block-border);
     background: var(--block-bg);
     color: var(--text-color);
-    box-shadow: var(--surface-shadow);
 }
 
 /* Before the first roll the dice wait, face unknown. */
@@ -150,16 +207,36 @@
     display: none;
 }
 
-.chance-die[data-rolling] {
-    animation: chance-shake 120ms linear infinite;
+/* Earlier rolls: one group per roll, each die a small square with its value. */
+.chance-roll-marks {
+    align-items: center;
 }
 
-@keyframes chance-shake {
-    0% { transform: translate(0, 0) rotate(0deg); }
-    25% { transform: translate(1px, -1px) rotate(2deg); }
-    50% { transform: translate(-1px, 1px) rotate(-2deg); }
-    75% { transform: translate(1px, 1px) rotate(1deg); }
-    100% { transform: translate(0, 0) rotate(0deg); }
+.chance-roll-mark {
+    min-width: 22px;
+    height: 22px;
+    padding: 0 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--text-color);
+    font-family: var(--font-code);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-color);
+}
+
+.chance-roll-mark[data-sides="6"] {
+    color: #161616;
+    background: #fbf9f2;
+    border-color: #2a2a2a;
+}
+
+.chance-roll-total {
+    margin-left: 3px;
+    font-family: var(--font-code);
+    font-size: 11px;
+    color: var(--log-muted);
 }
 
 /* ---------- Coin ---------- */
@@ -169,8 +246,26 @@
  * scripts/coin-images.mjs), like the tarot's 1909 cards. Both faces are
  * stacked and the one showing is opaque.
  */
-.chance-coin {
+/* The coins on the table, centred; the more coins, the smaller each. */
+.chance-coins {
     --coin: clamp(112px, 20cqw, 164px);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: calc(var(--coin) * 0.18);
+    max-width: 100%;
+    padding-block: 4px;
+}
+
+.chance-coins[data-count="few"] {
+    --coin: clamp(80px, 14cqw, 128px);
+}
+
+.chance-coins[data-count="many"] {
+    --coin: clamp(56px, 9cqw, 92px);
+}
+
+.chance-coin {
     position: relative;
     width: var(--coin);
     height: var(--coin);
@@ -250,41 +345,31 @@
     75.1%, 100% { opacity: 0; }
 }
 
-.chance-coin-tally {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-}
-
-/* Recent flips, newest first: small coins, heads dark, tails light. */
-.chance-coin-history {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 5px;
+/* Earlier flips: one group per flip of H/T marks, heads dark and tails
+   light, which read at a glance where small photos would not. */
+.chance-coin-marks {
     margin: 0;
     padding: 0;
     list-style: none;
 }
 
-.chance-coin-history li {
+.chance-coin-marks li {
     width: 22px;
     height: 22px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid var(--internal-border);
+    border: 1px solid var(--text-color);
     border-radius: 50%;
     font-family: var(--font-code);
     font-size: 11px;
     color: var(--text-color);
+    background: var(--detail-bg);
 }
 
-.chance-coin-history li[data-side="heads"] {
+.chance-coin-marks li[data-side="heads"] {
     color: var(--detail-bg);
     background: var(--text-color);
-    border-color: var(--text-color);
 }
 
 /* ---------- Cards ---------- */
@@ -304,15 +389,86 @@
     font-size: 13px;
 }
 
-/* The latest draw, centred; cards grow with the window up to a cap. */
+/*
+ * The table: the deck face down on the left, the latest draw beside it.
+ * Cards grow with the window up to a cap.
+ */
+.chance-table {
+    --card: clamp(84px, 12cqw, 120px);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: calc(var(--card) * 0.36);
+    max-width: 100%;
+    padding-block: 6px 14px;
+}
+
+.chance-deck {
+    flex: 0 0 auto;
+}
+
+/* The latest draw: up to six cards a row, as wide as the next draw needs. */
 .chance-hand {
-    --card: clamp(68px, 9cqw, 96px);
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
     gap: calc(var(--card) * 0.14);
-    max-width: calc(var(--card) * 6 + var(--card) * 0.14 * 5);
-    padding-block: 6px;
+    width: calc(var(--hand-cols, 1) * var(--card) + (var(--hand-cols, 1) - 1) * var(--card) * 0.14);
+    max-width: 100%;
+    min-width: 0;
+}
+
+/* A place in the hand: dashed until a card lands on it. */
+.chance-card-slot {
+    position: relative;
+    width: var(--card);
+    height: calc(var(--card) * 1.41);
+    border: 1px dashed var(--internal-border);
+}
+
+.chance-card-slot > .chance-dealt {
+    position: absolute;
+    inset: -1px;
+}
+
+/* A dealt card: the back and the face in one place, turning over in
+   perspective as it travels from the deck (deal.ts). Not clipped, so the
+   near edge can swing out while it turns. */
+.chance-dealt {
+    width: var(--card);
+    height: calc(var(--card) * 1.41);
+    transform-origin: 0 0;
+}
+
+.chance-dealt > .chance-card {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    transform: perspective(700px) rotateY(-180deg);
+    transition: transform 460ms cubic-bezier(0.3, 0.7, 0.3, 1) calc(var(--chance-deal-delay, 0ms) + 120ms);
+}
+
+.chance-dealt > .chance-dealt-back {
+    transform: perspective(700px) rotateY(0deg);
+}
+
+.chance-dealt[data-face-up] > .chance-card {
+    transform: perspective(700px) rotateY(0deg);
+}
+
+.chance-dealt[data-face-up] > .chance-dealt-back {
+    transform: perspective(700px) rotateY(180deg);
+}
+
+@container (max-width: 420px) {
+    /* Narrow: the deck above the hand. */
+    .chance-table {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .chance-hand {
+        justify-content: center;
+    }
 }
 
 .chance-card {
@@ -397,15 +553,13 @@
     gap: 12px;
 }
 
-.chance-card-word {
-    position: absolute;
-    right: 3px;
-    top: 50%;
-    transform: translateY(-50%) rotate(90deg);
-    transform-origin: center;
-    font-size: 9px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+.chance-card-joker {
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    font-size: calc(var(--card, 68px) * 0.19);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.04em;
 }
 
 .chance-history-draw {
@@ -426,6 +580,11 @@
     left: 3px;
     font-size: 9px;
     line-height: 1;
+}
+
+.chance-card[data-small] .chance-card-joker {
+    font-size: 8px;
+    letter-spacing: 0;
 }
 
 .chance-card[data-small] .chance-card-pip {
@@ -597,14 +756,20 @@
     line-height: 1.45;
 }
 
-/* The art: two faces in one frame. The back shows while the scan loads, then
-   the card turns over; with no back it simply fades in. */
+/* The art: two faces in one frame. The card is dealt face down and turns
+   over once its scan has loaded (data-face-up); with no back it fades in.
+   The deal itself (from the deck to this place) is a Web Animation on the
+   frame, set up in TarotCardView. */
 .chance-tarot-art {
     position: relative;
+    transform-origin: 0 0;
     width: 100%;
     border: 1px solid var(--block-border);
     background: var(--detail-meta-bg);
-    overflow: hidden;
+    /* Not clipped: while a card turns, its near edge swings out past the
+       frame in perspective, and clipping would cut it square. Both faces
+       fill the frame exactly, so nothing else spills. */
+    overflow: visible;
 }
 
 /* The scans carry their own printed edge; the frame only marks the space while
@@ -645,12 +810,12 @@
     opacity: 0;
 }
 
-.chance-tarot-art[data-art="shown"] .chance-tarot-face {
+.chance-tarot-art[data-face-up] .chance-tarot-face {
     transform: perspective(900px) rotateY(0deg);
     opacity: 1;
 }
 
-.chance-tarot-art[data-art="shown"] .chance-tarot-back {
+.chance-tarot-art[data-face-up] .chance-tarot-back {
     transform: perspective(900px) rotateY(180deg);
 }
 
@@ -726,9 +891,41 @@
     text-wrap: balance;
 }
 
-/* Under a reading: one quiet line handing the cards to Ask AI. */
+/* The reading types out after the card turns (Ask AI's typing, typos and
+   all). The untyped rest is laid out but invisible, so lines never reflow. */
+.chance-typed-rest {
+    visibility: hidden;
+}
+
+.chance-typed-caret {
+    position: relative;
+    display: inline-block;
+    width: 0;
+}
+
+.chance-typed-caret::after {
+    content: '▌';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    font-weight: normal;
+    animation: chance-caret 0.9s steps(1) infinite;
+}
+
+@keyframes chance-caret {
+    50% { opacity: 0; }
+}
+
+/* Under a reading, once every card has turned and typed: one quiet line
+   handing the cards to Ask AI. Right after a deal it waits a second, so the
+   reading lands first. */
+.chance-ask-line[data-fresh] {
+    animation: chance-ask-in 260ms ease 1s both;
+}
+
 .chance-ask-line {
     margin: 12px 0 0;
+
     font-size: 12px;
     line-height: 1.4;
     text-align: center;
@@ -757,14 +954,20 @@
     outline-offset: 2px;
 }
 
+@keyframes chance-ask-in {
+    from { opacity: 0; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-    .chance-die[data-rolling],
     .chance-coin[data-flipping],
     .chance-coin[data-flipping] .chance-coin-image {
         animation: none;
     }
 
-    .chance-tarot-art > * {
+    .chance-tarot-art > *,
+    .chance-dealt > .chance-card,
+    .chance-ask-line {
         transition: none;
+        animation: none;
     }
 }
