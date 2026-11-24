@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { WINDOW_DEFAULTS } from "@/config/window";
 import { dissolveSingletons, leaveStack } from '@/lib/windowStacks';
 import { createApplicationElement, getApplicationDefinition } from "@/config/apps";
-import { getAppState, setAppState, deleteAppState } from "@/lib/storage";
+import { getAppState, setAppState, setAppStateOnUnload, deleteAppState } from "@/lib/storage";
 
 // Storage keys
 const WINDOW_SESSION_KEY = 'windowSession';
@@ -167,6 +167,8 @@ export const useWindowManagerController = (): WindowManagerController => {
   const [activeWindow, setActiveWindow] = useState<string | null>(null);
   const [isSessionRestored, setIsSessionRestored] = useState(false);
   const sessionSaveTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** The session waiting on the debounce, written at once if the page unloads first. */
+  const pendingSession = useRef<WindowSession | null>(null);
   const windowsRef = useRef<DesktopWindow[]>(windows);
   const activeWindowRef = useRef<string | null>(activeWindow);
   windowsRef.current = windows;
@@ -275,35 +277,37 @@ export const useWindowManagerController = (): WindowManagerController => {
 
     if (sessionSaveTimeout.current) clearTimeout(sessionSaveTimeout.current);
 
+    // Only windows backed by an Application can be restored
+    const serializableWindows: SerializableWindowData[] = windows
+      .filter(w => w.componentType)
+      .map(w => ({
+        id: w.id,
+        title: w.title,
+        componentType: w.componentType!,
+        iconType: w.iconType,
+        x: w.x,
+        y: w.y,
+        width: w.width,
+        height: w.height,
+        minimized: w.minimized,
+        maximized: w.maximized,
+        shaded: w.shaded,
+        stack: w.stack,
+        stackedAt: w.stackedAt,
+        zIndex: w.zIndex,
+        props: w.props,
+      }));
+
+    const session: WindowSession = {
+      windows: serializableWindows,
+      lastZIndex: zIndexRef.current,
+      savedAt: Date.now(),
+    };
+    pendingSession.current = session;
+
     sessionSaveTimeout.current = setTimeout(async () => {
+      pendingSession.current = null;
       try {
-        // Only windows backed by an Application can be restored
-        const serializableWindows: SerializableWindowData[] = windows
-          .filter(w => w.componentType)
-          .map(w => ({
-            id: w.id,
-            title: w.title,
-            componentType: w.componentType!,
-            iconType: w.iconType,
-            x: w.x,
-            y: w.y,
-            width: w.width,
-            height: w.height,
-            minimized: w.minimized,
-            maximized: w.maximized,
-            shaded: w.shaded,
-            stack: w.stack,
-            stackedAt: w.stackedAt,
-            zIndex: w.zIndex,
-            props: w.props,
-          }));
-
-        const session: WindowSession = {
-          windows: serializableWindows,
-          lastZIndex: zIndexRef.current,
-          savedAt: Date.now(),
-        };
-
         await setAppState(WINDOW_SESSION_KEY, session);
         console.debug(`[WindowManager] Saved session with ${serializableWindows.length} windows`);
       } catch (error) {
@@ -315,6 +319,20 @@ export const useWindowManagerController = (): WindowManagerController => {
       if (sessionSaveTimeout.current) clearTimeout(sessionSaveTimeout.current);
     };
   }, [windows, isSessionRestored]);
+
+  // Leaving the page inside the debounce (a quick reload after moving a window
+  // or switching an app's tab) still saves the latest session.
+  useEffect(() => {
+    const saveOnUnload = () => {
+      const session = pendingSession.current;
+      if (!session) return;
+      pendingSession.current = null;
+      if (sessionSaveTimeout.current) clearTimeout(sessionSaveTimeout.current);
+      setAppStateOnUnload(WINDOW_SESSION_KEY, session);
+    };
+    window.addEventListener('pagehide', saveOnUnload);
+    return () => window.removeEventListener('pagehide', saveOnUnload);
+  }, []);
 
   const focusWindow = useCallback((id: string) => {
     // A stacked window brings its stack up with it (keeping their order), so

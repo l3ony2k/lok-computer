@@ -2,7 +2,7 @@
  * Persisted view state backed by IndexedDB (see src/lib/storage.ts).
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { getAppState, setAppState } from '@/lib/storage';
+import { getAppState, setAppState, setAppStateOnUnload } from '@/lib/storage';
 import { createDebouncedWrite, type DebouncedWrite } from '@/lib/debouncedWrite';
 
 export interface PersistedStateOptions<T> {
@@ -42,7 +42,7 @@ export const usePersistedState = <T>({
     const normalizeRef = useRef(normalize);
     const onChangeRef = useRef(onChange);
     const handled = useRef<{ key: string | null; value: unknown }>({ key: null, value: undefined });
-    const [writer] = useState<DebouncedWrite<T>>(() => createDebouncedWrite<T>((storeKey, storeValue) => setAppState(storeKey, storeValue)));
+    const [writer] = useState<DebouncedWrite<T>>(() => createDebouncedWrite<T>((storeKey, storeValue) => setAppState(storeKey, storeValue), setAppStateOnUnload));
     defaultValueRef.current = defaultValue;
     normalizeRef.current = normalize;
     onChangeRef.current = onChange;
@@ -114,13 +114,14 @@ export const usePersistedState = <T>({
         writer.schedule(key, value, debounceMs);
     }, [enabled, key, value, isLoading, debounceMs, writer]);
 
-    // Hide, unmount, or leaving the page: write what is pending now.
+    // Closing the window writes what is pending now; leaving the page also
+    // keeps a synchronous copy, since IndexedDB may not finish in time.
     useEffect(() => {
-        const flush = () => writer.flush();
-        window.addEventListener('pagehide', flush);
+        const flushOnUnload = () => writer.flush(true);
+        window.addEventListener('pagehide', flushOnUnload);
         return () => {
-            window.removeEventListener('pagehide', flush);
-            flush();
+            window.removeEventListener('pagehide', flushOnUnload);
+            writer.flush();
         };
     }, [writer]);
 

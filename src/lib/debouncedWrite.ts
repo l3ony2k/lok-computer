@@ -5,12 +5,14 @@
  */
 export interface DebouncedWrite<T> {
   schedule: (key: string, value: T, delayMs: number) => void;
-  flush: () => void;
+  /** Sends the pending write now; `onUnload` uses the write that survives the page going away. */
+  flush: (onUnload?: boolean) => void;
   hasPending: () => boolean;
 }
 
 export const createDebouncedWrite = <T>(
   write: (key: string, value: T) => Promise<void>,
+  writeOnUnload: (key: string, value: T) => void = (key, value) => { void write(key, value); },
 ): DebouncedWrite<T> => {
   let pending: { key: string; value: T; timer: ReturnType<typeof setTimeout> } | null = null;
 
@@ -20,12 +22,13 @@ export const createDebouncedWrite = <T>(
     });
   };
 
-  const flush = () => {
+  const flush = (onUnload = false) => {
     if (!pending) return;
     const { key, value, timer } = pending;
     pending = null;
     clearTimeout(timer);
-    send(key, value);
+    if (onUnload) writeOnUnload(key, value);
+    else send(key, value);
   };
 
   const schedule = (key: string, value: T, delayMs: number) => {

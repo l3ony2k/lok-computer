@@ -62,3 +62,19 @@ describe('createDebouncedWrite', () => {
     expect(logged).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('flush on unload', () => {
+  it('uses the unload writer for the pending value', () => {
+    const normal: string[] = [];
+    const unload: string[] = [];
+    const writer = createDebouncedWrite<string>(
+      async (key, value) => { normal.push(`${key}=${value}`); },
+      (key, value) => { unload.push(`${key}=${value}`); },
+    );
+    writer.schedule('app:chance', 'cards', 200);
+    writer.flush(true);
+    expect(unload).toEqual(['app:chance=cards']);
+    expect(normal).toEqual([]);
+    expect(writer.hasPending()).toBe(false);
+  });
+});

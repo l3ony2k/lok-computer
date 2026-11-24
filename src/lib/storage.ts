@@ -175,8 +175,41 @@ const clearStore = async (storeName: string): Promise<void> => {
 /**
  * Get app state by key
  */
+/*
+ * IndexedDB cannot promise to finish a write while the page is unloading, so a
+ * value saved on the way out also goes to localStorage, which is synchronous.
+ * The next read of that key moves it into IndexedDB and uses it.
+ */
+const UNLOAD_PREFIX = 'lok.unsaved:';
+
+const takeUnloadCopy = <T>(key: string): { value: T } | null => {
+    try {
+        const raw = localStorage.getItem(UNLOAD_PREFIX + key);
+        if (raw === null) return null;
+        localStorage.removeItem(UNLOAD_PREFIX + key);
+        return { value: JSON.parse(raw) as T };
+    } catch {
+        return null;
+    }
+};
+
+/** Saves app state while the page unloads: a synchronous copy first, then the usual write. */
+export const setAppStateOnUnload = <T>(key: string, value: T): void => {
+    try {
+        localStorage.setItem(UNLOAD_PREFIX + key, JSON.stringify(value));
+    } catch {
+        // Storage full or blocked: the IndexedDB write below may still land.
+    }
+    void setAppState(key, value);
+};
+
 export const getAppState = async <T>(key: string): Promise<T | null> => {
     try {
+        const unloadCopy = takeUnloadCopy<T>(key);
+        if (unloadCopy) {
+            await setInStore(STORES.APP_STATE, key, unloadCopy.value);
+            return unloadCopy.value;
+        }
         return await getFromStore<T>(STORES.APP_STATE, key);
     } catch (error) {
         console.error(`[Storage] Failed to get app state for key "${key}":`, error);

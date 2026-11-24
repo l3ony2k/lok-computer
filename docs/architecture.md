@@ -70,7 +70,7 @@ Expired entries are kept for seven days past their TTL so there is something to 
 
 ### Persisted view state
 
-`usePersistedState` owns initial-load suppression, dynamic keys, optional disabling, normalization/migration, debounced writes, and optional synchronization. Storage remains internal to the implementation. A pending debounced write is flushed, never dropped, when the window closes or the page unloads (`src/lib/debouncedWrite.ts`), and effects re-running for a key already loaded neither reload storage over the value in memory nor write it twice.
+`usePersistedState` owns initial-load suppression, dynamic keys, optional disabling, normalization/migration, debounced writes, and optional synchronization. Storage remains internal to the implementation. A pending debounced write is flushed, never dropped, when the window closes or the page unloads (`src/lib/debouncedWrite.ts`); on unload `setAppStateOnUnload` also keeps a synchronous localStorage copy (`lok.unsaved:<key>`), because IndexedDB may not finish a write while the page goes away, and the next `getAppState` moves it into IndexedDB. The window session saves the same way, and effects re-running for a key already loaded neither reload storage over the value in memory nor write it twice.
 
 ### Social feed
 
