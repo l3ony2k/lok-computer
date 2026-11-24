@@ -607,12 +607,12 @@ html[data-theme="system"][data-layout]:not(#_) .menu-item-button {
     border: 0;
 }
 
-html[data-theme="system"][data-layout]:not(#_) .menu-item-button:hover:not(:disabled) svg,
+html[data-theme="system"][data-layout]:not(#_) .menu-item-button:is(:hover, [data-highlighted]):not(:disabled, [aria-disabled="true"]) svg,
 html[data-theme="system"][data-layout]:not(#_) .menu-item-shell.has-submenu:hover > .menu-item-button svg {
     color: #ffffff;
 }
 
-html[data-theme="system"][data-layout]:not(#_) .menu-item-button:hover:not(:disabled) img,
+html[data-theme="system"][data-layout]:not(#_) .menu-item-button:is(:hover, [data-highlighted]):not(:disabled, [aria-disabled="true"]) img,
 html[data-theme="system"][data-layout]:not(#_) .menu-item-shell.has-submenu:hover > .menu-item-button img {
     filter: invert(1);
 }

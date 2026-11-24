@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { ArenaChannel, ArenaItem } from "@/types/arena";
 import { WindowLayout } from "@/components/window/WindowLayout";
 import { RetroButton } from "@/components/ui/RetroButton";
+import { Select } from '@/components/ui/Select';
 import { StateMessage } from "@/components/ui/StateMessage";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import {
@@ -13,6 +14,8 @@ import {
   ArenaFileViewState,
 } from "./arenaFileViewState";
 import { getArenaPlayableMedia } from "../utils/arenaLinks";
+
+const SORT_OPTIONS = ARENA_FILE_SORTS.map((sort) => ({ value: sort, label: sort }));
 
 interface ArenaFileViewProps {
   items: ArenaItem[];
@@ -478,14 +481,13 @@ const ArenaFileToolbar = ({ items, state, onStateChange }: {
       )}
 
       <div className="arena-file-button-group">
-        <select
+        <Select
           className="arena-toolbar-control arena-file-sort-select"
           aria-label="Sort Are.na items"
           value={state.sort}
-          onChange={(event) => onStateChange({ ...state, sort: event.target.value as ArenaFileSort })}
-        >
-          {ARENA_FILE_SORTS.map((sort) => <option key={sort} value={sort}>{sort}</option>)}
-        </select>
+          onValueChange={(next) => onStateChange({ ...state, sort: next as ArenaFileSort })}
+          items={SORT_OPTIONS}
+        />
         <button
           type="button"
           className="arena-toolbar-control arena-file-direction-button"

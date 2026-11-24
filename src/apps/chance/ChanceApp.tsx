@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Minus, Plus } from 'lucide-react';
 import { WindowLayout } from '@/components/window/WindowLayout';
 import { RetroButton } from '@/components/ui/RetroButton';
+import { Select } from '@/components/ui/Select';
 import { usePersistedState } from '@/hooks/useStorage';
 import { useApplicationLauncher } from '@/hooks/useApplicationLauncher';
 import {
@@ -47,6 +48,7 @@ const ROLL_MS = 450;
 const ROLL_TICK_MS = 60;
 const FLIP_MS = 500;
 const COIN_HISTORY = 12;
+const DIE_OPTIONS = DIE_SIDES.map((sides) => ({ value: String(sides), label: `d${sides}` }));
 /**
  * The coin's two faces: a 1909 Lincoln cent from the National Numismatic
  * Collection (made by scripts/coin-images.mjs), square and transparent outside the rim.
@@ -258,14 +260,13 @@ export const ChanceApp: React.FC<ChanceAppProps> = ({ initialTab, onPropsChange 
             <RetroButton variant="primary" onClick={roll} disabled={rolling}>Roll</RetroButton>
             {state.dice.map((sides, index) => (
               <div className="chance-die-config app-joined-control" key={index}>
-                <select
+                <Select
                   className="search-input chance-die-select"
-                  value={sides}
+                  value={String(sides)}
                   aria-label={`Die ${index + 1}`}
-                  onChange={(event) => setDie(index, Number(event.target.value))}
-                >
-                  {DIE_SIDES.map((option) => <option key={option} value={option}>d{option}</option>)}
-                </select>
+                  onValueChange={(next) => setDie(index, Number(next))}
+                  items={DIE_OPTIONS}
+                />
                 <RetroButton size="icon" aria-label={`Remove die ${index + 1}`} disabled={state.dice.length <= 1} onClick={() => removeDie(index)}>
                   <Minus className="w-3 h-3" />
                 </RetroButton>

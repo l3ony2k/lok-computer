@@ -36,6 +36,7 @@ Path alias `@/` maps to `./src/`.
 - **No rounded corners** — avoid `rounded-*` classes (theme skins may round what the original system rounded)
 - **Never size a layer with `100vh` or `h-screen`** — on phones that is the height with the browser toolbar collapsed, and the body is `overflow: clip`, so anything in that strip is unreachable. Use `h-dvh`/`100dvh`, or a percentage of a fixed `inset: 0` parent (`src/lib/viewportUnits.test.ts` checks)
 - **Phone insets**: `viewport-fit=cover`, so `--safe-top`/`--safe-bottom` (in `src/index.css`) carry the status bar and home indicator. Any bar at the top or bottom edge, and anything anchored to one, must add them (the classic bars use transparent `border-top`/`border-bottom` so their background paints under the inset). A theme's `themeColor` is the colour at the very top of the page.
+- **Dropdowns use `Select`** (`src/components/ui/Select.tsx`), never a bare `<select>` (`src/lib/controls.test.ts` checks). Its field is a real `<select>`, so each theme's field styling and screen readers keep working, but it opens a listbox drawn with the theme's menu classes (`.menu-surface`, `.menu-item-button[data-highlighted]`) instead of the OS list. lok draws its own select chevron, checkboxes and sliders in `index.css`; the classic skins draw theirs.
 - **Focus rings on text fields** show only in keyboard mode: `src/lib/inputModality.ts` sets `html[data-input]`, and a base rule in `index.css` hides field rings otherwise. Do not add `:focus`/`:focus-visible` outlines to fields in theme files.
 
 ## Architecture

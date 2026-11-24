@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { WindowLayout } from '@/components/window/WindowLayout';
 import { RetroButton } from '@/components/ui/RetroButton';
+import { Select, type SelectItem } from '@/components/ui/Select';
 import { usePersistedState } from '@/hooks/useStorage';
 import { swatchBeats } from '@/lib/internetTime';
 import { scrollIntoViewWithin } from '@/lib/utils';
@@ -159,6 +160,14 @@ export const ClockApp: React.FC<ClockAppProps> = () => {
       ?.focus({ preventScroll: true });
   }, [state.zones]);
 
+  const zoneItems = useMemo<SelectItem[]>(() => [
+    { value: '', label: isFull ? `Limit of ${MAX_ZONES} zones` : 'Choose a zone…' },
+    ...zoneGroups.map((group) => ({
+      group: group.area,
+      options: group.zones.map((zone) => ({ value: zone.id, label: zone.name, disabled: zoneIds.has(zone.id) })),
+    })),
+  ], [isFull, zoneGroups, zoneIds]);
+
   return (
     <WindowLayout
       className="clock-window"
@@ -166,23 +175,15 @@ export const ClockApp: React.FC<ClockAppProps> = () => {
       footer={
         <div className="app-footer-row clock-footer">
           <div className="clock-add">
-            <select
+            <Select
               ref={selectRef}
               className="search-input clock-select"
               aria-label="Time zone to add"
               value={pick}
               disabled={isFull}
-              onChange={(event) => setPick(event.target.value)}
-            >
-              <option value="">{isFull ? `Limit of ${MAX_ZONES} zones` : 'Choose a zone…'}</option>
-              {zoneGroups.map((group) => (
-                <optgroup key={group.area} label={group.area}>
-                  {group.zones.map((zone) => (
-                    <option key={zone.id} value={zone.id} disabled={zoneIds.has(zone.id)}>{zone.name}</option>
-                  ))}
-                </optgroup>
-              ))}
-            </select>
+              onValueChange={setPick}
+              items={zoneItems}
+            />
             <RetroButton size="sm" onClick={addZone} disabled={!canAdd}>Add</RetroButton>
           </div>
           <RetroButton size="sm" onClick={resetZones} title="Restore the default zones">Reset</RetroButton>
