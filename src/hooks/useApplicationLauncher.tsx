@@ -25,7 +25,7 @@ export interface ApplicationLaunchOptions {
  */
 export const useApplicationLauncher = () => {
   const { addOrFocusWindow } = useWindowLaunchActions();
-  const { updateWindowProps } = useWindowActions();
+  const { updateWindowProps, updateWindowTitle } = useWindowActions();
 
   return useCallback((componentType: string, options: ApplicationLaunchOptions = {}) => {
     const application = getApplicationDefinition(componentType);
@@ -43,7 +43,10 @@ export const useApplicationLauncher = () => {
     const onPropsChange = (nextProps: Record<string, unknown>) => {
       if (windowId) updateWindowProps(windowId, nextProps);
     };
-    const content = createApplicationElement(componentType, props, onPropsChange);
+    const onTitleChange = (nextTitle: string) => {
+      if (windowId) updateWindowTitle(windowId, nextTitle);
+    };
+    const content = createApplicationElement(componentType, props, onPropsChange, onTitleChange);
     if (!content) return null;
     trackEvent('open-app', { app: application.componentType });
     const title = options.title ?? application.name;
@@ -66,5 +69,5 @@ export const useApplicationLauncher = () => {
       y: options.y,
     });
     return windowId;
-  }, [addOrFocusWindow, updateWindowProps]);
+  }, [addOrFocusWindow, updateWindowProps, updateWindowTitle]);
 };

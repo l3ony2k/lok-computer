@@ -1,4 +1,6 @@
 import React, { useEffect, useMemo, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { getChannelDetails } from '@/lib/api';
 import { APP_CONFIG } from '@/config/constants';
 import { ArenaChannel, ArenaItem } from '@/types/arena';
 import { useApplicationLauncher } from '@/hooks/useApplicationLauncher';
@@ -49,6 +51,8 @@ interface ChannelExplorerProps {
   initialPreviewMode?: 'off' | 'horizontal' | 'vertical';
   initialSelectedBlockId?: number;
   onPropsChange?: (props: Partial<ChannelExplorerProps>) => void;
+  /** Renames the window: a deep link only knows the slug until the channel loads. */
+  onTitleChange?: (title: string) => void;
 }
 
 const sizeFromRoute = (size: 'S' | 'M' | 'L' = 'S'): ArenaFileSize => ({
@@ -72,6 +76,7 @@ export const ChannelExplorer: React.FC<ChannelExplorerProps> = ({
   initialPreviewMode = 'off',
   initialSelectedBlockId,
   onPropsChange,
+  onTitleChange,
 }) => {
   const defaultViewState = useMemo<ChannelViewState>(() => ({
     fileState: createArenaFileViewState({
@@ -106,6 +111,19 @@ export const ChannelExplorer: React.FC<ChannelExplorerProps> = ({
       };
     },
   });
+
+  // The window opened from a link is titled with the slug ("cool-stuff-on-web");
+  // the channel's own title replaces it once known (a cached request).
+  const { data: channelDetails } = useQuery({
+    queryKey: ['arena', 'channel-details', channelSlug],
+    queryFn: ({ signal }) => getChannelDetails(channelSlug as string, signal),
+    enabled: Boolean(channelSlug && onTitleChange),
+    staleTime: Infinity,
+  });
+  const channelTitle = channelDetails?.title;
+  useEffect(() => {
+    if (channelTitle) onTitleChange?.(channelTitle);
+  }, [channelTitle, onTitleChange]);
 
   const browsing = useArenaChannelBrowsing({
     channelSlug,

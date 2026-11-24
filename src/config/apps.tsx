@@ -299,6 +299,7 @@ export const createApplicationElement = (
   componentType: string,
   props: Record<string, unknown> = {},
   onPropsChange?: (props: Record<string, unknown>) => void,
+  onTitleChange?: (title: string) => void,
 ): React.ReactElement | null => {
   const application = getApplicationDefinition(componentType);
   if (!application) {
@@ -310,5 +311,6 @@ export const createApplicationElement = (
     ...application.defaultProps,
     ...props,
     ...(onPropsChange ? { onPropsChange } : {}),
+    ...(onTitleChange ? { onTitleChange } : {}),
   });
 };

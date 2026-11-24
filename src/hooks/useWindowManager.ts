@@ -106,6 +106,8 @@ export interface WindowManagerActionsContextType {
   /** Clears every stack: a theme without tab stacking must not raise or move windows as groups. */
   dissolveStacks: () => void;
   updateWindowProps: (id: string, props: Record<string, unknown>) => void;
+  /** Renames a window (an app that learns its real name after opening, like a deep-linked channel). */
+  updateWindowTitle: (id: string, title: string) => void;
 }
 
 export interface WindowLaunchInput extends WindowInput {
@@ -216,7 +218,11 @@ export const useWindowManagerController = (): WindowManagerController => {
             ));
           };
 
-          const content = createApplicationElement(savedWindow.componentType, savedWindow.props, onPropsChange);
+          const onTitleChange = (title: string) => {
+            setWindows(prev => prev.map(w => (w.id === windowId && w.title !== title ? { ...w, title } : w)));
+          };
+
+          const content = createApplicationElement(savedWindow.componentType, savedWindow.props, onPropsChange, onTitleChange);
           if (!content) continue;
 
           restoredWindows.push({
@@ -520,6 +526,14 @@ export const useWindowManagerController = (): WindowManagerController => {
     );
   }, []);
 
+  const updateWindowTitle = useCallback((id: string, title: string) => {
+    setWindows((prev) => (
+      prev.some((w) => w.id === id && w.title !== title)
+        ? prev.map((w) => (w.id === id ? { ...w, title } : w))
+        : prev
+    ));
+  }, []);
+
   const state = useMemo<WindowManagerStateContextType>(() => ({
     windows,
     activeWindow,
@@ -541,6 +555,7 @@ export const useWindowManagerController = (): WindowManagerController => {
     updateStackBounds,
     dissolveStacks,
     updateWindowProps,
+    updateWindowTitle,
   }), [
     closeWindow,
     minimizeWindow,
@@ -556,6 +571,7 @@ export const useWindowManagerController = (): WindowManagerController => {
     updateStackBounds,
     dissolveStacks,
     updateWindowProps,
+    updateWindowTitle,
   ]);
 
   const launchActions = useMemo<WindowManagerLaunchContextType>(() => ({
