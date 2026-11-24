@@ -67,6 +67,20 @@ const getCategorySymbol = (category: string): string => {
     return symbols[category] || '📄';
 };
 
+// Spoken name of the category mark on each cover
+const getCategoryLabel = (category: string): string => {
+    const labels: Record<string, string> = {
+        movie: 'Film',
+        book: 'Book',
+        tv: 'TV',
+        music: 'Music',
+        game: 'Game',
+        podcast: 'Podcast',
+        performance: 'Performance',
+    };
+    return labels[category] || 'Item';
+};
+
 // Extract external links from item
 const getExternalLinks = (item: ShelfItem['item']) => {
     const links: { label: string; url: string }[] = [];
@@ -149,13 +163,12 @@ const ShelfContent: React.FC<ShelfContentProps> = ({ type, page, onDataLoaded })
     }
 
     return (
-        <div className="flex flex-wrap gap-3 p-3 content-start">
+        <div className="shelf-grid">
             {data.data.map((shelfItem) => (
                 <HoverCard key={shelfItem.post_id} openDelay={200} closeDelay={100}>
                     <HoverCardTrigger asChild>
                         <div
-                            className="cursor-pointer group flex-shrink-0"
-                            style={{ width: '80px' }}
+                            className="cursor-pointer group min-w-0"
                             onClick={() => {
                                 if (shelfItem.item.cover_image_url) {
                                     openApplication('ImageViewer', {
@@ -167,7 +180,7 @@ const ShelfContent: React.FC<ShelfContentProps> = ({ type, page, onDataLoaded })
                                 }
                             }}
                         >
-                            <div className="aspect-[2/3] bg-secondary border border-border overflow-hidden mb-1">
+                            <div className="relative aspect-[2/3] bg-secondary border border-border overflow-hidden mb-1">
                                 {shelfItem.item.cover_image_url ? (
                                     <img
                                         src={shelfItem.item.cover_image_url}
@@ -180,6 +193,15 @@ const ShelfContent: React.FC<ShelfContentProps> = ({ type, page, onDataLoaded })
                                         {getCategorySymbol(shelfItem.item.category)}
                                     </div>
                                 )}
+                                {/* The shelves mix books, films and TV, so every cover carries its kind */}
+                                <span
+                                    className="shelf-category-tag noto-emoji"
+                                    role="img"
+                                    aria-label={getCategoryLabel(shelfItem.item.category)}
+                                    title={getCategoryLabel(shelfItem.item.category)}
+                                >
+                                    {getCategorySymbol(shelfItem.item.category)}
+                                </span>
                             </div>
                             <p className="shelf-caption text-xs text-center group-hover:text-primary transition-colors">
                                 {shelfItem.item.display_title}

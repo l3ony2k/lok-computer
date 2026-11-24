@@ -379,6 +379,9 @@
 
 .ask-ai-notes li::before {
     content: "· ";
+    display: inline-block;
+    width: 2ch;
+    text-indent: 0;
     font-family: var(--font-code);
 }
 
@@ -639,15 +642,28 @@
     font-size: 11px;
 }
 
-.ask-ai-json > summary::-webkit-details-marker {
+/* One disclosure marker for every <details>: the native ▶/▼ is hidden and replaced with ▸/▾. */
+.ask-ai-json > summary,
+.ask-ai-analytics > summary,
+.ask-ai-content > summary {
+    list-style: none;
+}
+
+.ask-ai-json > summary::-webkit-details-marker,
+.ask-ai-analytics > summary::-webkit-details-marker,
+.ask-ai-content > summary::-webkit-details-marker {
     display: none;
 }
 
-.ask-ai-json > summary > span::before {
+.ask-ai-json > summary > span::before,
+.ask-ai-analytics > summary::before,
+.ask-ai-content > summary::before {
     content: "▸ ";
 }
 
-.ask-ai-json[open] > summary > span::before {
+.ask-ai-json[open] > summary > span::before,
+.ask-ai-analytics[open] > summary::before,
+.ask-ai-content[open] > summary::before {
     content: "▾ ";
 }
 

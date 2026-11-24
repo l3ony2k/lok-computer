@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { WindowLayout } from '@/components/window/WindowLayout';
 import { StateMessage } from '@/components/ui/StateMessage';
@@ -8,6 +8,7 @@ import { APP_CONFIG } from '@/config/constants';
 import { CACHE_TTL } from '@/lib/storage';
 import { cachedRequest } from '@/lib/cachedRequest';
 import { usePersistedState } from '@/hooks/useStorage';
+import { useTheme } from '@/hooks/useTheme';
 
 const APP_STATE_KEY = 'app:weather';
 interface WeatherAppState {
@@ -80,11 +81,50 @@ const parseWeatherAnsi = (text: string): WeatherTextSegment[] => {
   return segments;
 };
 
+const toHex = (color: string) => {
+  if (color.startsWith('#')) return color;
+  const channels = color.match(/\d+/g)?.map(Number) ?? [0, 0, 0];
+  return `#${channels.slice(0, 3).map((channel) => channel.toString(16).padStart(2, '0')).join('')}`;
+};
+
+const toLinear = (channel: number) => (channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4);
+const toSrgb = (channel: number) => (channel <= 0.0031308 ? channel * 12.92 : (1.055 * channel ** (1 / 2.4)) - 0.055);
+
+// wttr.in paints for a black terminal: its yellows and light greens vanish on a
+// light window. On light schemes, darken any colour brighter than 4.5:1 against
+// white while keeping its hue (luminance 0.18 is that limit).
+const MAX_LIGHT_SCHEME_LUMINANCE = 0.18;
+const readableOnLight = (color: string) => {
+  const hex = toHex(color);
+  const linear = [1, 3, 5].map((offset) => toLinear(parseInt(hex.slice(offset, offset + 2), 16) / 255));
+  const luminance = (0.2126 * linear[0]) + (0.7152 * linear[1]) + (0.0722 * linear[2]);
+  if (luminance <= MAX_LIGHT_SCHEME_LUMINANCE) return color;
+  const scale = MAX_LIGHT_SCHEME_LUMINANCE / luminance;
+  const [red, green, blue] = linear.map((channel) => Math.round(toSrgb(channel * scale) * 255));
+  return `rgb(${red}, ${green}, ${blue})`;
+};
+
 const DIRECTION_GLYPHS = /([↖↗↘↙↑↓←→])/g;
 const DIRECTION_GLYPH_CHARACTERS = "↖↗↘↙↑↓←→";
 
+/**
+ * wttr.in ends with "Location: <full place name> [lat,long]", often wider than
+ * the forecast. It wraps on its own line so it never sets the window's width.
+ */
+const splitLocation = (text: string): [string, string | null] => {
+  const index = text.lastIndexOf('\nLocation:');
+  if (index === -1) return [text, null];
+  return [text.slice(0, index), text.slice(index + 1).trim()];
+};
+
 const WeatherText = ({ text }: { text: string }) => {
-  const segments = useMemo(() => parseWeatherAnsi(text), [text]);
+  const { colorScheme } = useTheme();
+  const segments = useMemo(() => {
+    const parsed = parseWeatherAnsi(text);
+    return colorScheme === 'light'
+      ? parsed.map((segment) => (segment.color ? { ...segment, color: readableOnLight(segment.color) } : segment))
+      : parsed;
+  }, [text, colorScheme]);
 
   return segments.map((segment, segmentIndex) => (
     <span
@@ -113,7 +153,41 @@ const normalizeWeatherResponse = (responseText: string, contentType: string | nu
   return terminalReport.replaceAll('\u00a0', ' ').trimEnd();
 };
 
+// wttr.in's full report is about 125 columns. Below this window width ask for
+// the narrow report (noon and night only, about 64 columns) so the whole
+// forecast fits without scrolling sideways.
+const NARROW_WIDTH_PX = 600;
+type WeatherFormat = 'full' | 'narrow';
+const FORMAT_FLAGS: Record<WeatherFormat, string> = { full: '2dFqA', narrow: '2dFqAn' };
+// The full report keeps its original cache key so saved entries still hit.
+const FORMAT_CACHE_PREFIX: Record<WeatherFormat, string> = { full: 'weather:text-v4', narrow: 'weather:text-v4-narrow' };
+
+/**
+ * Which report fits the element's width. Only changes when the width crosses
+ * the threshold, so resizing a window refetches at most once per crossing.
+ * Null until the first measurement, so no request goes out for the wrong one.
+ */
+const useWeatherFormat = (ref: React.RefObject<HTMLElement | null>) => {
+  const [format, setFormat] = useState<WeatherFormat | null>(null);
+  useLayoutEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    const update = (width: number) => setFormat(width < NARROW_WIDTH_PX ? 'narrow' : 'full');
+    update(element.getBoundingClientRect().width);
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[entries.length - 1];
+      if (entry) update(entry.contentRect.width);
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [ref]);
+  return format;
+};
+
 export const WeatherApp: React.FC = () => {
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const format = useWeatherFormat(toolbarRef);
   const [searchInput, setSearchInput] = useState<string>('');
   const [weatherState, setWeatherState, stateLoading] = usePersistedState<WeatherAppState>({
     key: APP_STATE_KEY,
@@ -131,18 +205,19 @@ export const WeatherApp: React.FC = () => {
     if (!stateLoading) setSearchInput(query);
   }, [query, stateLoading]);
 
-  const fetchWeather = async (location: string) => {
-    const cacheKey = `weather:text-v4:${location || 'auto'}`;
+  const fetchWeather = async (location: string, reportFormat: WeatherFormat) => {
+    const cacheKey = `${FORMAT_CACHE_PREFIX[reportFormat]}:${location || 'auto'}`;
+    const flags = FORMAT_FLAGS[reportFormat];
     return cachedRequest({
       cacheKey,
       ttlMs: CACHE_TTL.WEATHER,
       source: 'weather',
-      debugLabel: `weather:${location || 'auto'}`,
+      debugLabel: `weather:${reportFormat}:${location || 'auto'}`,
       load: async () => {
-        console.log(`[API:Weather] GET ${location || 'auto'}`);
+        console.log(`[API:Weather] GET ${location || 'auto'} (${reportFormat})`);
         const url = location
-          ? `${APP_CONFIG.WEATHER_API_URL}/${encodeURIComponent(location)}?2dFqA`
-          : `${APP_CONFIG.WEATHER_API_URL}/?2dFqA`;
+          ? `${APP_CONFIG.WEATHER_API_URL}/${encodeURIComponent(location)}?${flags}`
+          : `${APP_CONFIG.WEATHER_API_URL}/?${flags}`;
         console.log('[API:Weather] Request:', url);
         const response = await fetch(url, { headers: { Accept: 'text/plain' } });
         if (!response.ok) throw new Error(`Weather data not available (${response.status})`);
@@ -152,11 +227,16 @@ export const WeatherApp: React.FC = () => {
     });
   };
 
-  const { data: weatherData, isLoading, error, refetch } = useQuery({
-    queryKey: ['weather', 'text-v4', query],
-    queryFn: () => fetchWeather(query),
+  const { data: weatherData, isLoading: isQueryLoading, error, refetch } = useQuery({
+    queryKey: ['weather', 'text-v4', format, query],
+    queryFn: () => fetchWeather(query, format ?? 'full'),
     staleTime: CACHE_TTL.WEATHER,
+    enabled: format !== null,
+    // Crossing the width threshold swaps reports for the same place: keep the
+    // one on screen until the other arrives instead of flashing "Loading".
+    placeholderData: (previous, previousQuery) => (previousQuery?.queryKey[3] === query ? previous : undefined),
   });
+  const isLoading = format === null || isQueryLoading;
 
   // Handle search form submission
   const handleSearch = (e: React.FormEvent) => {
@@ -171,10 +251,12 @@ export const WeatherApp: React.FC = () => {
     }
   };
 
+  const [forecastText, locationLine] = splitLocation(weatherData || '');
+
   return (
     <WindowLayout
       toolbar={
-        <div className="app-toolbar-row">
+        <div ref={toolbarRef} className="app-toolbar-row">
           <form onSubmit={handleSearch} className="app-joined-control flex-1">
             <input
               type="text"
@@ -202,7 +284,8 @@ export const WeatherApp: React.FC = () => {
         <LoadFailure error={error} what="the weather" onRetry={() => void refetch()} />
       ) : (
         <div className="weather-output-layout">
-          <pre className="weather-output"><WeatherText text={weatherData || ''} /></pre>
+          <pre className="weather-output"><WeatherText text={forecastText} /></pre>
+          {locationLine && <p className="weather-location"><WeatherText text={locationLine} /></p>}
           <div className="weather-attribution select-none">Powered by <a href={APP_CONFIG.WEATHER_API_URL} target="_blank" rel="noopener noreferrer">wttr.in</a></div>
         </div>
       )}

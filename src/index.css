@@ -226,6 +226,11 @@
         color: #999999;
     }
 
+    /* lok's checkboxes, radios and sliders take the text colour, not the browser's blue; the classic skins draw their own. */
+    html:not([data-chrome="classic"]) :is(input[type="checkbox"], input[type="radio"], input[type="range"]) {
+        accent-color: var(--text-color);
+    }
+
     button:not(:disabled),
     select:not(:disabled),
     a[href],
@@ -316,6 +321,8 @@
 @layer components {
     .retro-button {
         @apply inline-flex items-center justify-center border border-border select-none;
+        /* An icon and its label never touch; a whitespace text node is dropped in flex. */
+        gap: 4px;
         height: var(--control-height);
         min-height: var(--control-height);
         padding: 0 5px;
@@ -458,7 +465,7 @@
 
     .menu-item-shortcut {
         flex: 0 0 auto;
-        opacity: 0.55;
+        opacity: 0.75;
         font-size: 0.85em;
         letter-spacing: 0.02em;
     }
@@ -537,7 +544,7 @@
         font: inherit;
         font-size: 10px;
         line-height: 16px;
-        opacity: 0.5;
+        opacity: 0.75;
     }
 
     .launcher-results {
@@ -580,7 +587,7 @@
     .launcher-item-group {
         flex: 0 0 auto;
         font-size: 10px;
-        opacity: 0.55;
+        opacity: 0.75;
     }
 
     .launcher-empty {
@@ -2309,6 +2316,7 @@
 
 .guestbook-composer-pane {
     margin-bottom: 16px;
+    padding: 12px;
     background: var(--detail-header-bg);
 }
 
@@ -2403,8 +2411,8 @@
     border: none;
     font: inherit;
     font-size: 13px;
+    font-size: 14px;
     line-height: 1.4;
-    color: var(--text-color);
 }
 
 .guestbook-message-reply {
@@ -2619,14 +2627,6 @@
     text-align: center;
 }
 
-.weather-attribution {
-    margin-top: 16px;
-    color: var(--log-muted);
-    font-size: 11px;
-}
-
-.weather-attribution a {
-    color: inherit;
 /* Wraps inside the forecast's width instead of widening it (width 0, then 100%). */
 .weather-location {
     width: 0;
@@ -2639,6 +2639,14 @@
     overflow-wrap: anywhere;
 }
 
+.weather-attribution {
+    margin-top: 16px;
+    color: var(--log-muted);
+    font-size: 11px;
+}
+
+.weather-attribution a {
+    color: inherit;
     text-decoration: underline;
 }
 
@@ -3833,6 +3841,12 @@ a:hover .animate-marquee-if-overflow {
     background: var(--detail-bg);
 }
 
+/* An odd last cell spans the row, so the grid's gap colour never shows as an empty cell. */
+.config-system-info > div:last-child:nth-child(odd),
+.config-stats-grid > div:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+}
+
 .config-system-info dt,
 .config-stats-grid dt {
     color: var(--log-muted);
@@ -4102,13 +4116,9 @@ a:hover .animate-marquee-if-overflow {
     min-height: 100%;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 24px;
     margin-inline: auto;
-}
-
-.oobe-page:has(.oobe-live-preview) {
-    justify-content: flex-start;
 }
 
 .oobe-page-icon {

@@ -1,8 +1,15 @@
+import type { ReactNode } from 'react';
 import { APP_CONFIG } from '@/config/constants';
 import { CACHE_TTL } from '@/lib/storage';
 import { cachedRequest } from '@/lib/cachedRequest';
 import { SocialFeedAdapter, SocialFeedApp } from '@/apps/social/SocialFeedApp';
 import { getNextCursor } from '@/apps/social/pagination';
+
+interface CustomEmoji {
+  shortcode: string;
+  url: string;
+  static_url: string;
+}
 
 interface Account {
   id: string;
@@ -16,6 +23,7 @@ interface Account {
   following_count: number;
   statuses_count: number;
   fields: Array<{ name: string; value: string }>;
+  emojis?: CustomEmoji[];
 }
 
 interface MediaAttachment {
@@ -40,12 +48,48 @@ interface Status {
   reblogs_count: number;
   favourites_count: number;
   reblog: Status | null;
+  emojis?: CustomEmoji[];
 }
 
 interface StatusPage {
   statuses: Status[];
   nextCursor?: string;
 }
+
+// Custom emoji arrive as `:shortcode:` text plus a list of images. Preflight
+// makes images block-level, so the inline style keeps them in the line.
+const EMOJI_STYLE = 'display:inline;height:1.2em;width:auto;vertical-align:-0.2em';
+
+const escapeAttribute = (value: string) => value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+
+const findEmoji = (emojis: CustomEmoji[] | undefined) => {
+  const byCode = new Map((emojis ?? []).map((emoji) => [emoji.shortcode, emoji]));
+  return byCode.size ? byCode : undefined;
+};
+
+/** Replaces known `:shortcode:` in server HTML with the emoji image. */
+const emojifyHtml = (html: string, emojis: CustomEmoji[] | undefined) => {
+  const byCode = findEmoji(emojis);
+  if (!byCode) return html;
+  return html.replace(/:([a-zA-Z0-9_]+):/g, (match, code: string) => {
+    const emoji = byCode.get(code);
+    return emoji
+      ? `<img src="${escapeAttribute(emoji.static_url || emoji.url)}" alt=":${code}:" title=":${code}:" style="${EMOJI_STYLE}">`
+      : match;
+  });
+};
+
+/** Renders a plain-text display name with its custom emoji as images. */
+const emojifyName = (name: string, emojis: CustomEmoji[] | undefined): ReactNode => {
+  const byCode = findEmoji(emojis);
+  if (!byCode || !name.includes(':')) return undefined;
+  return name.split(/(:[a-zA-Z0-9_]+:)/g).map((part, index) => {
+    const emoji = /^:[a-zA-Z0-9_]+:$/.test(part) ? byCode.get(part.slice(1, -1)) : undefined;
+    return emoji
+      ? <img key={index} src={emoji.static_url || emoji.url} alt={part} title={part} className="inline h-[1.2em] w-auto align-[-0.2em]" />
+      : part;
+  });
+};
 
 const getMediaAspectRatio = (media: MediaAttachment) => {
   const dimensions = [media.meta?.small, media.meta?.original].find((candidate) => candidate?.width && candidate?.height)
@@ -77,13 +121,14 @@ const adapter: SocialFeedAdapter = {
     return {
       sourceId: account.id,
       displayName: account.display_name || account.username,
+      displayNameContent: emojifyName(account.display_name, account.emojis),
       handle: account.username,
       avatar: account.avatar,
       banner: account.header,
-      bio: account.note ? <div dangerouslySetInnerHTML={{ __html: account.note }} /> : undefined,
+      bio: account.note ? <div dangerouslySetInnerHTML={{ __html: emojifyHtml(account.note, account.emojis) }} /> : undefined,
       fields: account.fields?.map((field) => ({
         name: field.name,
-        value: <span dangerouslySetInnerHTML={{ __html: field.value }} />,
+        value: <span dangerouslySetInnerHTML={{ __html: emojifyHtml(field.value, account.emojis) }} />,
       })),
       stats: [
         { label: 'followers', value: account.followers_count },
@@ -123,15 +168,16 @@ const adapter: SocialFeedAdapter = {
         return {
           id: status.id,
           contextLabel: status.reblog
-            ? `Reposted by ${status.account.display_name || status.account.username}`
+            ? <>Reposted by {emojifyName(status.account.display_name, status.account.emojis) ?? (status.account.display_name || status.account.username)}</>
             : undefined,
           author: {
             displayName: displayStatus.account.display_name || displayStatus.account.username,
+            displayNameContent: emojifyName(displayStatus.account.display_name, displayStatus.account.emojis),
             handle: displayStatus.account.username,
             avatar: displayStatus.account.avatar,
           },
           createdAt: displayStatus.created_at,
-          body: <div className="text-sm break-words mb-2 [&>p]:mb-2 last:[&>p]:mb-0 [&_a]:text-blue-400 [&_a]:underline" dangerouslySetInnerHTML={{ __html: displayStatus.content }} />,
+          body: <div className="text-sm break-words mb-2 [&>p]:mb-2 last:[&>p]:mb-0 [&_a]:underline" dangerouslySetInnerHTML={{ __html: emojifyHtml(displayStatus.content, displayStatus.emojis) }} />,
           media: displayStatus.media_attachments
             .filter((media) => media.type !== 'unknown')
             .map((media) => ({

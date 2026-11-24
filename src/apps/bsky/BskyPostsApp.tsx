@@ -78,7 +78,7 @@ const RichText = ({ text, facets }: { text: string; facets?: Facet[] }) => {
     else if (feature?.tag) href = `https://bsky.app/hashtag/${feature.tag}`;
 
     elements.push(href ? (
-      <a key={index} href={href} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline dark:text-blue-400" onClick={(event) => event.stopPropagation()}>
+      <a key={index} href={href} target="_blank" rel="noopener noreferrer" className="underline" onClick={(event) => event.stopPropagation()}>
         {facetText}
       </a>
     ) : facetText);

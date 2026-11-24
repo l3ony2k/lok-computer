@@ -257,7 +257,7 @@
 }
 
 .media-player-track[data-current] .media-player-track-index {
-    opacity: 1;
+    color: var(--text-color);
 }
 
 .media-player-track-text {
@@ -286,7 +286,7 @@
 .media-player-track-kind {
     padding: 0 3px;
     border: 1px solid var(--internal-border);
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 400;
     letter-spacing: 0.06em;
     color: var(--log-muted);

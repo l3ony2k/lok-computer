@@ -679,7 +679,7 @@ export const ImageViewerApp: React.FC<ImageViewerAppProps> = ({
                 <span>{displayWidth} × {displayHeight} px</span>
               </>
             ) : currentUrl && !imageFailed ? (
-              <span>Loading image...</span>
+              <span>Loading image…</span>
             ) : null}
           </span>
         </div>

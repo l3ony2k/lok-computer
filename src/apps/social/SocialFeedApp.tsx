@@ -10,6 +10,8 @@ import { MEDIA_PLAYER_TYPE, createMediaItem, createMediaRequest } from '@/apps/m
 export interface SocialProfile {
   sourceId: string;
   displayName: string;
+  /** Rich display name (custom emoji); falls back to `displayName`. */
+  displayNameContent?: ReactNode;
   handle: string;
   avatar?: string;
   banner?: string;
@@ -21,9 +23,10 @@ export interface SocialProfile {
 
 export interface SocialPost {
   id: string;
-  contextLabel?: string;
+  contextLabel?: ReactNode;
   author: {
     displayName: string;
+    displayNameContent?: ReactNode;
     handle: string;
     avatar?: string;
   };
@@ -140,23 +143,23 @@ export const SocialFeedApp = ({ adapter }: { adapter: SocialFeedAdapter }) => {
                   <div className="w-20 h-20 bg-background border-4 border-background overflow-hidden relative z-10">
                     {profile.avatar
                       ? <img src={profile.avatar} alt={profile.handle} className="w-full h-full object-cover" />
-                      : <div className="w-full h-full bg-secondary flex items-center justify-center"><span className="text-2xl opacity-50">?</span></div>}
+                      : <div className="w-full h-full bg-secondary flex items-center justify-center"><span className="text-2xl text-muted-foreground">?</span></div>}
                   </div>
                   <RetroButton className="mb-1" onClick={() => window.open(profile.action.url, '_blank', 'noopener,noreferrer')}>
                     {profile.action.label}
                   </RetroButton>
                 </div>
                 <div className="mb-4">
-                  <h1 className="text-xl font-bold leading-tight">{profile.displayName}</h1>
+                  <h1 className="text-xl font-bold leading-tight">{profile.displayNameContent ?? profile.displayName}</h1>
                   <p className="text-muted-foreground text-sm">@{profile.handle}</p>
                 </div>
-                {profile.bio && <div className="text-sm whitespace-pre-wrap mb-4 [&>p]:mb-2 last:[&>p]:mb-0 [&_a]:text-blue-400 [&_a]:underline">{profile.bio}</div>}
+                {profile.bio && <div className="text-sm whitespace-pre-wrap mb-4 [&>p]:mb-2 last:[&>p]:mb-0 [&_a]:underline">{profile.bio}</div>}
                 {profile.fields && profile.fields.length > 0 && (
                   <div className="grid grid-cols-1 gap-2 mb-4 text-sm border border-border bg-secondary/20 p-2">
                     {profile.fields.map((field) => (
-                      <div key={field.name} className="flex flex-col sm:flex-row sm:justify-between border-b border-border/50 last:border-0 pb-1 last:pb-0">
-                        <span className="font-semibold text-muted-foreground uppercase text-xs tracking-wider mr-2">{field.name}</span>
-                        <span className="min-w-0 max-w-full overflow-hidden text-ellipsis whitespace-nowrap [&_a]:text-blue-400 [&_a]:underline">{field.value}</span>
+                      <div key={field.name} className="flex flex-col sm:flex-row sm:justify-between sm:items-baseline border-b border-border/50 last:border-0 pb-1 last:pb-0">
+                        <span className="text-xs text-muted-foreground font-normal mr-2">{field.name}</span>
+                        <span className="min-w-0 max-w-full overflow-hidden text-ellipsis whitespace-nowrap [&_a]:underline">{field.value}</span>
                       </div>
                     ))}
                   </div>
@@ -181,16 +184,16 @@ export const SocialFeedApp = ({ adapter }: { adapter: SocialFeedAdapter }) => {
               <div className="lok-reader-entry-list">
                 {feedQuery.data?.pages.flatMap((page) => page.posts).map((post) => (
                   <article key={post.id} className="lok-reader-entry p-3">
-                    {post.contextLabel && <div className="flex items-center gap-2 mb-1 ml-12 text-xs text-muted-foreground"><span>↻</span><span>{post.contextLabel}</span></div>}
+                    {post.contextLabel && <div className="flex items-center gap-2 mb-1 ml-[52px] text-xs text-muted-foreground"><span>↻</span><span>{post.contextLabel}</span></div>}
                     <div className="flex items-start gap-3">
                       {post.author.avatar
                         ? <img src={post.author.avatar} alt={post.author.handle} className="w-10 h-10 border border-border bg-secondary" />
-                        : <div className="w-10 h-10 border border-border bg-secondary flex items-center justify-center"><span className="text-xs opacity-50">?</span></div>}
+                        : <div className="w-10 h-10 border border-border bg-secondary flex items-center justify-center"><span className="text-xs text-muted-foreground">?</span></div>}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-baseline gap-2 mb-1">
-                          <span className="font-bold text-sm truncate">{post.author.displayName}</span>
-                          <span className="text-xs opacity-50 truncate">@{post.author.handle}</span>
-                          <span className="text-xs opacity-30 ml-auto whitespace-nowrap">{formatTime(post.createdAt)}</span>
+                          <span className="font-bold text-sm truncate">{post.author.displayNameContent ?? post.author.displayName}</span>
+                          <span className="text-xs text-muted-foreground truncate">@{post.author.handle}</span>
+                          <span className="text-xs text-muted-foreground ml-auto whitespace-nowrap">{formatTime(post.createdAt)}</span>
                         </div>
                         {post.body}
                         {post.media && post.media.length > 0 && (
@@ -231,7 +234,7 @@ export const SocialFeedApp = ({ adapter }: { adapter: SocialFeedAdapter }) => {
                             ))}
                           </div>
                         )}
-                        <div className="flex gap-4 text-xs opacity-50">
+                        <div className="flex gap-4 text-xs text-muted-foreground">
                           <span title="Replies">✉︎ {post.metrics.replies}</span>
                           <span title="Reposts">↻ {post.metrics.reposts}</span>
                           <span title="Likes">♡ {post.metrics.likes}</span>
@@ -240,7 +243,7 @@ export const SocialFeedApp = ({ adapter }: { adapter: SocialFeedAdapter }) => {
                     </div>
                   </article>
                 ))}
-                <div ref={loadMoreRef} className="p-4 text-center text-xs opacity-50">
+                <div ref={loadMoreRef} className="p-4 text-center text-xs text-muted-foreground">
                   {feedQuery.isFetchingNextPage ? 'Loading more...' : feedQuery.hasNextPage ? 'Scroll for more' : 'End of feed'}
                 </div>
               </div>

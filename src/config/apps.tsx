@@ -121,7 +121,7 @@ export const APPLICATIONS = {
     iconType: 'weather',
     component: WeatherApp,
     loader: APP_MODULE_LOADERS.Weather,
-    defaultWidth: 860,
+    defaultWidth: 924,
     defaultHeight: 525,
     showOnDesktop: true,
   },

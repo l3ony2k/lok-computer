@@ -1,7 +1,8 @@
 /**
  * The 78-card tarot deck with short keyword meanings (Rider–Waite tradition).
- * The minor arcana combine a rank meaning with the suit's domain; the Ask AI
- * hand-off is there for anyone who wants more than keywords.
+ * A minor card's meaning is its rank's; its suit names the sphere of life the
+ * meaning plays out in, shown on its own line. The Ask AI hand-off is there for
+ * anyone who wants more than keywords.
  */
 
 export type TarotArcana = 'major' | 'wands' | 'cups' | 'swords' | 'pentacles';
@@ -12,8 +13,15 @@ export interface TarotCard {
   arcana: TarotArcana;
   /** Roman numeral for the majors, the rank for the minors. */
   label: string;
+  /** The minors' suit and the short sphere of life it stands for. */
+  suit?: TarotSuit;
   upright: string;
   reversed: string;
+}
+
+export interface TarotSuit {
+  name: string;
+  sphere: string;
 }
 
 const ROMAN = ['0', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV', 'XVI', 'XVII', 'XVIII', 'XIX', 'XX', 'XXI'];
@@ -43,11 +51,11 @@ const MAJOR: Array<[string, string, string]> = [
   ['The World', 'completion, wholeness, travel', 'incompletion, delays, seeking closure'],
 ];
 
-const SUITS: Array<{ id: Exclude<TarotArcana, 'major'>; name: string; domain: string }> = [
-  { id: 'wands', name: 'Wands', domain: 'energy, creativity and ambition' },
-  { id: 'cups', name: 'Cups', domain: 'feelings, relationships and intuition' },
-  { id: 'swords', name: 'Swords', domain: 'thought, truth and conflict' },
-  { id: 'pentacles', name: 'Pentacles', domain: 'work, money and the body' },
+const SUITS: Array<TarotSuit & { id: Exclude<TarotArcana, 'major'> }> = [
+  { id: 'wands', name: 'Wands', sphere: 'drive and ambition' },
+  { id: 'cups', name: 'Cups', sphere: 'feelings and relationships' },
+  { id: 'swords', name: 'Swords', sphere: 'thought and conflict' },
+  { id: 'pentacles', name: 'Pentacles', sphere: 'work and money' },
 ];
 
 const RANKS: Array<[string, string, string]> = [
@@ -76,13 +84,14 @@ export const TAROT_DECK: TarotCard[] = [
     upright,
     reversed,
   })),
-  ...SUITS.flatMap((suit) => RANKS.map(([rank, upright, reversed]) => ({
-    id: `${suit.id}-${rank.toLowerCase()}`,
-    name: `${rank} of ${suit.name}`,
-    arcana: suit.id,
+  ...SUITS.flatMap(({ id, name, sphere }) => RANKS.map(([rank, upright, reversed]) => ({
+    id: `${id}-${rank.toLowerCase()}`,
+    name: `${rank} of ${name}`,
+    arcana: id,
     label: rank,
-    upright: `${upright}, in ${suit.domain}`,
-    reversed: `${reversed}, in ${suit.domain}`,
+    suit: { name, sphere },
+    upright,
+    reversed,
   }))),
 ];
 

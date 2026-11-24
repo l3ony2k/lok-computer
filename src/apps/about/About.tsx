@@ -37,7 +37,7 @@ const AboutThis = () => {
         <div className="border-l-4 border-accent pl-4 italic mb-4">A small OS in your browser, for curiosity and creation.</div>
 
         <p className="mb-4">
-          <strong>lok.computer</strong> is yet another useless side project of Leon's. It's a retro-inspired web desktop brings together modular mini apps like an are.na browser (yeh so orginal),
+          <strong>lok.computer</strong> is yet another useless side project of Leon's. It's a retro-inspired web desktop that brings together modular mini apps like an are.na browser (yeh so original),
           weather (maybe?), social media (bsky and fediverse), and more (i don't know yet), within a playful, windowed environment.
         </p>
 

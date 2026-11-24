@@ -171,12 +171,10 @@
  */
 .chance-coin {
     --coin: clamp(112px, 20cqw, 164px);
+    position: relative;
     width: var(--coin);
     height: var(--coin);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid #77746b;
+    flex: none;
     border-radius: 50%;
     filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.2)) drop-shadow(0 5px 12px rgb(0 0 0 / 0.16));
 }
@@ -194,16 +192,18 @@
 .chance-coin[data-face="heads"] .chance-coin-image[data-side="heads"],
 .chance-coin[data-face="tails"] .chance-coin-image[data-side="tails"] {
     opacity: 1;
+}
+
 /*
  * The flip turns the coin edge-on twice (25% and 75%). The face swaps at each
  * edge, so it reads like a coin turning over: the starting face, the other
  * face, then where it lands (`data-face`). Landing on the other face swaps
  * once, landing on the same face swaps twice.
  */
-}
-
 .chance-coin[data-flipping] {
     animation: chance-flip 500ms ease-in-out;
+}
+
 .chance-coin[data-turns="once"] .chance-coin-image[data-start] {
     animation: chance-face-out 500ms linear;
 }
@@ -220,14 +220,34 @@
     animation: chance-face-between 500ms linear;
 }
 
-}
-
 @keyframes chance-flip {
     0% { transform: scaleX(1); }
-    25% { transform: scaleX(0.1); }
+    25% { transform: scaleX(0.04); }
     50% { transform: scaleX(1); }
-    75% { transform: scaleX(0.1); }
+    75% { transform: scaleX(0.04); }
     100% { transform: scaleX(1); }
+}
+
+@keyframes chance-face-out {
+    0%, 25% { opacity: 1; }
+    25.1%, 100% { opacity: 0; }
+}
+
+@keyframes chance-face-in {
+    0%, 25% { opacity: 0; }
+    25.1%, 100% { opacity: 1; }
+}
+
+@keyframes chance-face-away {
+    0%, 25% { opacity: 1; }
+    25.1%, 75% { opacity: 0; }
+    75.1%, 100% { opacity: 1; }
+}
+
+@keyframes chance-face-between {
+    0%, 25% { opacity: 0; }
+    25.1%, 75% { opacity: 1; }
+    75.1%, 100% { opacity: 0; }
 }
 
 .chance-coin-tally {
@@ -365,9 +385,7 @@
 }
 
 .chance-history-label {
-    font-size: 10px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    font-size: 11px;
     color: var(--log-muted);
 }
 
@@ -521,17 +539,29 @@
 
 @container (min-width: 560px) {
     /* Three cards, wide: side by side, each over its reading. */
+    /*
+     * Each kind of line sits on a row shared by the three cards (subgrid), so
+     * the names line up however long a suit line wraps: art, position, suit
+     * line, name, orientation, meaning.
+     */
     .chance-reading[data-spread="3"] {
         grid-template-columns: repeat(3, clamp(140px, 25cqw, 210px));
+        grid-template-rows: repeat(6, auto);
         justify-content: center;
         column-gap: clamp(16px, 4cqw, 36px);
         max-width: none;
     }
 
     .chance-reading[data-spread="3"] .chance-tarot {
+        grid-row: span 6;
         grid-template-columns: 1fr;
-        grid-template-rows: auto 1fr;
+        grid-template-rows: subgrid;
+        row-gap: 4px;
         text-align: center;
+    }
+
+    .chance-reading[data-spread="3"] .chance-tarot-art {
+        margin-bottom: 8px;
     }
 
     .chance-reading[data-spread="3"] .chance-tarot + .chance-tarot {
@@ -540,7 +570,7 @@
     }
 
     .chance-reading[data-spread="3"] .chance-tarot-text {
-        align-items: center;
+        display: contents;
     }
 }
 
@@ -661,15 +691,20 @@
 }
 
 .chance-tarot-position {
-    font-size: 10px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    font-size: 11px;
     color: var(--log-muted);
 }
 
+/* "Cups · feelings and relationships" for a minor, "IV · Major Arcana" for a major. */
 .chance-tarot-arcana {
     font-size: 11px;
     color: var(--log-muted);
+    text-wrap: balance;
+}
+
+.chance-tarot-suit {
+    font-weight: 600;
+    color: var(--text-color);
 }
 
 .chance-tarot-name {
@@ -685,34 +720,16 @@
 
 .chance-tarot-meaning {
     margin: 4px 0 0;
-    font-size: 12px;
+    font-size: 13px;
     line-height: 1.4;
     color: var(--text-color);
+    text-wrap: balance;
 }
 
-.chance-ask {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 8px 12px;
-    border: 1px solid var(--internal-border);
-    background: var(--detail-meta-bg);
+/* Under a reading: one quiet line handing the cards to Ask AI. */
+.chance-ask-line {
+    margin: 12px 0 0;
     font-size: 12px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .chance-die[data-rolling],
-    .chance-coin[data-flipping],
-    .chance-coin[data-flipping] .chance-coin-image {
-        animation: none;
-    }
-
-    .chance-tarot-art > * {
-        transition: none;
-    }
-}
     line-height: 1.4;
     text-align: center;
     color: var(--log-muted);
@@ -738,3 +755,16 @@
 /* The base ring sits inside the box; a text link needs it outside. */
 .chance-ask-link:focus-visible {
     outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .chance-die[data-rolling],
+    .chance-coin[data-flipping],
+    .chance-coin[data-flipping] .chance-coin-image {
+        animation: none;
+    }
+
+    .chance-tarot-art > * {
+        transition: none;
+    }
+}

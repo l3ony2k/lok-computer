@@ -200,6 +200,7 @@
 .notepad-preview blockquote, .notepad-rich blockquote { margin: 0 0 8px; padding-left: 10px; border-left: 3px solid var(--internal-border); color: var(--log-muted); }
 .notepad-preview pre, .notepad-rich pre { margin: 0 0 8px; padding: 8px; overflow-x: auto; background: var(--detail-meta-bg); border: 1px solid var(--internal-border); font-family: var(--font-code); font-size: 12px; }
 .notepad-preview code, .notepad-rich code { font-family: var(--font-code); font-size: 0.95em; }
+.notepad-preview :not(pre) > code, .notepad-rich :not(pre) > code { padding: 0 4px; background: var(--detail-meta-bg); border: 1px solid var(--internal-border); }
 .notepad-preview a, .notepad-rich a { color: var(--link-color); text-decoration: underline; }
 .notepad-preview hr, .notepad-rich hr { margin: 10px 0; border: 0; border-top: 1px solid var(--internal-border); }
 

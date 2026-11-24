@@ -60,14 +60,18 @@ const highlightPrefix = (text: string): React.ReactNode => {
   );
 };
 
+const FOLD_SHOWN_LINES = 10;
+
 const LogItem: React.FC<LogItemProps> = ({ log, getLogColor, formatMessage }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const displayMessage = formatMessage(log.message);
   const lines = displayMessage.split('\n');
-  const isLong = lines.length > 10;
+  // Fold only when more than three lines would be hidden; folding away one
+  // to three lines saves nothing.
+  const isLong = lines.length > FOLD_SHOWN_LINES + 3;
 
   const content = isLong && !isExpanded
-    ? lines.slice(0, 10).join('\n') + '\n...'
+    ? lines.slice(0, FOLD_SHOWN_LINES).join('\n') + '\n...'
     : displayMessage;
 
   // Highlight the first line's prefix
@@ -77,10 +81,10 @@ const LogItem: React.FC<LogItemProps> = ({ log, getLogColor, formatMessage }) =>
 
   return (
     <div className={`mb-1 ${getLogColor(log.type)}`}>
-      <div className="flex items-start">
+      <div className="flex items-baseline">
         <span className="console-timestamp mr-2 select-none text-xs shrink-0">[{log.timestamp}]</span>
         <div className="flex-1 overflow-hidden min-w-0">
-          <span className="break-all whitespace-pre-wrap">
+          <span className="whitespace-pre-wrap [overflow-wrap:anywhere]">
             {highlightPrefix(firstLine)}{restLines}
           </span>
           {isLong && (
@@ -88,7 +92,7 @@ const LogItem: React.FC<LogItemProps> = ({ log, getLogColor, formatMessage }) =>
               onClick={() => setIsExpanded(!isExpanded)}
               className="console-expand block text-xs mt-1 focus:outline-none underline decoration-dotted"
             >
-              {isExpanded ? 'Show less' : `Show ${lines.length - 10} more lines...`}
+              {isExpanded ? 'Show less' : `Show ${lines.length - FOLD_SHOWN_LINES} more ${lines.length - FOLD_SHOWN_LINES === 1 ? 'line' : 'lines'}...`}
             </button>
           )}
         </div>
@@ -311,8 +315,7 @@ export const ConsoleApp: React.FC = () => {
     console.info = (...args) => captureLog('info', ...args);
 
     // Initial welcome message
-    console.info('Welcome to lok.computer Console!');
-    console.info('Type "help" to see available commands');
+    console.info('lok.computer console');
 
     return () => {
       console.log = originalConsoleLog;
@@ -442,7 +445,7 @@ export const ConsoleApp: React.FC = () => {
             value={command}
             onChange={(e) => setCommand(e.target.value)}
             onKeyDown={handleCommand}
-            placeholder="Type 'help' for available commands"
+            placeholder='Type "help" for available commands'
             className="console-command-input bg-transparent flex-1 focus:outline-none"
             disabled={isDeleting}
           />

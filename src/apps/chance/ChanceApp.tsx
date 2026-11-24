@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Minus, Plus, Sparkles } from 'lucide-react';
+import { Minus, Plus } from 'lucide-react';
 import { WindowLayout } from '@/components/window/WindowLayout';
 import { RetroButton } from '@/components/ui/RetroButton';
 import { usePersistedState } from '@/hooks/useStorage';
@@ -272,7 +272,7 @@ export const ChanceApp: React.FC<ChanceAppProps> = ({ initialTab, onPropsChange 
               </div>
             ))}
             <RetroButton size="sm" onClick={addDie} disabled={state.dice.length >= MAX_DICE} title={`Up to ${MAX_DICE} dice`}>
-              <Plus className="w-3 h-3 mr-1" />Add die
+              <Plus className="w-3 h-3" />Add die
             </RetroButton>
           </div>
 
@@ -439,12 +439,12 @@ export const ChanceApp: React.FC<ChanceAppProps> = ({ initialTab, onPropsChange 
           )}
 
           {reading.length > 0 && (
-            <div className="chance-ask">
-              <span>Don't know what this means?</span>
-              <RetroButton size="sm" onClick={askAi}>
-                <Sparkles className="w-3 h-3 mr-1" />Ask AI
-              </RetroButton>
-            </div>
+            <p className="chance-ask-line">
+              Not sure what it means?{' '}
+              <button type="button" className="chance-ask-link" onClick={askAi}>
+                <span className="chance-ask-link-text">Ask AI to read it</span> →
+              </button>
+            </p>
           )}
         </section>
       )}

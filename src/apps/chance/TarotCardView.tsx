@@ -60,7 +60,13 @@ export const TarotCardView = ({ draw: { card, reversed }, position, index }: Tar
       </div>
       <div className="chance-tarot-text">
         {position && <span className="chance-tarot-position">{position}</span>}
-        <span className="chance-tarot-arcana">{card.label} · {arcanaLabel(card.arcana)}</span>
+        <span className="chance-tarot-arcana">
+          {card.suit ? (
+            <><strong className="chance-tarot-suit">{card.suit.name}</strong> · {card.suit.sphere}</>
+          ) : (
+            <>{card.label} · {arcanaLabel(card.arcana)}</>
+          )}
+        </span>
         <h3 className="chance-tarot-name">{card.name}</h3>
         <span className="chance-tarot-orientation">{reversed ? '↓ Reversed' : '↑ Upright'}</span>
         <p className="chance-tarot-meaning">{reversed ? card.reversed : card.upright}</p>

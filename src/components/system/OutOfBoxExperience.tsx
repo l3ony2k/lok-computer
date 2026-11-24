@@ -77,7 +77,7 @@ export const OutOfBoxExperience = ({
         <div className="oobe-layout">
           <nav className="oobe-steps" aria-label="Setup progress">
             <div className="oobe-brand">
-              <strong>Lok</strong>
+              <strong>lok</strong>
               <span>initial setup</span>
             </div>
             {STEPS.map((label, index) => (

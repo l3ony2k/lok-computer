@@ -69,7 +69,9 @@ const plainText = (entry: NoteEntry) => (entry.format === 'rich' ? htmlToText(en
 const entryLabel = (entry: NoteEntry) => {
   const title = entry.title.trim();
   if (title) return title;
-  const firstLine = plainText(entry).split('\n').map((line) => line.trim()).find(Boolean);
+  const lines = plainText(entry).split('\n').map((line) => line.trim());
+  // A Markdown heading is labelled by its text, not its # marker.
+  const firstLine = (entry.format === 'markdown' ? lines.map((line) => line.replace(/^#{1,6}\s+/, '')) : lines).find(Boolean);
   return firstLine ? firstLine.slice(0, 60) : 'Untitled';
 };
 
@@ -228,7 +230,7 @@ export const NotepadApp: React.FC<NotepadAppProps> = () => {
             ))}
           </div>
           {active.format === 'markdown' && (
-            <RetroButton size="sm" active={preview} onClick={() => setPreview((open) => !open)} title="Preview the rendered Markdown">
+            <RetroButton size="sm" className="gap-1" active={preview} onClick={() => setPreview((open) => !open)} title="Preview the rendered Markdown">
               <Eye className="w-3.5 h-3.5" /> Preview
             </RetroButton>
           )}
@@ -238,11 +240,12 @@ export const NotepadApp: React.FC<NotepadAppProps> = () => {
           <RetroButton
             size="sm"
             onClick={deleteActive}
+            className="gap-1"
             onBlur={() => setTimeout(() => setConfirmDelete(false), 150)}
             title="Delete this note"
             aria-label={confirmDelete ? 'Confirm delete' : 'Delete note'}
           >
-            <Trash2 className="w-3.5 h-3.5" />{confirmDelete && <span> Confirm</span>}
+            <Trash2 className="w-3.5 h-3.5" />{confirmDelete && <span>Confirm</span>}
           </RetroButton>
         </div>
       ) : undefined}
@@ -255,7 +258,7 @@ export const NotepadApp: React.FC<NotepadAppProps> = () => {
     >
       <div className="notepad-layout" onKeyDown={handleKeyDown}>
         <nav className="notepad-sidebar" aria-label="Notes">
-          <RetroButton size="sm" className="notepad-new" onClick={createNote} title="New note (Ctrl+N)">
+          <RetroButton size="sm" className="notepad-new gap-1" onClick={createNote} title="New note (Ctrl+N)">
             <Plus className="w-3.5 h-3.5" /> New note
           </RetroButton>
           <div className="notepad-list scrollable-area" role="listbox" aria-label="Saved notes">
@@ -285,7 +288,7 @@ export const NotepadApp: React.FC<NotepadAppProps> = () => {
             <div className="notepad-empty">
               <strong>No note open</strong>
               <span>Notes are saved in this browser as you type.</span>
-              <RetroButton size="sm" onClick={createNote}><Plus className="w-3.5 h-3.5" /> New note</RetroButton>
+              <RetroButton size="sm" className="gap-1" onClick={createNote}><Plus className="w-3.5 h-3.5" /> New note</RetroButton>
             </div>
           )}
 
