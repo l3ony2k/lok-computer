@@ -1,14 +1,14 @@
 # Applied by the Workers asset layer to the static files it serves directly.
 # Responses the Worker builds (the HTML shell at "/" and every deep link, the
-# Markdown 404, /api) set their own headers in worker/site.ts and worker/worker.js.
+# Markdown 404, /api) set their own headers in worker/http.ts.
 
 # What Pages sent on every file, plus the agent discovery links (the same value
-# as DISCOVERY_LINKS in worker/site.ts).
+# as DISCOVERY_LINKS in worker/http.ts).
 /*
   Access-Control-Allow-Origin: *
   Referrer-Policy: strict-origin-when-cross-origin
   X-Content-Type-Options: nosniff
-  Link: </llms.txt>; rel="alternate"; type="text/markdown", </openapi.json>; rel="service-desc"; type="application/vnd.oai.openapi+json", </sitemap.xml>; rel="sitemap"; type="application/xml"
+  Link: </llms.txt>; rel="alternate"; type="text/markdown", </openapi.json>; rel="service-desc"; type="application/vnd.oai.openapi+json", </sitemap.xml>; rel="sitemap"; type="application/xml", </developers>; rel="help"
 
 # The workers.dev address and the version preview URLs
 # (<version>-<worker>.<account>.workers.dev) serve a full copy of the site; only

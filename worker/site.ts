@@ -4,6 +4,7 @@ import {
   renderMarkdown,
   renderNoScript,
 } from "./agent-content";
+import { DISCOVERY_LINKS, baseHeaders } from "./http";
 
 /** The static assets binding (`[assets] binding = "ASSETS"` in wrangler.toml). */
 export interface AssetFetcher {
@@ -36,13 +37,6 @@ const UI_PATHS = new Set([
   "/chance",
   "/web",
 ]);
-
-// public/_headers sends the same value on every static file (site.test.ts checks).
-export const DISCOVERY_LINKS = [
-  '</llms.txt>; rel="alternate"; type="text/markdown"',
-  '</openapi.json>; rel="service-desc"; type="application/vnd.oai.openapi+json"',
-  '</sitemap.xml>; rel="sitemap"; type="application/xml"',
-].join(", ");
 
 function normalizePath(pathname: string): string {
   if (pathname === "/") return pathname;
@@ -83,14 +77,7 @@ function addVary(headers: Headers): void {
 }
 
 function responseHeaders(contentType: string): Headers {
-  const headers = new Headers({
-    "Cache-Control": "public, max-age=300",
-    "Content-Type": contentType,
-    Link: DISCOVERY_LINKS,
-    "X-Content-Type-Options": "nosniff",
-  });
-  addVary(headers);
-  return headers;
+  return new Headers({ ...baseHeaders(contentType), "Cache-Control": "public, max-age=300" });
 }
 
 function textResponse(request: Request, body: string, status = 200): Response {

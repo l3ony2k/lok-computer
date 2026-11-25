@@ -23,6 +23,8 @@
  * - AI_BASE_URL / AI_API_KEY: OpenAI-compatible endpoint that serves the planner model
  */
 
+import { USER_AGENT } from './http.ts';
+
 export const JEV_ENDPOINT = 'https://api.typesafe.ai/v1/systemone';
 /** Rate limits, overload, and gateway errors: retried with backoff, then reported as busy. */
 const JEV_TRANSIENT_STATUSES = new Set([429, 502, 503, 504, 529]);
@@ -724,7 +726,7 @@ export const askJev = async (request, env, fetchImpl = callFetch) => {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${env.TYPESAFE_API_KEY}`,
-        'User-Agent': 'lok-computer-worker/1.0',
+        'User-Agent': USER_AGENT,
       },
       body,
     }, 'Jev');

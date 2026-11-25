@@ -293,7 +293,13 @@
             }
           },
           "500": {
+            "$ref": "#/components/responses/InternalError"
+          },
+          "502": {
             "$ref": "#/components/responses/UpstreamFailure"
+          },
+          "503": {
+            "$ref": "#/components/responses/NotConfigured"
           }
         }
       }
@@ -369,7 +375,13 @@
             }
           },
           "500": {
+            "$ref": "#/components/responses/InternalError"
+          },
+          "502": {
             "$ref": "#/components/responses/UpstreamFailure"
+          },
+          "503": {
+            "$ref": "#/components/responses/NotConfigured"
           }
         }
       }
@@ -444,7 +456,13 @@
             }
           },
           "500": {
+            "$ref": "#/components/responses/InternalError"
+          },
+          "502": {
             "$ref": "#/components/responses/UpstreamFailure"
+          },
+          "503": {
+            "$ref": "#/components/responses/NotConfigured"
           }
         }
       }
@@ -482,8 +500,28 @@
           }
         }
       },
+      "NotConfigured": {
+        "description": "The Worker is not configured for this provider.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "InternalError": {
+        "description": "An unexpected error in the Worker.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
       "UpstreamFailure": {
-        "description": "The Worker is not configured for the provider or the upstream request failed.",
+        "description": "The upstream service failed, could not be reached, or returned an unreadable reply.",
         "content": {
           "application/json": {
             "schema": {
@@ -691,10 +729,8 @@
         "required": ["error"],
         "properties": {
           "error": {
-            "type": "string"
-          },
-          "details": {
-            "type": "string"
+            "type": "string",
+            "description": "A message safe to show to people. Upstream replies and internal error text are never included."
           },
           "code": {
             "type": "string",
