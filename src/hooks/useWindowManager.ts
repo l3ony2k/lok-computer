@@ -4,6 +4,7 @@ import { WINDOW_DEFAULTS } from "@/config/window";
 import { dissolveSingletons, leaveStack } from '@/lib/windowStacks';
 import { createApplicationElement, getApplicationDefinition } from "@/config/apps";
 import { getAppState, setAppState, setAppStateOnUnload, deleteAppState } from "@/lib/storage";
+import { createDebouncedWrite, flushOnPageHide, type DebouncedWrite } from "@/lib/debouncedWrite";
 
 // Storage keys
 const WINDOW_SESSION_KEY = 'windowSession';
@@ -166,9 +167,14 @@ export const useWindowManagerController = (): WindowManagerController => {
   const [windows, setWindows] = useState<DesktopWindow[]>([]);
   const [activeWindow, setActiveWindow] = useState<string | null>(null);
   const [isSessionRestored, setIsSessionRestored] = useState(false);
-  const sessionSaveTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  /** The session waiting on the debounce, written at once if the page unloads first. */
-  const pendingSession = useRef<WindowSession | null>(null);
+  /** Holds the session back by the debounce; written at once if the page unloads first. */
+  const [sessionWriter] = useState<DebouncedWrite<WindowSession>>(() => createDebouncedWrite<WindowSession>(
+    async (key, session) => {
+      await setAppState(key, session);
+      console.debug(`[WindowManager] Saved session with ${session.windows.length} windows`);
+    },
+    setAppStateOnUnload,
+  ));
   const windowsRef = useRef<DesktopWindow[]>(windows);
   const activeWindowRef = useRef<string | null>(activeWindow);
   windowsRef.current = windows;
@@ -275,8 +281,6 @@ export const useWindowManagerController = (): WindowManagerController => {
   useEffect(() => {
     if (!isSessionRestored) return;
 
-    if (sessionSaveTimeout.current) clearTimeout(sessionSaveTimeout.current);
-
     // Only windows backed by an Application can be restored
     const serializableWindows: SerializableWindowData[] = windows
       .filter(w => w.componentType)
@@ -303,36 +307,18 @@ export const useWindowManagerController = (): WindowManagerController => {
       lastZIndex: zIndexRef.current,
       savedAt: Date.now(),
     };
-    pendingSession.current = session;
-
-    sessionSaveTimeout.current = setTimeout(async () => {
-      pendingSession.current = null;
-      try {
-        await setAppState(WINDOW_SESSION_KEY, session);
-        console.debug(`[WindowManager] Saved session with ${serializableWindows.length} windows`);
-      } catch (error) {
-        console.error('[WindowManager] Failed to save window session:', error);
-      }
-    }, SESSION_SAVE_DEBOUNCE_MS);
-
-    return () => {
-      if (sessionSaveTimeout.current) clearTimeout(sessionSaveTimeout.current);
-    };
-  }, [windows, isSessionRestored]);
+    sessionWriter.schedule(WINDOW_SESSION_KEY, session, SESSION_SAVE_DEBOUNCE_MS);
+  }, [windows, isSessionRestored, sessionWriter]);
 
   // Leaving the page inside the debounce (a quick reload after moving a window
-  // or switching an app's tab) still saves the latest session.
+  // or switching an app's tab) still saves the latest session; so does unmounting.
   useEffect(() => {
-    const saveOnUnload = () => {
-      const session = pendingSession.current;
-      if (!session) return;
-      pendingSession.current = null;
-      if (sessionSaveTimeout.current) clearTimeout(sessionSaveTimeout.current);
-      setAppStateOnUnload(WINDOW_SESSION_KEY, session);
+    const stopListening = flushOnPageHide(sessionWriter);
+    return () => {
+      stopListening();
+      sessionWriter.flush();
     };
-    window.addEventListener('pagehide', saveOnUnload);
-    return () => window.removeEventListener('pagehide', saveOnUnload);
-  }, []);
+  }, [sessionWriter]);
 
   const focusWindow = useCallback((id: string) => {
     // A stacked window brings its stack up with it (keeping their order), so

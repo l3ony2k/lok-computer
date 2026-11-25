@@ -4,7 +4,8 @@
  * so every open lands here; the list is persisted in IndexedDB.
  */
 import { useSyncExternalStore } from 'react';
-import { getAppState, setAppState } from '@/lib/storage';
+import { getAppState, setAppState, setAppStateOnUnload } from '@/lib/storage';
+import { createDebouncedWrite } from '@/lib/debouncedWrite';
 
 export interface RecentEntry {
   componentType: string;
@@ -65,7 +66,6 @@ export const normalizeRecent = (stored: unknown): RecentEntry[] => {
 let entries: RecentEntry[] = [];
 let hydrated = false;
 let hydrating: Promise<void> | null = null;
-let saveTimer: ReturnType<typeof setTimeout> | null = null;
 const listeners = new Set<() => void>();
 
 const emit = () => listeners.forEach((listener) => listener());
@@ -86,12 +86,16 @@ const hydrate = () => {
   return hydrating;
 };
 
+// Leaving the page inside the debounce (a quick reload) still saves the list.
+const writer = createDebouncedWrite<RecentEntry[]>(setAppState, setAppStateOnUnload, { flushOnPageHide: true });
+
+const writeEntries = () => writer.schedule(RECENT_STORAGE_KEY, entries, SAVE_DEBOUNCE_MS);
+
+// The saved list is whatever `entries` holds once the stored one is merged in,
+// so a save never goes out (not even on unload) before that read finishes.
 const scheduleSave = () => {
-  if (saveTimer) clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => {
-    saveTimer = null;
-    setAppState(RECENT_STORAGE_KEY, entries).catch((error) => console.warn('[Recent] Could not save recent items:', error));
-  }, SAVE_DEBOUNCE_MS);
+  if (hydrated) writeEntries();
+  else void hydrate().then(writeEntries);
 };
 
 /** Called by the application launcher on every open. */

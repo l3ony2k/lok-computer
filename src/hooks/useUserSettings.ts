@@ -1,5 +1,6 @@
 import React, { useState, useEffect, createContext, useContext, ReactNode, useCallback } from "react";
-import { getAppState, setAppState } from "@/lib/storage";
+import { getAppState, setAppState, setAppStateOnUnload } from "@/lib/storage";
+import { createDebouncedWrite } from "@/lib/debouncedWrite";
 
 /**
  * Interface defining all user settings
@@ -88,6 +89,15 @@ const STORAGE_KEY = 'userSettings';
 // Sliders (CRT, Oneko speed) fire on every pointer move; one write per pause is plenty.
 const SAVE_DEBOUNCE_MS = 150;
 
+// One provider for the whole page, so the writer lives as long as the page;
+// leaving it inside the debounce (a quick reload) still saves the change.
+const settingsWriter = createDebouncedWrite<UserSettings>(setAppState, setAppStateOnUnload, { flushOnPageHide: true });
+
+/** Saves the settings after the debounce; exported for tests. */
+export const scheduleUserSettingsSave = (settings: UserSettings) => {
+  settingsWriter.schedule(STORAGE_KEY, settings, SAVE_DEBOUNCE_MS);
+};
+
 interface UserSettingsContextValue {
   settings: UserSettings;
   isLoading: boolean;
@@ -147,13 +157,11 @@ export function UserSettingsProvider({ children }: { children: ReactNode }) {
   // Save settings to IndexedDB whenever they change (debounced; skipped until loaded)
   useEffect(() => {
     if (isLoading) return;
-    const timeout = setTimeout(() => {
-      setAppState(STORAGE_KEY, settings).catch((error) => {
-        console.error('[UserSettings] Failed to save settings:', error);
-      });
-    }, SAVE_DEBOUNCE_MS);
-    return () => clearTimeout(timeout);
+    scheduleUserSettingsSave(settings);
   }, [settings, isLoading]);
+
+  // Unmounting writes what is pending instead of dropping it.
+  useEffect(() => () => settingsWriter.flush(), []);
 
   useEffect(() => {
     document.documentElement.dataset.verboseCacheLogging = String(
