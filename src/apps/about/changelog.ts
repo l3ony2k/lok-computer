@@ -14,6 +14,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '3.3.0',
+    date: '2026-11-25',
+    title: 'Eight tables of chance',
+    notes: [
+      'Chance has four new tables: M8gic (shake the black ball for an answer), I Ching (cast a hexagram with three Qing coins), Moon blocks (throw the jiaobei until the question is answered, as seriously as you like) and Wheel (spin for lunch, a film or who pays, or your own list).',
+      'Every Chance table works the same way: change things where they lie, one button (or Space) to play, history beside it that you can hide. Cards are dealt from the deck, tarot cards turn over before their reading types out, dice are thrown and tumble (the d4 too), and coins are sized to the window.',
+      'Ten real coins to flip, from a 1909 Lincoln cent to a Kangxi Tongbao with its square hole, and each photograph credited in About.',
+      'Tabs that need two rows keep the selected row next to the page, and every dropdown draws its theme’s arrow with room around it.',
+    ],
+  },
+  {
     version: '3.2.1',
     date: '2026-11-25',
     title: 'Nothing lost on a reload',
