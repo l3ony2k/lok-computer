@@ -1,8 +1,6 @@
-import { useEffect, useRef, useState, type ComponentProps, type ReactNode } from 'react';
+import React, { useEffect, useRef, useState, type ComponentProps, type ReactNode } from 'react';
 import { RetroButton } from '@/components/ui/RetroButton';
 
-/** How long an armed button waits for the second click before it disarms. */
-export const CONFIRM_TIMEOUT_MS = 5000;
 /** Blur disarms after this delay, so a click that moves focus still lands. */
 const BLUR_DISARM_MS = 150;
 
@@ -22,12 +20,15 @@ interface ConfirmButtonProps extends Omit<RetroButtonProps, 'onClick' | 'childre
   'aria-label'?: string;
   /** Accessible name while armed; defaults to `aria-label`. */
   confirmAriaLabel?: string;
+  /** Render a bare `<button>` (styled by `className`) instead of a RetroButton, for text-link actions. */
+  plain?: boolean;
 }
 
 /**
  * A destructive action that takes two clicks: the first arms it (the label
- * changes), the second runs `onConfirm`. It disarms on blur, on Escape and
- * after CONFIRM_TIMEOUT_MS, and clears its timers when it unmounts.
+ * changes), the second runs `onConfirm`. It stays armed until the person
+ * confirms, moves focus away, or presses Escape; it never disarms on a timer.
+ * It clears its timers when it unmounts.
  */
 export const ConfirmButton = ({
   onConfirm,
@@ -40,6 +41,7 @@ export const ConfirmButton = ({
   confirmAriaLabel,
   onBlur,
   onKeyDown,
+  plain = false,
   ...props
 }: ConfirmButtonProps) => {
   const [armed, setArmed] = useState(false);
@@ -72,7 +74,6 @@ export const ConfirmButton = ({
   const click = () => {
     if (!armed) {
       setArmed(true);
-      disarmAfter(CONFIRM_TIMEOUT_MS);
       return;
     }
     clearTimer();
@@ -81,24 +82,39 @@ export const ConfirmButton = ({
     else disarm();
   };
 
+  const shared = {
+    onClick: click,
+    onBlur: (event: React.FocusEvent<HTMLButtonElement>) => {
+      onBlur?.(event);
+      if (armed) disarmAfter(BLUR_DISARM_MS);
+    },
+    onKeyDown: (event: React.KeyboardEvent<HTMLButtonElement>) => {
+      onKeyDown?.(event);
+      if (armed && event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
+        disarm();
+      }
+    },
+    title: armed ? confirmTitle ?? title : title,
+    'aria-label': armed ? confirmAriaLabel ?? ariaLabel : ariaLabel,
+    'data-armed': armed || undefined,
+  };
+
+  if (plain) {
+    const { className, disabled, type, id } = props;
+    return (
+      <button type={type ?? 'button'} id={id} className={className} disabled={disabled} {...shared}>
+        {icon}
+        {armed ? confirmLabel : label}
+      </button>
+    );
+  }
+
   return (
     <RetroButton
       {...props}
-      onClick={click}
-      onBlur={(event) => {
-        onBlur?.(event);
-        if (armed) disarmAfter(BLUR_DISARM_MS);
-      }}
-      onKeyDown={(event) => {
-        onKeyDown?.(event);
-        if (armed && event.key === 'Escape') {
-          event.preventDefault();
-          event.stopPropagation();
-          disarm();
-        }
-      }}
-      title={armed ? confirmTitle ?? title : title}
-      aria-label={armed ? confirmAriaLabel ?? ariaLabel : ariaLabel}
+      {...shared}
     >
       {icon}
       {armed ? confirmLabel : label}

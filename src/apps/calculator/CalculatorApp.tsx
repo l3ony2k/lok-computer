@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { ConfirmButton } from '@/components/ui/ConfirmButton';
 import { toast } from 'sonner';
 import { copyText } from '@/lib/clipboard';
 import { Delete } from 'lucide-react';
@@ -224,9 +225,7 @@ export const CalculatorApp: React.FC<CalculatorAppProps> = () => {
             <section className="calculator-tape" aria-label="Tape">
               <div className="calculator-tape-header">
                 <span>Tape</span>
-                <RetroButton size="sm" onClick={clearTape} disabled={stored.tape.length === 0}>
-                  Clear
-                </RetroButton>
+                <ConfirmButton size="sm" onConfirm={clearTape} disabled={stored.tape.length === 0} label="Clear" confirmLabel="Clear tape?" confirmTitle="Click again to clear the tape" />
               </div>
               {stored.tape.length === 0 ? (
                 <p className="calculator-tape-empty">No calculations yet</p>

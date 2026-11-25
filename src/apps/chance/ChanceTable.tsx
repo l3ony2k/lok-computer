@@ -1,4 +1,5 @@
 import { useCallback, useContext, useEffect, useLayoutEffect, useRef, type KeyboardEvent, type ReactNode, type Ref } from 'react';
+import { ConfirmButton } from '@/components/ui/ConfirmButton';
 import { Plus } from 'lucide-react';
 import { RetroButton } from '@/components/ui/RetroButton';
 import { useDismiss, type DismissReason } from '@/hooks/useDismiss';
@@ -159,7 +160,7 @@ export const ChanceTable = <T,>({ label, setup, children, result, action, action
           <div className="chance-history-head">
             <span className="chance-history-title">{history.title}</span>
             {historyCount > 0 && (
-              <button type="button" className="chance-history-clear" onClick={history.onClear}>Clear</button>
+              <ConfirmButton plain className="chance-history-clear" onConfirm={history.onClear} label="Clear" confirmLabel="Clear all?" confirmTitle="Click again to clear the history" />
             )}
           </div>
           {historyCount > 0 && history.summary && <span className="chance-history-summary">{history.summary}</span>}

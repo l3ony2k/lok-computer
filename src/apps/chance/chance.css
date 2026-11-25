@@ -401,6 +401,12 @@ html:not([data-chrome="classic"]) .chance-segmented .retro-button[aria-checked="
     color: var(--text-color);
 }
 
+/* Armed: the second click clears, so it reads as a question in the text colour. */
+.chance-history-clear[data-armed] {
+    color: var(--text-color);
+    font-weight: 700;
+}
+
 .chance-history-summary,
 .chance-history-empty {
     margin: 0;

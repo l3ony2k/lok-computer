@@ -1245,7 +1245,7 @@
         gap: 5px;
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: 767px) {
         .app-toolbar-row,
         .app-footer-row {
             min-height: 43px;
@@ -1911,7 +1911,7 @@
 
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: 767px) {
         .arena-toolbar-control {
             height: 32px;
             min-height: 32px;
