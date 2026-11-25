@@ -16,7 +16,7 @@ const HoverCardContent = React.forwardRef<
     align={align}
     sideOffset={sideOffset}
     className={cn(
-      "menu-surface z-50 w-64 p-4 text-popover-foreground outline-none",
+      "menu-surface z-[var(--z-popover)] w-64 p-4 text-popover-foreground outline-none",
       className
     )}
     {...props}

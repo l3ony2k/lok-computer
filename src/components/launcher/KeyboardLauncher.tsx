@@ -182,7 +182,7 @@ export const KeyboardLauncher: React.FC = () => {
 
   return createPortal(
     <div
-      className="launcher-scrim fixed inset-0 z-[10001]"
+      className="launcher-scrim fixed inset-0 z-[var(--z-launcher)]"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) close();
       }}

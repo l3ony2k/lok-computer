@@ -250,7 +250,7 @@ export const Oneko: React.FC = () => {
                 imageRendering: 'pixelated',
                 left: 16,
                 top: 16,
-                zIndex: 2147483647,
+                zIndex: 'var(--z-top)',
                 backgroundImage: `url(${nekoFile})`,
                 pointerEvents: 'none',
             }}

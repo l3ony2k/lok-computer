@@ -7,7 +7,7 @@
 .panic-screen {
     position: fixed;
     inset: 0;
-    z-index: 2147483000;
+    z-index: var(--z-system-screen);
     display: flex;
     overflow: auto;
     cursor: default;

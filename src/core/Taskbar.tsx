@@ -75,7 +75,7 @@ export const Taskbar = ({ layout = 'lok' }: { layout?: DesktopLayout }) => {
 
   return (
     <div
-      className="taskbar flex items-center text-sm relative z-50 select-none"
+      className="taskbar flex items-center text-sm relative z-[var(--z-taskbar)] select-none"
       data-layout={layout}
       role="toolbar"
       aria-label="Taskbar"

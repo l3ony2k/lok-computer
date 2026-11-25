@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { CustomIcon } from '@/components/window/CustomIcon';
 import { ContextMenu } from '@/components/menu/ContextMenu';
 import type { MenuEntry } from '@/components/menu/MenuItems';
@@ -391,6 +392,8 @@ export const DesktopIcons: React.FC = React.memo(() => {
 
   const draggedApp = drag ? APPS_BY_TYPE.get(drag.type) : undefined;
   const pixelated = desktop.iconSize === 'l';
+  // The desktop container: the icons layer's parent, mounted whenever a drag is under way.
+  const ghostHost = drag ? layerRef.current?.parentElement : null;
 
   if (!desktop.showIcons) return null;
 
@@ -398,7 +401,7 @@ export const DesktopIcons: React.FC = React.memo(() => {
     <>
       <div
         ref={layerRef}
-        className={`desktop-icons-layer absolute inset-3 z-10 select-none ${free ? '' : 'flex flex-col flex-wrap-reverse content-start gap-3'}`}
+        className={`desktop-icons-layer absolute inset-3 z-[var(--z-desktop-icons)] select-none ${free ? '' : 'flex flex-col flex-wrap-reverse content-start gap-3'}`}
         data-rearranging={drag ? 'true' : undefined}
         data-free={free || undefined}
       >
@@ -420,23 +423,27 @@ export const DesktopIcons: React.FC = React.memo(() => {
             onContextMenu={handleContextMenu(app.componentType)}
           />
         ))}
-        {drag && draggedApp && (
-          <div
-            className="desktop-icon-ghost flex flex-col items-center justify-center gap-2 p-1"
-            aria-hidden="true"
-            style={{
-              width: drag.width,
-              height: drag.height,
-              transform: `translate(${drag.x - drag.offsetX}px, ${drag.y - drag.offsetY}px)`,
-            }}
-          >
-            <span className="desktop-icon-image flex items-center justify-center">
-              <CustomIcon iconType={draggedApp.iconType} className="desktop-icon-glyph" pixelated={pixelated} />
-            </span>
-            <span className="desktop-icon-label max-w-full text-center text-xs font-bold leading-tight">{draggedApp.name}</span>
-          </div>
-        )}
       </div>
+
+      {/* The ghost goes beside the window layer, not in the icons layer (which sits under every window),
+          so a dragged icon stays visible over windows: --z-icon-ghost is above the window band. */}
+      {drag && draggedApp && ghostHost && createPortal(
+        <div
+          className="desktop-icon-ghost flex flex-col items-center justify-center gap-2 p-1"
+          aria-hidden="true"
+          style={{
+            width: drag.width,
+            height: drag.height,
+            transform: `translate(${drag.x - drag.offsetX}px, ${drag.y - drag.offsetY}px)`,
+          }}
+        >
+          <span className="desktop-icon-image flex items-center justify-center">
+            <CustomIcon iconType={draggedApp.iconType} className="desktop-icon-glyph" pixelated={pixelated} />
+          </span>
+          <span className="desktop-icon-label max-w-full text-center text-xs font-bold leading-tight">{draggedApp.name}</span>
+        </div>,
+        ghostHost,
+      )}
 
       <ContextMenu
         items={menuItems}

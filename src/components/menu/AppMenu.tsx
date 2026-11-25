@@ -27,7 +27,7 @@ export const AppMenu: React.FC<AppMenuProps> = ({ items, isOpen, placement = 'to
   // Portaled so the taskbar's stacking context cannot trap the menu below windows.
   return createPortal(
     <div
-      className="fixed inset-0 z-[10000]"
+      className="fixed inset-0 z-[var(--z-menu)]"
       onClick={handleOutsideClick}
       onContextMenu={(event) => event.preventDefault()}
     >

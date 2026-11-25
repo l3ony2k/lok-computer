@@ -188,6 +188,43 @@
 }
 
 @layer base {
+    /*
+     * The page's z-index scale. Every stacking value above 10 lives here, so
+     * the order of the layers can be read in one place (src/lib/zIndex.test.ts
+     * checks that no stylesheet or component writes its own).
+     *
+     * Inside the desktop (.desktop-container isolates, so all of this sits
+     * under the taskbar and every overlay): the wallpaper, the icons, then the
+     * windows, which the window manager numbers from FIRST_Z_INDEX (1000) up
+     * (src/lib/windowZOrder.ts). Above the window band: the icon being
+     * dragged and the snap preview.
+     *
+     * Page level: the taskbar and hover cards, menus and flyouts, the launcher,
+     * then the system layers near the top of the 32-bit range.
+     */
+    :root {
+        --z-wallpaper: -1;
+        --z-desktop-icons: 10;
+        --z-icon-ghost: 99999;
+        --z-snap-preview: 100000;
+        --z-taskbar: 50;
+        --z-popover: 50;
+        --z-menu: 10000;
+        --z-launcher: 10001;
+        --z-window-transition: 2147482000;
+        /* Boot and reboot screens, the kernel panic, BIOS setup. */
+        --z-system-screen: 2147483000;
+        --z-oobe: 2147483100;
+        --z-system-dialog: 2147483150;
+        /* Toasts stay readable over the boot, panic and BIOS screens. */
+        --z-toast: 2147483200;
+        --z-crt-vignette: 2147483646;
+        /* CRT scanlines, and Oneko, who walks on top of them. */
+        --z-top: 2147483647;
+    }
+}
+
+@layer base {
     * {
         @apply border-border;
         box-sizing: border-box;
@@ -403,7 +440,7 @@
     .desktop-wallpaper {
         position: absolute;
         inset: 0;
-        z-index: -1;
+        z-index: var(--z-wallpaper);
         width: 100%;
         height: 100%;
         object-fit: cover;
@@ -1018,7 +1055,7 @@
         position: fixed;
         top: 0;
         left: 0;
-        z-index: 9999;
+        z-index: var(--z-icon-ghost);
         pointer-events: none;
         color: var(--text-color);
         opacity: 0.9;
@@ -1075,7 +1112,7 @@
     /* Where a dragged window lands when dropped (Alt held, or the pointer at the desktop's edge). */
     .window-snap-preview {
         position: absolute;
-        z-index: 100000;
+        z-index: var(--z-snap-preview);
         box-sizing: border-box;
         border: 2px dashed var(--block-border);
         background: color-mix(in srgb, var(--button-hover) 55%, transparent);
@@ -1337,7 +1374,7 @@
     .arena-file-filter-menu {
         position: fixed;
         min-width: 150px;
-        z-index: 10000;
+        z-index: var(--z-menu);
     }
 
     .arena-file-filter-menu label {
@@ -2807,7 +2844,7 @@
 /* Geometry-only window transitions avoid cloning live app content. */
 .window-transition-ghost {
     position: fixed;
-    z-index: 2147482000;
+    z-index: var(--z-window-transition);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -3589,7 +3626,7 @@ a:hover .animate-marquee-if-overflow {
     width: 100%;
     height: 100%;
     pointer-events: none;
-    z-index: 2147483647;
+    z-index: var(--z-top);
     background: repeating-linear-gradient(0deg,
             rgba(255, 255, 255, calc(0.08 * var(--crt-scanlines) / 100)) 0px,
             rgba(255, 255, 255, calc(0.08 * var(--crt-scanlines) / 100)) 2px,
@@ -3606,7 +3643,7 @@ a:hover .animate-marquee-if-overflow {
     width: 100%;
     height: 100%;
     pointer-events: none;
-    z-index: 2147483646;
+    z-index: var(--z-crt-vignette);
     background: radial-gradient(ellipse at center,
             transparent 50%,
             rgba(0, 0, 0, calc(0.5 * var(--crt-curvature) / 100)) 100%);
@@ -4044,7 +4081,7 @@ a:hover .animate-marquee-if-overflow {
 .system-dialog-overlay {
     position: fixed;
     inset: 0;
-    z-index: 2147483150;
+    z-index: var(--z-system-dialog);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -4093,7 +4130,7 @@ a:hover .animate-marquee-if-overflow {
 .oobe-overlay {
     position: fixed;
     inset: 0;
-    z-index: 2147483100;
+    z-index: var(--z-oobe);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -4500,7 +4537,7 @@ a:hover .animate-marquee-if-overflow {
 .system-boot-screen {
     position: fixed;
     inset: 0;
-    z-index: 2147483000;
+    z-index: var(--z-system-screen);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -4646,7 +4683,7 @@ a:hover .animate-marquee-if-overflow {
  * through :where(), so the theme face only has to be named here.
  */
 [data-sonner-toaster] {
-    z-index: 2147483200 !important;
+    z-index: var(--z-toast) !important;
     font-family: var(--font-ui);
 }
 

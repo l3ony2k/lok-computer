@@ -104,7 +104,7 @@ export const Calendar: React.FC<CalendarProps> = ({
   // Portaled so the taskbar's stacking context cannot trap the panel below windows.
   return createPortal(
     <div
-      className="fixed inset-0 z-[10000]"
+      className="fixed inset-0 z-[var(--z-menu)]"
       onClick={handleOutsideClick}
     >
       <div className="menu-surface calendar-panel p-3 select-none" data-placement={placement} role="dialog" aria-label="Calendar and clock">

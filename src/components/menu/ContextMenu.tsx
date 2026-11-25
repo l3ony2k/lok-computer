@@ -44,7 +44,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ items, isOpen, positio
     return createPortal(
         <div
             ref={menuRef}
-            className="menu-surface context-menu fixed min-w-[160px] select-none z-[10000]"
+            className="menu-surface context-menu fixed min-w-[160px] select-none z-[var(--z-menu)]"
             role="menu"
             style={{ left: 0, top: 0 }}
             onContextMenu={(event) => event.preventDefault()}
