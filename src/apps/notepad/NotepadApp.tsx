@@ -249,7 +249,7 @@ export const NotepadApp: React.FC<NotepadAppProps> = () => {
         </div>
       ) : undefined}
       footer={
-        <div className="app-footer-row notepad-footer">
+        <div className="app-footer-row app-footer-note">
           <span>{active ? `${words} ${words === 1 ? 'word' : 'words'} · ${text.length} characters` : `${state.entries.length} ${state.entries.length === 1 ? 'note' : 'notes'}`}</span>
           <span className="notepad-footer-right">{active?.updatedAt ? `Saved ${formatDate(active.updatedAt)}` : 'Saved in this browser'}</span>
         </div>

@@ -313,7 +313,7 @@ export const About: React.FC<AboutProps> = ({ initialTab, onPropsChange }) => {
         <TabStrip tabs={ABOUT_TABS} selected={activeTab} onSelect={handleTabChange} label="About" />
       }
       footer={
-        <div className="app-footer-row arena-file-footer">
+        <div className="app-footer-row app-footer-note">
           <span>v{SYSTEM_VERSION}</span>
           <span>lok</span>
         </div>

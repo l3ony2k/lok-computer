@@ -52,4 +52,41 @@ describe('form controls', () => {
     }
     expect(offenders).toEqual([]);
   });
+
+  /**
+   * A window footer is an `.app-footer-row` (with `.app-footer-note` for small
+   * muted status text and `.app-footer-actions` for its buttons), so every theme
+   * styles one footer. A hand-written footer row (Are.na once had its own)
+   * misses the themes' status-bar rules.
+   */
+  it('builds every window footer from app-footer-row', async () => {
+    const offenders: string[] = [];
+    for await (const file of new Glob('src/**/*.tsx').scan({ cwd: process.cwd() })) {
+      const lines = (await Bun.file(file).text()).split('\n');
+      lines.forEach((line, index) => {
+        if (!/\bfooter=\{/.test(line)) return;
+        if (!/\bapp-footer-row\b/.test(lines.slice(index, index + 4).join('\n'))) offenders.push(`${file}:${index + 1}`);
+      });
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  /**
+   * Popups portal into getOverlayRoot(), so inside the Palm phone frame they
+   * open in the frame. The Palm confirmation is the one exception: it covers
+   * the whole screen before the frame exists.
+   */
+  it('portals popups into the overlay root', async () => {
+    const allowed = new Set(['src/components/system/ThemePicker.tsx']);
+    const offenders: string[] = [];
+    for await (const file of new Glob('src/**/*.tsx').scan({ cwd: process.cwd() })) {
+      if (allowed.has(file)) continue;
+      const text = await Bun.file(file).text();
+      if (!/\bcreatePortal\(/.test(text)) continue;
+      text.split('\n').forEach((line, index) => {
+        if (/^\s*document\.body\s*,?\s*\)?\s*$|,\s*document\.body\s*\)/.test(line)) offenders.push(`${file}:${index + 1}: ${line.trim()}`);
+      });
+    }
+    expect(offenders).toEqual([]);
+  });
 });

@@ -65,11 +65,11 @@ html[data-chrome="classic"]:not(#_) :where(
 
 html[data-chrome="classic"]:not(#_) :where(
     .text-xs, .text-sm, .text-base,
-    .app-readout, .arena-address-bar, .arena-detail-action, .arena-detail-comment, .arena-detail-connection,
+    .app-readout, .arena-detail-action, .arena-detail-comment, .arena-detail-connection,
     .arena-detail-load-more, .arena-detail-meta, .arena-file-card-large .arena-file-grid-preview,
     .arena-file-card-medium .arena-file-grid-preview, .arena-file-card-small .arena-file-item-title,
     .arena-file-error, .arena-file-table, .arena-file-table-large, .arena-file-table-medium,
-    .arena-file-text-preview, .arena-file-toolbar, .arena-toolbar-control, .ask-ai-best-answer span,
+    .arena-file-text-preview, .arena-toolbar-control, .ask-ai-best-answer span,
     .ask-ai-error, .ask-ai-field textarea, .ask-ai-intro p, .ask-ai-json pre, .ask-ai-property-title,
     .ask-ai-property[data-type="score"] .ask-ai-value strong, .ask-ai-request, .ask-ai-summary,
     .config-category-button, .config-checkbox-row, .config-input-label, .config-range-setting,
@@ -100,7 +100,7 @@ html[data-chrome="classic"]:not(#_) :where(
     .about-changelog-entry time, .about-changelog-version,
     .arena-detail-comment-header span, .arena-detail-connection > span:last-child,
     .arena-file-card-small .arena-file-grid-preview, .arena-file-card-small .arena-file-item-meta,
-    .arena-file-fallback-preview > span, .arena-file-footer, .arena-file-item-meta,
+    .app-footer-note, .arena-file-fallback-preview > span, .arena-file-item-meta,
     .arena-file-list-thumbnail span, .arena-file-table-small, .ask-ai-analytics > summary, .ask-ai-best-stats, .ask-ai-confidence, .ask-ai-content, .ask-ai-editor label, .ask-ai-editor textarea,
     .ask-ai-editor-error, .ask-ai-field, .ask-ai-json > summary, .ask-ai-meta, .ask-ai-noul small,
     .ask-ai-noul-scale, .ask-ai-notes, .ask-ai-options li, .ask-ai-progress, .ask-ai-question,
@@ -118,7 +118,7 @@ html[data-chrome="classic"]:not(#_) :where(
     .chance-hint, .chance-tarot-arcana, .chance-tarot-missing, .chance-tarot-orientation, .chance-tarot-position,
     .iching-number, .iching-line-label, .iching-throw-note, .iching-pinyin, .moon-history-count, .moon-phase,
     .chance-wheel-list-title, .chance-wheel-reset, .chance-wheel-hint, .chance-wheel-history-preset,
-    .clock-caption, .clock-row-meta, .notepad-empty-list, .notepad-footer, .notepad-list-meta,
+    .clock-caption, .clock-row-meta, .notepad-empty-list, .notepad-list-meta,
     #guestbooks___guestbook-messages-container p:first-child small
 ) {
     --c-type-size: var(--c-text-small);
@@ -572,11 +572,8 @@ html[data-chrome="classic"]:not(#_) .window-footer {
     padding: var(--c-status-padding, 2px);
 }
 
-html[data-chrome="classic"]:not(#_) :where(.app-toolbar-row, .arena-address-bar, .arena-file-toolbar) {
+html[data-chrome="classic"]:not(#_) :where(.app-toolbar-row) {
     background: var(--c-toolbar-bg, var(--c-face));
-}
-
-html[data-chrome="classic"]:not(#_) :where(.app-toolbar-row, .arena-address-bar) {
     border-bottom: var(--c-toolbar-border);
     box-shadow: var(--c-toolbar-shadow, none);
 }
@@ -586,7 +583,7 @@ html[data-chrome="classic"]:not(#_) .app-toolbar-stack > .app-toolbar-row:last-c
     box-shadow: none;
 }
 
-html[data-chrome="classic"]:not(#_) :where(.app-footer-row, .arena-file-footer) {
+html[data-chrome="classic"]:not(#_) :where(.app-footer-row) {
     min-height: 24px;
     padding: 2px 6px;
     color: var(--text-color);
