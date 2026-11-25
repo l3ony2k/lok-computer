@@ -78,7 +78,7 @@ All persistence goes through a single IndexedDB wrapper with three stores:
 - `apiCache` — TTL-based response cache (Weather: 10m, Are.na: 30m–1h, social feeds: 5m)
 - `usageStats` — request/cache hit counters
 
-Use `usePersistedState` for view-state lifecycle and `cachedRequest` for remote reads; do not reproduce cache lookup, request accounting, fetch and cache write in app modules. App modules should retain only source-specific URL, status, and decoding knowledge. Verbose cache logging is off by default and toggled in Config › Debug.
+Delayed saves go through `createDebouncedWrite` in `src/lib/debouncedWrite.ts`, which flushes on `pagehide` with a synchronous copy (`setAppStateOnUnload`); never hand-roll a `setTimeout` before a storage write (`delayedSaves.test.ts` checks). Use `usePersistedState` for view-state lifecycle and `cachedRequest` for remote reads; do not reproduce cache lookup, request accounting, fetch and cache write in app modules. App modules should retain only source-specific URL, status, and decoding knowledge. Verbose cache logging is off by default and toggled in Config › Debug.
 
 ### Offline
 
@@ -127,7 +127,7 @@ The Are.na app (`src/apps/arena/`) fetches channel/block data from the Are.na v3
 
 Use `ARENA_WINDOW_DEFAULTS` in the Application catalog. `useArenaChannelBrowsing` owns remote/in-memory pagination, ordering, cancellation, dedupe, and selection restoration. Shared file rendering lives in `src/apps/arena/components/ArenaFileView.tsx`, preview/detail rendering in `ArenaDetailPanel.tsx`.
 
-lok marks image-heavy channels with `🜳` in the title (`IMAGE_CHANNEL_MARK` in `src/config/channels.ts`). The Images app suggests those from the live channel list (`getUserChannels`, cached at boot); `FEATURED_CHANNELS` is a snapshot that seeds the buttons and stands in when Are.na cannot be reached. The account name is `APP_CONFIG.ARENA_USERNAME`.
+lok marks image-heavy channels with `🜳` in the title (`IMAGE_CHANNEL_MARK` in `src/config/channels.ts`). The Images app suggests those from the live channel list (`useUserChannels` in `src/hooks/`, one React Query query that the boot screen warms and background refreshes reach; never call `getUserChannels` directly, `useUserChannels.test.ts` checks); `FEATURED_CHANNELS` is a snapshot that seeds the buttons and stands in when Are.na cannot be reached. The account name is `APP_CONFIG.ARENA_USERNAME`.
 
 ### Desktop Icons
 

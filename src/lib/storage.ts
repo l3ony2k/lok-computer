@@ -193,6 +193,23 @@ const takeUnloadCopy = <T>(key: string): { value: T } | null => {
     }
 };
 
+/*
+ * Once IndexedDB holds the same value, the unload copy is spent. Left in place it
+ * would win over newer saves on a later load (after a back/forward-cache restore).
+ * Only a copy of exactly this value is removed, so an older write finishing late
+ * never discards a newer copy.
+ */
+const clearUnloadCopyIfSaved = (key: string, value: unknown): void => {
+    try {
+        const raw = localStorage.getItem(UNLOAD_PREFIX + key);
+        if (raw !== null && raw === JSON.stringify(value)) {
+            localStorage.removeItem(UNLOAD_PREFIX + key);
+        }
+    } catch {
+        // localStorage blocked: nothing to clear.
+    }
+};
+
 /** Saves app state while the page unloads: a synchronous copy first, then the usual write. */
 export const setAppStateOnUnload = <T>(key: string, value: T): void => {
     try {
@@ -223,6 +240,7 @@ export const getAppState = async <T>(key: string): Promise<T | null> => {
 export const setAppState = async <T>(key: string, value: T): Promise<void> => {
     try {
         await setInStore(STORES.APP_STATE, key, value);
+        clearUnloadCopyIfSaved(key, value);
     } catch (error) {
         console.error(`[Storage] Failed to set app state for key "${key}":`, error);
     }
