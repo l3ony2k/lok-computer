@@ -1,9 +1,9 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, FolderOpen } from 'lucide-react';
 import { WindowLayout } from '@/components/window/WindowLayout';
 import { RetroButton } from '@/components/ui/RetroButton';
 import { FEATURED_CHANNELS, imageChannelLabel, isImageChannel } from '@/config/channels';
-import { getUserChannels } from '@/lib/api';
+import { useUserChannels } from '@/hooks/useUserChannels';
 import {
   formatArenaReference,
   getArenaImage,
@@ -106,7 +106,6 @@ export const ImageViewerApp: React.FC<ImageViewerAppProps> = ({
   const [address, setAddress] = useState(() => arena ?? (imageUrl && !imageUrl.startsWith('blob:') ? imageUrl : ''));
   const [addressInvalid, setAddressInvalid] = useState(false);
   const [isDropping, setIsDropping] = useState(false);
-  const [suggestions, setSuggestions] = useState<SuggestedChannel[]>(SNAPSHOT_SUGGESTIONS);
 
   // Scale: 1.0 = 100% = image displayed at its natural pixel size
   const [scale, setScale] = useState<number>(1);
@@ -215,18 +214,12 @@ export const ImageViewerApp: React.FC<ImageViewerAppProps> = ({
   }, [arena, initialIndex, openArena, startBlockId]);
 
   // Suggestions follow the live channel list: whatever lok marks with 🜳 now.
-  useEffect(() => {
-    let cancelled = false;
-    getUserChannels()
-      .then((channels) => {
-        const live = toSuggestions(channels);
-        if (!cancelled && live.length) setSuggestions(live);
-      })
-      .catch(() => undefined);
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  // The bundled snapshot stands in until (and unless) the live list has some.
+  const { data: liveChannels } = useUserChannels();
+  const suggestions = useMemo<SuggestedChannel[]>(() => {
+    const live = liveChannels ? toSuggestions(liveChannels) : [];
+    return live.length ? live : SNAPSHOT_SUGGESTIONS;
+  }, [liveChannels]);
 
   // Report what's open so the window restores and shares it. Local files can't be.
   useEffect(() => {

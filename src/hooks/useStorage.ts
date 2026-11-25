@@ -3,7 +3,7 @@
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { getAppState, setAppState, setAppStateOnUnload } from '@/lib/storage';
-import { createDebouncedWrite, type DebouncedWrite } from '@/lib/debouncedWrite';
+import { createDebouncedWrite, flushOnPageHide, type DebouncedWrite } from '@/lib/debouncedWrite';
 
 export interface PersistedStateOptions<T> {
     key: string;
@@ -117,10 +117,9 @@ export const usePersistedState = <T>({
     // Closing the window writes what is pending now; leaving the page also
     // keeps a synchronous copy, since IndexedDB may not finish in time.
     useEffect(() => {
-        const flushOnUnload = () => writer.flush(true);
-        window.addEventListener('pagehide', flushOnUnload);
+        const stopListening = flushOnPageHide(writer);
         return () => {
-            window.removeEventListener('pagehide', flushOnUnload);
+            stopListening();
             writer.flush();
         };
     }, [writer]);
