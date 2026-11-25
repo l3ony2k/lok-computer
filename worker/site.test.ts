@@ -133,6 +133,16 @@ describe("agent-facing site routing", () => {
     }
   });
 
+  test("a $ sequence in the path is inserted literally, not as a replacement pattern", async () => {
+    const { handle } = createContext("/explorer/a$'b$&c", {
+      headers: { Accept: "text/html" },
+    });
+    const html = await (await handle()).text();
+
+    expect(html.match(/<noscript id="agent-static-content">/g)?.length).toBe(1);
+    expect(html).not.toContain("old fallback");
+  });
+
   test("serves every deep link from the shell at / and never caches it", async () => {
     const { handle, getAssetPaths } = createContext("/explorer/example-channel", {
       headers: { Accept: "text/html" },

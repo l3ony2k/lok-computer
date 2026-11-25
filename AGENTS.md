@@ -24,7 +24,7 @@ Path alias `@/` maps to `./src/`.
 ## Repository Layout
 
 - `src/` the React desktop; `public/` static files served as is (`llms.txt`, `openapi.json`, buttons, `_headers`).
-- `worker/` the Cloudflare Worker and its tests: `worker.js` (entry point and the API), `jev.js` (the Ask AI pipeline), `site.ts` and `agent-content.ts` (deep links, agent-facing Markdown, the 404 rule); `wrangler.toml` configures it. The text documents themselves (`/`, `/about`, `/privacy`, `/contact`, `/developers`) live in `src/config/documents.ts`, shared with the app.
+- `worker/` the Cloudflare Worker and its tests: `worker.js` (entry point and the API), `http.ts` (shared headers, discovery links, JSON errors, rate limiting), `proxy.ts` (the one proxy helper behind the credentialed routes), `jev.js` (the Ask AI pipeline), `site.ts` and `agent-content.ts` (deep links, agent-facing Markdown, the 404 rule); `wrangler.toml` configures it. The text documents themselves (`/`, `/about`, `/privacy`, `/contact`, `/developers`) live in `src/config/documents.ts`, shared with the app.
 - `scripts/pixel-icons.mjs` generates the app icons; `docs/` holds the developer docs, the glossary of domain terms, and the development log.
 - `promo/` is a separate, untracked video project (ignored by git and ESLint).
 

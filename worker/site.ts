@@ -129,8 +129,8 @@ function withDiscoveryHeaders(response: Response): Response {
 
 function injectAgentContent(html: string, content: string): string {
   const marker = /<noscript id="agent-static-content">[\s\S]*?<\/noscript>/;
-  if (marker.test(html)) return html.replace(marker, content);
-  return html.replace("</body>", `${content}</body>`);
+  if (marker.test(html)) return html.replace(marker, () => content);
+  return html.replace("</body>", () => `${content}</body>`);
 }
 
 /**
