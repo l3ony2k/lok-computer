@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { getOverlayRoot } from '@/lib/overlayRoot';
 import { Search } from 'lucide-react';
 import { CustomIcon } from '@/components/window/CustomIcon';
+import { useDismiss } from '@/hooks/useDismiss';
 import { useApplicationLauncher } from '@/hooks/useApplicationLauncher';
 import { APP_LIST } from '@/config/apps';
 import { APP_CONFIG } from '@/config/constants';
@@ -84,6 +85,9 @@ export const KeyboardLauncher: React.FC = () => {
     };
   }, [isOpen, channels.length]);
 
+  // The scrim catches outside presses; Escape closes from anywhere.
+  useDismiss(isOpen, close);
+
   useEffect(() => {
     if (isOpen) inputRef.current?.focus({ preventScroll: true });
   }, [isOpen]);
@@ -154,9 +158,6 @@ export const KeyboardLauncher: React.FC = () => {
       event.preventDefault();
       const item = results[activeIndex];
       if (item) run(item);
-    } else if (event.key === 'Escape') {
-      event.preventDefault();
-      close();
     }
   };
 
@@ -175,8 +176,8 @@ export const KeyboardLauncher: React.FC = () => {
         role="option"
         aria-selected={index === activeIndex}
         data-index={index}
-        data-active={index === activeIndex || undefined}
-        className="launcher-item menu-item-button flex items-center select-none"
+        data-highlighted={index === activeIndex ? '' : undefined}
+        className="menu-item-button flex items-center select-none"
         onMouseMove={() => setActiveIndex(index)}
         onClick={() => run(item)}
       >
@@ -214,7 +215,7 @@ export const KeyboardLauncher: React.FC = () => {
           />
           <kbd className="launcher-shortcut">{launcherShortcutLabel()}</kbd>
         </div>
-        <div ref={listRef} id="launcher-results" className="launcher-results scrollable-area" role="listbox">
+        <div ref={listRef} id="launcher-results" className="launcher-results scrollable-area" role="listbox" data-follow-pointer="">
           {results.length === 0 && <div className="launcher-empty">Nothing matches “{query}”</div>}
           {grouped
             ? grouped.map((group) => (

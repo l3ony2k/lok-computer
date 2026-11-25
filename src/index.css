@@ -532,8 +532,10 @@
         text-align: left;
     }
 
-    /* [data-highlighted]: the keyboard's option in a dropdown list looks like a hovered item. */
-    .menu-item-button:is(:hover, [data-highlighted]):not(:disabled, [aria-disabled="true"]) {
+    /* [data-highlighted]: the keyboard's option in a dropdown list looks like a hovered item.
+       In a list marked [data-follow-pointer] (the launcher) the pointer moves that
+       highlight, so hover alone never shades a second row. */
+    .menu-item-button:is(:hover:not(:where([data-follow-pointer] *)), [data-highlighted]):not(:disabled, [aria-disabled="true"]) {
         background: var(--button-hover);
     }
 
@@ -682,21 +684,6 @@
         letter-spacing: 0;
         text-transform: none;
         color: var(--log-muted);
-    }
-
-    .launcher-item {
-        width: 100%;
-        gap: 8px;
-    }
-
-    /* The highlight follows the keyboard and the pointer through data-active, never a second hover shade. */
-    .launcher-item:hover:not(:disabled) {
-        background: transparent;
-    }
-
-    .launcher-item[data-active],
-    .launcher-item[data-active]:hover {
-        background: var(--button-hover);
     }
 
     .launcher-item-icon {
