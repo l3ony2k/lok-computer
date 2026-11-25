@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { ArenaChannel, ArenaItem } from "@/types/arena";
-import { getUserChannels } from "@/lib/api";
+import { useUserChannels } from "@/hooks/useUserChannels";
 import { APP_CONFIG } from "@/config/constants";
 import { useApplicationLauncher } from "@/hooks/useApplicationLauncher";
 import { usePersistedState } from "@/hooks/useStorage";
@@ -14,6 +14,7 @@ import {
   normalizeArenaFileViewState,
 } from "../components/arenaFileViewState";
 
+const NO_CHANNELS: ArenaChannel[] = [];
 const VIEW_STATE_KEY = "app:arena-browser";
 const DEFAULT_FILE_STATE = createArenaFileViewState({
   view: "list",
@@ -22,9 +23,10 @@ const DEFAULT_FILE_STATE = createArenaFileViewState({
 });
 
 export const ChannelBrowser: React.FC<{ username?: string }> = ({ username = APP_CONFIG.ARENA_USERNAME }) => {
-  const [channels, setChannels] = useState<ArenaChannel[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const channelsQuery = useUserChannels(username);
+  const channels = channelsQuery.data ?? NO_CHANNELS;
+  const loading = channelsQuery.isPending;
+  const loadError = channelsQuery.isError ? "Failed to load channels" : null;
   const [address, setAddress] = useState("");
   const [selectedChannel, setSelectedChannel] = useState<ArenaChannel | null>(null);
   const [fileState, setFileState] = usePersistedState<ArenaFileViewState>({
@@ -34,25 +36,6 @@ export const ChannelBrowser: React.FC<{ username?: string }> = ({ username = APP
     normalize: (stored) => normalizeArenaFileViewState(stored as StoredArenaFileViewState, DEFAULT_FILE_STATE),
   });
   const openApplication = useApplicationLauncher();
-
-  useEffect(() => {
-    let active = true;
-    const fetchChannels = async () => {
-      try {
-        setLoading(true);
-        setLoadError(null);
-        const fetchedChannels = await getUserChannels(username);
-        if (active) setChannels(fetchedChannels);
-      } catch (error) {
-        console.error("Error fetching user channels", error);
-        if (active) setLoadError("Failed to load channels");
-      } finally {
-        if (active) setLoading(false);
-      }
-    };
-    fetchChannels();
-    return () => { active = false; };
-  }, [username]);
 
   const openChannel = (channel: ArenaChannel | { title: string; slug: string }) => {
     openApplication('ChannelExplorer', {

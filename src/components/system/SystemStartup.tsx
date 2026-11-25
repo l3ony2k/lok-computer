@@ -5,7 +5,8 @@ import { useUserSettings } from "@/hooks/useUserSettings";
 import { useTheme } from "@/hooks/useTheme";
 import { loadThemeStyles, THEMES } from "@/lib/theme";
 import { useWindowState } from "@/hooks/useWindowManager";
-import { getUserChannels } from "@/lib/api";
+import { useQueryClient } from "@tanstack/react-query";
+import { fetchUserChannels } from "@/hooks/useUserChannels";
 import { getUsageStats } from "@/lib/storage";
 import { consumeBootMode, consumeBootReason, SYSTEM_VERSION } from "@/lib/system";
 import { KernelPanic } from "./KernelPanic";
@@ -108,6 +109,7 @@ export const SystemStartup = ({ children }: { children: ReactNode }) => {
   const { isLoading: settingsLoading } = useUserSettings();
   const { isSessionRestored, windows } = useWindowState();
   const { theme } = useTheme();
+  const queryClient = useQueryClient();
   const [bootTheme] = useState(theme);
   const [stages, setStages] = useState(initialStages);
   const [preloadReady, setPreloadReady] = useState(false);
@@ -179,7 +181,7 @@ export const SystemStartup = ({ children }: { children: ReactNode }) => {
       });
 
       const cacheStartedAt = performance.now();
-      const cacheTask = withTimeout(getUserChannels(APP_CONFIG.ARENA_USERNAME), 5000)
+      const cacheTask = withTimeout(fetchUserChannels(queryClient, APP_CONFIG.ARENA_USERNAME), 5000)
         .then(async (channels) => {
           if (cancelled) return;
           const latency = Math.round(performance.now() - cacheStartedAt);
@@ -253,7 +255,7 @@ export const SystemStartup = ({ children }: { children: ReactNode }) => {
 
     void runPreload();
     return () => { cancelled = true; };
-  }, [bootMode, bootTheme]);
+  }, [bootMode, bootTheme, queryClient]);
 
   useEffect(() => {
     updateStage("settings", settingsLoading

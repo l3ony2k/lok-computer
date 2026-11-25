@@ -8,7 +8,7 @@ import { CustomIcon } from '@/components/window/CustomIcon';
 import { useApplicationLauncher } from '@/hooks/useApplicationLauncher';
 import { useTheme } from '@/hooks/useTheme';
 import { APP_LIST } from '@/config/apps';
-import { getUserChannels } from '@/lib/api';
+import { useUserChannels } from '@/hooks/useUserChannels';
 import { launcherShortcutLabel, openLauncher } from '@/lib/launcher';
 import { clearRecent, useRecentApps } from '@/lib/recentApps';
 import { rebootSystem, requestSystemUpdateCheck } from '@/lib/system';
@@ -21,6 +21,7 @@ interface LinkAppItem {
   };
 }
 
+const NO_CHANNELS: ArenaChannel[] = [];
 const arenaUsername = APP_LIST.find((app) => app.name === 'Are.na')?.props?.username;
 
 /**
@@ -30,20 +31,7 @@ const arenaUsername = APP_LIST.find((app) => app.name === 'Are.na')?.props?.user
 const useSystemMenuItems = () => {
   const openApplication = useApplicationLauncher();
   const recent = useRecentApps();
-  const [arenaChannels, setArenaChannels] = useState<ArenaChannel[]>([]);
-
-  useEffect(() => {
-    if (typeof arenaUsername !== 'string') return;
-
-    let cancelled = false;
-    void getUserChannels(arenaUsername)
-      .then((channels) => {
-        if (!cancelled) setArenaChannels(channels);
-      })
-      .catch((error) => console.error('Failed to fetch channels for app menu', error));
-
-    return () => { cancelled = true; };
-  }, []);
+  const { data: arenaChannels = NO_CHANNELS } = useUserChannels(typeof arenaUsername === 'string' ? arenaUsername : '');
 
   const applications = useMemo<MenuEntry[]>(() => APP_LIST.map((app) => {
     const item: MenuEntry = {

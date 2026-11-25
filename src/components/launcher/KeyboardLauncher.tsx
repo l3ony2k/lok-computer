@@ -6,13 +6,15 @@ import { CustomIcon } from '@/components/window/CustomIcon';
 import { useApplicationLauncher } from '@/hooks/useApplicationLauncher';
 import { APP_LIST } from '@/config/apps';
 import { APP_CONFIG } from '@/config/constants';
-import { getUserChannels } from '@/lib/api';
+import { useUserChannels } from '@/hooks/useUserChannels';
 import { rankFuzzy } from '@/lib/fuzzyMatch';
 import { LAUNCHER_OPEN_EVENT, isLauncherShortcut, launcherShortcutLabel } from '@/lib/launcher';
 import { useRecentApps } from '@/lib/recentApps';
 import { scrollIntoViewWithin } from '@/lib/utils';
 import { rebootSystem, requestSystemUpdateCheck } from '@/lib/system';
 import type { ArenaChannel } from '@/types/arena';
+
+const NO_CHANNELS: ArenaChannel[] = [];
 
 type LauncherGroup = 'Recent' | 'Applications' | 'Channels' | 'System';
 
@@ -40,7 +42,8 @@ export const KeyboardLauncher: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [activeIndex, setActiveIndex] = useState(0);
-  const [channels, setChannels] = useState<ArenaChannel[]>([]);
+  // Channels come from the list the boot screen already cached; loaded on first open.
+  const { data: channels = NO_CHANNELS } = useUserChannels(undefined, { enabled: isOpen });
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -69,20 +72,6 @@ export const KeyboardLauncher: React.FC = () => {
       document.removeEventListener('keydown', onKeyDown);
     };
   }, []);
-
-  // Channels come from the list the boot screen already cached.
-  useEffect(() => {
-    if (!isOpen || channels.length) return;
-    let cancelled = false;
-    getUserChannels()
-      .then((list) => {
-        if (!cancelled) setChannels(list);
-      })
-      .catch(() => undefined);
-    return () => {
-      cancelled = true;
-    };
-  }, [isOpen, channels.length]);
 
   useEffect(() => {
     if (isOpen) inputRef.current?.focus({ preventScroll: true });
