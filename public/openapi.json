@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "lok.computer Public API",
-    "version": "3.1.5",
+    "version": "3.4.0",
     "description": "Public REST endpoints used by the lok.computer browser desktop. Most operations read public data through an upstream provider. No caller API key is currently required. Upstream-dependent operations can fail independently of the credential-free status endpoint.",
     "contact": {
       "name": "Lok",
@@ -501,7 +501,7 @@
         }
       },
       "NotConfigured": {
-        "description": "The Worker is not configured for this provider.",
+        "description": "The route is not configured on this server, or the upstream service is rate limiting it (its Retry-After is passed on when given).",
         "content": {
           "application/json": {
             "schema": {
@@ -521,7 +521,7 @@
         }
       },
       "UpstreamFailure": {
-        "description": "The upstream service failed, could not be reached, or returned an unreadable reply.",
+        "description": "The upstream service could not answer: it was unreachable, replied with an error (5xx), sent an unreadable reply, or rejected this server's own credentials (401/403). Details are logged, never returned.",
         "content": {
           "application/json": {
             "schema": {

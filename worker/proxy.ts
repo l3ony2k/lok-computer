@@ -28,6 +28,26 @@ export interface ProxyRoute<Config extends Record<string, string | undefined>> {
   transform?: (data: unknown) => unknown;
 }
 
+/**
+ * A failed upstream reply, as the client should see it. 401/403 mean the
+ * server's own token is wrong or expired, which the client cannot fix, so they
+ * and 5xx are a 502. A 429 is a 503 that keeps `Retry-After`. Anything else
+ * (400, 404, ...) is usually the request's own fault and keeps its status.
+ */
+export function upstreamFailure(service: string, response: Response): Response {
+  const { status } = response;
+  if (status === 429) {
+    const reply = errorResponse(`${service} is busy. Try again shortly.`, 503);
+    const retryAfter = response.headers.get("Retry-After");
+    if (retryAfter) reply.headers.set("Retry-After", retryAfter);
+    return reply;
+  }
+  if (status === 401 || status === 403 || status >= 500) {
+    return errorResponse(`${service} is unavailable right now.`, 502);
+  }
+  return errorResponse(`${service} request failed (${status}).`, status);
+}
+
 function missingSettings(config: Record<string, string | undefined>): string[] {
   return Object.entries(config)
     .filter(([, value]) => !value)
@@ -38,8 +58,8 @@ function missingSettings(config: Record<string, string | undefined>): string[] {
  * The steps every proxy route shares: GET/HEAD only, the per-IP budget, the
  * configuration check, the authenticated upstream fetch, and one error shape.
  * Upstream replies and exception text are logged, never sent to the client.
- * A failed upstream reply keeps its status; a network failure or unreadable
- * reply is a 502, missing configuration a 503.
+ * Upstream failures are mapped by whose fault they are (`upstreamFailure`);
+ * a network failure or unreadable reply is a 502, missing configuration a 503.
  */
 export async function proxyJson<Config extends Record<string, string | undefined>>(
   request: Request,
@@ -79,7 +99,7 @@ export async function proxyJson<Config extends Record<string, string | undefined
     if (!response.ok) {
       const detail = await response.text().catch(() => "");
       console.error(`${service} API error:`, response.status, detail);
-      return errorResponse(`${service} request failed (${response.status}).`, response.status);
+      return upstreamFailure(service, response);
     }
 
     let data: unknown;

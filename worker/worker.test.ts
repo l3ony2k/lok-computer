@@ -258,19 +258,31 @@ describe("proxy routes share one helper", () => {
     });
   });
 
-  test("a failed upstream reply keeps its status but never its body", async () => {
+  test("a failed upstream reply maps by whose fault it is and never leaks its body", async () => {
     const secret = "token abc123 expired at internal-host:5432";
-    await withUpstream(() => new Response(secret, { status: 401 }), async (seen) => {
-      for (const { path, env, service } of proxyCases) {
-        const response = await worker.fetch(new Request(`https://lok.computer${path}`), env, {});
-        const text = await response.text();
+    const cases: Array<[number, number, (service: string) => string]> = [
+      [401, 502, (service) => `${service} is unavailable right now.`],
+      [403, 502, (service) => `${service} is unavailable right now.`],
+      [500, 502, (service) => `${service} is unavailable right now.`],
+      [503, 502, (service) => `${service} is unavailable right now.`],
+      [429, 503, (service) => `${service} is busy. Try again shortly.`],
+      [404, 404, (service) => `${service} request failed (404).`],
+      [400, 400, (service) => `${service} request failed (400).`],
+    ];
+    for (const [upstream, expected, message] of cases) {
+      await withUpstream(() => new Response(secret, { status: upstream, headers: { "Retry-After": "30" } }), async (seen) => {
+        for (const { path, env, service } of proxyCases) {
+          const response = await worker.fetch(new Request(`https://lok.computer${path}`), env, {});
+          const text = await response.text();
 
-        expect(response.status).toBe(401);
-        expect(JSON.parse(text)).toEqual({ error: `${service} request failed (401).` });
-        expect(text).not.toContain("abc123");
-      }
-      expect(seen.logged).toContain(secret);
-    });
+          expect(response.status).toBe(expected);
+          expect(JSON.parse(text)).toEqual({ error: message(service) });
+          expect(text).not.toContain("abc123");
+          expect(response.headers.get("Retry-After")).toBe(upstream === 429 ? "30" : null);
+        }
+        expect(seen.logged).toContain(secret);
+      });
+    }
   });
 
   test("an unreachable or unreadable upstream is a 502 without the exception text", async () => {
