@@ -14,6 +14,18 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '3.4.0',
+    date: '2026-11-25',
+    title: 'One of everything',
+    notes: [
+      'Settings and recent apps are kept even when you reload right after changing them, and the Are.na channel list refreshes everywhere at once.',
+      'Escape closes every menu and popup, dropdowns highlight one row at a time, and the launcher highlights like a menu in every theme.',
+      'Clear in Chance’s history and Calculator’s tape asks first, and a confirm button now waits for you instead of timing out.',
+      'A dragged desktop icon stays above the windows, Notepad links with & in them work, and iPad portrait gets the desktop layout.',
+      'Under the hood: one shared way to save, copy, measure, escape, stack and confirm, each with a test that keeps copies from coming back.',
+    ],
+  },
+  {
     version: '3.3.0',
     date: '2026-11-25',
     title: 'Eight tables of chance',
