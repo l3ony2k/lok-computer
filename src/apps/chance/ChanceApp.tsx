@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect } from 'react';
+import { createId } from '@/lib/id';
 import { WindowLayout } from '@/components/window/WindowLayout';
 import { RetroButton } from '@/components/ui/RetroButton';
 import { usePersistedState } from '@/hooks/useStorage';
@@ -31,8 +32,6 @@ export interface ChanceAppProps {
 const STORAGE_KEY = 'app:chance';
 /** Catalog identity of Ask AI (predates its rename). */
 const ASK_AI_TYPE = 'AI Talk';
-
-const createId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
 /**
  * Dice, coins, playing cards and tarot. Every tab is a table (ChanceTable):

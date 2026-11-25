@@ -1,15 +1,16 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { toast } from 'sonner';
 import { CustomIcon } from '@/components/window/CustomIcon';
 import { ContextMenu } from '@/components/menu/ContextMenu';
 import type { MenuEntry } from '@/components/menu/MenuItems';
 import { useApplicationLauncher } from '@/hooks/useApplicationLauncher';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { usePersistedState } from '@/hooks/useStorage';
+import { useResizeObserver } from '@/hooks/useResizeObserver';
 import { DEFAULT_DESKTOP_SETTINGS, useUserSettings } from '@/hooks/useUserSettings';
 import { useTheme } from '@/hooks/useTheme';
 import { APP_LIST, type AppConfig } from '@/config/apps';
 import { generateShareUrl } from '@/config/routes';
+import { copyText } from '@/lib/clipboard';
 import {
   DESKTOP_ICON_ORDER_KEY,
   DESKTOP_ICON_ORDER_RESET_EVENT,
@@ -198,15 +199,7 @@ export const DesktopIcons: React.FC = React.memo(() => {
   );
 
   // Free placement needs the layer's size for default slots and clamping.
-  useEffect(() => {
-    const layer = layerRef.current;
-    if (!layer) return;
-    const measure = () => setArea({ width: layer.clientWidth, height: layer.clientHeight });
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(layer);
-    return () => observer.disconnect();
-  }, [desktop.showIcons]);
+  useResizeObserver(layerRef, (layer) => setArea({ width: layer.clientWidth, height: layer.clientHeight }), [desktop.showIcons]);
 
   const slots = useMemo(() => layoutIconSlots(apps.length, area, cell), [apps.length, area, cell]);
   const points = useMemo(() => (
@@ -385,16 +378,6 @@ export const DesktopIcons: React.FC = React.memo(() => {
     return true;
   };
 
-  const copyLink = async (url: string) => {
-    try {
-      await navigator.clipboard.writeText(url);
-      toast('Link copied to clipboard');
-    } catch (error) {
-      console.warn('[Desktop] Could not copy the link:', error);
-      toast('Could not copy the link');
-    }
-  };
-
   const menuItems = ((): MenuEntry[] => {
     const app = menu ? APPS_BY_TYPE.get(menu.type) : undefined;
     if (!app) return [];
@@ -402,7 +385,7 @@ export const DesktopIcons: React.FC = React.memo(() => {
     return [
       { label: 'Open', icon: app.iconType, action: () => openApplication(app.componentType) },
       { type: 'divider' },
-      { label: 'Copy link', disabled: !shareUrl, action: shareUrl ? () => void copyLink(shareUrl) : undefined },
+      { label: 'Copy link', disabled: !shareUrl, action: shareUrl ? () => void copyText(shareUrl, { what: 'Link' }) : undefined },
     ];
   })();
 

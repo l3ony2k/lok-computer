@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import { createId } from '@/lib/id';
+import { prefersReducedMotion } from '@/lib/motion';
 import { ChanceTable } from './ChanceTable';
 import { COIN_IMAGE_SIZE, isCoinType } from './coins';
 import { coinFace } from './coinImages';
@@ -27,9 +29,6 @@ const COIN = 'kangxi-tongbao';
 const FLIP_MS = 500;
 const HISTORY = 30;
 const LINES = 6;
-
-const createId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 export interface IChingCast { id: string; lines: LineValue[] }
 
@@ -82,7 +81,7 @@ export const useIChingTable = (active: boolean) => {
     };
     setAskFresh(false);
     if (before !== lines) setLines([]);
-    if (reducedMotion()) {
+    if (prefersReducedMotion()) {
       setCoins(thrown.coins);
       land();
       return;

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createId } from '@/lib/id';
 import { scrollIntoViewWithin } from '@/lib/utils';
 import { useWindowActions, useWindowState } from '@/hooks/useWindowManager';
 import { useApplicationLauncher } from '@/hooks/useApplicationLauncher';
@@ -10,7 +11,7 @@ import { WindowLayout } from '@/components/window/WindowLayout';
 import { rebootIntoKernelPanic, rebootSystem, requestSystemUpdateCheck, SYSTEM_VERSION } from '@/lib/system';
 
 interface LogEntry {
-  id: number;
+  id: string;
   timestamp: string;
   message: unknown[];
   type: 'log' | 'error' | 'warn' | 'info';
@@ -298,7 +299,7 @@ export const ConsoleApp: React.FC = () => {
       setLogs(prevLogs => [
         ...prevLogs,
         {
-          id: Date.now() + Math.random(),
+          id: createId(),
           timestamp: new Date().toLocaleTimeString(),
           message: args,
           type: type,

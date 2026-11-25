@@ -2,6 +2,7 @@ import React, { type CSSProperties, useEffect, useLayoutEffect, useRef, useState
 import { Check, ChevronRight } from 'lucide-react';
 import { CustomIcon } from '@/components/window/CustomIcon';
 import { getOverlayBounds } from '@/lib/overlayRoot';
+import { useResizeObserver } from '@/hooks/useResizeObserver';
 
 import { isDivider, type MenuEntry, type MenuItemEntry } from './menuModel';
 
@@ -96,15 +97,7 @@ const MenuItem: React.FC<{ item: MenuItemEntry; onClose: () => void; submenuClas
   const disabled = item.disabled || (!item.action && !hasSubItems);
 
   // Long labels (Are.na channel titles) scroll on hover instead of clipping.
-  useLayoutEffect(() => {
-    const text = textRef.current;
-    if (!text) return;
-    const measure = () => setOverflowDistance(Math.max(0, text.scrollWidth - text.clientWidth));
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(text);
-    return () => observer.disconnect();
-  }, [item.label]);
+  useResizeObserver(textRef, (text) => setOverflowDistance(Math.max(0, text.scrollWidth - text.clientWidth)), [item.label], { layout: true });
 
   useEffect(() => () => {
     if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);

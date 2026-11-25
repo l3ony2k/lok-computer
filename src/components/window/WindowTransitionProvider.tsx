@@ -1,4 +1,5 @@
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { prefersReducedMotion } from "@/lib/motion";
 import { flushSync } from "react-dom";
 import { scrollIntoViewWithin } from "@/lib/utils";
 import { CustomIcon } from "@/components/window/CustomIcon";
@@ -89,8 +90,6 @@ const getDesktopRect = () => {
   return desktop ? toViewportRect(desktop) : null;
 };
 
-const reducedMotionEnabled = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
 export const WindowTransitionProvider = ({ children }: { children: ReactNode }) => {
   const { minimizeWindow, focusWindow, toggleWindowShade } = useWindowActions();
   const [transition, setTransition] = useState<WindowTransition | null>(null);
@@ -105,7 +104,7 @@ export const WindowTransitionProvider = ({ children }: { children: ReactNode }) 
   const runTransition = useCallback((window: DesktopWindow, from: ViewportRect, to: ViewportRect, commit: () => void) => {
     if (transitioningWindowRef.current) return;
 
-    if (reducedMotionEnabled()) {
+    if (prefersReducedMotion()) {
       commit();
       return;
     }
@@ -175,7 +174,7 @@ export const WindowTransitionProvider = ({ children }: { children: ReactNode }) 
     const surface = getWindowElement(window.id) as HTMLElement | null;
     const frame = surface?.parentElement;
     const titlebar = surface?.querySelector<HTMLElement>(".window-titlebar");
-    if (!surface || !frame || !titlebar || transitioningWindowRef.current || reducedMotionEnabled()) {
+    if (!surface || !frame || !titlebar || transitioningWindowRef.current || prefersReducedMotion()) {
       if (!transitioningWindowRef.current) toggleWindowShade(window.id);
       return;
     }

@@ -6,6 +6,7 @@
  */
 
 import { APP_CONFIG } from '@/config/constants';
+import { createId } from '@/lib/id';
 import { TEXT_DOCUMENT_PATHS, isTextDocumentPath, textDocumentFileName } from '@/config/textDocuments';
 
 export interface RouteConfig {
@@ -190,7 +191,7 @@ export const ROUTES: RouteConfig[] = [
             if (!src && !arena) return {};
             return {
                 request: {
-                    id: `route-${Date.now()}`,
+                    id: createId('route'),
                     play: true,
                     items: src ? [{ src, title: query.get('title') || undefined }] : [],
                     ...(arena ? { arena } : {}),

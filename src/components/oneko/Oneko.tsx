@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { prefersReducedMotion } from '@/lib/motion';
 import { useUserSettings } from '@/hooks/useUserSettings';
 import onekoDefault from '@/assets/oneko.gif';
 import onekoDark from '@/assets/oneko-dark.gif';
@@ -88,9 +89,7 @@ export const Oneko: React.FC = () => {
     const variant = settings.oneko?.variant ?? 'default';
 
     // Check for reduced motion preference
-    const isReducedMotion =
-        typeof window !== 'undefined' &&
-        (window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    const isReducedMotion = prefersReducedMotion();
 
     useEffect(() => {
         if (!isEnabled || isReducedMotion || !nekoRef.current) return;

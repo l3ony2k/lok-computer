@@ -39,6 +39,7 @@ import { AppearancePicker, ThemePicker } from "@/components/system/ThemePicker";
 import { WindowLayout } from "@/components/window/WindowLayout";
 import { RetroButton } from "@/components/ui/RetroButton";
 import { toast } from "sonner";
+import { copyText } from "@/lib/clipboard";
 import {
   clearCache,
   getUsageStats,
@@ -280,15 +281,7 @@ export const ConfigApp: React.FC<ConfigAppProps> = ({ initialCategory, focusSett
     timestamp: new Date().toISOString(),
   });
 
-  const copyDiagnostics = async () => {
-    try {
-      await navigator.clipboard.writeText(JSON.stringify(getDiagnostics(), null, 2));
-      toast.success("Diagnostics copied.");
-    } catch (error) {
-      console.error("[ConfigApp] Failed to copy diagnostics:", error);
-      toast.error("Could not copy diagnostics.");
-    }
-  };
+  const copyDiagnostics = () => copyText(JSON.stringify(getDiagnostics(), null, 2), { what: "Diagnostics" });
 
   const toggleDebugOutlines = () => {
     const nextValue = !debugOutlines;

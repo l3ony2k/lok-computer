@@ -9,7 +9,7 @@ import { adjustWindowToViewport, type WindowDimensions, type ViewportDimensions 
 import { WINDOW_DEFAULTS } from '@/config/window';
 import { ContextMenu } from '@/components/menu/ContextMenu';
 import { generateShareUrl } from '@/config/routes';
-import { toast } from 'sonner';
+import { copyText } from '@/lib/clipboard';
 import { useWindowTransitions } from '@/hooks/useWindowTransitions';
 import { useTheme } from '@/hooks/useTheme';
 import { pointerFromDragEvent, resolveSnapZone, snapZoneRect, type SnapRect, type SnapZone } from '@/lib/windowSnap';
@@ -159,17 +159,6 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
     onTitleDoubleClick(windowProps);
   };
 
-  // The link reopens this window as it is shown: apps report their view through onPropsChange.
-  const copyShareUrl = async (shareUrl: string) => {
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      toast('Link copied to clipboard');
-    } catch (error) {
-      console.warn('[Window] Could not copy the share link:', error);
-      toast('Could not copy the link');
-    }
-  };
-
   const getContextMenuItems = () => {
     const shareUrl = generateShareUrl(windowProps.componentType || '', windowProps.props);
     return buildWindowMenu(windowProps, {
@@ -179,7 +168,8 @@ export const DraggableWindow = memo(function DraggableWindow({ window: windowPro
       restore: () => restoreWindow(windowProps.id),
       toggleShade: () => toggleShadeWithTransition(windowProps),
       close: () => closeWindow(windowProps.id),
-      share: shareUrl ? () => void copyShareUrl(shareUrl) : null,
+      // The link reopens this window as it is shown: apps report their view through onPropsChange.
+      share: shareUrl ? () => void copyText(shareUrl, { what: 'Link' }) : null,
       detach: stacked ? () => {
         unstackWindow(windowProps.id);
         updateWindowPosition(windowProps.id, (windowProps.x ?? 0) + STACK_STRIP_MARGIN, (windowProps.y ?? 0) + STACK_STRIP_MARGIN);
