@@ -1,5 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
+import { useDismiss } from '@/hooks/useDismiss';
 import { getOverlayRoot } from '@/lib/overlayRoot';
 import { MenuList, type MenuEntry } from './MenuItems';
 
@@ -15,6 +16,8 @@ interface AppMenuProps {
 
 /** The system menu panel: the lok.computer menu in the top bar, the start menu in classic layouts. */
 export const AppMenu: React.FC<AppMenuProps> = ({ items, isOpen, placement = 'top', onClose }) => {
+  // The scrim below catches outside presses; Escape closes it too.
+  useDismiss(isOpen, onClose);
   if (!isOpen) return null;
 
   const handleOutsideClick = (event: React.MouseEvent) => {

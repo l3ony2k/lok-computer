@@ -1,6 +1,8 @@
-import React, { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
+import React, { useLayoutEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { useDismiss } from '@/hooks/useDismiss';
 import { getOverlayBounds, getOverlayRoot, toOverlayPoint } from '@/lib/overlayRoot';
+import { clampToOverlay } from '@/lib/overlayPlacement';
 import { MenuList, type MenuEntry } from './MenuItems';
 
 export type ContextMenuItem = MenuEntry;
@@ -21,23 +23,7 @@ interface ContextMenuProps {
 export const ContextMenu: React.FC<ContextMenuProps> = ({ items, isOpen, position, onClose }) => {
     const menuRef = useRef<HTMLDivElement>(null);
 
-    const handleOutsideClick = useCallback((event: MouseEvent) => {
-        if (menuRef.current && !menuRef.current.contains(event.target as Node)) onClose();
-    }, [onClose]);
-
-    const handleKeyDown = useCallback((event: KeyboardEvent) => {
-        if (event.key === 'Escape') onClose();
-    }, [onClose]);
-
-    useEffect(() => {
-        if (!isOpen) return;
-        document.addEventListener('mousedown', handleOutsideClick);
-        document.addEventListener('keydown', handleKeyDown);
-        return () => {
-            document.removeEventListener('mousedown', handleOutsideClick);
-            document.removeEventListener('keydown', handleKeyDown);
-        };
-    }, [isOpen, handleOutsideClick, handleKeyDown]);
+    useDismiss(isOpen, onClose, { inside: [menuRef], pressEvent: 'mousedown' });
 
     const { x, y } = position;
     useLayoutEffect(() => {
@@ -46,8 +32,9 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ items, isOpen, positio
         const rect = menu.getBoundingClientRect();
         const bounds = getOverlayBounds();
         const point = toOverlayPoint({ x, y }, bounds);
-        menu.style.left = `${Math.max(0, Math.min(point.x, bounds.width - rect.width))}px`;
-        menu.style.top = `${Math.max(0, Math.min(point.y, bounds.height - rect.height))}px`;
+        const place = clampToOverlay(point, rect, bounds);
+        menu.style.left = `${place.x}px`;
+        menu.style.top = `${place.y}px`;
     }, [isOpen, x, y]);
 
     if (!isOpen) return null;

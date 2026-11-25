@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ArenaChannel, ArenaItem } from "@/types/arena";
 import { WindowLayout } from "@/components/window/WindowLayout";
 import { RetroButton } from "@/components/ui/RetroButton";
 import { Select } from '@/components/ui/Select';
+import { useDismiss } from "@/hooks/useDismiss";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import {
@@ -413,15 +414,8 @@ const ArenaFileToolbar = ({ items, state, onStateChange }: {
   const availableTypes = useMemo(() => Array.from(new Set(items.map((item) => item.kind))).sort(), [items]);
   const activeSize = state.view === "grid" ? state.gridSize : state.listSize;
 
-  useEffect(() => {
-    if (!filterOpen) return;
-    const handlePointerDown = (event: MouseEvent) => {
-      const target = event.target as Node;
-      if (!filterButtonRef.current?.contains(target) && !filterMenuRef.current?.contains(target)) setFilterOpen(false);
-    };
-    document.addEventListener("mousedown", handlePointerDown);
-    return () => document.removeEventListener("mousedown", handlePointerDown);
-  }, [filterOpen]);
+  const closeFilter = useCallback(() => setFilterOpen(false), []);
+  useDismiss(filterOpen, closeFilter, { inside: [filterButtonRef, filterMenuRef], pressEvent: "mousedown" });
 
   const toggleFilter = () => {
     const next = !filterOpen;

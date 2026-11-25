@@ -1,7 +1,9 @@
 import React, { forwardRef, useCallback, useEffect, useId, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Check } from 'lucide-react';
+import { useDismiss } from '@/hooks/useDismiss';
 import { getOverlayBounds, getOverlayRoot, toOverlayPoint } from '@/lib/overlayRoot';
+import { chooseVerticalSide, clampSpan, verticalOffset } from '@/lib/overlayPlacement';
 import { scrollIntoViewWithin } from '@/lib/utils';
 
 export interface SelectOption {
@@ -83,17 +85,9 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
     selectRef.current?.focus({ preventScroll: true });
   };
 
-  // Close on a press outside the field and the list, or when the field loses focus.
-  useEffect(() => {
-    if (!open) return;
-    const onPointerDown = (event: PointerEvent) => {
-      const target = event.target as Node;
-      if (selectRef.current?.contains(target) || listRef.current?.contains(target)) return;
-      close();
-    };
-    document.addEventListener('pointerdown', onPointerDown, true);
-    return () => document.removeEventListener('pointerdown', onPointerDown, true);
-  }, [open, close]);
+  // Close on a press outside the field and the list (the field's own keys handle
+  // Escape, and losing focus closes it too).
+  useDismiss(open, close, { inside: [selectRef, listRef], capture: true, escape: false });
 
   // Below the field, or above it when there is more room there; never outside the overlay.
   useLayoutEffect(() => {
@@ -103,15 +97,14 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
     const rect = field.getBoundingClientRect();
     const bounds = getOverlayBounds();
     const topLeft = toOverlayPoint({ x: rect.left, y: rect.top }, bounds);
-    const below = bounds.height - (topLeft.y + rect.height) - LIST_GAP;
-    const above = topLeft.y - LIST_GAP;
-    const placeAbove = list.scrollHeight > below && above > below;
+    const anchor = { top: topLeft.y, bottom: topLeft.y + rect.height };
+    const { side, space } = chooseVerticalSide(anchor, list.scrollHeight, bounds.height, LIST_GAP);
     list.style.minWidth = `${rect.width}px`;
-    list.style.maxHeight = `${Math.max(120, Math.min(320, placeAbove ? above : below))}px`;
+    list.style.maxHeight = `${Math.max(120, Math.min(320, space))}px`;
     const height = list.getBoundingClientRect().height;
     const width = list.getBoundingClientRect().width;
-    list.style.left = `${Math.max(0, Math.min(topLeft.x, bounds.width - width))}px`;
-    list.style.top = `${placeAbove ? topLeft.y - LIST_GAP - height : topLeft.y + rect.height + LIST_GAP}px`;
+    list.style.left = `${clampSpan(topLeft.x, width, bounds.width)}px`;
+    list.style.top = `${verticalOffset(anchor, height, side, LIST_GAP)}px`;
   }, [open]);
 
   // Keep the highlighted option in view as it moves.

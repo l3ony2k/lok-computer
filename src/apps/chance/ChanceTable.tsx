@@ -1,6 +1,8 @@
-import { useContext, useEffect, useLayoutEffect, useRef, type KeyboardEvent, type ReactNode, type Ref } from 'react';
+import { useCallback, useContext, useEffect, useLayoutEffect, useRef, type KeyboardEvent, type ReactNode, type Ref } from 'react';
 import { Plus } from 'lucide-react';
 import { RetroButton } from '@/components/ui/RetroButton';
+import { useDismiss, type DismissReason } from '@/hooks/useDismiss';
+import { clampSpan } from '@/lib/overlayPlacement';
 import { HistoryShown } from './historyShown';
 
 /**
@@ -162,30 +164,16 @@ export const TableItem = ({ label, caption, shape = 'square', open, onToggle, on
     if (!open || !picker || !bounds) return;
     picker.style.removeProperty('--chance-picker-shift');
     const rect = picker.getBoundingClientRect();
-    const margin = 8;
-    const shift = rect.left < bounds.left + margin
-      ? bounds.left + margin - rect.left
-      : rect.right > bounds.right - margin ? bounds.right - margin - rect.right : 0;
+    const start = rect.left - bounds.left;
+    const shift = clampSpan(start, rect.width, bounds.width, 8) - start;
     if (shift) picker.style.setProperty('--chance-picker-shift', `${Math.round(shift)}px`);
   }, [open]);
 
-  useEffect(() => {
-    if (!open) return;
-    const onPointerDown = (event: PointerEvent) => {
-      if (!ref.current?.contains(event.target as Node)) onClose();
-    };
-    const onKey = (event: globalThis.KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      onClose();
-      buttonRef.current?.focus({ preventScroll: true });
-    };
-    document.addEventListener('pointerdown', onPointerDown);
-    document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('pointerdown', onPointerDown);
-      document.removeEventListener('keydown', onKey);
-    };
-  }, [open, onClose]);
+  const dismiss = useCallback((reason: DismissReason) => {
+    onClose();
+    if (reason === 'escape') buttonRef.current?.focus({ preventScroll: true });
+  }, [onClose]);
+  useDismiss(open, dismiss, { inside: [ref] });
 
   return (
     <div ref={ref} className="chance-item" data-shape={shape} data-open={open || undefined}>
