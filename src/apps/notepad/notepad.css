@@ -204,12 +204,6 @@
 .notepad-preview a, .notepad-rich a { color: var(--link-color); text-decoration: underline; }
 .notepad-preview hr, .notepad-rich hr { margin: 10px 0; border: 0; border-top: 1px solid var(--internal-border); }
 
-.notepad-footer {
-    justify-content: space-between;
-    font-size: 11px;
-    color: var(--log-muted);
-}
-
 .notepad-footer-right {
     font-variant-numeric: tabular-nums;
 }

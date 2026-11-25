@@ -504,7 +504,7 @@ html[data-theme="tui"][data-layout]:not(#_) :where(.retro-button, button.arena-t
 }
 
 /* Frame-hugging toolbars don't need the button shadow's spacing on their last row. */
-html[data-theme="tui"][data-layout]:not(#_) :where(.app-toolbar-row, .arena-address-bar, .app-footer-row) {
+html[data-theme="tui"][data-layout]:not(#_) :where(.app-toolbar-row, .app-footer-row) {
     min-height: 32px;
     align-items: flex-start;
     padding-top: 4px;

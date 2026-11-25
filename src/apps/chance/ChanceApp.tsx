@@ -87,9 +87,9 @@ export const ChanceApp: React.FC<ChanceAppProps> = ({ initialTab, onPropsChange 
         <TabStrip tabs={CHANCE_TABS} selected={state.tab} onSelect={setTab} label="Chance" />
       }
       footer={
-        <div className="arena-file-footer chance-footer">
+        <div className="app-footer-row app-footer-note chance-footer">
           <span>Chance is an illusion, don't use this for secrets.</span>
-          <div className="arena-file-footer-actions">
+          <div className="app-footer-actions">
             <RetroButton active={state.history} aria-pressed={state.history} aria-controls="chance-history" onClick={toggleHistory}>History</RetroButton>
           </div>
         </div>

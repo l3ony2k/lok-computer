@@ -68,7 +68,7 @@ export const ChannelBrowser: React.FC<{ username?: string }> = ({ username = APP
       error={loadError}
       emptyText="no matching channels"
       addressBar={
-        <div className="arena-address-bar">
+        <div className="app-toolbar-row">
           <div className="arena-address-group">
             <input
               className="arena-toolbar-control"

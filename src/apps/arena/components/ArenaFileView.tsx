@@ -1,10 +1,12 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ArenaChannel, ArenaItem } from "@/types/arena";
 import { WindowLayout } from "@/components/window/WindowLayout";
 import { RetroButton } from "@/components/ui/RetroButton";
 import { Select } from '@/components/ui/Select';
 import { useDismiss } from "@/hooks/useDismiss";
+import { getOverlayBounds, getOverlayRoot, toOverlayPoint } from "@/lib/overlayRoot";
+import { chooseVerticalSide, clampSpan, verticalOffset } from "@/lib/overlayPlacement";
 import { StateMessage } from "@/components/ui/StateMessage";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import {
@@ -16,6 +18,7 @@ import {
 } from "./arenaFileViewState";
 import { getArenaPlayableMedia } from "../utils/arenaLinks";
 
+const FILTER_MENU_GAP = 4;
 const SORT_OPTIONS = ARENA_FILE_SORTS.map((sort) => ({ value: sort, label: sort }));
 
 interface ArenaFileViewProps {
@@ -408,7 +411,6 @@ const ArenaFileToolbar = ({ items, state, onStateChange }: {
   onStateChange: (state: ArenaFileViewState) => void;
 }) => {
   const [filterOpen, setFilterOpen] = useState(false);
-  const [filterPosition, setFilterPosition] = useState({ top: 0, left: 0 });
   const filterButtonRef = useRef<HTMLButtonElement>(null);
   const filterMenuRef = useRef<HTMLDivElement>(null);
   const availableTypes = useMemo(() => Array.from(new Set(items.map((item) => item.kind))).sort(), [items]);
@@ -417,14 +419,20 @@ const ArenaFileToolbar = ({ items, state, onStateChange }: {
   const closeFilter = useCallback(() => setFilterOpen(false), []);
   useDismiss(filterOpen, closeFilter, { inside: [filterButtonRef, filterMenuRef], pressEvent: "mousedown" });
 
-  const toggleFilter = () => {
-    const next = !filterOpen;
-    if (next && filterButtonRef.current) {
-      const rect = filterButtonRef.current.getBoundingClientRect();
-      setFilterPosition({ top: rect.bottom + 4, left: Math.min(rect.left, window.innerWidth - 170) });
-    }
-    setFilterOpen(next);
-  };
+  // Under the button (above it when there is more room there), kept inside the overlay.
+  useLayoutEffect(() => {
+    const button = filterButtonRef.current;
+    const menu = filterMenuRef.current;
+    if (!filterOpen || !button || !menu) return;
+    const rect = button.getBoundingClientRect();
+    const bounds = getOverlayBounds();
+    const topLeft = toOverlayPoint({ x: rect.left, y: rect.top }, bounds);
+    const anchor = { top: topLeft.y, bottom: topLeft.y + rect.height };
+    const { width, height } = menu.getBoundingClientRect();
+    const { side } = chooseVerticalSide(anchor, height, bounds.height, FILTER_MENU_GAP);
+    menu.style.left = `${clampSpan(topLeft.x, width, bounds.width)}px`;
+    menu.style.top = `${verticalOffset(anchor, height, side, FILTER_MENU_GAP)}px`;
+  }, [filterOpen]);
 
   const updateSize = (size: ArenaFileSize) => onStateChange({
     ...state,
@@ -432,7 +440,7 @@ const ArenaFileToolbar = ({ items, state, onStateChange }: {
   });
 
   return (
-    <div className="arena-file-toolbar">
+    <div className="app-toolbar-row">
       <input
         type="search"
         className="arena-toolbar-control arena-file-search"
@@ -448,13 +456,13 @@ const ArenaFileToolbar = ({ items, state, onStateChange }: {
         className="arena-toolbar-control arena-file-filter-button"
         aria-haspopup="menu"
         aria-expanded={filterOpen}
-        onClick={toggleFilter}
+        onClick={() => setFilterOpen((open) => !open)}
       >
         {state.types.length ? `${state.types.length} types` : "all"}
       </button>
 
       {filterOpen && createPortal(
-        <div ref={filterMenuRef} className="menu-surface arena-file-filter-menu" style={filterPosition} role="menu">
+        <div ref={filterMenuRef} className="menu-surface arena-file-filter-menu" role="menu">
           {availableTypes.map((type) => (
             <label key={type}>
               <input
@@ -471,7 +479,7 @@ const ArenaFileToolbar = ({ items, state, onStateChange }: {
             </label>
           ))}
         </div>,
-        document.body
+        getOverlayRoot()
       )}
 
       <div className="arena-file-button-group">
@@ -633,15 +641,15 @@ export const ArenaFileView = ({
   return (
     <WindowLayout
       toolbar={
-        <div className="arena-file-chrome">
+        <div className="app-toolbar-stack">
           {addressBar}
           <ArenaFileToolbar items={items} state={state} onStateChange={onStateChange} />
         </div>
       }
       footer={(
-        <div className="arena-file-footer">
+        <div className="app-footer-row app-footer-note">
           <span>{countLabel}</span>
-          <div className="arena-file-footer-actions">
+          <div className="app-footer-actions">
             {footerActions}
             {hasMore && items.length > 0 && onLoadMore && (
               <RetroButton onClick={onLoadMore} disabled={loadingMore}>
