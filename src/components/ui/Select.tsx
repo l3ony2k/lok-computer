@@ -217,7 +217,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
           role="listbox"
           data-follow-pointer=""
           aria-label={ariaLabel}
-          className="menu-surface select-list fixed z-[10000] select-none"
+          className="menu-surface select-list fixed z-[var(--z-menu)] select-none"
           style={{ left: 0, top: 0 }}
           // Keep focus on the field: a press in the list must not blur it.
           onMouseDown={(event) => event.preventDefault()}

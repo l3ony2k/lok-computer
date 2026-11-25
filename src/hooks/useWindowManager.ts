@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { ReactNode } from "react";
 import { WINDOW_DEFAULTS } from "@/config/window";
 import { dissolveSingletons, leaveStack } from '@/lib/windowStacks';
+import { FIRST_Z_INDEX, renumberZIndexes } from '@/lib/windowZOrder';
 import { createApplicationElement, getApplicationDefinition } from "@/config/apps";
 import { getAppState, setAppState, setAppStateOnUnload, deleteAppState } from "@/lib/storage";
 import { createDebouncedWrite, flushOnPageHide, type DebouncedWrite } from "@/lib/debouncedWrite";
@@ -12,7 +13,8 @@ const WINDOW_SESSION_KEY = 'windowSession';
 // could never be read back — cleaned up on startup.
 const LEGACY_WINDOW_POSITIONS_KEY = 'windowPositions';
 const SESSION_SAVE_DEBOUNCE_MS = 500;
-const FIRST_Z_INDEX = 1000;
+// Windows are numbered from FIRST_Z_INDEX up (src/lib/windowZOrder.ts); that band sits between
+// --z-desktop-icons and --z-icon-ghost in the z-index scale at the top of src/index.css.
 
 // Serializable window data for session persistence
 export interface SerializableWindowData {
@@ -209,8 +211,6 @@ export const useWindowManagerController = (): WindowManagerController => {
         console.info(`[Session] Restoring ${session.windows.length} windows`);
 
         const restoredWindows: DesktopWindow[] = [];
-        let maxZIndex = session.lastZIndex || FIRST_Z_INDEX;
-
         for (const savedWindow of session.windows) {
           const application = getApplicationDefinition(savedWindow.componentType);
           if (!application) {
@@ -254,13 +254,14 @@ export const useWindowManagerController = (): WindowManagerController => {
             minHeight: WINDOW_DEFAULTS.MIN_HEIGHT,
             props: savedWindow.props,
           });
-          maxZIndex = Math.max(maxZIndex, savedWindow.zIndex);
         }
 
         if (restoredWindows.length > 0) {
-          setWindows(dissolveSingletons(restoredWindows));
-          zIndexRef.current = maxZIndex;
-          setActiveWindow(topmost(restoredWindows.filter((w) => !w.minimized))?.id ?? null);
+          // Saved numbers only ever climbed; start them again from FIRST_Z_INDEX in the same order.
+          const renumbered = renumberZIndexes(restoredWindows);
+          setWindows(dissolveSingletons(renumbered.windows));
+          zIndexRef.current = renumbered.lastZIndex;
+          setActiveWindow(topmost(renumbered.windows.filter((w) => !w.minimized))?.id ?? null);
           console.info(`[WindowManager] Restored ${restoredWindows.length} windows`);
         }
       } catch (error) {
