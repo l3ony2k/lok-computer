@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react';
-import { toast } from 'sonner';
 import { WindowLayout } from '@/components/window/WindowLayout';
 import { RetroButton } from '@/components/ui/RetroButton';
+import { copyText } from '@/lib/clipboard';
 import { getAgentDocument, renderMarkdown } from '@/config/documents';
 import { isTextDocumentPath } from '@/config/textDocuments';
 
@@ -20,15 +20,8 @@ export const DocumentApp = ({ path }: DocumentAppProps) => {
     return document ? renderMarkdown(document) : null;
   }, [path]);
 
-  const copyText = useCallback(async () => {
-    if (!text) return;
-    try {
-      await navigator.clipboard.writeText(text);
-      toast('Copied');
-    } catch (error) {
-      console.warn('[Document] Could not copy the text:', error);
-      toast('Could not copy');
-    }
+  const copyAll = useCallback(() => {
+    if (text) void copyText(text);
   }, [text]);
 
   return (
@@ -36,7 +29,7 @@ export const DocumentApp = ({ path }: DocumentAppProps) => {
       toolbar={
         <div className="app-toolbar-row">
           <span className="text-xs text-muted-foreground flex-1 min-w-0">Written for agents and crawlers, not as a page for people.</span>
-          <RetroButton size="sm" onClick={() => void copyText()} disabled={!text} title="Copy the whole text as Markdown">
+          <RetroButton size="sm" onClick={copyAll} disabled={!text} title="Copy the whole text as Markdown">
             Copy
           </RetroButton>
         </div>

@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type FormEvent } from 'react';
+import { createId } from '@/lib/id';
+import { prefersReducedMotion } from '@/lib/motion';
 import { Plus } from 'lucide-react';
 import { RetroButton } from '@/components/ui/RetroButton';
 import { usePersistedState } from '@/hooks/useStorage';
@@ -27,9 +29,6 @@ import './wheel.css';
 
 const HISTORY = 30;
 const SPIN_EASING = 'cubic-bezier(0.16, 0.84, 0.24, 1)';
-
-const createId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 export interface WheelSpin { id: string; preset: string; result: string }
 
@@ -83,7 +82,7 @@ export const useWheelTable = () => {
     };
     setWinner(null);
     setAddNote(null);
-    if (reducedMotion()) {
+    if (prefersReducedMotion()) {
       land();
       return;
     }

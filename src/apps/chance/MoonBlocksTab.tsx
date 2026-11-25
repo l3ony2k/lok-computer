@@ -1,4 +1,6 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { createId } from '@/lib/id';
+import { prefersReducedMotion } from '@/lib/motion';
 import { usePersistedState } from '@/hooks/useStorage';
 import { ChanceTable } from './ChanceTable';
 import {
@@ -49,9 +51,6 @@ const QUESTIONS = 15;
 const THROWS_PER_QUESTION = 40;
 /** How long the three-yes celebration plays. */
 const CELEBRATION_MS = 1500;
-
-const createId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /** How the blocks lie before the first throw. */
 const RESTING: [BlockThrow, BlockThrow] = [
@@ -108,7 +107,7 @@ export const useMoonBlocksTable = () => {
       if (confirmed) setCelebration({ id, startedAt: performance.now() });
     };
     setBlocks(plan);
-    if (reducedMotion()) {
+    if (prefersReducedMotion()) {
       land();
       return;
     }
@@ -406,7 +405,7 @@ export const MoonBlocksTab = ({ table }: { table: MoonTable }) => {
   useLayoutEffect(() => {
     const element = tableRef.current;
     const layer = confettiRef.current;
-    if (!celebrationId || celebratedAt === undefined || !element || !layer || reducedMotion()) return;
+    if (!celebrationId || celebratedAt === undefined || !element || !layer || prefersReducedMotion()) return;
     const elapsed = performance.now() - celebratedAt;
     if (elapsed > CELEBRATION_MS) return;
     const animations = playCelebration(element, layer);

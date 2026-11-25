@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState, type Ref } from 'react';
+import { createId } from '@/lib/id';
+import { prefersReducedMotion } from '@/lib/motion';
 import { flushSync } from 'react-dom';
 import { ChanceTable } from './ChanceTable';
 import { useTableFit } from './useTableFit';
@@ -18,9 +20,6 @@ const SHAKE_MS = 600;
 const SINK_MS = 260;
 /** The new answer rising into the window and settling. */
 const RISE_MS = 900;
-
-const createId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 export interface M8gicEntry { id: string; answer: number }
 
@@ -76,7 +75,7 @@ export const useM8gicTable = () => {
     if (shaking) return;
     const next = drawM8gic();
     const ball = ballRef.current;
-    if (reducedMotion() || !ball || typeof ball.animate !== 'function') {
+    if (prefersReducedMotion() || !ball || typeof ball.animate !== 'function') {
       setShown(next);
       record(next);
       return;

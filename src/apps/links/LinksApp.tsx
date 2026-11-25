@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { WindowLayout } from '@/components/window/WindowLayout';
 import { TabStrip } from '@/components/ui/TabStrip';
 
@@ -8,6 +8,7 @@ const LINKS_TABS = [
 ] as const;
 import { usePersistedState } from '@/hooks/useStorage';
 import { SITE } from '@/config/site';
+import { copyText } from '@/lib/clipboard';
 
 // Import local 88x31 button images
 import l3onButton from '@/assets/buttons/l3on.gif'
@@ -213,10 +214,15 @@ const MyButtonsTab = () => {
     const getEmbedCode = (variant: ButtonVariant) =>
         `<a href="${SITE.url}" target="_blank" rel="noopener noreferrer"><img src="${variant.url}" alt="${SITE.name}" width="${variant.width}" height="${variant.height}" /></a>`;
 
-    const handleCopyEmbed = (variant: ButtonVariant) => {
-        navigator.clipboard.writeText(getEmbedCode(variant));
+    const copiedTimer = useRef<ReturnType<typeof setTimeout>>();
+    useEffect(() => () => clearTimeout(copiedTimer.current), []);
+
+    // The button itself reads "copied!", so only a failure toasts.
+    const handleCopyEmbed = async (variant: ButtonVariant) => {
+        if (!await copyText(getEmbedCode(variant), { announce: false })) return;
         setCopiedId(variant.id);
-        setTimeout(() => setCopiedId(null), 2000);
+        clearTimeout(copiedTimer.current);
+        copiedTimer.current = setTimeout(() => setCopiedId(null), 2000);
     };
 
     const renderButtonSection = (title: string, variants: ButtonVariant[]) => (
@@ -246,7 +252,7 @@ const MyButtonsTab = () => {
                                     </code>
                                 </pre>
                                 <button
-                                    onClick={() => handleCopyEmbed(variant)}
+                                    onClick={() => void handleCopyEmbed(variant)}
                                     className="absolute top-1 right-1 px-1 py-0 text-xs bg-accent hover:bg-accent/50 border border-border transition-colors"
                                 >
                                     {copiedId === variant.id ? 'copied!' : 'copy'}

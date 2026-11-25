@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useRef, useState, type CSSProperties } from 'react';
+import { useResizeObserver } from '@/hooks/useResizeObserver';
 import { Minus, Plus } from 'lucide-react';
 import { RetroButton } from '@/components/ui/RetroButton';
 import { ChanceTable, TableItem } from './ChanceTable';
@@ -217,24 +218,16 @@ export const CardsTab = ({ table }: { table: ReturnType<typeof useCardTable> }) 
   // centred group at any width instead of a full-width hand.
   const [fitCols, setFitCols] = useState(6);
 
-  useEffect(() => {
-    const stage = stageRef.current;
-    if (!stage || typeof ResizeObserver !== 'function') return;
-    const measure = () => {
-      const card = table.deckRef.current?.getBoundingClientRect().width ?? 0;
-      const row = stage.firstElementChild as HTMLElement | null;
-      if (!card || !row) return;
-      const style = getComputedStyle(row);
-      const stacked = style.flexDirection === 'column';
-      const deckWidth = deckColumnRef.current?.getBoundingClientRect().width ?? card;
-      const room = stage.clientWidth - (stacked ? 0 : deckWidth + parseFloat(style.columnGap || '0'));
-      const gap = card * 0.14;
-      setFitCols(Math.max(1, Math.min(6, Math.floor((room + gap) / (card + gap)))));
-    };
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(stage);
-    return () => observer.disconnect();
+  useResizeObserver(stageRef, (stage) => {
+    const card = table.deckRef.current?.getBoundingClientRect().width ?? 0;
+    const row = stage.firstElementChild as HTMLElement | null;
+    if (!card || !row) return;
+    const style = getComputedStyle(row);
+    const stacked = style.flexDirection === 'column';
+    const deckWidth = deckColumnRef.current?.getBoundingClientRect().width ?? card;
+    const room = stage.clientWidth - (stacked ? 0 : deckWidth + parseFloat(style.columnGap || '0'));
+    const gap = card * 0.14;
+    setFitCols(Math.max(1, Math.min(6, Math.floor((room + gap) / (card + gap)))));
   }, [table.deckRef]);
 
   const shown = draws.filter((cards) => cards.length);

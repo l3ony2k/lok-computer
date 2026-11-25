@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createId } from '@/lib/id';
 import { Bold, Download, Eraser, Eye, Heading1, Heading2, Italic, List, ListOrdered, Plus, Strikethrough, Trash2, Underline } from 'lucide-react';
 import { toast } from 'sonner';
 import { WindowLayout } from '@/components/window/WindowLayout';
@@ -37,8 +38,6 @@ const FORMATS: ReadonlyArray<{ id: NoteFormat; label: string; title: string }> =
 ];
 
 const isFormat = (value: unknown): value is NoteFormat => FORMATS.some((format) => format.id === value);
-
-const createId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
 const normalizeState = (stored: unknown): NotepadState => {
   if (!stored || typeof stored !== 'object') return { entries: [], activeId: null };

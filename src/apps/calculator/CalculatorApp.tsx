@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { copyText } from '@/lib/clipboard';
 import { Delete } from 'lucide-react';
 import { WindowLayout } from '@/components/window/WindowLayout';
 import { RetroButton } from '@/components/ui/RetroButton';
@@ -136,13 +137,7 @@ export const CalculatorApp: React.FC<CalculatorAppProps> = () => {
       toast('Nothing to copy');
       return;
     }
-    try {
-      await navigator.clipboard.writeText(resultText);
-      toast('Copied');
-    } catch (error) {
-      console.warn('[Calculator] Could not copy the result:', error);
-      toast('Could not copy');
-    }
+    await copyText(resultText);
   }, [resultText, state.error]);
 
   const recall = (entry: TapeEntry) => {

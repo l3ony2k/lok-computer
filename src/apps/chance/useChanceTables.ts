@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react';
+import { createId } from '@/lib/id';
+import { prefersReducedMotion } from '@/lib/motion';
 import {
   MAX_CARDS,
   MAX_DICE,
@@ -31,9 +33,6 @@ type SetChanceState = Dispatch<SetStateAction<ChanceState>>;
 const HISTORY = 30;
 const ROLL_TICK_MS = 60;
 const FLIP_MS = 500;
-
-const createId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // ---------- Dice ----------
 
@@ -73,7 +72,7 @@ export const useDiceTable = (dice: DieSides[], setState: SetChanceState) => {
     const record = () => setRolls((prev) => [{ id: createId(), dice: dice.map((sides, index) => ({ sides, value: final[index] })) }, ...prev].slice(0, HISTORY));
     const container = diceRef.current;
     const from = rollButtonRef.current?.getBoundingClientRect();
-    if (reducedMotion() || !container || !from) {
+    if (prefersReducedMotion() || !container || !from) {
       setFaces(final);
       record();
       return;
@@ -162,7 +161,7 @@ export const useCoinTable = (coins: string[], setState: SetChanceState) => {
       setFlipping(false);
       flipTimer.current = null;
     };
-    if (reducedMotion()) {
+    if (prefersReducedMotion()) {
       land();
       return;
     }
@@ -231,7 +230,7 @@ export const useCardTable = (jokers: boolean, setState: SetChanceState, active: 
     draw: () => {
       const { drawn, rest } = drawCards(deck, drawCount);
       if (!drawn.length) return;
-      const origin = reducedMotion() ? null : dealOriginOf(deckRef.current);
+      const origin = prefersReducedMotion() ? null : dealOriginOf(deckRef.current);
       setDeal(origin ? { id: drawn[0].id, origin } : null);
       setDraws((prev) => [drawn, ...prev].slice(0, HISTORY));
       setDeck(rest);
@@ -303,7 +302,7 @@ export const useTarotTable = (active: boolean) => {
       const arts = pane ? Array.from(pane.querySelectorAll<HTMLElement>('.chance-tarot-art')) : [];
       const deck = pane?.querySelector<HTMLElement>('.chance-tarot-empty-back') ?? arts[Math.floor(arts.length / 2)];
       setDealOrigin(dealOriginOf(deck));
-      setDealing(!reducedMotion());
+      setDealing(!prefersReducedMotion());
       setRevealedCount(0);
       setAskFresh(false);
       setReadings((prev) => [{ id: createId(), draws: drawTarot(spread) }, ...prev].slice(0, HISTORY));

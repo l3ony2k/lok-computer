@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { createId } from '@/lib/id';
 import { scrollIntoViewWithin } from '@/lib/utils';
 import { ArrowRight, Copy, Pencil, Play, RotateCcw, Trash2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { copyText } from '@/lib/clipboard';
 import { WindowLayout } from '@/components/window/WindowLayout';
 import { RetroButton } from '@/components/ui/RetroButton';
 import { usePersistedState } from '@/hooks/useStorage';
@@ -76,8 +77,6 @@ const STATUS_TEXT: Record<RunStatus, string> = {
   error: 'Failed',
 };
 
-const createRunId = () => `run-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
-
 const isRecord = (value: unknown): value is Record<string, unknown> => (
   Boolean(value) && typeof value === 'object' && !Array.isArray(value)
 );
@@ -118,15 +117,6 @@ const humanize = (key: string) => {
 const optionName = (property: ChoiceProperty, option: string) => property.optionLabels?.[option] ?? humanize(option);
 const TYPE_LABEL = { noul: 'yes/no', choice: 'choice', score: 'score' } as const;
 const CERTAINTY_LABEL = { high: 'High confidence', medium: 'Some uncertainty', low: 'Unsure' } as const;
-
-const copyText = async (text: string, label: string) => {
-  try {
-    await navigator.clipboard.writeText(text);
-    toast.success(`${label} copied.`);
-  } catch {
-    toast.error('The clipboard is not available.');
-  }
-};
 
 const Meter = ({ value, label, emphasis = false }: { value: number; label: string; emphasis?: boolean }) => (
   <span
@@ -323,7 +313,7 @@ const RawJson = ({ label, value }: { label: string; value: unknown }) => {
           className="gap-1"
           onClick={(event) => {
             event.preventDefault();
-            void copyText(text, label);
+            void copyText(text, { what: label });
           }}
         >
           <Copy className="h-3 w-3" /> Copy
@@ -549,7 +539,7 @@ export const AskAiApp: React.FC<AskAiAppProps> = ({ ask: handoff, onPropsChange 
   const ask = useCallback((text: string) => {
     const trimmed = text.trim();
     if (!trimmed || busy) return;
-    void execute({ id: createRunId(), question: trimmed, createdAt: Date.now(), status: 'planning' }, { append: true });
+    void execute({ id: createId('run'), question: trimmed, createdAt: Date.now(), status: 'planning' }, { append: true });
     setQuestion('');
   }, [busy, execute]);
 
@@ -588,7 +578,7 @@ export const AskAiApp: React.FC<AskAiAppProps> = ({ ask: handoff, onPropsChange 
 
   const retry = (run: AskRun) => {
     void execute({
-      id: createRunId(),
+      id: createId('run'),
       question: run.question,
       inputs: run.inputs,
       createdAt: Date.now(),
@@ -611,7 +601,7 @@ export const AskAiApp: React.FC<AskAiAppProps> = ({ ask: handoff, onPropsChange 
     }
     setEditing(null);
     void execute({
-      id: createRunId(),
+      id: createId('run'),
       question: source?.question ?? 'Edited plan',
       inputs: source?.inputs,
       createdAt: Date.now(),
@@ -811,7 +801,7 @@ export const AskAiApp: React.FC<AskAiAppProps> = ({ ask: handoff, onPropsChange 
                           <RetroButton
                             size="sm"
                             className="gap-1"
-                            onClick={() => void copyText(JSON.stringify(run.answer?.result, null, 2), 'Result JSON')}
+                            onClick={() => void copyText(JSON.stringify(run.answer?.result, null, 2), { what: 'Result JSON' })}
                           >
                             <Copy className="h-3 w-3" /> Result
                           </RetroButton>

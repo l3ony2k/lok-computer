@@ -1,4 +1,5 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
+import { useResizeObserver } from '@/hooks/useResizeObserver';
 import { RetroButton } from '@/components/ui/RetroButton';
 import { cn } from '@/lib/utils';
 import { tabRows } from '@/lib/tabRows';
@@ -31,29 +32,19 @@ export const TabStrip = <T extends string>({ tabs, selected, onSelect, label, cl
   const count = tabs.length;
   const [rows, setRows] = useState<number[][]>(() => [tabs.map((_, index) => index)]);
 
-  useLayoutEffect(() => {
-    const bar = barRef.current;
-    if (!bar) return;
+  useResizeObserver(barRef, (bar) => {
     const px = (value: string) => parseFloat(value) || 0;
-    const measure = () => {
-      const style = getComputedStyle(bar);
-      // A pixel of slack, so sub-pixel widths never squeeze a full row.
-      const available = bar.clientWidth - px(style.paddingLeft) - px(style.paddingRight) - 1;
-      const widths = tabRefs.current.slice(0, count).map((tab) => {
-        if (!tab) return 0;
-        const tabStyle = getComputedStyle(tab);
-        return tab.getBoundingClientRect().width + px(tabStyle.marginLeft) + px(tabStyle.marginRight);
-      });
-      const next = tabRows(widths, available, px(style.columnGap), selectedIndex);
-      setRows((prev) => (JSON.stringify(prev) === JSON.stringify(next) ? prev : next));
-    };
-    measure();
-    if (typeof ResizeObserver !== 'function') return;
-    const observer = new ResizeObserver(measure);
-    observer.observe(bar);
-    tabRefs.current.slice(0, count).forEach((tab) => tab && observer.observe(tab));
-    return () => observer.disconnect();
-  }, [selectedIndex, count]);
+    const style = getComputedStyle(bar);
+    // A pixel of slack, so sub-pixel widths never squeeze a full row.
+    const available = bar.clientWidth - px(style.paddingLeft) - px(style.paddingRight) - 1;
+    const widths = tabRefs.current.slice(0, count).map((tab) => {
+      if (!tab) return 0;
+      const tabStyle = getComputedStyle(tab);
+      return tab.getBoundingClientRect().width + px(tabStyle.marginLeft) + px(tabStyle.marginRight);
+    });
+    const next = tabRows(widths, available, px(style.columnGap), selectedIndex);
+    setRows((prev) => (JSON.stringify(prev) === JSON.stringify(next) ? prev : next));
+  }, [selectedIndex, count], { layout: true, also: () => tabRefs.current.slice(0, count) });
 
   return (
     <div ref={barRef} className={cn('app-toolbar-row app-tab-bar app-tab-strip sticky top-0', className)} role="tablist" aria-label={label} data-rows={rows.length}>
