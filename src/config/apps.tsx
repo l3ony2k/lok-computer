@@ -174,7 +174,7 @@ export const APPLICATIONS = {
     iconType: 'dice',
     component: ChanceApp,
     loader: APP_MODULE_LOADERS.Chance,
-    defaultWidth: 520,
+    defaultWidth: 780,
     defaultHeight: 600,
     singleInstance: true,
     showOnDesktop: true,

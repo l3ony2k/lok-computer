@@ -1,0 +1,121 @@
+/*
+ * M8gic: a black ball with a dark-blue window and a blue die floating in it.
+ * The ball is a real object, so it keeps its own colours in every theme
+ * (like the dice and coins); the result and history use the theme's tokens.
+ */
+
+.m8gic-stage {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    /* Room for the shake, so the ball never touches the table's edges. */
+    padding: 6px 0;
+}
+
+.m8gic-ball {
+    /* useTableFit sets --m8gic-fit on the stage from the room the table has. */
+    /* Whole pixels, so the window and the die inside it land on the pixel grid. */
+    --m8gic-size: round(down, var(--m8gic-fit, clamp(160px, 48cqw, 300px)), 2px);
+    position: relative;
+    width: var(--m8gic-size);
+    height: var(--m8gic-size);
+    flex-shrink: 0;
+    border-radius: 50%;
+    background:
+        /* The window light's sharp highlight, up and to the left. */
+        radial-gradient(ellipse 22% 14% at 32% 20%, rgb(255 255 255 / 0.55), rgb(255 255 255 / 0) 70%),
+        /* A soft sheen over the top half. */
+        radial-gradient(ellipse 70% 55% at 40% 26%, rgb(255 255 255 / 0.16), rgb(255 255 255 / 0) 70%),
+        /* Light bouncing off the table into the bottom edge. */
+        radial-gradient(ellipse 60% 22% at 55% 96%, rgb(120 130 160 / 0.22), rgb(120 130 160 / 0) 70%),
+        radial-gradient(circle at 42% 36%, #3a3b40 0%, #16171a 38%, #060607 72%, #000 100%);
+    box-shadow:
+        0 calc(var(--m8gic-size) * 0.05) calc(var(--m8gic-size) * 0.08) rgb(0 0 0 / 0.35),
+        inset 0 calc(var(--m8gic-size) * -0.02) calc(var(--m8gic-size) * 0.05) rgb(0 0 0 / 0.6);
+    transform-origin: 50% 60%;
+}
+
+/* The round window: a dark ring of moulding, then the blue liquid. */
+.m8gic-window {
+    position: absolute;
+    /* 56% of the ball, centred, in whole pixels. */
+    --m8gic-window: round(calc(var(--m8gic-size) * 0.56), 2px);
+    left: calc((var(--m8gic-size) - var(--m8gic-window)) / 2);
+    top: calc((var(--m8gic-size) - var(--m8gic-window)) / 2);
+    width: var(--m8gic-window);
+    height: var(--m8gic-window);
+    border-radius: 50%;
+    overflow: hidden;
+    background: radial-gradient(circle at 50% 45%, #10236b 0%, #0a1648 55%, #040a24 100%);
+    box-shadow:
+        0 0 0 calc(var(--m8gic-size) * 0.018) #1d1e22,
+        0 0 0 calc(var(--m8gic-size) * 0.03) #050506,
+        inset 0 calc(var(--m8gic-size) * 0.02) calc(var(--m8gic-size) * 0.05) rgb(0 0 0 / 0.75);
+}
+
+/* The liquid's haze and the glass's reflection, over the die. */
+.m8gic-window::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    pointer-events: none;
+    background:
+        radial-gradient(ellipse 46% 20% at 38% 18%, rgb(255 255 255 / 0.12), rgb(255 255 255 / 0) 70%),
+        /* Only the rim darkens, outside the die's corners, so its edges stay crisp. */
+        radial-gradient(circle at 50% 50%, rgb(4 10 36 / 0) 86%, rgb(4 10 36 / 0.5) 100%);
+}
+
+.m8gic-die {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.m8gic-die-face {
+    transform-box: view-box;
+    transform-origin: 50% 50%;
+}
+
+.m8gic-triangle {
+    /* A flat fill with no stroke: a lighter outline read as a fuzzy halo at this size. */
+    fill: #2547c8;
+}
+
+/* Before the first shake the die waits deep in the liquid, blank. */
+.m8gic-die-face[data-idle] {
+    opacity: 0.28;
+    filter: blur(0.6px);
+}
+
+.m8gic-die-text {
+    fill: #f4f6ff;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-weight: 700;
+    /* Some skins turn font smoothing off for their bitmap faces; the die is an object, always smooth. */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* History: a small square per answer, filled for yes, outlined for maybe, dim for no. */
+.m8gic-mark {
+    flex-shrink: 0;
+    width: 10px;
+    height: 10px;
+    box-sizing: border-box;
+    border: 1px solid var(--text-color);
+    background: var(--text-color);
+}
+
+.m8gic-mark[data-kind="maybe"] {
+    background: transparent;
+}
+
+.m8gic-mark[data-kind="no"] {
+    border-color: var(--log-muted);
+    background: var(--log-muted);
+    opacity: 0.6;
+}

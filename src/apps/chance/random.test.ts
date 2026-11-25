@@ -104,8 +104,9 @@ describe('tarot', () => {
 
 describe('normalizeChanceState', () => {
   test('keeps known tabs and dice, falls back otherwise', () => {
-    expect(normalizeChanceState({ tab: 'tarot', dice: [6, 20, 7, 100], jokers: true })).toEqual({ tab: 'tarot', dice: [6, 20, 100], coins: [DEFAULT_COIN], jokers: true });
-    expect(normalizeChanceState({ tab: 'nope', dice: [] })).toEqual({ tab: 'dice', dice: DEFAULT_DICE, coins: [DEFAULT_COIN], jokers: false });
+    expect(normalizeChanceState({ tab: 'tarot', dice: [6, 20, 7, 100], jokers: true })).toEqual({ tab: 'tarot', dice: [6, 20, 100], coins: [DEFAULT_COIN], jokers: true, history: true });
+    expect(normalizeChanceState({ tab: 'nope', dice: [] })).toEqual({ tab: 'coin', dice: DEFAULT_DICE, coins: [DEFAULT_COIN], jokers: false, history: true });
+    expect(normalizeChanceState({ history: false }).history).toBe(false);
     expect(normalizeChanceState({ coins: [DEFAULT_COIN, 'nope', DEFAULT_COIN] }).coins).toEqual([DEFAULT_COIN, DEFAULT_COIN]);
     expect(normalizeChanceState(null).dice).toEqual(DEFAULT_DICE);
     expect(normalizeChanceState({ dice: Array(20).fill(6) }).dice).toHaveLength(MAX_DICE);

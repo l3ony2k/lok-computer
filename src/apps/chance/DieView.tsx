@@ -2,7 +2,7 @@ import { PIP_LAYOUT, isRedFace } from './random';
 import { cubeTransform } from './dieThrow';
 
 /**
- * A die on the table. A d6 is a real cube (six faces in CSS 3D, opposite
+ * A die on the table. A d4 is a tetrahedron (below), a d6 a real cube (six faces in CSS 3D, opposite
  * faces summing to seven) turned so the rolled face looks up at the viewer;
  * any other die is a two-sided tile showing its number. throwDice()
  * (dieThrow.ts) animates both: thrown from a point, tumbling, bouncing once
@@ -27,6 +27,40 @@ const CUBE_FACES = [
   { value: 6, side: 'back' },
 ] as const;
 
+/**
+ * A d4 is a tetrahedron: one face toward the viewer, its apex behind. Like a
+ * real d4 every face carries the numbers of its three corners, each reading
+ * toward its corner, and the roll is the number at the top. The numbers are
+ * laid out per roll (the rolled one on the top corner), so it always lands
+ * the same way up.
+ */
+type D4Corner = 'top' | 'left' | 'right';
+const D4_FACES: { side: string; corners: Record<D4Corner, 'T' | 'L' | 'R' | 'A'> }[] = [
+  { side: 'front', corners: { top: 'T', left: 'L', right: 'R' } },
+  { side: 'bottom', corners: { top: 'A', left: 'L', right: 'R' } },
+  { side: 'left', corners: { top: 'A', left: 'T', right: 'L' } },
+  { side: 'right', corners: { top: 'A', left: 'R', right: 'T' } },
+];
+
+const Tetrahedron = ({ value, rolling }: { value: number | null; rolling: boolean }) => {
+  const top = value ?? 1;
+  const [L, R, A] = [1, 2, 3, 4].filter((n) => n !== top);
+  const vertex = { T: top, L, R, A };
+  return (
+    <div className="chance-d4">
+      {D4_FACES.map((face) => (
+        <div className="chance-d4-face" data-side={face.side} key={face.side}>
+          {face.side === 'front' && value === null && !rolling
+            ? <span className="chance-d4-unknown">?</span>
+            : (Object.keys(face.corners) as D4Corner[]).map((corner) => (
+              <span className="chance-d4-num" data-corner={corner} key={corner}>{vertex[face.corners[corner]]}</span>
+            ))}
+        </div>
+      ))}
+    </div>
+  );
+};
+
 export const DieView = ({ sides, value, rolling }: { sides: number; value: number | null; rolling: boolean }) => {
   const label = value === null ? `d${sides}, not rolled` : rolling ? `d${sides}, rolling` : `d${sides}: ${value}`;
   return (
@@ -43,6 +77,8 @@ export const DieView = ({ sides, value, rolling }: { sides: number; value: numbe
               </div>
             ))}
           </div>
+        ) : sides === 4 ? (
+          <Tetrahedron value={value} rolling={rolling} />
         ) : (
           <div className="chance-tile">
             {(['front', 'back'] as const).map((side) => (

@@ -8,27 +8,6 @@
     container-type: inline-size;
 }
 
-/*
- * Every tab is laid out the same way: its controls on top, then the result
- * (dice, coin, cards, a reading) centred on the table beneath them, then a
- * one-line readout. Objects grow with the window up to a cap, so a maximised
- * window gives a calm, centred table rather than giant or stranded pieces.
- */
-.chance-pane {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 18px;
-    padding: 16px 12px 20px;
-}
-
-.chance-actions {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
 
 /* The line under the result: a hint before the first go, then the outcome. */
 .chance-readout {
@@ -52,7 +31,7 @@
     font-variant-numeric: tabular-nums;
 }
 
-.chance-total,
+
 .chance-hint {
     font-size: 12px;
     color: var(--log-muted);
@@ -62,6 +41,514 @@
     font-size: 11px;
     color: var(--log-muted);
     line-height: 1.35;
+}
+
+/*
+ * Every tab is a table (ChanceTable): an optional setup row, the things on
+ * the table, the result, and one primary button that Space also presses; the
+ * history sits in a side panel, under the table when the window is narrow.
+ * Objects grow with the window up to a cap, so a maximised window gives a
+ * calm, centred table rather than giant or stranded pieces.
+ */
+.chance-layout {
+    display: flex;
+    /* Exactly the window's height: the table and the history each scroll on
+       their own, so a long history never stretches the page. */
+    height: 100%;
+    outline: none;
+}
+
+.chance-main {
+    /* Its own container: sizes and narrow layouts follow the table, not the window. */
+    container-type: inline-size;
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 16px 18px;
+}
+
+.chance-setup {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: center;
+    max-width: 100%;
+}
+
+.chance-setup-label {
+    font-size: 11px;
+    color: var(--log-muted);
+    margin-right: 4px;
+}
+
+/* The table: whatever is on it, centred in the space between setup and button. */
+.chance-stage {
+    /* Grows to fill the window but never shrinks below what is on it: in a
+       short window the table area scrolls instead of squeezing the cards
+       under the setup row and the button. */
+    flex: 1 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    width: 100%;
+}
+
+.chance-result {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    /* Room for a note and a total at once, so the table never shifts as the
+       result changes between "Rolling…" and "3 + 4 / 7". */
+    min-height: 52px;
+    text-align: center;
+}
+
+.chance-result-note {
+    font-size: 12px;
+    line-height: 1.35;
+    color: var(--log-muted);
+}
+
+.chance-action {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.chance-action-row {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+}
+
+/* The square + after the primary button: as tall as it, so the two read as one pair. */
+.chance-add.retro-button {
+    width: auto;
+    min-width: 0;
+    min-height: 40px;
+    aspect-ratio: 1;
+    padding: 0;
+}
+
+/* The one primary action, larger than the rest. */
+.chance-primary.retro-button {
+    min-height: 40px;
+    padding-inline: 28px;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.chance-action-hint {
+    font-size: 11px;
+    color: var(--log-muted);
+}
+
+/* Space only means something with a keyboard. */
+@media (hover: none) {
+    .chance-action-hint {
+        display: none;
+    }
+}
+
+/* A row of things on the table: dice, coins. */
+.chance-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+/* Quick sets, side choices: small square chips; the chosen one is filled. */
+.chance-chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.chance-chip {
+    min-width: 40px;
+    padding: 4px 9px;
+    font: inherit;
+    font-size: 12px;
+    color: var(--text-secondary, var(--text-color));
+    background: var(--detail-meta-bg);
+    border: 1px solid var(--internal-border);
+    cursor: pointer;
+}
+
+.chance-chip:hover {
+    color: var(--text-color);
+    border-color: var(--internal-border-hover, var(--block-border));
+}
+
+.chance-chip[aria-pressed="true"] {
+    color: var(--detail-bg);
+    background: var(--text-color);
+    border-color: var(--text-color);
+    font-weight: 700;
+}
+
+/* Tarot's spread: two joined choices. */
+.chance-segmented {
+    display: flex;
+    border: 1px solid var(--block-border);
+}
+
+.chance-segmented button {
+    padding: 6px 14px;
+    font: inherit;
+    font-size: 12px;
+    color: var(--text-secondary, var(--text-color));
+    background: var(--detail-meta-bg);
+    border: 0;
+    cursor: pointer;
+}
+
+.chance-segmented button + button {
+    border-left: 1px solid var(--block-border);
+}
+
+.chance-segmented button[aria-checked="true"] {
+    color: var(--detail-bg);
+    background: var(--text-color);
+    font-weight: 700;
+}
+
+/*
+ * One thing on the table (TableItem): the thing itself is the button that
+ * changes it; the corner × removes it (on hover, focus or while its picker is
+ * open; always on touch); the picker opens under it. Selected items carry a
+ * thin dashed outline. TableAdd is the dashed place that adds one more.
+ */
+.chance-item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.chance-item-button {
+    display: block;
+    padding: 0;
+    color: inherit;
+    background: none;
+    border: 0;
+    cursor: pointer;
+}
+
+.chance-item[data-shape="round"] .chance-item-button {
+    border-radius: 50%;
+}
+
+.chance-item[data-open] .chance-item-button {
+    outline: 1px dashed var(--log-muted);
+    outline-offset: 5px;
+}
+
+.chance-item-remove {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    z-index: 2;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    font: inherit;
+    font-size: 14px;
+    line-height: 1;
+    color: var(--text-color);
+    background: var(--detail-meta-bg);
+    border: 1px solid var(--block-border);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 120ms ease;
+}
+
+.chance-item:hover .chance-item-remove,
+.chance-item[data-open] .chance-item-remove,
+.chance-item-remove:focus-visible {
+    opacity: 1;
+}
+
+@media (hover: none) {
+    .chance-item-remove {
+        opacity: 1;
+    }
+}
+
+.chance-item-caption {
+    font-size: 11px;
+    color: var(--log-muted);
+    white-space: nowrap;
+}
+
+/* A coin's caption never makes it wider than the coin (the row's sizing
+   counts coins, not captions); a long name ends in "…" on a small coin. */
+.chance-coins .chance-item-caption {
+    max-width: var(--coin);
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chance-item[data-open] .chance-item-caption {
+    color: var(--text-color);
+}
+
+.chance-item-picker {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    /* Centred under the item; TableItem shifts it back inside the table at an edge. */
+    translate: calc(-50% + var(--chance-picker-shift, 0px)) 0;
+    z-index: 5;
+    padding: 10px;
+}
+
+.chance-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+    width: 196px;
+}
+
+.chance-picker-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: 190px;
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+.chance-picker-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 6px;
+    font: inherit;
+    font-size: 12px;
+    text-align: left;
+    color: var(--text-color);
+    background: none;
+    border: 1px solid transparent;
+    cursor: pointer;
+}
+
+.chance-picker-option img {
+    width: 24px;
+    height: 24px;
+}
+
+.chance-picker-option:hover {
+    background: var(--button-hover);
+}
+
+.chance-picker-option[aria-pressed="true"] {
+    border-color: var(--text-color);
+    font-weight: 700;
+}
+
+/*
+ * The history panel: newest first, the latest boxed. Beside the table in a
+ * wide window, under it (full width) in a narrow one.
+ */
+.chance-history-panel {
+    flex: 0 0 210px;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    border-left: 1px solid var(--internal-border);
+}
+
+.chance-history-head {
+    display: flex;
+    align-items: center;
+    padding: 12px 14px 6px;
+}
+
+.chance-history-title {
+    flex: 1 1 auto;
+    font-size: 12px;
+    color: var(--text-secondary, var(--text-color));
+}
+
+.chance-history-clear {
+    padding: 0;
+    font: inherit;
+    font-size: 11px;
+    color: var(--log-muted);
+    background: none;
+    border: 0;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+}
+
+.chance-history-clear:hover {
+    color: var(--text-color);
+}
+
+.chance-history-summary,
+.chance-history-empty {
+    margin: 0;
+    padding: 0 14px 8px;
+    font-size: 11px;
+    color: var(--log-muted);
+}
+
+.chance-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0;
+    padding: 0 10px 12px;
+    list-style: none;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.chance-history-entry {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 6px;
+    border: 1px solid transparent;
+}
+
+.chance-history-entry[data-latest] {
+    background: var(--detail-meta-bg);
+    border-color: var(--internal-border);
+}
+
+.chance-history-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    min-width: 0;
+}
+
+.chance-history-total {
+    margin-left: auto;
+    font-family: var(--font-code);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-secondary, var(--text-color));
+}
+
+.chance-history-entry[data-latest] .chance-history-total {
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+/* A die in the history: an ivory d6 with its pips, or a square with the number. */
+.chance-mini-die {
+    min-width: 22px;
+    height: 22px;
+    padding: 0 3px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-code);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-color);
+    border: 1px solid var(--text-secondary, var(--text-color));
+}
+
+.chance-mini-die[data-sides="6"] {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    place-items: center;
+    width: 22px;
+    padding: 3px;
+    background: #fbf9f2;
+    border-color: #2a2a2a;
+}
+
+.chance-mini-pip[data-on] {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #161616;
+}
+
+.chance-mini-pip[data-on][data-red] {
+    background: #c8102e;
+}
+
+/* A coin in the history: H dark, T light, which read at a glance. */
+.chance-coin-mark {
+    width: 20px;
+    height: 20px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--text-color);
+    border-radius: 50%;
+    font-family: var(--font-code);
+    font-size: 11px;
+    color: var(--text-color);
+}
+
+.chance-coin-mark[data-side="heads"] {
+    color: var(--detail-bg);
+    background: var(--text-color);
+}
+
+/* A reading in the history: the card's thumbnail (one card) and the names. */
+.chance-history-reading {
+    align-items: flex-start;
+}
+
+.chance-history-tarot {
+    width: 18px;
+    height: auto;
+    flex: none;
+}
+
+.chance-history-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    font-size: 12px;
+    line-height: 1.35;
+    color: var(--text-color);
+}
+
+.chance-history-position {
+    color: var(--log-muted);
+}
+
+@container (max-width: 620px) {
+    .chance-layout {
+        flex-direction: column;
+    }
+
+    /* Under the table: at most about a third of the window, its list scrolling. */
+    .chance-history-panel {
+        flex: 0 0 auto;
+        max-height: 36%;
+        border-left: 0;
+        border-top: 1px solid var(--internal-border);
+    }
 }
 
 /* ---------- Dice ---------- */
@@ -137,6 +624,80 @@
 .chance-cube > [data-side="top"] { transform: rotateX(90deg) translateZ(calc(var(--die) / 2)); }
 .chance-cube > [data-side="bottom"] { transform: rotateX(-90deg) translateZ(calc(var(--die) / 2)); }
 
+/*
+ * The d4: four equilateral triangles (edge --a, height --h) folded into a
+ * tetrahedron (height --H) about its centre. The front face lies in the
+ * die's place; the other three fold back from its edges by the dihedral
+ * angle (70.53°) to meet at the apex behind. Each face is a dark triangle
+ * with an ivory one inset, so the edges read like the d6's border.
+ */
+.chance-d4 {
+    --a: calc(var(--die) * 1.2);
+    --h: calc(var(--a) * 0.866);
+    --H: calc(var(--a) * 0.8165);
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    /* Front face level with the other dice, the triangle centred in the slot. */
+    translate: 0 calc(var(--h) / 6) calc(var(--H) / -4);
+}
+
+.chance-d4-face {
+    position: absolute;
+    left: calc(50% - var(--a) / 2);
+    top: calc(50% - var(--h) * 2 / 3);
+    width: var(--a);
+    height: var(--h);
+    transform-origin: 50% 66.667%;
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+    background: #2a2a2a;
+    backface-visibility: hidden;
+    color: #161616;
+}
+
+.chance-d4-face::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    clip-path: polygon(50% 4px, calc(100% - 3.5px) calc(100% - 2px), 3.5px calc(100% - 2px));
+    background: var(--d4-face, #fbf9f2);
+}
+
+/* The faces that start hidden are shaded a little, so the solid reads as it tumbles. */
+.chance-d4 > [data-side="bottom"] { --d4-face: #e4dfd1; }
+.chance-d4 > [data-side="left"] { --d4-face: #efebdf; }
+.chance-d4 > [data-side="right"] { --d4-face: #d9d3c3; }
+
+.chance-d4 > [data-side="front"] { transform: translateZ(calc(var(--H) / 4)); }
+.chance-d4 > [data-side="bottom"] { transform: translateZ(calc(var(--H) / 4)) translateY(calc(var(--h) / 3)) rotateX(70.53deg) translateY(calc(var(--h) / -3)); }
+.chance-d4 > [data-side="left"] { transform: translateZ(calc(var(--H) / 4)) rotateZ(120deg) translateY(calc(var(--h) / 3)) rotateX(70.53deg) translateY(calc(var(--h) / -3)); }
+.chance-d4 > [data-side="right"] { transform: translateZ(calc(var(--H) / 4)) rotateZ(-120deg) translateY(calc(var(--h) / 3)) rotateX(70.53deg) translateY(calc(var(--h) / -3)); }
+
+/* Each number sits toward its corner and reads with that corner up. */
+.chance-d4-num,
+.chance-d4-unknown {
+    position: absolute;
+    translate: -50% -50%;
+    font-family: var(--font-code);
+    font-weight: 700;
+    line-height: 1;
+}
+
+.chance-d4-num {
+    font-size: calc(var(--die) * 0.21);
+}
+
+.chance-d4-num[data-corner="top"] { left: 50%; top: 27%; }
+.chance-d4-num[data-corner="left"] { left: 21%; top: 85%; rotate: -120deg; }
+.chance-d4-num[data-corner="right"] { left: 79%; top: 85%; rotate: 120deg; }
+
+.chance-d4-unknown {
+    left: 50%;
+    top: 66.667%;
+    font-size: calc(var(--die) * 0.34);
+    color: var(--log-muted);
+}
+
 /* A tile's back carries the same number, so it reads mid-tumble. */
 .chance-tile > [data-side="back"] { transform: rotateY(180deg); }
 
@@ -206,39 +767,6 @@
 .chance-die-pips ~ .chance-die-sides {
     display: none;
 }
-
-/* Earlier rolls: one group per roll, each die a small square with its value. */
-.chance-roll-marks {
-    align-items: center;
-}
-
-.chance-roll-mark {
-    min-width: 22px;
-    height: 22px;
-    padding: 0 3px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--text-color);
-    font-family: var(--font-code);
-    font-size: 11px;
-    font-variant-numeric: tabular-nums;
-    color: var(--text-color);
-}
-
-.chance-roll-mark[data-sides="6"] {
-    color: #161616;
-    background: #fbf9f2;
-    border-color: #2a2a2a;
-}
-
-.chance-roll-total {
-    margin-left: 3px;
-    font-family: var(--font-code);
-    font-size: 11px;
-    color: var(--log-muted);
-}
-
 /* ---------- Coin ---------- */
 
 /*
@@ -246,9 +774,10 @@
  * scripts/coin-images.mjs), like the tarot's 1909 cards. Both faces are
  * stacked and the one showing is opaque.
  */
-/* The coins on the table, centred; the more coins, the smaller each. */
+/* The coins on the table, centred. useTableFit sets --coin and the row's
+   width from the room the table has; the clamp only covers the first frame. */
 .chance-coins {
-    --coin: clamp(112px, 20cqw, 164px);
+    --coin: clamp(104px, 19cqw, 160px);
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
@@ -257,15 +786,9 @@
     padding-block: 4px;
 }
 
-.chance-coins[data-count="few"] {
-    --coin: clamp(80px, 14cqw, 128px);
-}
-
-.chance-coins[data-count="many"] {
-    --coin: clamp(56px, 9cqw, 92px);
-}
 
 .chance-coin {
+    display: block;
     position: relative;
     width: var(--coin);
     height: var(--coin);
@@ -344,49 +867,56 @@
     25.1%, 75% { opacity: 1; }
     75.1%, 100% { opacity: 0; }
 }
-
-/* Earlier flips: one group per flip of H/T marks, heads dark and tails
-   light, which read at a glance where small photos would not. */
-.chance-coin-marks {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-}
-
-.chance-coin-marks li {
-    width: 22px;
-    height: 22px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--text-color);
-    border-radius: 50%;
-    font-family: var(--font-code);
-    font-size: 11px;
-    color: var(--text-color);
-    background: var(--detail-bg);
-}
-
-.chance-coin-marks li[data-side="heads"] {
-    color: var(--detail-bg);
-    background: var(--text-color);
-}
-
 /* ---------- Cards ---------- */
 
 .chance-count {
     align-items: stretch;
 }
 
+.chance-count .retro-button {
+    height: auto;
+    min-height: 40px;
+    min-width: 36px;
+}
+
 .chance-count-value {
-    min-width: 28px;
+    min-width: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
     border-top: 1px solid hsl(var(--border));
     border-bottom: 1px solid hsl(var(--border));
     font-variant-numeric: tabular-nums;
-    font-size: 13px;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+/* The table spans the stage, so the hand can measure how many cards fit. */
+.chance-table-wrap {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+/* The deck and what acts on it: its count, Shuffle, and the Jokers box. */
+.chance-deck-column {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    width: var(--card);
+}
+
+.chance-deck-count {
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--text-secondary, var(--text-color));
+}
+
+.chance-deck-control {
+    width: 100%;
+    justify-content: center;
 }
 
 /*
@@ -489,12 +1019,6 @@
 .chance-card[data-red] {
     --card-ink: #c8102e;
 }
-
-/* The cards pane fills the window so the history can take the space below the hand. */
-.chance-pane-cards {
-    min-height: 100%;
-}
-
 /* The deck, face down, while nothing is on the table: a red lattice inside a white margin. */
 .chance-card-back::before {
     content: "";
@@ -526,33 +1050,6 @@
     cursor: pointer;
 }
 
-/* Earlier draws: rows of small cards, newest first, scrolling down through the empty space. */
-.chance-history {
-    flex: 1 1 auto;
-    align-self: stretch;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 0 4px;
-    overflow-y: auto;
-    border-top: 1px dashed var(--internal-border);
-}
-
-.chance-history-label {
-    font-size: 11px;
-    color: var(--log-muted);
-}
-
-.chance-history-draws {
-    display: flex;
-    flex-wrap: wrap;
-    align-content: flex-start;
-    justify-content: center;
-    gap: 12px;
-}
-
 .chance-card-joker {
     writing-mode: vertical-rl;
     text-orientation: upright;
@@ -560,12 +1057,6 @@
     font-weight: 700;
     line-height: 1;
     letter-spacing: -0.04em;
-}
-
-.chance-history-draw {
-    display: flex;
-    flex: 0 0 auto;
-    gap: 3px;
 }
 
 .chance-card[data-small] {
@@ -919,6 +1410,10 @@
 /* Under a reading, once every card has turned and typed: one quiet line
    handing the cards to Ask AI. Right after a deal it waits a second, so the
    reading lands first. */
+.chance-ask-line[data-waiting] {
+    visibility: hidden;
+}
+
 .chance-ask-line[data-fresh] {
     animation: chance-ask-in 260ms ease 1s both;
 }

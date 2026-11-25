@@ -1,0 +1,282 @@
+/*
+ * Moon blocks: two red wooden crescents on the table. The blocks are real
+ * objects with their own fixed colours in every theme; the text around them
+ * and the history use the shared tokens.
+ */
+
+.moon-table {
+    /* A block's width follows the table (.chance-main is the container), capped. */
+    --moon-block: clamp(64px, 24cqi, 168px);
+    position: relative;
+    flex: none;
+    width: min(100%, calc(var(--moon-block) * 3.1));
+    height: calc(var(--moon-block) * 1.45);
+}
+
+.moon-block-spot {
+    position: absolute;
+    width: var(--moon-block);
+    aspect-ratio: 100 / 64;
+    translate: -50% -50%;
+}
+
+.moon-block-flight,
+.moon-block-turn,
+.moon-block-flip,
+.moon-block-shadow,
+.moon-shadow-turn,
+.moon-shadow-flip {
+    position: absolute;
+    inset: 0;
+}
+
+.moon-block-turn,
+.moon-shadow-turn {
+    transform: rotate(var(--moon-angle));
+}
+
+.moon-block-face,
+.moon-shadow-flip svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+/* The face that landed up; the throw swaps them in the air. */
+.moon-block-face {
+    opacity: 0;
+    filter: drop-shadow(0 1px 0 rgb(0 0 0 / 0.25));
+}
+
+.moon-block-spot[data-face="flat"] .moon-block-face[data-side="flat"],
+.moon-block-spot[data-face="round"] .moon-block-face[data-side="round"] {
+    opacity: 1;
+}
+
+/* Light from the top left: the shadow falls a little down and to the right. */
+.moon-block-shadow {
+    translate: 4% 9%;
+    pointer-events: none;
+}
+
+.moon-shadow-flip svg {
+    fill: rgb(0 0 0 / 0.38);
+    filter: blur(3px);
+}
+
+/* Three 聖筊: paper pieces burst from the blocks (MoonBlocksTab playCelebration). */
+.moon-confetti {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.moon-confetti-piece {
+    position: absolute;
+    opacity: 0;
+}
+
+/* Answered: the blocks step back once the answer has taken over (after the celebration on a yes). */
+.moon-block-spot {
+    transition: opacity 0.2s ease;
+}
+
+.moon-table[data-answered] .moon-block-spot {
+    opacity: 0.55;
+    transition: opacity 0.5s ease 0.3s;
+}
+
+.moon-table[data-answered="confirmed"] .moon-block-spot {
+    transition-delay: 1.5s;
+}
+
+/*
+ * The result: a phase label, one headline, one line under it, and the
+ * progress toward three yeses. Every row keeps its height in every phase, so
+ * nothing moves between throwing, asking and answered.
+ */
+.moon-result {
+    display: grid;
+    justify-items: center;
+    row-gap: 2px;
+    width: min(100%, 380px);
+    text-align: center;
+}
+
+.moon-phase {
+    font-size: 11px;
+    line-height: 16px;
+    color: var(--log-muted);
+}
+
+.moon-result[data-phase="answered"] .moon-phase {
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+.moon-headline {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+}
+
+.moon-final {
+    font-size: 36px;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--text-color);
+}
+
+.moon-subline {
+    min-height: 1.35em;
+}
+
+.moon-progress {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 4px 8px;
+    min-height: 20px;
+    margin-top: 8px;
+}
+
+.moon-streak-pips {
+    display: flex;
+    gap: 3px;
+}
+
+.moon-streak-pip {
+    width: 10px;
+    height: 10px;
+    box-sizing: border-box;
+    border: 1px solid var(--log-muted);
+}
+
+.moon-streak-pip[data-on] {
+    background: var(--text-color);
+    border-color: var(--text-color);
+}
+
+.moon-no-mark {
+    width: 12px;
+    height: 12px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    line-height: 1;
+    color: var(--detail-bg, var(--window-bg));
+    background: var(--text-color);
+}
+
+/* History: one group per question, newest first; its throws under a header. */
+.moon-history-question {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 4px 0 6px 8px;
+    border-left: 2px solid transparent;
+}
+
+.moon-history-question + .moon-history-question {
+    margin-top: 4px;
+}
+
+.moon-history-question[data-current] {
+    border-left-color: var(--text-color);
+}
+
+.moon-history-head {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 0 6px 2px;
+}
+
+.moon-history-outcome {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-secondary, var(--text-color));
+}
+
+.moon-history-question[data-current] .moon-history-outcome {
+    color: var(--text-color);
+}
+
+.moon-history-count {
+    flex: none;
+    white-space: nowrap;
+    font-size: 11px;
+    color: var(--log-muted);
+}
+
+.moon-history-throws {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.moon-history-throws .chance-history-entry {
+    padding-top: 3px;
+    padding-bottom: 3px;
+}
+
+.moon-glyphs {
+    flex: none;
+    flex-wrap: nowrap;
+    gap: 4px;
+}
+
+.moon-glyph {
+    width: 22px;
+    height: 14px;
+    flex: none;
+    overflow: visible;
+}
+
+.moon-history-name {
+    min-width: 0;
+    font-size: 12px;
+    color: var(--text-secondary, var(--text-color));
+}
+
+.chance-history-entry[data-latest] .moon-history-name {
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+/* Setup: how serious the question is, and the rule that follows. */
+.moon-setup {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    max-width: 100%;
+    text-align: center;
+}
+
+.moon-mode-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 6px 8px;
+}
+
+.moon-mode-row .chance-segmented button:disabled {
+    cursor: default;
+}
+
+.moon-mode-row .chance-segmented button:disabled:not([aria-checked="true"]) {
+    opacity: 0.5;
+}

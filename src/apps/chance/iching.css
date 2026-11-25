@@ -1,0 +1,301 @@
+/*
+ * I Ching: the hexagram on the left, its name and the last throw on the
+ * right; stacked in a narrow table. Bars and text use the theme's tokens;
+ * the coins keep their photo's colours.
+ */
+
+.iching-table {
+    --iching-bar: clamp(140px, 26cqw, 260px);
+    --iching-bar-height: clamp(12px, 2.6cqw, 20px);
+    /* One group centred over the button: the hexagram, a fixed gap, and an
+       info column of fixed width, so the group never moves as the cast fills. */
+    display: grid;
+    grid-template-columns: auto minmax(0, 280px);
+    align-items: center;
+    justify-content: center;
+    column-gap: clamp(28px, 5cqw, 48px);
+    row-gap: 20px;
+    width: 100%;
+    max-width: 100%;
+}
+
+/* ---------- The hexagram ---------- */
+
+.iching-hexagram {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--iching-bar-height) * 1.1);
+}
+
+.iching-line {
+    display: grid;
+    grid-template-columns: 3.6em var(--iching-bar) 1.4em;
+    align-items: center;
+    column-gap: 10px;
+}
+
+.iching-line-label {
+    font-size: 11px;
+    line-height: 1;
+    text-align: right;
+    color: var(--log-muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.iching-line-mark {
+    position: relative;
+    width: 0.9em;
+    height: 0.9em;
+    font-size: 15px;
+}
+
+/* The marks are drawn, not typed, so every skin's font shows them alike:
+   ○ old yang, × old yin. */
+.iching-line-mark[data-mark="circle"] {
+    box-sizing: border-box;
+    border: 2px solid var(--text-color);
+    border-radius: 50%;
+}
+
+.iching-line-mark[data-mark="cross"]::before,
+.iching-line-mark[data-mark="cross"]::after {
+    content: "";
+    position: absolute;
+    left: -10%;
+    top: calc(50% - 1px);
+    width: 120%;
+    height: 2px;
+    background: var(--text-color);
+    transform: rotate(45deg);
+}
+
+.iching-line-mark[data-mark="cross"]::after {
+    transform: rotate(-45deg);
+}
+
+.iching-bar {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    height: var(--iching-bar-height);
+}
+
+.iching-bar-half {
+    width: 42%;
+    height: 100%;
+    background: var(--text-color);
+}
+
+.iching-bar[data-yang] .iching-bar-half {
+    width: 50.5%;
+}
+
+/* Lines not thrown yet: one dashed slot, the next one a little firmer. */
+.iching-line[data-empty] .iching-bar {
+    box-sizing: border-box;
+    border: 1px dashed var(--internal-border);
+}
+
+.iching-line[data-empty] .iching-bar-half {
+    display: none;
+}
+
+.iching-line[data-next] .iching-bar {
+    border-color: var(--internal-border-hover, var(--log-muted));
+}
+
+.iching-line[data-next] .iching-line-label {
+    color: var(--text-color);
+}
+
+/* The line that just landed draws in from the middle. */
+.iching-line[data-fresh] .iching-bar-half {
+    animation: iching-draw 320ms ease-out both;
+}
+
+.iching-line[data-fresh] .iching-bar-half:first-child {
+    transform-origin: right center;
+}
+
+.iching-line[data-fresh] .iching-bar-half:last-child {
+    transform-origin: left center;
+}
+
+.iching-line[data-fresh] .iching-line-mark {
+    animation: iching-mark-in 200ms ease-out 240ms both;
+}
+
+@keyframes iching-draw {
+    from { transform: scaleX(0); }
+}
+
+@keyframes iching-mark-in {
+    from { opacity: 0; }
+}
+
+/* ---------- Name and throw ---------- */
+
+.iching-side {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+}
+
+/* Before and during a cast it explains the method in about the room a
+   finished reading takes, so the group barely moves when the reading lands. */
+.iching-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 3px;
+    color: var(--text-color);
+}
+
+.iching-number {
+    font-size: 11px;
+    line-height: 1.3;
+    color: var(--log-muted);
+}
+
+.iching-name {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    column-gap: 10px;
+    margin: 2px 0 0;
+}
+
+.iching-chinese {
+    font-size: 44px;
+    line-height: 1.1;
+    font-weight: 400;
+    color: var(--text-color);
+}
+
+.iching-pinyin {
+    font-size: 18px;
+    line-height: 1.2;
+    color: var(--text-color);
+}
+
+.iching-english {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--text-color);
+}
+
+.iching-meaning {
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--text-secondary, var(--text-color));
+}
+
+.iching-change {
+    margin-top: 6px;
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--log-muted);
+}
+
+.iching-change-to {
+    color: var(--text-color);
+}
+
+.iching-throw {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.iching-coins {
+    --coin: clamp(52px, 11cqw, 78px);
+    display: flex;
+    gap: calc(var(--coin) * 0.2);
+}
+
+.iching-throw-note {
+    min-height: 2.8em;
+    font-size: 11px;
+    line-height: 1.4;
+    color: var(--log-muted);
+}
+
+/* Without the photos: a brass coin with its square hole and its side's character. */
+.iching-coin-stand-in {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    box-sizing: border-box;
+    padding-top: 9%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #d9b45a, #a77b2c 70%, #7c5718);
+    color: #4a3108;
+    font-size: calc(var(--coin) * 0.2);
+    line-height: 1;
+    -webkit-mask: linear-gradient(#000 0 0) center / 26% 26% no-repeat exclude, linear-gradient(#000 0 0);
+    mask: linear-gradient(#000 0 0) center / 26% 26% no-repeat exclude, linear-gradient(#000 0 0);
+}
+
+.iching-ask-line {
+    margin-top: 0;
+}
+
+/* ---------- History ---------- */
+
+.iching-history-entry {
+    align-items: center;
+}
+
+.iching-mini {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: 20px;
+    flex: none;
+}
+
+.iching-mini .iching-bar {
+    height: 2px;
+}
+
+/* ---------- Narrow: stacked and centred ---------- */
+
+@container (max-width: 500px) {
+    .iching-table {
+        grid-template-columns: minmax(0, 1fr);
+        justify-items: center;
+    }
+
+    .iching-side {
+        align-items: center;
+        text-align: center;
+        width: 100%;
+    }
+
+    .iching-info {
+        align-items: center;
+        justify-content: center;
+    }
+
+    .iching-name {
+        justify-content: center;
+    }
+
+    .iching-throw {
+        align-items: center;
+    }
+
+    .iching-throw-note {
+        text-align: center;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .iching-line[data-fresh] .iching-bar-half,
+    .iching-line[data-fresh] .iching-line-mark {
+        animation: none;
+    }
+}

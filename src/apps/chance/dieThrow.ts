@@ -65,10 +65,11 @@ export const throwDice = (container: HTMLElement, from: DOMRect, sides: readonly
     ], timing));
 
     // Tumble: a few full turns that end exactly on the landing orientation.
-    const body = slot.querySelector<HTMLElement>(sides[index] === 6 ? '.chance-cube' : '.chance-tile');
+    const solid = sides[index] === 6 || sides[index] === 4;
+    const body = slot.querySelector<HTMLElement>(sides[index] === 6 ? '.chance-cube' : sides[index] === 4 ? '.chance-d4' : '.chance-tile');
     if (body) {
       const end = sides[index] === 6 ? cubeTurn(finals[index]) : { x: 0, y: 0 };
-      const turnsX = sides[index] === 6 ? 720 : 360;
+      const turnsX = solid ? 720 : 360;
       const start = {
         x: end.x - turnsX - (sides[index] === 6 ? 90 * Math.round(random(0, 3)) : 0),
         y: end.y + 360 * (Math.random() < 0.5 ? 1 : -1),

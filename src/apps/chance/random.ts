@@ -16,11 +16,17 @@ export const MAX_DICE = 12;
 export const MAX_CARDS = 12;
 export const DEFAULT_DICE: DieSides[] = [6, 6];
 
-export type ChanceTab = 'dice' | 'coin' | 'cards' | 'tarot';
+export type ChanceTab = 'dice' | 'coin' | 'cards' | 'tarot' | 'm8gic' | 'iching' | 'moon' | 'wheel';
 export const CHANCE_TABS: ReadonlyArray<{ id: ChanceTab; label: string }> = [
-  { id: 'dice', label: 'Dice' },
+  // Tools that give a random result, simplest first; then oracles that answer
+  // a question, lightest first.
   { id: 'coin', label: 'Coin' },
+  { id: 'dice', label: 'Dice' },
   { id: 'cards', label: 'Cards' },
+  { id: 'wheel', label: 'Wheel' },
+  { id: 'm8gic', label: 'M8gic' },
+  { id: 'moon', label: 'Moon blocks' },
+  { id: 'iching', label: 'I Ching' },
   { id: 'tarot', label: 'Tarot' },
 ];
 
@@ -34,9 +40,11 @@ export interface ChanceState {
   coins: string[];
   /** Two jokers in the deck. */
   jokers: boolean;
+  /** The history panel is open (folded to a strip otherwise). */
+  history: boolean;
 }
 
-export const DEFAULT_CHANCE_STATE: ChanceState = { tab: 'dice', dice: DEFAULT_DICE, coins: [DEFAULT_COIN], jokers: false };
+export const DEFAULT_CHANCE_STATE: ChanceState = { tab: CHANCE_TABS[0].id, dice: DEFAULT_DICE, coins: [DEFAULT_COIN], jokers: false, history: true };
 
 export const normalizeChanceState = (stored: unknown): ChanceState => {
   if (!stored || typeof stored !== 'object') return DEFAULT_CHANCE_STATE;
@@ -44,10 +52,11 @@ export const normalizeChanceState = (stored: unknown): ChanceState => {
   const dice = Array.isArray(candidate.dice) ? candidate.dice.filter(isDieSides).slice(0, MAX_DICE) : [];
   const coins = Array.isArray(candidate.coins) ? candidate.coins.filter(isCoinType).slice(0, MAX_COINS) : [];
   return {
-    tab: isChanceTab(candidate.tab) ? candidate.tab : 'dice',
+    tab: isChanceTab(candidate.tab) ? candidate.tab : CHANCE_TABS[0].id,
     dice: dice.length ? dice : DEFAULT_DICE,
     coins: coins.length ? coins : [DEFAULT_COIN],
     jokers: candidate.jokers === true,
+    history: candidate.history !== false,
   };
 };
 
