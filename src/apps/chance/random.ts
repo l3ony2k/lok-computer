@@ -10,6 +10,9 @@ export type Rng = () => number;
 
 export const defaultRng: Rng = () => Math.random();
 
+/** A number from `min` up to (not including) `max`. */
+export const between = (rng: Rng, min: number, max: number) => min + rng() * (max - min);
+
 export const DIE_SIDES = [4, 6, 8, 10, 12, 20, 100] as const;
 export type DieSides = (typeof DIE_SIDES)[number];
 export const MAX_DICE = 12;

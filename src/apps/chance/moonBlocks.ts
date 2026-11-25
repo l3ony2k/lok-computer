@@ -5,7 +5,7 @@
  * the outcome is never chosen first. Every draw takes an `rng` so tests can
  * be deterministic.
  */
-import { defaultRng, type Rng } from './random';
+import { between, defaultRng, type Rng } from './random';
 
 export type BlockFace = 'flat' | 'round';
 export type BlockPair = readonly [BlockFace, BlockFace];
@@ -135,8 +135,6 @@ export interface BlockMotion {
 }
 
 export interface BlockThrow { face: BlockFace; pose: BlockPose; motion: BlockMotion }
-
-const between = (rng: Rng, min: number, max: number) => min + rng() * (max - min);
 
 /** Resting spots: each block keeps to its own half, far enough apart never to touch. */
 const SPOTS = [

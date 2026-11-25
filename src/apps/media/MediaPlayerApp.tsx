@@ -24,6 +24,7 @@ import { RetroButton } from '@/components/ui/RetroButton';
 import { usePersistedState } from '@/hooks/useStorage';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { scrollIntoViewWithin } from '@/lib/utils';
+import { plural } from '@/lib/plural';
 import {
   DEFAULT_LIBRARY,
   DEFAULT_PLAYER_STATE,
@@ -273,7 +274,7 @@ export const MediaPlayerApp: React.FC<MediaPlayerAppProps> = ({ request, onProps
       if (firstId && (autoplay || !stateRef.current.currentId)) playItemRef.current(firstId, autoplay);
 
       const count = result.items.length;
-      const what = `${count} ${count === 1 ? 'item' : 'items'}`;
+      const what = plural(count, 'item', 'items');
       const from = reference.type === 'channel' ? ` from “${result.title}”` : '';
       toast.success(added === 0
         ? `Already in the playlist: ${what}${from}.`
@@ -968,7 +969,7 @@ export const MediaPlayerApp: React.FC<MediaPlayerAppProps> = ({ request, onProps
             <section className="media-player-playlist" aria-label="Playlist">
               <header className="media-player-playlist-header">
                 <span>
-                  {playlist.length} {playlist.length === 1 ? 'item' : 'items'}
+                  {plural(playlist.length, 'item', 'items')}
                   {totalDuration > 0 && ` · ${formatMediaTime(totalDuration)}`}
                 </span>
                 <span className="media-player-playlist-actions">

@@ -21,6 +21,9 @@ import {
 import { DEFAULT_COIN, MAX_COINS, isCoinType } from './coins';
 import { LAND_AT, THROW_MS, THROW_STAGGER_MS, throwDice } from './dieThrow';
 import { dealOriginOf, type DealOrigin } from './deal';
+import { FLIP_MS } from './CoinView';
+import { pushHistory } from './history';
+import { useLanding } from './useLanding';
 
 /**
  * The state and actions behind each Chance tab. ChanceApp calls all four, so
@@ -29,10 +32,7 @@ import { dealOriginOf, type DealOrigin } from './deal';
 
 type SetChanceState = Dispatch<SetStateAction<ChanceState>>;
 
-/** Entries kept in each history, newest first. */
-const HISTORY = 30;
 const ROLL_TICK_MS = 60;
-const FLIP_MS = 500;
 
 // ---------- Dice ----------
 
@@ -48,17 +48,14 @@ export const QUICK_SETS: ReadonlyArray<{ label: string; dice: DieSides[] }> = [
 
 export const useDiceTable = (dice: DieSides[], setState: SetChanceState) => {
   const [faces, setFaces] = useState<number[] | null>(null);
-  const [rolling, setRolling] = useState(false);
+  // The throw itself is a Web Animation (dieThrow.ts); the landing hook keeps
+  // the busy flag and the number flicker's timer.
+  const { busy: rolling, setBusy: setRolling, later } = useLanding();
   const [rolls, setRolls] = useState<DiceRoll[]>([]);
   // The die whose picker is open.
   const [picked, setPicked] = useState<number | null>(null);
-  const rollTimer = useRef<number | null>(null);
   const rollButtonRef = useRef<HTMLButtonElement>(null);
   const diceRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => () => {
-    if (rollTimer.current) window.clearTimeout(rollTimer.current);
-  }, []);
 
   const setDice = (update: (prev: DieSides[]) => DieSides[]) => {
     setState((prev) => ({ ...prev, dice: update(prev.dice) }));
@@ -69,7 +66,7 @@ export const useDiceTable = (dice: DieSides[], setState: SetChanceState) => {
     if (rolling) return;
     setPicked(null);
     const final = rollDice(dice);
-    const record = () => setRolls((prev) => [{ id: createId(), dice: dice.map((sides, index) => ({ sides, value: final[index] })) }, ...prev].slice(0, HISTORY));
+    const record = () => setRolls((prev) => pushHistory(prev, { id: createId(), dice: dice.map((sides, index) => ({ sides, value: final[index] })) }));
     const container = diceRef.current;
     const from = rollButtonRef.current?.getBoundingClientRect();
     if (prefersReducedMotion() || !container || !from) {
@@ -81,15 +78,15 @@ export const useDiceTable = (dice: DieSides[], setState: SetChanceState) => {
     // Each die's number flickers while it tumbles and stops where it lands.
     const started = performance.now();
     const landsAt = dice.map((_, index) => index * THROW_STAGGER_MS + THROW_MS * LAND_AT);
+    let stopTick: (() => void) | null = null;
     const tick = () => {
       const elapsed = performance.now() - started;
       setFaces(dice.map((sides, index) => (sides === 6 || sides === 4 || elapsed >= landsAt[index] ? final[index] : rollDie(sides))));
-      if (elapsed < landsAt[landsAt.length - 1]) rollTimer.current = window.setTimeout(tick, ROLL_TICK_MS);
+      stopTick = elapsed < landsAt[landsAt.length - 1] ? later(ROLL_TICK_MS, tick) : null;
     };
     tick();
     void throwDice(container, from, dice, final).then(() => {
-      if (rollTimer.current) window.clearTimeout(rollTimer.current);
-      rollTimer.current = null;
+      stopTick?.();
       setFaces(final);
       setRolling(false);
       record();
@@ -135,16 +132,11 @@ export const useCoinTable = (coins: string[], setState: SetChanceState) => {
   const [flips, setFlips] = useState<CoinFlip[]>([]);
   // The faces showing now (null before the first flip, or after the table changes).
   const [sides, setSides] = useState<CoinSide[] | null>(null);
-  const [flipping, setFlipping] = useState(false);
+  const { busy: flipping, run } = useLanding();
   // Per coin, the face showing when a flip starts; a coin turns edge-on twice
   // and shows the other face in between.
   const [flipFrom, setFlipFrom] = useState<CoinSide[]>([]);
   const [picked, setPicked] = useState<number | null>(null);
-  const flipTimer = useRef<number | null>(null);
-
-  useEffect(() => () => {
-    if (flipTimer.current) window.clearTimeout(flipTimer.current);
-  }, []);
 
   const setCoins = (update: (prev: string[]) => string[], keepFaces = false) => {
     setState((prev) => ({ ...prev, coins: update(prev.coins) }));
@@ -155,20 +147,13 @@ export const useCoinTable = (coins: string[], setState: SetChanceState) => {
     if (flipping) return;
     setPicked(null);
     const landed = flipCoins(coins.length);
-    const land = () => {
+    run(FLIP_MS, () => {
       setSides(landed);
-      setFlips((prev) => [{ id: createId(), coins: coins.map((type, index) => ({ type, side: landed[index] })) }, ...prev].slice(0, HISTORY));
-      setFlipping(false);
-      flipTimer.current = null;
-    };
-    if (prefersReducedMotion()) {
-      land();
-      return;
-    }
-    setFlipFrom(coins.map((_, index) => sides?.[index] ?? 'heads'));
-    setSides(landed);
-    setFlipping(true);
-    flipTimer.current = window.setTimeout(land, FLIP_MS);
+      setFlips((prev) => pushHistory(prev, { id: createId(), coins: coins.map((type, index) => ({ type, side: landed[index] })) }));
+    }, () => {
+      setFlipFrom(coins.map((_, index) => sides?.[index] ?? 'heads'));
+      setSides(landed);
+    });
   };
 
   return {
@@ -232,7 +217,7 @@ export const useCardTable = (jokers: boolean, setState: SetChanceState, active: 
       if (!drawn.length) return;
       const origin = prefersReducedMotion() ? null : dealOriginOf(deckRef.current);
       setDeal(origin ? { id: drawn[0].id, origin } : null);
-      setDraws((prev) => [drawn, ...prev].slice(0, HISTORY));
+      setDraws((prev) => pushHistory(prev, drawn));
       setDeck(rest);
     },
     shuffleDeck: () => {
@@ -305,7 +290,7 @@ export const useTarotTable = (active: boolean) => {
       setDealing(!prefersReducedMotion());
       setRevealedCount(0);
       setAskFresh(false);
-      setReadings((prev) => [{ id: createId(), draws: drawTarot(spread) }, ...prev].slice(0, HISTORY));
+      setReadings((prev) => pushHistory(prev, { id: createId(), draws: drawTarot(spread) }));
     },
     clear: () => {
       setReadings([]);

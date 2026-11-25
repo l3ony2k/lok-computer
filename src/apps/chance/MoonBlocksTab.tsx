@@ -1,9 +1,12 @@
-import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { useId, useLayoutEffect, useRef, useState } from 'react';
 import { createId } from '@/lib/id';
 import { prefersReducedMotion } from '@/lib/motion';
+import { plural } from '@/lib/plural';
 import { Segmented } from '@/components/ui/Segmented';
 import { usePersistedState } from '@/hooks/useStorage';
-import { ChanceTable } from './ChanceTable';
+import { ChanceTable, HistoryEntry } from './ChanceTable';
+import { pushHistory } from './history';
+import { useLanding } from './useLanding';
 import {
   MOON_ANSWERS,
   DEFAULT_MOON_MODE,
@@ -68,7 +71,8 @@ export const useMoonBlocksTable = () => {
   const [flight, setFlight] = useState<{ id: string; startedAt: number } | null>(null);
   // The three-yes celebration, by when it started (a tab opened later skips it).
   const [celebration, setCelebration] = useState<{ id: string; startedAt: number } | null>(null);
-  const landTimer = useRef<number | null>(null);
+  // The flight (`flight`) says whether the blocks are in the air; the hook times the landing.
+  const { run } = useLanding();
   const buttonRef = useRef<HTMLButtonElement>(null);
   const current = questions[0] ?? null;
   const ended = current ? questionEnded(current.state) : false;
@@ -77,10 +81,6 @@ export const useMoonBlocksTable = () => {
   // The questions as last rendered, for reading inside the landing timer.
   const questionsRef = useRef(questions);
   questionsRef.current = questions;
-
-  useEffect(() => () => {
-    if (landTimer.current) window.clearTimeout(landTimer.current);
-  }, []);
 
   const throwNow = () => {
     if (flight) return;
@@ -91,7 +91,6 @@ export const useMoonBlocksTable = () => {
     const id = createId();
     const { mode } = settings;
     const land = () => {
-      landTimer.current = null;
       setFlight(null);
       const before = questionsRef.current[0];
       const continues = before && !questionEnded(before.state);
@@ -102,18 +101,13 @@ export const useMoonBlocksTable = () => {
         const state = nextQuestion(open ? head.state : NEW_QUESTION, answer, open ? head.mode : mode);
         const entry: MoonThrow = { id, faces, answer, state };
         return open
-          ? [{ ...head, state, throws: [entry, ...head.throws].slice(0, THROWS_PER_QUESTION) }, ...prev.slice(1)]
-          : [{ id: createId(), mode, state, throws: [entry] }, ...prev].slice(0, QUESTIONS);
+          ? [{ ...head, state, throws: pushHistory(head.throws, entry, THROWS_PER_QUESTION) }, ...prev.slice(1)]
+          : pushHistory(prev, { id: createId(), mode, state, throws: [entry] }, QUESTIONS);
       });
       if (confirmed) setCelebration({ id, startedAt: performance.now() });
     };
     setBlocks(plan);
-    if (prefersReducedMotion()) {
-      land();
-      return;
-    }
-    setFlight({ id, startedAt: performance.now() });
-    landTimer.current = window.setTimeout(land, throwLength(plan));
+    run(throwLength(plan), land, () => setFlight({ id, startedAt: performance.now() }));
   };
 
   return {
@@ -507,7 +501,7 @@ export const MoonBlocksTab = ({ table }: { table: MoonTable }) => {
         count: throwCount,
         empty: 'Questions and their throws show up here.',
         summary: [
-          `${asked.length} ${asked.length === 1 ? 'question' : 'questions'}`,
+          plural(asked.length, 'question', 'questions'),
           tally.confirmed && `${tally.confirmed} yes`,
           tally.declined && `${tally.declined} no`,
           tally.open && `${tally.open} open`,
@@ -525,13 +519,13 @@ export const MoonBlocksTab = ({ table }: { table: MoonTable }) => {
                 {question.throws.map((entry, index) => {
                   const answer = MOON_ANSWERS[entry.answer];
                   return (
-                    <li className="chance-history-entry" data-latest={(isCurrent && index === 0) || undefined} key={entry.id} title={`${faceName(entry.faces[0])}, ${faceName(entry.faces[1])}`}>
+                    <HistoryEntry latest={isCurrent && index === 0} key={entry.id} title={`${faceName(entry.faces[0])}, ${faceName(entry.faces[1])}`}>
                       <span className="chance-history-items moon-glyphs" role="img" aria-label={`${faceName(entry.faces[0])} and ${faceName(entry.faces[1])}`}>
                         <BlockGlyph face={entry.faces[0]} />
                         <BlockGlyph face={entry.faces[1]} />
                       </span>
                       <span className="moon-history-name"><span lang="zh-Hant">{answer.hanzi}</span> {answer.name}</span>
-                    </li>
+                    </HistoryEntry>
                   );
                 })}
               </ol>

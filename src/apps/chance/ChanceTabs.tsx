@@ -3,10 +3,12 @@ import { useResizeObserver } from '@/hooks/useResizeObserver';
 import { Minus, Plus } from 'lucide-react';
 import { RetroButton } from '@/components/ui/RetroButton';
 import { Segmented } from '@/components/ui/Segmented';
-import { ChanceTable, TableItem } from './ChanceTable';
+import { AskLine, ChanceTable, TableItem } from './ChanceTable';
+import { CoinView } from './CoinView';
 import { DieView } from './DieView';
 import { DealtCard, DeckView, PlayingCardView } from './PlayingCards';
 import { TarotCardView } from './TarotCardView';
+import { plural } from '@/lib/plural';
 import { COIN_IMAGE_SIZE, COIN_TYPES, MAX_COINS, coinType } from './coins';
 import { coinFace } from './coinImages';
 import { TAROT_IMAGE_SIZE } from './tarot';
@@ -14,8 +16,6 @@ import { useTableFit } from './useTableFit';
 import { TAROT_BACK, tarotImage } from './tarotImages';
 import { DIE_SIDES, MAX_CARDS, MAX_DICE, PIP_LAYOUT, SPREAD_POSITIONS, isRedFace, type CoinSide } from './random';
 import { QUICK_SETS, type useCardTable, type useCoinTable, type useDiceTable, type useTarotTable } from './useChanceTables';
-
-const plural = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`;
 
 // ---------- Dice ----------
 
@@ -67,17 +67,17 @@ export const DiceTab = ({ table }: { table: ReturnType<typeof useDiceTable> }) =
       add={{ label: dice.length < MAX_DICE ? 'Add a die' : `Up to ${MAX_DICE} dice`, onClick: table.addDie, disabled: rolling || dice.length >= MAX_DICE }}
       history={{
         title: 'History',
-        count: rolls.length,
         empty: 'Rolls show up here.',
         onClear: table.clear,
-        children: rolls.map((entry, index) => (
-          <li className="chance-history-entry" data-latest={index === 0 || undefined} key={entry.id}>
+        entries: rolls,
+        renderEntry: (entry) => (
+          <>
             <span className="chance-history-items">
               {entry.dice.map((die, position) => <MiniDie sides={die.sides} value={die.value} key={position} />)}
             </span>
             <span className="chance-history-total">{entry.dice.reduce((sum, die) => sum + die.value, 0)}</span>
-          </li>
-        )),
+          </>
+        ),
       }}
     >
       <div ref={table.diceRef} className="chance-row chance-dice-results" data-idle={faces ? undefined : ''} aria-busy={rolling}>
@@ -137,21 +137,19 @@ export const CoinTab = ({ table }: { table: ReturnType<typeof useCoinTable> }) =
       add={{ label: coins.length < MAX_COINS ? 'Add a coin' : `Up to ${MAX_COINS} coins`, onClick: table.addCoin, disabled: flipping || coins.length >= MAX_COINS }}
       history={{
         title: 'History',
-        count: flips.length,
         empty: 'Flips show up here.',
         summary: `${plural(headsSoFar, 'head', 'heads')}, ${plural(allFlipped.length - headsSoFar, 'tail', 'tails')}`,
         onClear: table.clear,
-        children: flips.map((entry, index) => (
-          <li className="chance-history-entry" data-latest={index === 0 || undefined} key={entry.id}>
-            <span className="chance-history-items chance-coin-marks">
-              {entry.coins.map((coin, position) => (
-                <span className="chance-coin-mark" data-side={coin.side} title={`${coinType(coin.type).label}, ${sideLabel(coin.side)}`} key={position}>
-                  {coin.side === 'heads' ? 'H' : 'T'}
-                </span>
-              ))}
-            </span>
-          </li>
-        )),
+        entries: flips,
+        renderEntry: (entry) => (
+          <span className="chance-history-items chance-coin-marks">
+            {entry.coins.map((coin, position) => (
+              <span className="chance-coin-mark" data-side={coin.side} title={`${coinType(coin.type).label}, ${sideLabel(coin.side)}`} key={position}>
+                {coin.side === 'heads' ? 'H' : 'T'}
+              </span>
+            ))}
+          </span>
+        ),
       }}
     >
       <div ref={coinRowRef} className="chance-row chance-coins" style={coinFit}>
@@ -181,26 +179,7 @@ export const CoinTab = ({ table }: { table: ReturnType<typeof useCoinTable> }) =
                 </div>
               }
             >
-              <span
-                className="chance-coin"
-                data-face={face}
-                data-flipping={flipping || undefined}
-                data-turns={flipping ? (from === face ? 'twice' : 'once') : undefined}
-              >
-                {(['heads', 'tails'] as const).map((side) => (
-                  <img
-                    key={side}
-                    className="chance-coin-image"
-                    src={coinFace(type, side)}
-                    alt=""
-                    width={COIN_IMAGE_SIZE}
-                    height={COIN_IMAGE_SIZE}
-                    draggable={false}
-                    data-side={side}
-                    data-start={flipping && from === side ? '' : undefined}
-                  />
-                ))}
-              </span>
+              <CoinView type={type} side={face} from={from} flipping={flipping} />
             </TableItem>
           );
         })}
@@ -250,16 +229,16 @@ export const CardsTab = ({ table }: { table: ReturnType<typeof useCardTable> }) 
       action={{ label: `Draw ${drawCount === 1 ? 'a card' : `${drawCount} cards`}`, onClick: table.draw, disabled: deck.length === 0 }}
       history={{
         title: 'History',
-        count: shown.length,
         empty: 'Draws show up here.',
         onClear: table.clear,
-        children: shown.map((cards, index) => (
-          <li className="chance-history-entry" data-latest={(index === 0 && cards === hand) || undefined} key={cards[0].id}>
-            <span className="chance-history-items">
-              {cards.map((card) => <PlayingCardView card={card} small key={card.id} />)}
-            </span>
-          </li>
-        )),
+        entries: shown,
+        entryKey: (cards) => cards[0].id,
+        isLatest: (cards, index) => index === 0 && cards === hand,
+        renderEntry: (cards) => (
+          <span className="chance-history-items">
+            {cards.map((card) => <PlayingCardView card={card} small key={card.id} />)}
+          </span>
+        ),
       }}
     >
       <div ref={stageRef} className="chance-table-wrap">
@@ -315,11 +294,12 @@ export const TarotTab = ({ table, onAsk }: { table: ReturnType<typeof useTarotTa
       action={{ label: spread === 1 ? 'Draw a card' : 'Draw three cards', onClick: table.draw }}
       history={{
         title: 'Readings',
-        count: readings.length,
         empty: 'Readings show up here.',
         onClear: table.clear,
-        children: readings.map((entry, index) => (
-          <li className="chance-history-entry chance-history-reading" data-latest={index === 0 || undefined} key={entry.id}>
+        entries: readings,
+        entryClassName: 'chance-history-reading',
+        renderEntry: (entry) => (
+          <>
             {entry.draws.length === 1 && tarotImage(entry.draws[0].card) && (
               <img className="chance-history-tarot" src={tarotImage(entry.draws[0].card)} alt="" width={TAROT_IMAGE_SIZE.width} height={TAROT_IMAGE_SIZE.height} />
             )}
@@ -331,8 +311,8 @@ export const TarotTab = ({ table, onAsk }: { table: ReturnType<typeof useTarotTa
                 </span>
               ))}
             </span>
-          </li>
-        )),
+          </>
+        ),
       }}
     >
       {!reading && (
@@ -356,15 +336,7 @@ export const TarotTab = ({ table, onAsk }: { table: ReturnType<typeof useTarotTa
           ))}
         </div>
       )}
-      {/* Laid out from the start (hidden until the reading is done), so the cards never shift when it appears. */}
-      {reading && (
-        <p className="chance-ask-line" data-waiting={!readingDone || undefined} data-fresh={table.askFresh || undefined} aria-hidden={!readingDone || undefined}>
-          Not sure what it means?{' '}
-          <button type="button" className="chance-ask-link" onClick={onAsk}>
-            <span className="chance-ask-link-text">Ask AI to read it</span> →
-          </button>
-        </p>
-      )}
+      {reading && <AskLine waiting={!readingDone} fresh={table.askFresh} onAsk={onAsk} />}
     </ChanceTable>
   );
 };

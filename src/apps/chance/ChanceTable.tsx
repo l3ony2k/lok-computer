@@ -26,18 +26,35 @@ export interface ChanceAdd {
   disabled?: boolean;
 }
 
-export interface ChanceHistory {
+interface ChanceHistoryBase {
   title: string;
-  /** How many entries there are; none shows `empty`. */
-  count: number;
   empty: string;
   summary?: ReactNode;
   onClear: () => void;
-  /** The entries, newest first, as <li> elements. */
+}
+
+/** A history of entries, newest first; the table draws each <li>. */
+export interface ChanceHistoryList<T> extends ChanceHistoryBase {
+  entries: readonly T[];
+  renderEntry: (entry: T, index: number) => ReactNode;
+  /** Defaults to the entry's `id`. */
+  entryKey?: (entry: T) => string;
+  /** Which entry is marked as the latest; defaults to the first. */
+  isLatest?: (entry: T, index: number) => boolean;
+  /** Added to every entry's class. */
+  entryClassName?: string;
+}
+
+/** A history laid out by the tab itself (Moon blocks groups throws by question); entries use HistoryEntry. */
+export interface ChanceHistoryGroups extends ChanceHistoryBase {
+  /** How many entries there are; none shows `empty`. */
+  count: number;
   children: ReactNode;
 }
 
-interface ChanceTableProps {
+export type ChanceHistory<T> = ChanceHistoryList<T> | ChanceHistoryGroups;
+
+interface ChanceTableProps<T> {
   label: string;
   setup?: ReactNode;
   /** The table: dice, coins, cards. */
@@ -48,16 +65,41 @@ interface ChanceTableProps {
   actionLead?: ReactNode;
   /** The square + after the primary button that puts one more thing on the table. */
   add?: ChanceAdd;
-  history: ChanceHistory;
+  history: ChanceHistory<T>;
   paneRef?: Ref<HTMLElement>;
 }
 
 /** Space presses the primary button unless it would act on a control or a field. */
 const IGNORE_SPACE = 'button, input, select, textarea, a, [role="dialog"], [contenteditable="true"]';
 
-export const ChanceTable = ({ label, setup, children, result, action, actionLead, add, history, paneRef }: ChanceTableProps) => {
+/** One entry in a history list, marked when it is the latest. */
+export const HistoryEntry = ({ latest, className, title, children }: { latest?: boolean; className?: string; title?: string; children: ReactNode }) => (
+  <li className={className ? `chance-history-entry ${className}` : 'chance-history-entry'} data-latest={latest || undefined} title={title}>
+    {children}
+  </li>
+);
+
+const entryId = (entry: unknown) => (entry as { id: string }).id;
+const isFirst = (_entry: unknown, index: number) => index === 0;
+
+const HistoryItems = <T,>({ history }: { history: ChanceHistory<T> }) => {
+  if ('children' in history) return <>{history.children}</>;
+  const { entries, renderEntry, entryKey = entryId, isLatest = isFirst, entryClassName } = history;
+  return (
+    <>
+      {entries.map((entry, index) => (
+        <HistoryEntry key={entryKey(entry)} latest={isLatest(entry, index)} className={entryClassName}>
+          {renderEntry(entry, index)}
+        </HistoryEntry>
+      ))}
+    </>
+  );
+};
+
+export const ChanceTable = <T,>({ label, setup, children, result, action, actionLead, add, history, paneRef }: ChanceTableProps<T>) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const historyShown = useContext(HistoryShown);
+  const historyCount = 'children' in history ? history.count : history.entries.length;
 
   // Opening a tab puts focus on it (not on a control), so Space rolls at once.
   useEffect(() => {
@@ -116,19 +158,33 @@ export const ChanceTable = ({ label, setup, children, result, action, actionLead
         <aside id="chance-history" className="chance-history-panel" aria-label={history.title}>
           <div className="chance-history-head">
             <span className="chance-history-title">{history.title}</span>
-            {history.count > 0 && (
+            {historyCount > 0 && (
               <button type="button" className="chance-history-clear" onClick={history.onClear}>Clear</button>
             )}
           </div>
-          {history.count > 0 && history.summary && <span className="chance-history-summary">{history.summary}</span>}
-          {history.count > 0
-            ? <ol className="chance-history-list">{history.children}</ol>
+          {historyCount > 0 && history.summary && <span className="chance-history-summary">{history.summary}</span>}
+          {historyCount > 0
+            ? <ol className="chance-history-list"><HistoryItems history={history} /></ol>
             : <p className="chance-history-empty">{history.empty}</p>}
         </aside>
       )}
     </div>
   );
 };
+
+/**
+ * The quiet line under a finished reading that hands it to Ask AI. It is laid
+ * out from the start (hidden while `waiting`), so nothing shifts when it
+ * appears; `fresh` fades it in once, right after the reading lands.
+ */
+export const AskLine = ({ waiting, fresh, onAsk, className }: { waiting: boolean; fresh: boolean; onAsk: () => void; className?: string }) => (
+  <p className={className ? `chance-ask-line ${className}` : 'chance-ask-line'} data-waiting={waiting || undefined} data-fresh={fresh || undefined} aria-hidden={waiting || undefined}>
+    Not sure what it means?{' '}
+    <button type="button" className="chance-ask-link" tabIndex={waiting ? -1 : undefined} onClick={() => { if (!waiting) onAsk(); }}>
+      <span className="chance-ask-link-text">Ask AI to read it</span> →
+    </button>
+  </p>
+);
 
 interface TableItemProps {
   /** The item's accessible name, such as "d20 showing 17". */

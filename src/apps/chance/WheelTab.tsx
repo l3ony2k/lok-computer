@@ -1,10 +1,12 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type FormEvent } from 'react';
+import { useCallback, useLayoutEffect, useRef, useState, type FormEvent } from 'react';
 import { createId } from '@/lib/id';
-import { prefersReducedMotion } from '@/lib/motion';
+import { plural } from '@/lib/plural';
 import { Plus } from 'lucide-react';
 import { RetroButton } from '@/components/ui/RetroButton';
 import { usePersistedState } from '@/hooks/useStorage';
 import { ChanceTable } from './ChanceTable';
+import { pushHistory } from './history';
+import { useLanding } from './useLanding';
 import {
   DEFAULT_WHEEL_STATE,
   MAX_WHEEL_OPTIONS,
@@ -27,7 +29,6 @@ import './wheel.css';
  * spin only shows it.
  */
 
-const HISTORY = 30;
 const SPIN_EASING = 'cubic-bezier(0.16, 0.84, 0.24, 1)';
 
 export interface WheelSpin { id: string; preset: string; result: string }
@@ -47,11 +48,8 @@ export const useWheelTable = () => {
   const [spins, setSpins] = useState<WheelSpin[]>([]);
   const [draft, setDraft] = useState('');
   const [addNote, setAddNote] = useState<AddNote>(null);
-  const spinTimer = useRef<number | null>(null);
-
-  useEffect(() => () => {
-    if (spinTimer.current) window.clearTimeout(spinTimer.current);
-  }, []);
+  // The spin itself (`spin`) says whether the wheel turns; the hook times the landing.
+  const { run } = useLanding();
 
   const preset = wheelPreset(state.preset);
   const options = wheelOptions(state);
@@ -73,21 +71,16 @@ export const useWheelTable = () => {
     const plan = planSpin(angle, options.length);
     const result = options[plan.winner];
     const label = preset.label;
-    const land = () => {
-      spinTimer.current = null;
+    setWinner(null);
+    setAddNote(null);
+    run(plan.durationMs, () => {
       setSpin(null);
       setAngle(plan.to % 360);
       setWinner(plan.winner);
-      setSpins((prev) => [{ id: createId(), preset: label, result }, ...prev].slice(0, HISTORY));
-    };
-    setWinner(null);
-    setAddNote(null);
-    if (prefersReducedMotion()) {
-      land();
-      return;
-    }
-    setSpin({ id: createId(), from: angle, to: plan.to, durationMs: plan.durationMs, startedAt: performance.now() });
-    spinTimer.current = window.setTimeout(land, plan.durationMs);
+      setSpins((prev) => pushHistory(prev, { id: createId(), preset: label, result }));
+    }, () => {
+      setSpin({ id: createId(), from: angle, to: plan.to, durationMs: plan.durationMs, startedAt: performance.now() });
+    });
   };
 
   return {
@@ -246,17 +239,6 @@ const Wheel = ({ table }: { table: ReturnType<typeof useWheelTable> }) => {
     return () => animation.cancel();
   }, [spin]);
 
-  // The Spin button is disabled while the wheel turns, which drops focus to
-  // the page; give it back to the table so Space spins again.
-  const wasSpinning = useRef(false);
-  useEffect(() => {
-    if (wasSpinning.current && !spin) {
-      const active = document.activeElement;
-      if (!active || active === document.body) rotorRef.current?.closest<HTMLElement>('.chance-layout')?.focus({ preventScroll: true });
-    }
-    wasSpinning.current = Boolean(spin);
-  }, [spin]);
-
   return (
     <div className="chance-wheel" data-spinning={spin ? '' : undefined}>
       <div ref={rotorRef} className="chance-wheel-rotor" style={{ transform: `rotate(${angle}deg)` }}>
@@ -321,22 +303,22 @@ export const WheelTab = ({ table }: { table: ReturnType<typeof useWheelTable> })
       action={{ label: spinning ? 'Spinning…' : 'Spin', onClick: table.spinWheel, disabled: spinning || !canSpin }}
       history={{
         title: 'History',
-        count: spins.length,
         empty: 'Spins show up here.',
         onClear: table.clear,
-        children: spins.map((entry, index) => (
-          <li className="chance-history-entry" data-latest={index === 0 || undefined} key={entry.id}>
+        entries: spins,
+        renderEntry: (entry) => (
+          <>
             <span className="chance-wheel-history-preset">{entry.preset}</span>
             <span className="chance-wheel-history-result">{entry.result}</span>
-          </li>
-        )),
+          </>
+        ),
       }}
     >
       <div className="chance-wheel-table">
         <Wheel table={table} />
         <div className="chance-wheel-side">
           <div className="chance-wheel-list-head">
-            <span className="chance-wheel-list-title">{options.length === 1 ? '1 option' : `${options.length} options`}</span>
+            <span className="chance-wheel-list-title">{plural(options.length, 'option', 'options')}</span>
             {edited && (
               <button type="button" className="chance-wheel-reset" onClick={table.reset} disabled={spinning} title={`Back to the ${preset.label} list`}>
                 Reset

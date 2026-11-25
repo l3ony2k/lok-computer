@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createId } from '@/lib/id';
+import { plural } from '@/lib/plural';
 import { Bold, Download, Eraser, Eye, Heading1, Heading2, Italic, List, ListOrdered, Plus, Strikethrough, Trash2, Underline } from 'lucide-react';
 import { toast } from 'sonner';
 import { WindowLayout } from '@/components/window/WindowLayout';
@@ -232,7 +233,7 @@ export const NotepadApp: React.FC<NotepadAppProps> = () => {
       ) : undefined}
       footer={
         <div className="app-footer-row app-footer-note">
-          <span>{active ? `${words} ${words === 1 ? 'word' : 'words'} · ${text.length} characters` : `${state.entries.length} ${state.entries.length === 1 ? 'note' : 'notes'}`}</span>
+          <span>{active ? `${plural(words, 'word', 'words')} · ${text.length} characters` : plural(state.entries.length, 'note', 'notes')}</span>
           <span className="notepad-footer-right">{active?.updatedAt ? `Saved ${formatDate(active.updatedAt)}` : 'Saved in this browser'}</span>
         </div>
       }
