@@ -375,13 +375,16 @@ html:not([data-chrome="classic"]) .chance-segmented .retro-button[aria-checked="
     padding: 12px 14px 6px;
 }
 
-.chance-history-title {
+/* The history's title and Clear, and the Wheel's option count and Reset: one look. */
+.chance-history-title,
+.chance-wheel-list-title {
     flex: 1 1 auto;
     font-size: 12px;
     color: var(--text-secondary, var(--text-color));
 }
 
-.chance-history-clear {
+.chance-history-clear,
+.chance-wheel-reset {
     padding: 0;
     font: inherit;
     font-size: 11px;
@@ -393,7 +396,8 @@ html:not([data-chrome="classic"]) .chance-segmented .retro-button[aria-checked="
     cursor: pointer;
 }
 
-.chance-history-clear:hover {
+.chance-history-clear:hover,
+.chance-wheel-reset:hover:not(:disabled) {
     color: var(--text-color);
 }
 
@@ -811,26 +815,27 @@ html:not([data-chrome="classic"]) .chance-segmented .retro-button[aria-checked="
  * The flip turns the coin edge-on twice (25% and 75%). The face swaps at each
  * edge, so it reads like a coin turning over: the starting face, the other
  * face, then where it lands (`data-face`). Landing on the other face swaps
- * once, landing on the same face swaps twice.
+ * once, landing on the same face swaps twice. CoinView sets --chance-flip
+ * from FLIP_MS, which the tables also wait for.
  */
 .chance-coin[data-flipping] {
-    animation: chance-flip 500ms ease-in-out;
+    animation: chance-flip var(--chance-flip) ease-in-out;
 }
 
 .chance-coin[data-turns="once"] .chance-coin-image[data-start] {
-    animation: chance-face-out 500ms linear;
+    animation: chance-face-out var(--chance-flip) linear;
 }
 
 .chance-coin[data-turns="once"] .chance-coin-image:not([data-start]) {
-    animation: chance-face-in 500ms linear;
+    animation: chance-face-in var(--chance-flip) linear;
 }
 
 .chance-coin[data-turns="twice"] .chance-coin-image[data-start] {
-    animation: chance-face-away 500ms linear;
+    animation: chance-face-away var(--chance-flip) linear;
 }
 
 .chance-coin[data-turns="twice"] .chance-coin-image:not([data-start]) {
-    animation: chance-face-between 500ms linear;
+    animation: chance-face-between var(--chance-flip) linear;
 }
 
 @keyframes chance-flip {

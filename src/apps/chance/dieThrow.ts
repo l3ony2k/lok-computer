@@ -3,6 +3,8 @@
  * Web Animations that fly every die in from a point, tumble it and land it.
  */
 
+import { between, defaultRng } from './random';
+
 /** The cube's turn that brings each value to the front (see the face placement in chance.css). */
 const CUBE_TURN: Record<number, { x: number; y: number }> = {
   1: { x: 0, y: 0 },
@@ -25,8 +27,6 @@ export const THROW_MS = 760;
 export const THROW_STAGGER_MS = 55;
 /** Share of the throw at which a die first touches down. */
 export const LAND_AT = 0.68;
-
-const random = (min: number, max: number) => min + Math.random() * (max - min);
 
 /**
  * Throws the dice already laid out in `container` (one .chance-die-slot each)
@@ -71,9 +71,9 @@ export const throwDice = (container: HTMLElement, from: DOMRect, sides: readonly
       const end = sides[index] === 6 ? cubeTurn(finals[index]) : { x: 0, y: 0 };
       const turnsX = solid ? 720 : 360;
       const start = {
-        x: end.x - turnsX - (sides[index] === 6 ? 90 * Math.round(random(0, 3)) : 0),
+        x: end.x - turnsX - (sides[index] === 6 ? 90 * Math.round(between(defaultRng, 0, 3)) : 0),
         y: end.y + 360 * (Math.random() < 0.5 ? 1 : -1),
-        z: random(-60, 60),
+        z: between(defaultRng, -60, 60),
       };
       animations.push(body.animate([
         { transform: `rotateX(${start.x}deg) rotateY(${start.y}deg) rotateZ(${start.z}deg)`, easing: 'cubic-bezier(0.25, 0.5, 0.35, 1)' },

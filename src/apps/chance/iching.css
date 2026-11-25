@@ -223,22 +223,6 @@
     color: var(--log-muted);
 }
 
-/* Without the photos: a brass coin with its square hole and its side's character. */
-.iching-coin-stand-in {
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    box-sizing: border-box;
-    padding-top: 9%;
-    border-radius: 50%;
-    background: radial-gradient(circle at 35% 30%, #d9b45a, #a77b2c 70%, #7c5718);
-    color: #4a3108;
-    font-size: calc(var(--coin) * 0.2);
-    line-height: 1;
-    -webkit-mask: linear-gradient(#000 0 0) center / 26% 26% no-repeat exclude, linear-gradient(#000 0 0);
-    mask: linear-gradient(#000 0 0) center / 26% 26% no-repeat exclude, linear-gradient(#000 0 0);
-}
-
 .iching-ask-line {
     margin-top: 0;
 }

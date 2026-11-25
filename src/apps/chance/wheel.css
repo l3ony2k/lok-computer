@@ -115,28 +115,7 @@
     gap: 8px;
 }
 
-.chance-wheel-list-title {
-    flex: 1 1 auto;
-    font-size: 12px;
-    color: var(--text-secondary, var(--text-color));
-}
-
-.chance-wheel-reset {
-    padding: 0;
-    font: inherit;
-    font-size: 11px;
-    color: var(--log-muted);
-    background: none;
-    border: 0;
-    text-decoration: underline;
-    text-underline-offset: 2px;
-    cursor: pointer;
-}
-
-.chance-wheel-reset:hover:not(:disabled) {
-    color: var(--text-color);
-}
-
+/* .chance-wheel-list-title and .chance-wheel-reset share the history head's rules (chance.css). */
 .chance-wheel-reset:disabled {
     cursor: default;
     opacity: 0.5;

@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createId } from '@/lib/id';
-import { prefersReducedMotion } from '@/lib/motion';
-import { ChanceTable } from './ChanceTable';
-import { COIN_IMAGE_SIZE, isCoinType } from './coins';
-import { coinFace } from './coinImages';
+import { AskLine, ChanceTable } from './ChanceTable';
+import { CoinView, FLIP_MS } from './CoinView';
+import { pushHistory } from './history';
+import { useLanding } from './useLanding';
 import {
   LINE_NAMES,
   describeThrow,
@@ -26,8 +26,6 @@ import './iching.css';
  */
 
 const COIN = 'kangxi-tongbao';
-const FLIP_MS = 500;
-const HISTORY = 30;
 const LINES = 6;
 
 export interface IChingCast { id: string; lines: LineValue[] }
@@ -38,21 +36,13 @@ export const useIChingTable = (active: boolean) => {
   const [lines, setLines] = useState<LineValue[]>([]);
   // The coins of the last throw (null before the first throw of a cast).
   const [coins, setCoins] = useState<CoinSide[] | null>(null);
-  const [throwing, setThrowing] = useState(false);
+  const { busy: throwing, run } = useLanding();
   // Per coin, the face showing when a throw starts (see the Coin tab).
   const [flipFrom, setFlipFrom] = useState<CoinSide[]>([]);
   const [casts, setCasts] = useState<IChingCast[]>([]);
   // The line that just landed draws in; the Ask AI line fades in once.
   const [freshLine, setFreshLine] = useState<number | null>(null);
   const [askFresh, setAskFresh] = useState(false);
-  const timer = useRef<number | null>(null);
-  // The button is disabled mid-throw, which drops its focus; it gets it back
-  // on landing so Space keeps throwing.
-  const buttonRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => () => {
-    if (timer.current) window.clearTimeout(timer.current);
-  }, []);
 
   // Coming back to the tab shows the cast as it stands, without replaying it.
   useEffect(() => {
@@ -66,31 +56,21 @@ export const useIChingTable = (active: boolean) => {
     // A finished cast starts over: "Cast again" clears it and throws line 1.
     const before = lines.length >= LINES ? [] : lines;
     const thrown = throwLine();
-    const hadFocus = document.activeElement === buttonRef.current;
-    const land = () => {
+    setAskFresh(false);
+    if (before !== lines) setLines([]);
+    setCoins(thrown.coins);
+    run(FLIP_MS, () => {
       const next = [...before, thrown.value];
       setLines(next);
       setFreshLine(next.length - 1);
-      setThrowing(false);
-      timer.current = null;
-      if (hadFocus) window.requestAnimationFrame(() => buttonRef.current?.focus({ preventScroll: true }));
       if (next.length === LINES) {
-        setCasts((prev) => [{ id: createId(), lines: next }, ...prev].slice(0, HISTORY));
+        setCasts((prev) => pushHistory(prev, { id: createId(), lines: next }));
         setAskFresh(true);
       }
-    };
-    setAskFresh(false);
-    if (before !== lines) setLines([]);
-    if (prefersReducedMotion()) {
-      setCoins(thrown.coins);
-      land();
-      return;
-    }
-    setFlipFrom(thrown.coins.map((_, index) => coins?.[index] ?? 'heads'));
-    setCoins(thrown.coins);
-    setFreshLine(null);
-    setThrowing(true);
-    timer.current = window.setTimeout(land, FLIP_MS);
+    }, () => {
+      setFlipFrom(thrown.coins.map((_, index) => coins?.[index] ?? 'heads'));
+      setFreshLine(null);
+    });
   };
 
   return {
@@ -101,7 +81,6 @@ export const useIChingTable = (active: boolean) => {
     casts,
     freshLine,
     askFresh,
-    buttonRef,
     toss,
     clear: () => setCasts([]),
   };
@@ -126,53 +105,24 @@ const MiniHexagram = ({ lines }: { lines: readonly LineValue[] }) => (
   </span>
 );
 
+/** A Kangxi Tongbao, like the Coin tab's coins. */
+const IChingCoin = ({ side, from, flipping }: { side: CoinSide; from: CoinSide; flipping: boolean }) => (
+  <CoinView
+    type={COIN}
+    side={side}
+    from={from}
+    flipping={flipping}
+    className="iching-coin"
+    label={side === 'heads' ? 'Inscribed side (字)' : 'Back (背)'}
+  />
+);
+
 const HexagramName = ({ hexagram }: { hexagram: Hexagram }) => (
   <>
     <span className="iching-chinese" lang="zh-Hant">{hexagram.chinese}</span>
     <span className="iching-pinyin">{hexagram.pinyin}</span>
   </>
 );
-
-/** A Kangxi Tongbao, both faces stacked like the Coin tab's coins. */
-const IChingCoin = ({ side, from, flipping }: { side: CoinSide; from: CoinSide; flipping: boolean }) => {
-  const photographed = isCoinType(COIN);
-  return (
-    <span
-      className="chance-coin iching-coin"
-      data-face={side}
-      data-flipping={flipping || undefined}
-      data-turns={flipping ? (from === side ? 'twice' : 'once') : undefined}
-      role="img"
-      aria-label={side === 'heads' ? 'Inscribed side (字)' : 'Back (背)'}
-    >
-      {(['heads', 'tails'] as const).map((face) => (
-        photographed && coinFace(COIN, face) ? (
-          <img
-            key={face}
-            className="chance-coin-image"
-            src={coinFace(COIN, face)}
-            alt=""
-            width={COIN_IMAGE_SIZE}
-            height={COIN_IMAGE_SIZE}
-            draggable={false}
-            data-side={face}
-            data-start={flipping && from === face ? '' : undefined}
-          />
-        ) : (
-          // Until the photos exist: a plain brass coin with its square hole.
-          <span
-            key={face}
-            className="chance-coin-image iching-coin-stand-in"
-            data-side={face}
-            data-start={flipping && from === face ? '' : undefined}
-          >
-            <span lang="zh-Hant">{face === 'heads' ? '字' : '背'}</span>
-          </span>
-        )
-      ))}
-    </span>
-  );
-};
 
 // ---------- The tab ----------
 
@@ -187,16 +137,17 @@ export const IChingTab = ({ table, onAsk }: { table: ReturnType<typeof useIChing
   return (
     <ChanceTable
       label="I Ching"
-      action={{ label, onClick: table.toss, disabled: throwing, buttonRef: table.buttonRef }}
+      action={{ label, onClick: table.toss, disabled: throwing }}
       history={{
         title: 'Readings',
-        count: casts.length,
         empty: 'Readings show up here.',
         onClear: table.clear,
-        children: casts.map((cast, index) => {
+        entries: casts,
+        entryClassName: 'chance-history-reading iching-history-entry',
+        renderEntry: (cast) => {
           const { primary, resulting } = readLines(cast.lines);
           return (
-            <li className="chance-history-entry chance-history-reading iching-history-entry" data-latest={index === 0 || undefined} key={cast.id}>
+            <>
               <MiniHexagram lines={cast.lines} />
               <span className="chance-history-lines">
                 <span>{primary.number} <span lang="zh-Hant">{primary.chinese}</span> {primary.english}</span>
@@ -204,9 +155,9 @@ export const IChingTab = ({ table, onAsk }: { table: ReturnType<typeof useIChing
                   <span className="chance-history-position">→ {resulting.number} <span lang="zh-Hant">{resulting.chinese}</span> {resulting.english}</span>
                 )}
               </span>
-            </li>
+            </>
           );
-        }),
+        },
       }}
     >
       <div className="iching-table">
@@ -286,13 +237,7 @@ export const IChingTab = ({ table, onAsk }: { table: ReturnType<typeof useIChing
         </div>
       </div>
 
-      {/* Laid out from the start (hidden until the cast is complete), so the table never shifts when it appears. */}
-      <p className="chance-ask-line iching-ask-line" data-waiting={!complete || undefined} data-fresh={(complete && askFresh) || undefined} aria-hidden={!complete || undefined}>
-        Not sure what it means?{' '}
-        <button type="button" className="chance-ask-link" tabIndex={complete ? undefined : -1} onClick={() => { if (complete) onAsk(ichingQuestion(lines)); }}>
-          <span className="chance-ask-link-text">Ask AI to read it</span> →
-        </button>
-      </p>
+      <AskLine className="iching-ask-line" waiting={!complete} fresh={complete && askFresh} onAsk={() => onAsk(ichingQuestion(lines))} />
     </ChanceTable>
   );
 };

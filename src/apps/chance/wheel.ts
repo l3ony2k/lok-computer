@@ -1,4 +1,4 @@
-import { defaultRng, type Rng } from './random';
+import { between, defaultRng, type Rng } from './random';
 
 /**
  * The decision wheel: presets, the option lists people edit, and the spin.
@@ -120,7 +120,7 @@ export const planSpin = (from: number, count: number, rng: Rng = defaultRng): Sp
   const winner = Math.min(count - 1, Math.floor(rng() * count));
   const turns = SPIN_TURNS.min + Math.min(SPIN_TURNS.max - SPIN_TURNS.min, Math.floor(rng() * (SPIN_TURNS.max - SPIN_TURNS.min + 1)));
   const within = EDGE_MARGIN + rng() * (1 - 2 * EDGE_MARGIN);
-  const durationMs = Math.round(SPIN_MS.min + rng() * (SPIN_MS.max - SPIN_MS.min));
+  const durationMs = Math.round(between(rng, SPIN_MS.min, SPIN_MS.max));
   // The wheel's own angle that must sit under the pointer, at the top.
   const landing = (winner + within) * sliceAngle(count);
   const base = from + turns * 360;

@@ -1,8 +1,10 @@
-import { useEffect, useRef, useState, type Ref } from 'react';
+import { useRef, useState, type Ref } from 'react';
 import { createId } from '@/lib/id';
 import { prefersReducedMotion } from '@/lib/motion';
 import { flushSync } from 'react-dom';
 import { ChanceTable } from './ChanceTable';
+import { pushHistory } from './history';
+import { useLanding } from './useLanding';
 import { useTableFit } from './useTableFit';
 import { DIE, M8GIC_ANSWERS, TRIANGLE_POINTS, drawM8gic, kindCounts, layoutDie, type M8gicKind } from './m8gic';
 import './m8gic.css';
@@ -14,7 +16,6 @@ import './m8gic.css';
  * switching tabs.
  */
 
-const HISTORY = 30;
 /** The ball shakes this long; the old answer sinks during the first part. */
 const SHAKE_MS = 600;
 const SINK_MS = 260;
@@ -52,23 +53,15 @@ const RISE_FRAMES: Keyframe[] = [
 export const useM8gicTable = () => {
   // The answer in the window: null before the first shake (or after Clear).
   const [shown, setShown] = useState<number | null>(null);
-  const [shaking, setShaking] = useState(false);
+  // Two steps (the shake, then the rise), so the busy flag is set by hand.
+  const { busy: shaking, setBusy: setShaking, later } = useLanding();
   const [history, setHistory] = useState<M8gicEntry[]>([]);
   const ballRef = useRef<HTMLDivElement>(null);
   const dieRef = useRef<SVGGElement>(null);
-  const timers = useRef<number[]>([]);
   const sink = useRef<Animation | null>(null);
 
-  useEffect(() => () => {
-    timers.current.forEach((timer) => window.clearTimeout(timer));
-  }, []);
-
-  const later = (ms: number, run: () => void) => {
-    timers.current.push(window.setTimeout(run, ms));
-  };
-
   const record = (answer: number) => {
-    setHistory((prev) => [{ id: createId(), answer }, ...prev].slice(0, HISTORY));
+    setHistory((prev) => pushHistory(prev, { id: createId(), answer }));
   };
 
   const shake = () => {
@@ -80,7 +73,6 @@ export const useM8gicTable = () => {
       record(next);
       return;
     }
-    timers.current = [];
     setShaking(true);
     ball.animate(SHAKE_FRAMES, { duration: SHAKE_MS, easing: 'ease-in-out' });
     sink.current = dieRef.current?.animate(SINK_FRAMES, { duration: SINK_MS, easing: 'ease-in', fill: 'forwards' }) ?? null;
@@ -93,11 +85,6 @@ export const useM8gicTable = () => {
       later(RISE_MS, () => {
         setShaking(false);
         record(next);
-        // The disabled button dropped focus to the page; hand it back to the
-        // table so Space shakes again.
-        if (document.activeElement === document.body) {
-          ballRef.current?.closest<HTMLElement>('.chance-layout')?.focus({ preventScroll: true });
-        }
       });
     });
   };
@@ -158,22 +145,22 @@ export const M8gicTab = ({ table }: { table: ReturnType<typeof useM8gicTable> })
       action={{ label: shaking ? 'Shaking…' : 'Shake', onClick: table.shake, disabled: shaking }}
       history={{
         title: 'History',
-        count: history.length,
         empty: 'Answers show up here.',
         summary: `${counts.yes} yes · ${counts.maybe} maybe · ${counts.no} no`,
         onClear: table.clear,
-        children: history.map((entry, index) => {
+        entries: history,
+        renderEntry: (entry) => {
           const answer = M8GIC_ANSWERS[entry.answer];
           return (
-            <li className="chance-history-entry" data-latest={index === 0 || undefined} key={entry.id}>
+            <>
               <span className="m8gic-mark" data-kind={answer.kind} title={KIND_LABEL[answer.kind]} />
               <span className="chance-history-lines">
                 {answer.text}
                 <span className="sr-only">, {KIND_LABEL[answer.kind]}</span>
               </span>
-            </li>
+            </>
           );
-        }),
+        },
       }}
     >
       <div ref={stageRef} className="m8gic-stage" style={fit}>
