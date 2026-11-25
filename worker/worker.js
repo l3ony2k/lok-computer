@@ -1,4 +1,14 @@
 import { JevError, planQuestions, runJevRequest } from './jev.js';
+import {
+  CORS_HEADERS,
+  baseHeaders,
+  errorResponse,
+  isRateLimited,
+  jsonResponse,
+  methodNotAllowedResponse,
+  rateLimitedResponse,
+} from './http.ts';
+import { proxyJson } from './proxy.ts';
 import { handleSiteRequest } from './site.ts';
 
 /**
@@ -31,10 +41,7 @@ import { handleSiteRequest } from './site.ts';
  * - ASSETS: the static assets binding over `dist/` (wrangler.toml)
  */
 
-/**
- * A Cloudflare rate limiting binding.
- * @typedef {{ limit(options: { key: string }): Promise<{ success: boolean }> }} RateLimiter
- */
+/** @typedef {import('./http.ts').RateLimiter} RateLimiter */
 
 /**
  * The Worker's environment. Every API entry is optional: routes check for what
@@ -55,33 +62,6 @@ import { handleSiteRequest } from './site.ts';
  * @property {RateLimiter} [PROXY_RATE_LIMITER]
  */
 
-// Helper to set CORS headers
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, HEAD, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
-
-const discoveryLinks = [
-  '</llms.txt>; rel="alternate"; type="text/markdown"',
-  '</openapi.json>; rel="service-desc"; type="application/vnd.oai.openapi+json"',
-  '</developers>; rel="help"',
-].join(', ');
-
-// Function to create a JSON response with CORS headers
-function makeJsonResponse(body, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status: status,
-    headers: {
-      'Content-Type': 'application/json; charset=utf-8',
-      'Link': discoveryLinks,
-      'Vary': 'Accept, Accept-Encoding',
-      'X-Content-Type-Options': 'nosniff',
-      ...corsHeaders,
-    }
-  });
-}
-
 const readJsonBody = async (request) => {
   try {
     return await request.json();
@@ -90,37 +70,14 @@ const readJsonBody = async (request) => {
   }
 };
 
-// Each client IP gets a budget: Ask AI calls spend planner and Jev credits
-// (JEV_RATE_LIMITER); the Fedi and NeoDB proxies spend a personal token's API
-// quota (PROXY_RATE_LIMITER). Without the binding, as in tests, there is no limit.
-/**
- * @param {Request} request
- * @param {RateLimiter | undefined} limiter
- */
-const isRateLimited = async (request, limiter) => {
-  if (!limiter) return false;
-  const key = request.headers.get('CF-Connecting-IP') ?? 'anonymous';
-  const { success } = await limiter.limit({ key });
-  return !success;
-};
-
-const makeRateLimitedResponse = () =>
-  makeJsonResponse({ error: 'Too many requests. Try again in a minute.' }, 429);
-
 const makeJevErrorResponse = (error) => {
   if (error instanceof JevError) {
     if (error.details) console.error('Jev upstream detail:', error.details);
-    return makeJsonResponse({ error: error.message, ...(error.code ? { code: error.code } : {}) }, error.status);
+    return errorResponse(error.message, error.status, error.code);
   }
   console.error('Error in Jev endpoint:', error);
-  return makeJsonResponse({ error: 'Internal server error' }, 500);
+  return errorResponse('Internal server error', 500);
 };
-
-function makeMethodNotAllowedResponse(allow) {
-  const response = makeJsonResponse({ error: 'Method not allowed' }, 405);
-  response.headers.set('Allow', allow);
-  return response;
-}
 
 function makeNotFoundResponse(request) {
   if ((request.headers.get('Accept') || '').toLowerCase().includes('text/markdown')) {
@@ -134,18 +91,80 @@ function makeNotFoundResponse(request) {
       '',
     ].join('\n'), {
       status: 404,
-      headers: {
-        'Content-Type': 'text/markdown; charset=utf-8',
-        'Link': discoveryLinks,
-        'Vary': 'Accept, Accept-Encoding',
-        'X-Content-Type-Options': 'nosniff',
-        ...corsHeaders,
-      },
+      headers: { ...baseHeaders('text/markdown; charset=utf-8'), ...CORS_HEADERS },
     });
   }
 
-  return makeJsonResponse({ error: 'Not Found' }, 404);
+  return errorResponse('Not Found', 404);
 }
+
+const NEODB_SHELF_TYPES = ['wishlist', 'progress', 'complete', 'dropped'];
+
+/**
+ * Private and direct posts are dropped here, so they never reach the client.
+ * @param {unknown} data
+ */
+const onlyPublicStatuses = (data) =>
+  /** @type {Array<{ visibility?: string }>} */ (data).filter((status) =>
+    status.visibility === 'public' || status.visibility === 'unlisted');
+
+/**
+ * The credentialed read-only proxies, by exact path. Each names only what
+ * differs: its settings, the upstream URL, and the provider's own headers.
+ * @type {Record<string, (request: Request, env: Env) => Promise<Response>>}
+ */
+const PROXY_ROUTES = {
+  // Fedi/GoToSocial account lookup.
+  '/api/fedi/account': (request, env) => proxyJson(request, {
+    service: 'Fedi',
+    limiter: env.PROXY_RATE_LIMITER,
+    config: { FEDI_INSTANCE: env.FEDI_INSTANCE, FEDI_ACCESS_TOKEN: env.FEDI_ACCESS_TOKEN },
+    token: (config) => config.FEDI_ACCESS_TOKEN,
+    headers: { 'Content-Type': 'application/json' },
+    upstream: (url, config) => {
+      const username = url.searchParams.get('username');
+      if (!username) return { invalid: 'Missing username parameter' };
+      return `${config.FEDI_INSTANCE}/api/v1/accounts/lookup?acct=${encodeURIComponent(username)}`;
+    },
+  }),
+
+  // Fedi/GoToSocial statuses, public and unlisted only.
+  '/api/fedi/statuses': (request, env) => proxyJson(request, {
+    service: 'Fedi',
+    limiter: env.PROXY_RATE_LIMITER,
+    config: { FEDI_INSTANCE: env.FEDI_INSTANCE, FEDI_ACCESS_TOKEN: env.FEDI_ACCESS_TOKEN },
+    token: (config) => config.FEDI_ACCESS_TOKEN,
+    headers: { 'Content-Type': 'application/json' },
+    upstream: (url, config) => {
+      const accountId = url.searchParams.get('accountId');
+      if (!accountId) return { invalid: 'Missing accountId parameter' };
+      const upstreamUrl = new URL(`${config.FEDI_INSTANCE}/api/v1/accounts/${encodeURIComponent(accountId)}/statuses`);
+      upstreamUrl.searchParams.append('limit', url.searchParams.get('limit') || '20');
+      const maxId = url.searchParams.get('max_id');
+      if (maxId) upstreamUrl.searchParams.append('max_id', maxId);
+      return upstreamUrl.toString();
+    },
+    transform: onlyPublicStatuses,
+  }),
+
+  // One page of the configured user's NeoDB shelf.
+  '/api/neodb/shelf': (request, env) => proxyJson(request, {
+    service: 'NeoDB',
+    limiter: env.PROXY_RATE_LIMITER,
+    config: { NEODB_ACCESS_TOKEN: env.NEODB_ACCESS_TOKEN, NEODB_USERNAME: env.NEODB_USERNAME },
+    token: (config) => config.NEODB_ACCESS_TOKEN,
+    headers: { Accept: 'application/json' },
+    upstream: (url, config) => {
+      const shelfType = url.searchParams.get('type') || 'wishlist';
+      const page = url.searchParams.get('page') || '1';
+      const pageSize = url.searchParams.get('page_size') || '20';
+      if (!NEODB_SHELF_TYPES.includes(shelfType)) {
+        return { invalid: 'Invalid shelf type. Must be: wishlist, progress, complete, or dropped' };
+      }
+      return `https://neodb.social/api/user/${encodeURIComponent(config.NEODB_USERNAME)}/shelf/${shelfType}?page=${encodeURIComponent(page)}&page_size=${encodeURIComponent(pageSize)}`;
+    },
+  }),
+};
 
 /**
  * @param {Request} request
@@ -156,30 +175,31 @@ async function handleApiRequest(request, env) {
 
   // Handle CORS preflight requests
   if (request.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: CORS_HEADERS });
   }
 
   // Credential-free discovery endpoints for agents and integration checks.
   if (url.pathname === '/api' || url.pathname === '/api/') {
     if (request.method !== 'GET' && request.method !== 'HEAD') {
-      return makeMethodNotAllowedResponse('GET, HEAD');
+      return methodNotAllowedResponse('GET, HEAD');
     }
 
-    return makeJsonResponse({
+    return jsonResponse({
       name: 'lok.computer public API',
       description: 'Public REST endpoints used by the lok.computer browser desktop.',
-      documentation: 'https://lok.computer/developers',
-      openapi: 'https://lok.computer/openapi.json',
-      status: 'https://lok.computer/api/status',
+      // The origin the client reached, so forks, previews and dev point at themselves.
+      documentation: `${url.origin}/developers`,
+      openapi: `${url.origin}/openapi.json`,
+      status: `${url.origin}/api/status`,
     });
   }
 
   if (url.pathname === '/api/status') {
     if (request.method !== 'GET' && request.method !== 'HEAD') {
-      return makeMethodNotAllowedResponse('GET, HEAD');
+      return methodNotAllowedResponse('GET, HEAD');
     }
 
-    return makeJsonResponse({
+    return jsonResponse({
       service: 'lok.computer public API',
       status: 'ok',
     });
@@ -188,15 +208,15 @@ async function handleApiRequest(request, env) {
   // Ask AI: decide how Jev should answer a question (plan, ask for input, answer it directly, or refuse), without calling Jev.
   if (url.pathname === '/api/jev/plan') {
     if (request.method !== 'POST') {
-      return makeMethodNotAllowedResponse('POST');
+      return methodNotAllowedResponse('POST');
     }
     try {
-      if (await isRateLimited(request, env.JEV_RATE_LIMITER)) return makeRateLimitedResponse();
+      if (await isRateLimited(request, env.JEV_RATE_LIMITER)) return rateLimitedResponse();
       const started = Date.now();
       const body = await readJsonBody(request);
       // `kind` is "plan", "needs_input" (ask the person for more), "answer" (the planner answered itself), or "refuse".
       const { plannerModel, ...outcome } = await planQuestions(body ?? {}, env);
-      return makeJsonResponse({
+      return jsonResponse({
         ...outcome,
         planner: plannerModel ? { model: plannerModel } : null,
         timing: { plannerMs: Date.now() - started },
@@ -209,174 +229,19 @@ async function handleApiRequest(request, env) {
   // Ask AI: answer a question (or a supplied plan) with Jev: best answer plus per-question evidence.
   if (url.pathname === '/api/jev') {
     if (request.method !== 'POST') {
-      return makeMethodNotAllowedResponse('POST');
+      return methodNotAllowedResponse('POST');
     }
     try {
-      if (await isRateLimited(request, env.JEV_RATE_LIMITER)) return makeRateLimitedResponse();
+      if (await isRateLimited(request, env.JEV_RATE_LIMITER)) return rateLimitedResponse();
       const body = await readJsonBody(request);
-      return makeJsonResponse(await runJevRequest(body ?? {}, env));
+      return jsonResponse(await runJevRequest(body ?? {}, env));
     } catch (error) {
       return makeJevErrorResponse(error);
     }
   }
 
-  // Route for Fedi/GoToSocial account lookup
-  if (url.pathname === '/api/fedi/account') {
-    try {
-      if (request.method !== 'GET' && request.method !== 'HEAD') {
-        return makeMethodNotAllowedResponse('GET, HEAD');
-      }
-      if (await isRateLimited(request, env.PROXY_RATE_LIMITER)) return makeRateLimitedResponse();
-
-      const fediInstance = env.FEDI_INSTANCE;
-      const fediToken = env.FEDI_ACCESS_TOKEN;
-
-      if (!fediInstance || !fediToken) {
-        return makeJsonResponse({ error: 'Fedi configuration missing' }, 500);
-      }
-
-      const username = url.searchParams.get('username');
-      if (!username) {
-        return makeJsonResponse({ error: 'Missing username parameter' }, 400);
-      }
-
-      const upstreamUrl = `${fediInstance}/api/v1/accounts/lookup?acct=${encodeURIComponent(username)}`;
-      const response = await fetch(upstreamUrl, {
-        headers: {
-          'Authorization': `Bearer ${fediToken}`,
-          'Content-Type': 'application/json',
-          'User-Agent': 'lok-computer-worker/1.0',
-        }
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        return makeJsonResponse({ error: 'Failed to fetch account', details: errorText }, response.status);
-      }
-
-      const data = await response.json();
-      return makeJsonResponse(data);
-    } catch (error) {
-      console.error('Error in Fedi account proxy:', error);
-      return makeJsonResponse({ error: 'Internal server error', details: error instanceof Error ? error.message : String(error) }, 500);
-    }
-  }
-
-  // Route for Fedi/GoToSocial statuses proxy
-  if (url.pathname.startsWith('/api/fedi/statuses')) {
-    try {
-      if (request.method !== 'GET' && request.method !== 'HEAD') {
-        return makeMethodNotAllowedResponse('GET, HEAD');
-      }
-      if (await isRateLimited(request, env.PROXY_RATE_LIMITER)) return makeRateLimitedResponse();
-
-      const fediInstance = env.FEDI_INSTANCE;
-      const fediToken = env.FEDI_ACCESS_TOKEN;
-
-      if (!fediInstance) {
-        return makeJsonResponse({ error: 'FEDI_INSTANCE not configured' }, 500);
-      }
-      if (!fediToken) {
-        return makeJsonResponse({ error: 'FEDI_ACCESS_TOKEN not configured' }, 500);
-      }
-
-      const accountId = url.searchParams.get('accountId');
-      const maxId = url.searchParams.get('max_id');
-      const limit = url.searchParams.get('limit') || '20';
-
-      if (!accountId) {
-        return makeJsonResponse({ error: 'Missing accountId parameter' }, 400);
-      }
-
-      const upstreamUrl = new URL(`${fediInstance}/api/v1/accounts/${encodeURIComponent(accountId)}/statuses`);
-      upstreamUrl.searchParams.append('limit', limit);
-      if (maxId) {
-        upstreamUrl.searchParams.append('max_id', maxId);
-      }
-
-      const response = await fetch(upstreamUrl.toString(), {
-        headers: {
-          'Authorization': `Bearer ${fediToken}`,
-          'Content-Type': 'application/json',
-          'User-Agent': 'lok-computer-worker/1.0',
-        }
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Fedi API error:', response.status, errorText);
-        return makeJsonResponse({ error: 'Failed to fetch from Fedi instance', details: errorText }, response.status);
-      }
-
-      const data = await response.json();
-
-      // SECURITY: Filter out private and direct posts at the API level
-      // This ensures private content is never sent to the client
-      const publicStatuses = data.filter(status =>
-        status.visibility === 'public' || status.visibility === 'unlisted'
-      );
-
-      return makeJsonResponse(publicStatuses);
-
-    } catch (error) {
-      console.error('Error in Fedi proxy:', error);
-      return makeJsonResponse({ error: 'Internal server error in Fedi proxy', details: error instanceof Error ? error.message : String(error) }, 500);
-    }
-  }
-
-  // Route for NeoDB shelf
-  if (url.pathname === '/api/neodb/shelf') {
-    try {
-      if (request.method !== 'GET' && request.method !== 'HEAD') {
-        return makeMethodNotAllowedResponse('GET, HEAD');
-      }
-      if (await isRateLimited(request, env.PROXY_RATE_LIMITER)) return makeRateLimitedResponse();
-
-      const neodbToken = env.NEODB_ACCESS_TOKEN;
-
-      if (!neodbToken) {
-        return makeJsonResponse({ error: 'NEODB_ACCESS_TOKEN not configured' }, 500);
-      }
-
-      const neodbUser = env.NEODB_USERNAME;
-
-      if (!neodbUser) {
-        return makeJsonResponse({ error: 'NEODB_USERNAME not configured' }, 500);
-      }
-
-      const shelfType = url.searchParams.get('type') || 'wishlist';
-      const page = url.searchParams.get('page') || '1';
-      const pageSize = url.searchParams.get('page_size') || '20';
-
-      // Validate shelf type
-      const validTypes = ['wishlist', 'progress', 'complete', 'dropped'];
-      if (!validTypes.includes(shelfType)) {
-        return makeJsonResponse({ error: 'Invalid shelf type. Must be: wishlist, progress, complete, or dropped' }, 400);
-      }
-
-      const upstreamUrl = `https://neodb.social/api/user/${encodeURIComponent(neodbUser)}/shelf/${shelfType}?page=${encodeURIComponent(page)}&page_size=${encodeURIComponent(pageSize)}`;
-      const response = await fetch(upstreamUrl, {
-        headers: {
-          'Authorization': `Bearer ${neodbToken}`,
-          'Accept': 'application/json',
-          'User-Agent': 'lok-computer-worker/1.0',
-        }
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('NeoDB API error:', response.status, errorText);
-        return makeJsonResponse({ error: 'Failed to fetch from NeoDB', details: errorText }, response.status);
-      }
-
-      const data = await response.json();
-      return makeJsonResponse(data);
-
-    } catch (error) {
-      console.error('Error in NeoDB shelf proxy:', error);
-      return makeJsonResponse({ error: 'Internal server error', details: error instanceof Error ? error.message : String(error) }, 500);
-    }
-  }
+  const proxy = Object.hasOwn(PROXY_ROUTES, url.pathname) ? PROXY_ROUTES[url.pathname] : undefined;
+  if (proxy) return proxy(request, env);
 
   return makeNotFoundResponse(request);
 }

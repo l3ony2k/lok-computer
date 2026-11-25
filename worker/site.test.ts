@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { DISCOVERY_LINKS, handleSiteRequest, isKnownUiPath } from "./site";
+import { DISCOVERY_LINKS } from "./http";
+import { handleSiteRequest, isKnownUiPath } from "./site";
 import { ROUTES } from "../src/config/routes";
 
 const shell = `<!doctype html><html><head><title>lok.computer</title></head><body><div id="root"></div><noscript id="agent-static-content"><main>old fallback</main></noscript></body></html>`;
