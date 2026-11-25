@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { WindowLayout } from '@/components/window/WindowLayout';
 import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/hover-card';
 import { RetroButton } from '@/components/ui/RetroButton';
+import { TabStrip } from '@/components/ui/TabStrip';
 import { StateMessage } from '@/components/ui/StateMessage';
 import { LoadFailure } from '@/components/ui/LoadFailure';
 import { useApplicationLauncher } from '@/hooks/useApplicationLauncher';
@@ -46,8 +47,8 @@ interface ShelfResponse {
     count: number;
 }
 
-const SHELF_TABS: { value: ShelfType; label: string }[] = SHELF_TYPES.map((value) => ({
-    value,
+const SHELF_TABS: { id: ShelfType; label: string }[] = SHELF_TYPES.map((value) => ({
+    id: value,
     label: value[0].toUpperCase() + value.slice(1),
 }));
 
@@ -345,18 +346,7 @@ export const ShelfApp: React.FC<ShelfAppProps> = ({ initialTab, initialPage, onP
     return (
         <WindowLayout
             toolbar={
-                <div className="app-toolbar-row app-tab-bar sticky top-0">
-                    {SHELF_TABS.map((tab) => (
-                        <RetroButton
-                            key={tab.value}
-                            size="sm"
-                            active={activeTab === tab.value}
-                            onClick={() => handleTabChange(tab.value)}
-                        >
-                            {tab.label}
-                        </RetroButton>
-                    ))}
-                </div>
+                <TabStrip tabs={SHELF_TABS} selected={activeTab} onSelect={handleTabChange} label="Shelf" />
             }
             footer={
                 <div className="app-footer-row">

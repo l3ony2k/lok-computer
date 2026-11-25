@@ -1,6 +1,11 @@
 import { useState } from 'react';
 import { WindowLayout } from '@/components/window/WindowLayout';
-import { RetroButton } from '@/components/ui/RetroButton';
+import { TabStrip } from '@/components/ui/TabStrip';
+
+const LINKS_TABS = [
+    { id: 'buttons', label: 'Buttons' },
+    { id: 'my-buttons', label: 'My Buttons' },
+] as const;
 import { usePersistedState } from '@/hooks/useStorage';
 import { SITE } from '@/config/site';
 
@@ -283,22 +288,7 @@ export const LinksApp = () => {
     return (
         <WindowLayout
             toolbar={
-                <div className="app-toolbar-row app-tab-bar sticky top-0">
-                    <RetroButton
-                        size="sm"
-                        active={activeTab === 'buttons'}
-                        onClick={() => handleTabChange('buttons')}
-                    >
-                        Buttons
-                    </RetroButton>
-                    <RetroButton
-                        size="sm"
-                        active={activeTab === 'my-buttons'}
-                        onClick={() => handleTabChange('my-buttons')}
-                    >
-                        My Buttons
-                    </RetroButton>
-                </div>
+                <TabStrip tabs={LINKS_TABS} selected={activeTab} onSelect={handleTabChange} label="Links" />
             }
             hasPadding={false}
         >

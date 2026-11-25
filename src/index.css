@@ -1186,6 +1186,25 @@
         overflow: visible;
     }
 
+    /* TabStrip (components/ui/TabStrip.tsx): rows of tabs, the selected tab's
+       row at the bottom. Each row keeps the theme's gap between tabs; rows
+       stack with the same gap. A tab never shrinks or wraps its label. */
+    .app-tab-strip {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .app-tab-row {
+        display: flex;
+        align-items: flex-end;
+        gap: inherit;
+    }
+
+    .app-tab-row > * {
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+
     .app-tab-bar .retro-button {
         position: relative;
         height: 30px;
