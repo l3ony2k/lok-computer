@@ -14,11 +14,14 @@ export interface CoinType {
   name: string;
   /** The photograph's page on Wikimedia Commons, linked from About. */
   source: string;
+  /** Who photographed it, when not Jaclyn Nash for the Smithsonian (About credits it). */
+  credit?: string;
 }
 
 /**
- * Every photo is by Jaclyn Nash for the Smithsonian's National Numismatic
- * Collection (2015), public domain; the order is the dropdown's.
+ * Photos by Jaclyn Nash for the Smithsonian's National Numismatic Collection
+ * (2015) unless a type names its `credit`; all public domain. The order is
+ * the dropdown's.
  */
 export const COIN_TYPES: readonly CoinType[] = [
   {
@@ -81,11 +84,18 @@ export const COIN_TYPES: readonly CoinType[] = [
     name: "1835 two mohurs, William IV (British India)",
     source: 'https://commons.wikimedia.org/wiki/File:India_1835_2_Mohurs.jpg',
   },
+  {
+    id: 'kangxi-tongbao',
+    label: 'Kangxi Tongbao',
+    name: 'Kangxi Tongbao 康熙通寶, a Qing cash coin, 1662–1722 (China)',
+    source: 'https://commons.wikimedia.org/wiki/File:Coin._Qing_Dynasty._Kangxi_Tongbao._Bao_Quan._obv.jpg',
+    credit: 'Murberget, Länsmuseet Västernorrland',
+  },
 ];
 
 export const DEFAULT_COIN = COIN_TYPES[0].id;
 export const MAX_COINS = 10;
-export const COIN_IMAGE_SIZE = 360;
+export const COIN_IMAGE_SIZE = 480;
 
 export const isCoinType = (value: unknown): value is string => COIN_TYPES.some((type) => type.id === value);
 

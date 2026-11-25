@@ -1,6 +1,13 @@
 import { useEffect } from "react";
 import { WindowLayout } from "@/components/window/WindowLayout";
 import { RetroButton } from "@/components/ui/RetroButton";
+import { TabStrip } from "@/components/ui/TabStrip";
+
+const ABOUT_TABS = [
+  { id: "about-this", label: "About this" },
+  { id: "about-me", label: "About me" },
+  { id: "projects", label: "Projects" },
+] as const;
 import { usePersistedState } from "@/hooks/useStorage";
 import { SYSTEM_VERSION } from "@/lib/system";
 import { THEMES, THEME_IDS } from "@/lib/theme";
@@ -123,7 +130,7 @@ const AboutThis = () => {
             {TAROT_CREDIT.label}
           </a>
           , from Saskia Jansen’s scans of a first printing; and the coins (
-          {COIN_TYPES.map((type, index) => (
+          {COIN_TYPES.filter((type) => !type.credit).map((type, index) => (
             <span key={type.id}>
               {index > 0 && ", "}
               <a href={type.source} className="underline text-blue-700 dark:text-blue-300">
@@ -131,7 +138,17 @@ const AboutThis = () => {
               </a>
             </span>
           ))}
-          ), photographed by Jaclyn Nash for the Smithsonian’s National Numismatic Collection. Thank you for putting them in the public domain.
+          ), photographed by Jaclyn Nash for the Smithsonian’s National Numismatic Collection
+          {COIN_TYPES.filter((type) => type.credit).map((type) => (
+            <span key={type.id}>
+              ; the{" "}
+              <a href={type.source} className="underline text-blue-700 dark:text-blue-300">
+                {type.label}
+              </a>
+              {" "}from {type.credit}
+            </span>
+          ))}
+          . Thank you for putting them in the public domain.
         </p>
 
         <Changelog />
@@ -287,17 +304,7 @@ export const About: React.FC<AboutProps> = ({ initialTab, onPropsChange }) => {
   return (
     <WindowLayout
       toolbar={
-        <div className="app-toolbar-row app-tab-bar sticky top-0">
-          <RetroButton size="sm" active={activeTab === "about-this"} onClick={() => handleTabChange("about-this")}>
-            About this
-          </RetroButton>
-          <RetroButton size="sm" active={activeTab === "about-me"} onClick={() => handleTabChange("about-me")}>
-            About me
-          </RetroButton>
-          <RetroButton size="sm" active={activeTab === "projects"} onClick={() => handleTabChange("projects")}>
-            Projects
-          </RetroButton>
-        </div>
+        <TabStrip tabs={ABOUT_TABS} selected={activeTab} onSelect={handleTabChange} label="About" />
       }
       footer={
         <div className="app-footer-row arena-file-footer">

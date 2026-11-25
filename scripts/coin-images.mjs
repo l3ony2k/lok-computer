@@ -3,7 +3,9 @@
  * Coin faces for Chance: real coins from the Smithsonian's National
  * Numismatic Collection, photographed by Jaclyn Nash (2015) and published on
  * Wikimedia Commons. The first was a 1909 Lincoln cent, the same year as the
- * tarot deck; the list below adds US type coins and three gold and world coins.
+ * tarot deck; the list below adds US type coins and three gold and world coins,
+ * and one coin from elsewhere: a Qing Kangxi Tongbao cash coin from Murberget
+ * (Sweden), one photo per face, whose square hole is cut out too.
  *
  * Public domain twice over: US coins are US Mint designs (PD-USGov-money), the
  * world coins are designs long out of copyright (Wyon, 1835 and 1839), and the
@@ -24,7 +26,7 @@
  *      SVG circle) and encode WebP (WEBP_QUALITY, effort 6). Colours are kept
  *      as photographed; the photos are already upright.
  *
- * Output: SIZE × SIZE (about 2× the coin's largest display size, 164 CSS px),
+ * Output: SIZE × SIZE (2× the coin's largest display size, 240 CSS px),
  * src/assets/coin/<id>/heads.webp and tails.webp. Add the id to COIN_TYPES in
  * src/apps/chance/coins.ts and a row to NOTICE.md.
  *
@@ -127,10 +129,35 @@ const COINS = [
     sha1: 'adbb531608e634e42ed0eb86b03009ed7ddc741c',
     backdrop: 'black',
   },
+  /*
+   * A Qing cash coin, Kangxi Tongbao 康熙通寶 (1662–1722), Board of Revenue
+   * mint (寶泉): the classic coin for casting the I Ching. Not from the NNC:
+   * Murberget, Länsmuseet Västernorrland (Sweden), public domain. One photo
+   * per face on dark slate; heads is the inscribed side (字), tails the Manchu
+   * back (背). Cast, not struck, so less round; the square hole is cut out.
+   */
+  {
+    id: 'kangxi-tongbao',
+    faces: {
+      heads: {
+        file: 'Coin. Qing Dynasty. Kangxi Tongbao. Bao Quan. obv.jpg',
+        url: 'https://upload.wikimedia.org/wikipedia/commons/e/e2/Coin._Qing_Dynasty._Kangxi_Tongbao._Bao_Quan._obv.jpg',
+        sha1: 'e718894528751039f468e088e96daeffa402c77d',
+      },
+      tails: {
+        file: 'Coin. Qing Dynasty. Kangxi Tongbao. Bao Quan. rev.jpg',
+        url: 'https://upload.wikimedia.org/wikipedia/commons/a/af/Coin._Qing_Dynasty._Kangxi_Tongbao._Bao_Quan._rev.jpg',
+        sha1: 'b493ba435edd0a92a15a6b431491645c0005cc07',
+      },
+    },
+    backdrop: 'slate',
+    roundTolerance: 0.05,
+    hole: true,
+  },
 ];
 const USER_AGENT = 'lok-computer-coin-script/1.0 (build-time asset download)';
 
-export const SIZE = 360;
+export const SIZE = 480;
 const WEBP_QUALITY = 80;
 /** Share of the radius trimmed off the rim, so the antialiased edge never shows backdrop. */
 const RIM_INSET = 0.006;
@@ -145,7 +172,9 @@ const MIN_RUN = 40;
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const sha1Of = (bytes) => createHash('sha1').update(bytes).digest('hex');
-const cachePathOf = (coin) => path.join(CACHE_DIR, coin.file);
+const cachePathOf = (source) => path.join(CACHE_DIR, source.file);
+/** The photo(s) of a coin: one with both faces, or one per face. */
+const sourcesOf = (entry) => (entry.faces ? [entry.faces.heads, entry.faces.tails] : [entry]);
 
 /** The original's bytes from Commons, or the Wayback Machine's copy, checked against the published SHA-1. */
 const download = async (coin) => {
@@ -184,6 +213,17 @@ const download = async (coin) => {
   throw new Error(`No verified copy of ${coin.file}; download it by hand into scripts/.cache/coin/`);
 };
 
+/**
+ * Whether a pixel is backdrop. White and black are near-grey; the Kangxi
+ * coin's slate is dark and greenish, as dark as the coin's patina but of
+ * another hue (the brass is redder than green, the slate greener than red).
+ */
+const isBackdrop = (backdrop, r, g, b, lum, chroma) => {
+  if (backdrop === 'slate') return g >= r + 4 && chroma < 40 && lum < 120;
+  if (chroma > BACKDROP_CHROMA) return false;
+  return backdrop === 'black' ? lum <= BLACK_LUM : lum >= BACKDROP_LUM;
+};
+
 /** First and last index whose count reaches MIN_RUN. */
 const extent = (counts) => {
   let first = 0;
@@ -206,8 +246,7 @@ const findCoin = ({ data, width, height }, fromX, toX, backdrop) => {
       const b = data[i + 2];
       const lum = 0.299 * r + 0.587 * g + 0.114 * b;
       const chroma = Math.max(r, g, b) - Math.min(r, g, b);
-      const differs = backdrop === 'black' ? lum > BLACK_LUM : lum < BACKDROP_LUM;
-      if (differs || chroma > BACKDROP_CHROMA) {
+      if (!isBackdrop(backdrop, r, g, b, lum, chroma)) {
         rows[y] += 1;
         cols[x] += 1;
       }
@@ -230,9 +269,66 @@ const circleMask = Buffer.from(
   + `<circle cx="${SIZE / 2}" cy="${SIZE / 2}" r="${SIZE / 2}" fill="#fff"/></svg>`,
 );
 
-const convert = async (entry, photo, side, fromX, toX) => {
+/**
+ * A mask (white = keep) that clears the square hole of a cash coin: a flood
+ * fill of backdrop-coloured pixels from the centre, kept to the middle of the
+ * face, grown by a pixel to take the hole's shadowed edge, softened for
+ * antialiasing.
+ */
+const holeMask = async (face) => {
+  const { data } = await sharp(face).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+  const inHole = new Uint8Array(SIZE * SIZE);
+  const limit = SIZE * 0.22;
+  const centre = SIZE / 2;
+  const stack = [[Math.round(centre), Math.round(centre)]];
+  while (stack.length) {
+    const [x, y] = stack.pop();
+    if (x < 0 || y < 0 || x >= SIZE || y >= SIZE) continue;
+    if (Math.abs(x - centre) > limit || Math.abs(y - centre) > limit) continue;
+    const index = y * SIZE + x;
+    if (inHole[index]) continue;
+    const i = index * 3;
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+    const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+    if (!isBackdrop('slate', r, g, b, lum, Math.max(r, g, b) - Math.min(r, g, b))) continue;
+    inHole[index] = 1;
+    stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
+  }
+  let area = 0;
+  const mask = Buffer.alloc(SIZE * SIZE, 255);
+  for (let y = 0; y < SIZE; y += 1) {
+    for (let x = 0; x < SIZE; x += 1) {
+      let hole = false;
+      for (let dy = -1; dy <= 1 && !hole; dy += 1) {
+        for (let dx = -1; dx <= 1 && !hole; dx += 1) {
+          const nx = x + dx;
+          const ny = y + dy;
+          hole = nx >= 0 && ny >= 0 && nx < SIZE && ny < SIZE && inHole[ny * SIZE + nx] === 1;
+        }
+      }
+      if (hole) {
+        mask[y * SIZE + x] = 0;
+        area += 1;
+      }
+    }
+  }
+  const share = area / (SIZE * SIZE);
+  if (share < 0.02 || share > 0.12) throw new Error(`hole not found (${(share * 100).toFixed(1)}% of the face)`);
+  // dest-in keeps the face where the overlay is opaque, so the hole goes in
+  // the overlay's alpha channel (white, with the softened mask as alpha).
+  const soft = await sharp(mask, { raw: { width: SIZE, height: SIZE, channels: 1 } }).blur(0.6).extractChannel(0).raw().toBuffer();
+  const rgba = Buffer.alloc(SIZE * SIZE * 4, 255);
+  for (let i = 0; i < SIZE * SIZE; i += 1) rgba[i * 4 + 3] = soft[i];
+  const png = await sharp(rgba, { raw: { width: SIZE, height: SIZE, channels: 4 } }).png().toBuffer();
+  return { png, share };
+};
+
+const convert = async (entry, source, photo, side, fromX, toX) => {
   const coin = findCoin(photo, fromX, toX, entry.backdrop);
-  if (Math.abs(coin.roundness - 1) > 0.02) throw new Error(`${side}: coin is not round (${coin.roundness.toFixed(3)})`);
+  const tolerance = entry.roundTolerance ?? 0.02;
+  if (Math.abs(coin.roundness - 1) > tolerance) throw new Error(`${side}: coin is not round (${coin.roundness.toFixed(3)})`);
   const radius = coin.radius * (1 - RIM_INSET);
   const box = {
     left: Math.round(coin.cx - radius),
@@ -240,36 +336,60 @@ const convert = async (entry, photo, side, fromX, toX) => {
     width: Math.round(radius * 2),
     height: Math.round(radius * 2),
   };
-  const face = await sharp(cachePathOf(entry))
+  const face = await sharp(cachePathOf(source))
     .extract(box)
     .resize(SIZE, SIZE, { fit: 'fill', kernel: 'lanczos3' })
     .toBuffer();
   const output = path.join(OUT_ROOT, entry.id, `${side}.webp`);
+  const hole = entry.hole ? await holeMask(face) : null;
+  if (hole) console.log(`  ${side.padEnd(6)} hole ${(hole.share * 100).toFixed(1)}% of the face`);
   await sharp(face)
     .ensureAlpha()
-    .composite([{ input: circleMask, blend: 'dest-in' }])
+    .composite([
+      ...(hole ? [{ input: hole.png, blend: 'dest-in' }] : []),
+      { input: circleMask, blend: 'dest-in' },
+    ])
     .toColourspace('srgb')
     .webp({ quality: WEBP_QUALITY, alphaQuality: 90, effort: 6, smartSubsample: true })
     .toFile(output);
   return { side, coin, box, bytes: statSync(output).size };
 };
 
+const readPhoto = async (source) => {
+  const { data, info } = await sharp(cachePathOf(source)).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+  return { data, width: info.width, height: info.height };
+};
+
 const processCoin = async (entry) => {
-  const source = await download(entry);
-  console.log(`${entry.id}: ${entry.file} (${source}, checksum ok)`);
+  let fetched = 'cache';
+  for (const source of sourcesOf(entry)) {
+    const from = await download(source);
+    if (from !== 'cache') fetched = from;
+    console.log(`${entry.id}: ${source.file} (${from}, checksum ok)`);
+  }
   mkdirSync(path.join(OUT_ROOT, entry.id), { recursive: true });
-  const { data, info } = await sharp(cachePathOf(entry)).removeAlpha().raw().toBuffer({ resolveWithObject: true });
-  const photo = { data, width: info.width, height: info.height };
-  const middle = Math.round(photo.width / 2);
-  const results = [
-    await convert(entry, photo, 'heads', 0, middle),
-    await convert(entry, photo, 'tails', middle, photo.width),
-  ];
+  let results;
+  if (entry.faces) {
+    // One photo per face: each face fills its own photo.
+    const heads = await readPhoto(entry.faces.heads);
+    const tails = await readPhoto(entry.faces.tails);
+    results = [
+      await convert(entry, entry.faces.heads, heads, 'heads', 0, heads.width),
+      await convert(entry, entry.faces.tails, tails, 'tails', 0, tails.width),
+    ];
+  } else {
+    const photo = await readPhoto(entry);
+    const middle = Math.round(photo.width / 2);
+    results = [
+      await convert(entry, entry, photo, 'heads', 0, middle),
+      await convert(entry, entry, photo, 'tails', middle, photo.width),
+    ];
+  }
   for (const { side, coin, box, bytes } of results) {
     console.log(`  ${side.padEnd(6)} centre (${coin.cx.toFixed(0)}, ${coin.cy.toFixed(0)}) diameter ${(coin.radius * 2).toFixed(0)} px`
       + ` (x/y ${coin.roundness.toFixed(3)}), crop ${box.width} px → ${SIZE}×${SIZE}, ${(bytes / 1024).toFixed(1)} KB`);
   }
-  return source;
+  return fetched;
 };
 
 const main = async () => {
