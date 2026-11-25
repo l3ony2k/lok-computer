@@ -1,5 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
+import { useDismiss } from '@/hooks/useDismiss';
 import { getOverlayRoot } from '@/lib/overlayRoot';
 import type { MenuPlacement } from '@/components/menu/AppMenu';
 import { swatchBeats } from '@/lib/internetTime';
@@ -21,6 +22,8 @@ export const Calendar: React.FC<CalendarProps> = ({
   placement = 'top',
   onOpenClock,
 }) => {
+  // The scrim below catches outside presses; Escape closes it too.
+  useDismiss(isOpen, onClose);
   if (!isOpen) return null;
   const clockTime = date;
 

@@ -3,6 +3,7 @@ import { Check, ChevronRight } from 'lucide-react';
 import { CustomIcon } from '@/components/window/CustomIcon';
 import { getOverlayBounds } from '@/lib/overlayRoot';
 import { useResizeObserver } from '@/hooks/useResizeObserver';
+import { clampSpan } from '@/lib/overlayPlacement';
 
 import { isDivider, type MenuEntry, type MenuItemEntry } from './menuModel';
 
@@ -65,7 +66,7 @@ const Submenu: React.FC<MenuListProps & { onMouseEnter: () => void }> = ({ items
     }
 
     const wanted = rises ? itemRect.bottom + 1 - rect.height : itemRect.top - 1;
-    const top = Math.max(SUBMENU_EDGE_MARGIN, Math.min(wanted - bounds.top, bounds.height - SUBMENU_EDGE_MARGIN - rect.height));
+    const top = clampSpan(wanted - bounds.top, rect.height, bounds.height, SUBMENU_EDGE_MARGIN);
     setPlacement({ left, top, flip });
   }, []);
 

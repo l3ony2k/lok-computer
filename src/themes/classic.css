@@ -845,7 +845,7 @@ html[data-chrome="classic"]:not(#_) .menu-item-button {
     font-size: var(--c-font-size);
 }
 
-html[data-chrome="classic"]:not(#_) .menu-item-button:is(:hover, [data-highlighted]):not(:disabled, [aria-disabled="true"]),
+html[data-chrome="classic"]:not(#_) .menu-item-button:is(:hover:not(:where([data-follow-pointer] *)), [data-highlighted]):not(:disabled, [aria-disabled="true"]),
 html[data-chrome="classic"]:not(#_) .menu-item-shell.has-submenu:hover > .menu-item-button {
     color: var(--c-hl-fg);
     background: var(--c-hl-bg);
@@ -1040,25 +1040,6 @@ html[data-chrome="classic"]:not(#_) .app-header-search {
 html[data-chrome="classic"]:not(#_) .launcher-input {
     font-family: var(--font-ui);
     font-size: var(--c-text-body);
-}
-
-html[data-chrome="classic"]:not(#_) .launcher-item {
-    border: 1px solid transparent;
-    border-radius: var(--c-hl-radius);
-    font-size: var(--c-font-size);
-}
-
-html[data-chrome="classic"]:not(#_) .launcher-item:hover:not([data-active]) {
-    color: inherit;
-    background: transparent;
-    border-color: transparent;
-}
-
-html[data-chrome="classic"]:not(#_) .launcher-item[data-active],
-html[data-chrome="classic"]:not(#_) .launcher-item[data-active]:hover {
-    color: var(--c-hl-fg);
-    background: var(--c-hl-bg);
-    border: var(--c-hl-border);
 }
 
 html[data-chrome="classic"]:not(#_) .launcher-group-title,

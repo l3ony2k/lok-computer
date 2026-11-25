@@ -35,4 +35,21 @@ describe('form controls', () => {
     }
     expect(offenders).toEqual([]);
   });
+
+  /**
+   * A menu row's keyboard (or pointer-followed) highlight is `data-highlighted`,
+   * the attribute every theme's menu highlight styles. A row marked another way
+   * (the launcher once used `data-active`) misses each theme's highlight rules.
+   */
+  it('highlights menu rows with data-highlighted only', async () => {
+    const offenders: string[] = [];
+    for await (const file of new Glob('src/**/*.tsx').scan({ cwd: process.cwd() })) {
+      const text = await Bun.file(file).text();
+      if (!/\bmenu-item-button\b/.test(text)) continue;
+      text.split('\n').forEach((line, index) => {
+        if (/\bdata-active=/.test(line)) offenders.push(`${file}:${index + 1}: ${line.trim()}`);
+      });
+    }
+    expect(offenders).toEqual([]);
+  });
 });
