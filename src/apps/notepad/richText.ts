@@ -4,6 +4,8 @@
  * between HTML and plain text when a note changes format.
  */
 
+import { escapeHtml } from '@/lib/escapeHtml';
+
 const ALLOWED_TAGS = new Set(['P', 'BR', 'DIV', 'SPAN', 'B', 'STRONG', 'I', 'EM', 'U', 'S', 'STRIKE', 'H1', 'H2', 'H3', 'UL', 'OL', 'LI', 'BLOCKQUOTE', 'PRE', 'CODE', 'A', 'HR']);
 
 const sanitizeNode = (node: Node, output: Node) => {
@@ -71,10 +73,6 @@ export const htmlToText = (html: string): string => {
   return lines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
 };
 
-const escapeHtml = (text: string) => text
-  .replace(/&/g, '&amp;')
-  .replace(/</g, '&lt;')
-  .replace(/>/g, '&gt;');
 
 /** Plain text to paragraphs, for turning a text note into a rich one. */
 export const textToHtml = (text: string): string => (

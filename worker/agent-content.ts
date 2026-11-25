@@ -1,3 +1,4 @@
+import { escapeHtml } from "../src/lib/escapeHtml.ts";
 import type { AgentDocument } from "../src/config/documents.ts";
 
 export {
@@ -26,15 +27,6 @@ export function makeDeepLinkDocument(pathname: string): AgentDocument {
       },
     ],
   };
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
 }
 
 export function renderNoScript(document: AgentDocument): string {

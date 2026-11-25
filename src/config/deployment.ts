@@ -10,6 +10,8 @@
  * (`src/config/site.ts`), so it must stay free of browser and Node APIs.
  */
 
+import { escapeHtml } from '../lib/escapeHtml';
+
 export const DEPLOYMENT_DEFAULTS = {
   /** Public origin of the site, without a trailing slash. Canonical and social-card URLs, the Umami domain guard. */
   VITE_SITE_URL: 'https://lok.computer',
@@ -59,6 +61,5 @@ export function renderAnalyticsTag(deployment: Deployment): string {
   // data-domains keeps a fork that forgot to change these, local development,
   // and preview deployments from reporting into this site's statistics.
   const host = new URL(deployment.VITE_SITE_URL).hostname;
-  const attribute = (value: string) => value.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
-  return `<script defer src="${attribute(src)}" data-website-id="${attribute(websiteId)}" data-domains="${attribute(host)}" data-auto-pageview="false"></script>`;
+  return `<script defer src="${escapeHtml(src)}" data-website-id="${escapeHtml(websiteId)}" data-domains="${escapeHtml(host)}" data-auto-pageview="false"></script>`;
 }

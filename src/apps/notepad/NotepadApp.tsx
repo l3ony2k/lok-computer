@@ -1,3 +1,4 @@
+import { escapeHtml } from '@/lib/escapeHtml';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createId } from '@/lib/id';
 import { plural } from '@/lib/plural';
@@ -168,7 +169,7 @@ export const NotepadApp: React.FC<NotepadAppProps> = () => {
   const download = () => {
     if (!active) return;
     const content = active.format === 'rich'
-      ? `<!doctype html>\n<meta charset="utf-8">\n<title>${entryLabel(active).replace(/</g, '&lt;')}</title>\n${active.body}`
+      ? `<!doctype html>\n<meta charset="utf-8">\n<title>${escapeHtml(entryLabel(active))}</title>\n${active.body}`
       : active.body;
     const type = active.format === 'rich' ? 'text/html' : active.format === 'markdown' ? 'text/markdown' : 'text/plain';
     const url = URL.createObjectURL(new Blob([content], { type: `${type};charset=utf-8` }));

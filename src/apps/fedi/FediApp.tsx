@@ -1,3 +1,4 @@
+import { escapeHtml } from '@/lib/escapeHtml';
 import type { ReactNode } from 'react';
 import { APP_CONFIG } from '@/config/constants';
 import { CACHE_TTL } from '@/lib/storage';
@@ -60,7 +61,6 @@ interface StatusPage {
 // makes images block-level, so the inline style keeps them in the line.
 const EMOJI_STYLE = 'display:inline;height:1.2em;width:auto;vertical-align:-0.2em';
 
-const escapeAttribute = (value: string) => value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 
 const findEmoji = (emojis: CustomEmoji[] | undefined) => {
   const byCode = new Map((emojis ?? []).map((emoji) => [emoji.shortcode, emoji]));
@@ -74,7 +74,7 @@ const emojifyHtml = (html: string, emojis: CustomEmoji[] | undefined) => {
   return html.replace(/:([a-zA-Z0-9_]+):/g, (match, code: string) => {
     const emoji = byCode.get(code);
     return emoji
-      ? `<img src="${escapeAttribute(emoji.static_url || emoji.url)}" alt=":${code}:" title=":${code}:" style="${EMOJI_STYLE}">`
+      ? `<img src="${escapeHtml(emoji.static_url || emoji.url)}" alt=":${code}:" title=":${code}:" style="${EMOJI_STYLE}">`
       : match;
   });
 };

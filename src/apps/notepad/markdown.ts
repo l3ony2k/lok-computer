@@ -6,13 +6,11 @@
  * to insert as HTML.
  */
 
-const escapeHtml = (text: string) => text
-  .replace(/&/g, '&amp;')
-  .replace(/</g, '&lt;')
-  .replace(/>/g, '&gt;')
-  .replace(/"/g, '&quot;');
+import { escapeHtml } from '@/lib/escapeHtml';
 
-const safeHref = (href: string) => (/^(https?:\/\/|mailto:)/i.test(href.trim()) ? escapeHtml(href.trim()) : null);
+// Links arrive already escaped with the rest of the text, so they are only
+// checked here, never escaped again (that turned `&` into `&amp;amp;`).
+const safeHref = (escapedHref: string) => (/^(https?:\/\/|mailto:)/i.test(escapedHref.trim()) ? escapedHref.trim() : null);
 
 /** Inline markup on already-escaped text. */
 export const renderInline = (escaped: string): string => {

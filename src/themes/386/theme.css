@@ -18,6 +18,17 @@
     src: url("./fonts/Fixedsys500c.woff2") format("woff2");
 }
 
+/* The backup face in --font-ui. Declared here too, so 386 does not depend on
+   98 or TUI having been loaded first; it is the same file 98 ships (the build
+   keeps one copy), and the browser fetches it only if Fixedsys lacks a glyph. */
+@font-face {
+    font-family: "Perfect DOS VGA 437";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("../98/fonts/PerfectDOSVGA437Win.woff2") format("woff2");
+}
+
 html[data-theme="386"][data-layout]:not(#_) {
     --dos-blue: #000084;
     --dos-gray: #bbbbbb;
