@@ -17,6 +17,7 @@ import twitterButton from '@/assets/buttons/twitter.gif';
 import mailButton from '@/assets/buttons/email.png';
 import l3onButton from '@/assets/buttons/l3on.gif';
 import codebergButton from '@/assets/buttons/codeberg.gif';
+import lokComputerIcon from '@/assets/icons/lok-computer.png';
 
 export const SITE = {
   name: 'lok.computer',
@@ -83,7 +84,10 @@ export interface Project {
   id: string;
   title: string;
   description: string;
+  /** A square picture of the project (drawn to fill the tile). */
   image?: string;
+  /** Pixel art shown small and crisp on the tile instead, for a project without a picture. */
+  icon?: string;
   actions: { text: string; url: string }[];
 }
 
@@ -92,6 +96,7 @@ export const PROJECTS: Project[] = [
   {
     id: 'computer-project',
     title: 'lok.computer',
+    icon: lokComputerIcon,
     description: "A mini desktop-like environment with modular apps including are.na browser, weather app, and more. Yes it's the webpage you're seeing right now!",
     actions: [
       { text: 'visit site', url: SITE.url },

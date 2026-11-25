@@ -4795,6 +4795,47 @@ a:hover .animate-marquee-if-overflow {
 }
 
 /* About › Changelog: collapsed release notes at the end of "About this". */
+/* About › Projects: as many columns as fit, cards at least 240px wide and
+   equally tall per row; each image keeps a square place (a muted tile) while
+   it loads, so nothing shifts. */
+.about-projects {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+    max-width: 1120px;
+    margin: 0 auto;
+}
+
+.about-project {
+    display: flex;
+    flex-direction: column;
+}
+
+.about-project-image {
+    aspect-ratio: 1;
+    background: var(--detail-meta-bg);
+}
+
+.about-project-image img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Pixel art: a third of the tile, centred, kept crisp. */
+.about-project-image[data-icon] {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.about-project-image[data-icon] img {
+    width: 34%;
+    height: auto;
+    image-rendering: pixelated;
+}
+
 .about-changelog {
     border: 1px solid var(--internal-border);
 }

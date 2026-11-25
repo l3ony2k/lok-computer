@@ -243,11 +243,17 @@ const AboutMe = () => (
 // Projects Section
 // ============================================
 const Projects = () => (
-  <div className="select-text p-4 max-w-lg mx-auto">
-    <div className="space-y-4">
+  <div className="select-text p-4">
+    {/* As many columns as fit, cards at least 240px wide; every image is a
+        square that holds its place (a muted tile) before it loads. */}
+    <div className="about-projects">
       {PROJECTS.map((project) => (
-        <div key={project.id} className="border border-border transition-colors overflow-hidden">
-          {project.image && <img src={project.image} alt={project.title} className="w-full select-none border-b border-border transition-colors" />}
+        <div key={project.id} className="about-project border border-border transition-colors overflow-hidden">
+          {(project.image || project.icon) && (
+            <div className="about-project-image border-b border-border" data-icon={!project.image || undefined}>
+              <img src={project.image ?? project.icon} alt={project.title} width={600} height={600} loading="lazy" decoding="async" className="select-none" />
+            </div>
+          )}
           <div className="p-4">
             <h3 className="font-bold mb-2">{project.title}</h3>
             <p className="mb-3 text-[color:var(--text-secondary)]">{project.description}</p>
