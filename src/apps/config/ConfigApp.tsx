@@ -36,6 +36,8 @@ import { DESKTOP_ICON_ORDER_RESET_EVENT } from "@/lib/desktopIconOrder";
 import { useTheme } from "@/hooks/useTheme";
 import { THEMES } from "@/lib/theme";
 import { AppearancePicker, ThemePicker } from "@/components/system/ThemePicker";
+import { ConfirmButton } from "@/components/ui/ConfirmButton";
+import { Segmented } from "@/components/ui/Segmented";
 import { WindowLayout } from "@/components/window/WindowLayout";
 import { RetroButton } from "@/components/ui/RetroButton";
 import { toast } from "sonner";
@@ -113,21 +115,7 @@ const ChoiceSetting = <T extends string>({ label, value, options, onChange }: {
 }) => (
   <div className="config-choice">
     <span className="config-choice-label">{label}</span>
-    <div className="config-segmented" role="radiogroup" aria-label={label}>
-      {options.map((option) => (
-        <RetroButton
-          key={option.id}
-          size="sm"
-          role="radio"
-          aria-checked={value === option.id}
-          active={value === option.id}
-          title={option.title}
-          onClick={() => onChange(option.id)}
-        >
-          {option.label}
-        </RetroButton>
-      ))}
-    </div>
+    <Segmented className="config-segmented" label={label} value={value} options={options} onChange={onChange} />
   </div>
 );
 
@@ -195,8 +183,6 @@ export const ConfigApp: React.FC<ConfigAppProps> = ({ initialCategory, focusSett
   const [customError, setCustomError] = useState("");
   const [stats, setStats] = useState<UsageStats | null>(null);
   const [isClearing, setIsClearing] = useState(false);
-  const [confirmClearCache, setConfirmClearCache] = useState(false);
-  const [confirmResetStats, setConfirmResetStats] = useState(false);
   const [debugOutlines, setDebugOutlines] = useState(() => (
     document.documentElement.classList.contains("debug-layout-outlines")
   ));
@@ -230,11 +216,6 @@ export const ConfigApp: React.FC<ConfigAppProps> = ({ initialCategory, focusSett
   };
 
   const handleClearCache = async () => {
-    if (!confirmClearCache) {
-      setConfirmClearCache(true);
-      return;
-    }
-
     setIsClearing(true);
     try {
       await clearCache();
@@ -245,16 +226,10 @@ export const ConfigApp: React.FC<ConfigAppProps> = ({ initialCategory, focusSett
       toast.error("Failed to clear API cache.");
     } finally {
       setIsClearing(false);
-      setConfirmClearCache(false);
     }
   };
 
   const handleResetStats = async () => {
-    if (!confirmResetStats) {
-      setConfirmResetStats(true);
-      return;
-    }
-
     setIsClearing(true);
     try {
       await resetUsageStats();
@@ -265,7 +240,6 @@ export const ConfigApp: React.FC<ConfigAppProps> = ({ initialCategory, focusSett
       toast.error("Failed to reset usage statistics.");
     } finally {
       setIsClearing(false);
-      setConfirmResetStats(false);
     }
   };
 
@@ -617,22 +591,20 @@ export const ConfigApp: React.FC<ConfigAppProps> = ({ initialCategory, focusSett
                 )}
 
                 <div className="config-debug-actions">
-                  <RetroButton
+                  <ConfirmButton
                     disabled={isClearing}
-                    onClick={() => void handleClearCache()}
-                    onBlur={() => setTimeout(() => setConfirmClearCache(false), 150)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    {confirmClearCache ? "Confirm clear" : "Clear API cache"}
-                  </RetroButton>
-                  <RetroButton
+                    onConfirm={handleClearCache}
+                    icon={<Trash2 className="h-4 w-4" />}
+                    label="Clear API cache"
+                    confirmLabel="Confirm clear"
+                  />
+                  <ConfirmButton
                     disabled={isClearing}
-                    onClick={() => void handleResetStats()}
-                    onBlur={() => setTimeout(() => setConfirmResetStats(false), 150)}
-                  >
-                    <RefreshCw className={cn("h-4 w-4", isClearing && "animate-spin")} />
-                    {confirmResetStats ? "Confirm reset" : "Reset statistics"}
-                  </RetroButton>
+                    onConfirm={handleResetStats}
+                    icon={<RefreshCw className={cn("h-4 w-4", isClearing && "animate-spin")} />}
+                    label="Reset statistics"
+                    confirmLabel="Confirm reset"
+                  />
                 </div>
               </ConfigSection>
             </div>

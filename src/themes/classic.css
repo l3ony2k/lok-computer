@@ -114,7 +114,7 @@ html[data-chrome="classic"]:not(#_) :where(
     .oobe-step-count, .oobe-summary dt, .weather-attribution, .weather-location,
     .calculator-tape-empty, .calculator-tape-header, .chance-die-sides, .select-list-group, .chance-readout, .chance-footer span,
     .chance-setup-label, .chance-result-note, .chance-action-hint, .chance-item-caption, .chance-history-title, .chance-history-summary,
-    .chance-history-empty, .chance-history-clear, .chance-history-lines, .chance-deck-count, .chance-chip, .chance-segmented button, .chance-picker-option,
+    .chance-history-empty, .chance-history-clear, .chance-history-lines, .chance-deck-count, .chance-chip, .chance-picker-option,
     .chance-hint, .chance-tarot-arcana, .chance-tarot-missing, .chance-tarot-orientation, .chance-tarot-position,
     .iching-number, .iching-line-label, .iching-throw-note, .iching-pinyin, .moon-history-count, .moon-phase,
     .chance-wheel-list-title, .chance-wheel-reset, .chance-wheel-hint, .chance-wheel-history-preset,

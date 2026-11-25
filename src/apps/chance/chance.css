@@ -200,27 +200,22 @@
     font-weight: 700;
 }
 
-/* Tarot's spread: two joined choices. */
-.chance-segmented {
-    display: flex;
-    border: 1px solid var(--block-border);
-}
-
-.chance-segmented button {
+/* Tarot's spread and the moon blocks' seriousness (Segmented). lok draws the
+   choices flat with the chosen one inverted; classic skins draw their buttons. */
+html:not([data-chrome="classic"]) .chance-segmented .retro-button {
+    height: auto;
+    min-height: 0;
     padding: 6px 14px;
     font: inherit;
     font-size: 12px;
     color: var(--text-secondary, var(--text-color));
     background: var(--detail-meta-bg);
-    border: 0;
+    border-color: var(--block-border);
+    box-shadow: none;
     cursor: pointer;
 }
 
-.chance-segmented button + button {
-    border-left: 1px solid var(--block-border);
-}
-
-.chance-segmented button[aria-checked="true"] {
+html:not([data-chrome="classic"]) .chance-segmented .retro-button[aria-checked="true"] {
     color: var(--detail-bg);
     background: var(--text-color);
     font-weight: 700;

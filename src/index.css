@@ -3895,6 +3895,8 @@ a:hover .animate-marquee-if-overflow {
     display: inline-flex;
     width: fit-content;
     max-width: 100%;
+    /* Classic skins have always drawn these buttons touching. */
+    --c-joined-gap: 0px;
 }
 
 /* Buttons keep their width while there is room and shrink, equally, before the
@@ -3903,10 +3905,6 @@ a:hover .animate-marquee-if-overflow {
     flex: 0 1 auto;
     width: 84px;
     min-width: 0;
-}
-
-.config-segmented .retro-button + .retro-button {
-    border-left: 0;
 }
 
 /* A section opened from a toast or menu is outlined until it has been seen. */

@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { Check, Computer, Loader2, Moon, Sun } from "lucide-react";
 import { toast } from "sonner";
 import { RetroButton } from "@/components/ui/RetroButton";
+import { Segmented } from "@/components/ui/Segmented";
 import { CustomIcon } from "@/components/window/CustomIcon";
 import { useTheme } from "@/hooks/useTheme";
 import { PALM_FRAME_QUERY, THEMES, THEME_IDS, supportsAppearance, type Appearance, type ThemeId } from "@/lib/theme";
@@ -172,20 +173,18 @@ export const AppearancePicker = () => {
 
   return (
     <div className="theme-appearance">
-      <div className="config-theme-grid" role="radiogroup" aria-label="Color mode">
-        {APPEARANCE_OPTIONS.map(({ value, label, icon: Icon }) => (
-          <RetroButton
-            key={value}
-            role="radio"
-            aria-checked={appearance === value}
-            active={appearance === value}
-            disabled={!enabled}
-            onClick={() => setAppearance(value)}
-          >
-            <Icon className="h-4 w-4" /> {label}
-          </RetroButton>
-        ))}
-      </div>
+      <Segmented
+        className="config-theme-grid"
+        joined={false}
+        label="Color mode"
+        value={appearance}
+        options={APPEARANCE_OPTIONS.map(({ value, label, icon: Icon }) => ({
+          id: value,
+          label: <><Icon className="h-4 w-4" /> {label}</>,
+          disabled: !enabled,
+        }))}
+        onChange={setAppearance}
+      />
       {!enabled && (
         <p className="config-help-text">
           {THEMES[theme].name} uses its original palette. Color mode applies to themes with light and dark variants.

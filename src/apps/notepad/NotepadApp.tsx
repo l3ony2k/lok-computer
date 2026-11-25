@@ -3,7 +3,9 @@ import { createId } from '@/lib/id';
 import { Bold, Download, Eraser, Eye, Heading1, Heading2, Italic, List, ListOrdered, Plus, Strikethrough, Trash2, Underline } from 'lucide-react';
 import { toast } from 'sonner';
 import { WindowLayout } from '@/components/window/WindowLayout';
+import { ConfirmButton } from '@/components/ui/ConfirmButton';
 import { RetroButton } from '@/components/ui/RetroButton';
+import { Segmented } from '@/components/ui/Segmented';
 import { usePersistedState } from '@/hooks/useStorage';
 import { renderMarkdown } from './markdown';
 import { htmlToText, sanitizeHtml, textToHtml } from './richText';
@@ -103,7 +105,6 @@ export const NotepadApp: React.FC<NotepadAppProps> = () => {
     debounceMs: 300,
   });
   const [preview, setPreview] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
   const richRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLTextAreaElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
@@ -127,11 +128,6 @@ export const NotepadApp: React.FC<NotepadAppProps> = () => {
 
   const deleteActive = () => {
     if (!active) return;
-    if (!confirmDelete) {
-      setConfirmDelete(true);
-      return;
-    }
-    setConfirmDelete(false);
     setState((prev) => {
       const remaining = prev.entries.filter((entry) => entry.id !== prev.activeId);
       const next = [...remaining].sort((a, b) => b.updatedAt - a.updatedAt)[0];
@@ -213,21 +209,7 @@ export const NotepadApp: React.FC<NotepadAppProps> = () => {
             onChange={(event) => updateActive({ title: event.target.value })}
             aria-label="Note title"
           />
-          <div className="app-joined-control notepad-formats" role="radiogroup" aria-label="Format">
-            {FORMATS.map((format) => (
-              <RetroButton
-                key={format.id}
-                size="sm"
-                role="radio"
-                aria-checked={active.format === format.id}
-                active={active.format === format.id}
-                title={format.title}
-                onClick={() => changeFormat(format.id)}
-              >
-                {format.label}
-              </RetroButton>
-            ))}
-          </div>
+          <Segmented className="notepad-formats" label="Format" value={active.format} options={FORMATS} onChange={changeFormat} />
           {active.format === 'markdown' && (
             <RetroButton size="sm" className="gap-1" active={preview} onClick={() => setPreview((open) => !open)} title="Preview the rendered Markdown">
               <Eye className="w-3.5 h-3.5" /> Preview
@@ -236,16 +218,16 @@ export const NotepadApp: React.FC<NotepadAppProps> = () => {
           <RetroButton size="sm" onClick={download} title={`Download as ${fileName(active)}`}>
             <Download className="w-3.5 h-3.5" />
           </RetroButton>
-          <RetroButton
+          <ConfirmButton
             size="sm"
-            onClick={deleteActive}
+            onConfirm={deleteActive}
             className="gap-1"
-            onBlur={() => setTimeout(() => setConfirmDelete(false), 150)}
             title="Delete this note"
-            aria-label={confirmDelete ? 'Confirm delete' : 'Delete note'}
-          >
-            <Trash2 className="w-3.5 h-3.5" />{confirmDelete && <span>Confirm</span>}
-          </RetroButton>
+            aria-label="Delete note"
+            confirmAriaLabel="Confirm delete"
+            icon={<Trash2 className="w-3.5 h-3.5" />}
+            confirmLabel={<span>Confirm</span>}
+          />
         </div>
       ) : undefined}
       footer={
