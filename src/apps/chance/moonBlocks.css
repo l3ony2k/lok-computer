@@ -273,10 +273,11 @@
     gap: 6px 8px;
 }
 
-.moon-mode-row .chance-segmented button:disabled {
+html:not([data-chrome="classic"]) .moon-mode-row .chance-segmented .retro-button:disabled {
     cursor: default;
+    opacity: 1;
 }
 
-.moon-mode-row .chance-segmented button:disabled:not([aria-checked="true"]) {
+html:not([data-chrome="classic"]) .moon-mode-row .chance-segmented .retro-button:disabled:not([aria-checked="true"]) {
     opacity: 0.5;
 }

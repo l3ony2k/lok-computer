@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { Minus, Plus } from 'lucide-react';
 import { RetroButton } from '@/components/ui/RetroButton';
+import { Segmented } from '@/components/ui/Segmented';
 import { ChanceTable, TableItem } from './ChanceTable';
 import { DieView } from './DieView';
 import { DealtCard, DeckView, PlayingCardView } from './PlayingCards';
@@ -310,13 +311,13 @@ export const TarotTab = ({ table, onAsk }: { table: ReturnType<typeof useTarotTa
       label="Tarot"
       paneRef={table.paneRef}
       setup={
-        <div className="chance-segmented" role="radiogroup" aria-label="Spread">
-          {([[1, 'One card'], [3, 'Past · Present · Future']] as const).map(([count, label]) => (
-            <button type="button" role="radio" aria-checked={spread === count} key={count} onClick={() => table.setSpread(count)}>
-              {label}
-            </button>
-          ))}
-        </div>
+        <Segmented
+          className="chance-segmented"
+          label="Spread"
+          value={String(spread)}
+          options={[{ id: '1', label: 'One card' }, { id: '3', label: 'Past · Present · Future' }]}
+          onChange={(count) => table.setSpread(count === '3' ? 3 : 1)}
+        />
       }
       action={{ label: spread === 1 ? 'Draw a card' : 'Draw three cards', onClick: table.draw }}
       history={{

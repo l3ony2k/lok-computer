@@ -3,6 +3,7 @@ import { scrollIntoViewWithin } from '@/lib/utils';
 import { ArrowRight, Copy, Pencil, Play, RotateCcw, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { WindowLayout } from '@/components/window/WindowLayout';
+import { ConfirmButton } from '@/components/ui/ConfirmButton';
 import { RetroButton } from '@/components/ui/RetroButton';
 import { usePersistedState } from '@/hooks/useStorage';
 import { TypoText } from './TypoText';
@@ -429,7 +430,6 @@ export const AskAiApp: React.FC<AskAiAppProps> = ({ ask: handoff, onPropsChange 
   const [busy, setBusy] = useState(false);
   const [latestRunId, setLatestRunId] = useState<string | null>(null);
   const [editing, setEditing] = useState<{ runId: string; text: string; error?: string } | null>(null);
-  const [confirmClear, setConfirmClear] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const transcriptRef = useRef<HTMLDivElement>(null);
@@ -622,13 +622,8 @@ export const AskAiApp: React.FC<AskAiAppProps> = ({ ask: handoff, onPropsChange 
   };
 
   const clearRuns = () => {
-    if (!confirmClear) {
-      setConfirmClear(true);
-      return;
-    }
     abortRef.current?.abort();
     setState({ runs: [] });
-    setConfirmClear(false);
     setEditing(null);
   };
 
@@ -650,16 +645,17 @@ export const AskAiApp: React.FC<AskAiAppProps> = ({ ask: handoff, onPropsChange 
             ?
           </RetroButton>
           <span className="ask-ai-tagline">Robots make mistakes. Take the answer as a joke.</span>
-          <RetroButton
+          <ConfirmButton
             size="sm"
             className="gap-1"
-            onClick={clearRuns}
-            onBlur={() => setTimeout(() => setConfirmClear(false), 150)}
+            onConfirm={clearRuns}
             disabled={!runs.length}
-            title={confirmClear ? 'Click again to confirm' : 'Clear history'}
-          >
-            <Trash2 className="h-3.5 w-3.5" /> {confirmClear ? 'Confirm' : 'Clear'}
-          </RetroButton>
+            title="Clear history"
+            confirmTitle="Click again to confirm"
+            icon={<Trash2 className="h-3.5 w-3.5" />}
+            label="Clear"
+            confirmLabel="Confirm"
+          />
         </div>
       )}
       footer={(

@@ -1,4 +1,5 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { Segmented } from '@/components/ui/Segmented';
 import { usePersistedState } from '@/hooks/useStorage';
 import { ChanceTable } from './ChanceTable';
 import {
@@ -455,13 +456,14 @@ export const MoonBlocksTab = ({ table }: { table: MoonTable }) => {
       setup={
         <div className="moon-setup">
           <div className="moon-mode-row">
-            <div className="chance-segmented" role="radiogroup" aria-label="How serious is the question" title={locked ? 'Finish or answer this question first' : undefined}>
-              {MOON_MODES.map((mode) => (
-                <button type="button" role="radio" aria-checked={activeMode === mode.id} disabled={locked || throwing} key={mode.id} onClick={() => table.setMode(mode.id)}>
-                  {mode.label}
-                </button>
-              ))}
-            </div>
+            <Segmented
+              className="chance-segmented"
+              label="How serious is the question"
+              title={locked ? 'Finish or answer this question first' : undefined}
+              value={activeMode}
+              options={MOON_MODES.map((mode) => ({ id: mode.id, label: mode.label, disabled: locked || throwing }))}
+              onChange={table.setMode}
+            />
           </div>
           <span className="chance-result-note">{locked ? 'Locked until this question is answered.' : moonMode(activeMode).rule}</span>
         </div>
